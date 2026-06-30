@@ -1,27 +1,33 @@
 /** Shared styling primitives for dashboard bar charts (Recharts). */
 
-export const MODERN_CHART_MARGIN = { top: 14, right: 10, left: 0, bottom: 2 };
+export const MODERN_CHART_MARGIN = { top: 20, right: 20, left: 0, bottom: 10 };
 
 export const MODERN_AXIS_TICK = {
   fill: "#64748b",
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
 };
 
 export const MODERN_GRID_PROPS = {
-  strokeDasharray: "6 10",
+  strokeDasharray: "8 12",
   vertical: false,
   stroke: "#e2e8f0",
-  strokeOpacity: 0.7,
+  strokeOpacity: 0.6,
 };
 
 export const MODERN_BAR_CURSOR = {
-  fill: "rgba(99, 102, 241, 0.06)",
-  radius: 8,
+  fill: "rgba(99, 102, 241, 0.08)",
+  radius: 12,
 };
 
 export const MODERN_BAR_ANIMATION = {
-  animationDuration: 1200,
+  animationDuration: 2500,
+  animationEasing: "ease-out",
+  animationBegin: 0,
+};
+
+export const MODERN_AREA_ANIMATION = {
+  animationDuration: 2500,
   animationEasing: "ease-out",
 };
 
@@ -44,13 +50,13 @@ export const BarGradientDefs = ({
       <stop offset="100%" stopColor={bottomColor} stopOpacity={1} />
     </linearGradient>
     {shadowId && (
-      <filter id={shadowId} x="-30%" y="-10%" width="160%" height="130%">
+      <filter id={shadowId} x="-30%" y="-20%" width="160%" height="150%">
         <feDropShadow
           dx="0"
-          dy="4"
-          stdDeviation="4"
+          dy="6"
+          stdDeviation="6"
           floodColor={bottomColor}
-          floodOpacity="0.25"
+          floodOpacity="0.2"
         />
       </filter>
     )}
@@ -58,7 +64,7 @@ export const BarGradientDefs = ({
 );
 
 /**
- * Per-index gradients for multi-color bar charts (e.g. agent breakdown).
+ * Per-index gradients for multi-color bar charts (e.g., agent breakdown).
  */
 export const MultiBarGradientDefs = ({ idPrefix, colors }) => (
   <defs>
@@ -72,7 +78,7 @@ export const MultiBarGradientDefs = ({ idPrefix, colors }) => (
         y2="1"
       >
         <stop offset="0%" stopColor={color} stopOpacity={1} />
-        <stop offset="100%" stopColor={color} stopOpacity={0.72} />
+        <stop offset="100%" stopColor={color} stopOpacity={0.65} />
       </linearGradient>
     ))}
   </defs>
@@ -80,10 +86,10 @@ export const MultiBarGradientDefs = ({ idPrefix, colors }) => (
 
 export const modernActiveBar = (fillUrl) => ({
   fill: fillUrl,
-  stroke: "rgba(255,255,255,0.9)",
-  strokeWidth: 2,
-  radius: [10, 10, 0, 0],
-  filter: "brightness(1.08)",
+  stroke: "rgba(255,255,255,0.95)",
+  strokeWidth: 3,
+  radius: [14, 14, 4, 4],
+  filter: "brightness(1.1) drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
 });
 
 export const BAR_SERIES_THEMES = {
@@ -97,7 +103,7 @@ export const BAR_SERIES_THEMES = {
     gradientId: "modernBarAmber",
     top: "#fcd34d",
     mid: "#f59e0b",
-    bottom: "#b45309",
+    bottom: "#d97706",
   },
   blue: {
     gradientId: "modernBarBlue",
@@ -122,5 +128,17 @@ export const BAR_SERIES_THEMES = {
     top: "#6ee7b7",
     mid: "#10b981",
     bottom: "#047857",
+  },
+  purple: {
+    gradientId: "modernBarPurple",
+    top: "#a78bfa",
+    mid: "#8b5cf6",
+    bottom: "#7c3aed",
+  },
+  red: {
+    gradientId: "modernBarRed",
+    top: "#fca5a5",
+    mid: "#ef4444",
+    bottom: "#dc2626",
   },
 };

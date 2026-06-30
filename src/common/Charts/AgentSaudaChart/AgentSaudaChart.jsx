@@ -23,6 +23,7 @@ import {
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
+  MODERN_AREA_ANIMATION,
 } from "../modernBarChartShared";
 import {
   CHART_AREA_CLASS,
@@ -45,15 +46,15 @@ const CustomTooltip = ({ active, payload, label }) => {
     const isPie = !label;
     const data = isPie ? payload[0].payload : null;
     return (
-      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px]">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+      <div className="bg-white/95 backdrop-blur-xl p-5 shadow-2xl border border-slate-100 rounded-2xl min-w-[180px]">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">
           {isPie ? data.name : label}
         </p>
         <div className="space-y-2">
           <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                className="w-3 h-3 rounded-full shadow-sm"
                 style={{
                   backgroundColor: isPie ? payload[0].payload.fill : "#6366f1",
                 }}
@@ -68,7 +69,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             <div className="pt-2 mt-2 border-t border-slate-50">
               <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                 <span>Performance:</span>
-                <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-xl">
                   {((data.value / data.total) * 100).toFixed(1)}%
                 </span>
               </div>
@@ -81,19 +82,19 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const AgentSaudaChart = ({ data, chartType = "bar" }) => {
+const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
   const { chartData, totalTons } = useMemo(() => {
-    const total = data.reduce((sum, item) => sum + item.tons, 0);
+    const total = agentSaudasData.reduce((sum, item) => sum + (item.tons || 0), 0);
     return {
-      chartData: data.map((item) => ({
-        name: item.name,
-        value: item.tons,
-        tons: item.tons,
+      chartData: agentSaudasData.map((item) => ({
+        name: item.name || "Unknown",
+        value: item.tons || 0,
+        tons: item.tons || 0,
         total,
       })),
       totalTons: total,
     };
-  }, [data]);
+  }, [agentSaudasData]);
 
   const renderChart = () => {
     if (chartType === "pie") {
@@ -101,8 +102,8 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
         <PieChart>
           <defs>
             <filter id="pieShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-              <feOffset in="blur" dx="0" dy="5" result="offsetBlur" />
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+              <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
               <feMerge>
                 <feMergeNode in="offsetBlur" />
                 <feMergeNode in="SourceGraphic" />
@@ -113,11 +114,12 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             data={chartData}
             cx="50%"
             cy="50%"
-            innerRadius="52%"
+            innerRadius="48%"
             outerRadius="78%"
-            paddingAngle={5}
+            paddingAngle={10}
             dataKey="value"
-            animationDuration={2000}
+            animationDuration={2500}
+            animationEasing="ease-out"
             stroke="none"
             filter="url(#pieShadow)"
           >
@@ -133,6 +135,7 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             verticalAlign="bottom"
             align="center"
             iconType="circle"
+            iconSize={10}
             formatter={(value) => (
               <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                 {value}
@@ -146,7 +149,7 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
 
     const commonProps = {
       data: chartData,
-      margin: { ...MODERN_CHART_MARGIN, left: -12, bottom: 24 },
+      margin: MODERN_CHART_MARGIN,
     };
 
     if (chartType === "bar") {
@@ -157,8 +160,8 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
       return (
         <BarChart
           {...commonProps}
-          barCategoryGap="28%"
-          maxBarSize={44}
+          barCategoryGap="22%"
+          maxBarSize={48}
         >
           <MultiBarGradientDefs idPrefix="agentBar" colors={barColors} />
           <CartesianGrid {...MODERN_GRID_PROPS} />
@@ -166,15 +169,15 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            angle={chartData.length > 4 ? -35 : -22}
+            angle={chartData.length > 4 ? -30 : -20}
             textAnchor="end"
             interval={0}
-            height={chartData.length > 4 ? 72 : 56}
+            height={chartData.length > 4 ? 75 : 60}
             tick={{
               ...MODERN_AXIS_TICK,
-              fontSize: chartData.length > 6 ? 9 : 11,
+              fontSize: chartData.length > 6 ? 10 : 11,
             }}
-            dy={4}
+            dy={8}
           />
           <YAxis
             axisLine={false}
@@ -183,8 +186,8 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             tickFormatter={(v) =>
               v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v
             }
-            width={40}
-            domain={[0, (dataMax) => Math.ceil(dataMax * 1.12)]}
+            width={44}
+            domain={[0, (dataMax) => Math.ceil(dataMax * 1.15)]}
           />
           <Tooltip
             content={<CustomTooltip />}
@@ -192,13 +195,8 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
           />
           <Bar
             dataKey="tons"
-            radius={[10, 10, 0, 0]}
+            radius={[14, 14, 4, 4]}
             {...MODERN_BAR_ANIMATION}
-            activeBar={{
-              stroke: "rgba(255,255,255,0.95)",
-              strokeWidth: 2,
-              radius: [12, 12, 0, 0],
-            }}
           >
             {chartData.map((_, index) => (
               <Cell
@@ -214,7 +212,7 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
                 formatter={(v) => (v > 0 ? `${v.toLocaleString()} T` : "")}
                 style={{
                   fill: "#475569",
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 800,
                 }}
               />
@@ -228,14 +226,14 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorAgent" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.45} />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
           </linearGradient>
           <filter id="agentAreaShadow" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
-            <feOffset dx="0" dy="10" result="offsetblur" />
+            <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
+            <feOffset dx="0" dy="8" result="offsetblur" />
             <feComponentTransfer>
-              <feFuncA type="linear" slope="0.3" />
+              <feFuncA type="linear" slope="0.25" />
             </feComponentTransfer>
             <feMerge>
               <feMergeNode />
@@ -244,24 +242,25 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
           </filter>
         </defs>
         <CartesianGrid
-          strokeDasharray="3 3"
+          strokeDasharray="8 12"
           vertical={false}
-          stroke="#f1f5f9"
+          stroke="#e2e8f0"
+          strokeOpacity={0.6}
         />
         <XAxis
           dataKey="name"
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          tick={{ ...MODERN_AXIS_TICK, fontSize: 11 }}
           angle={-25}
           textAnchor="end"
           interval={0}
-          height={60}
+          height={65}
         />
         <YAxis
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          tick={{ ...MODERN_AXIS_TICK, fontSize: 11 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Area
@@ -271,7 +270,7 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorAgent)"
-          animationDuration={2000}
+          {...MODERN_AREA_ANIMATION}
           filter="url(#agentAreaShadow)"
         />
       </AreaChart>
@@ -289,9 +288,9 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
       <div className={CHART_AREA_CLASS}>
         {!chartData.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-10 h-10"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

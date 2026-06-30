@@ -14,6 +14,9 @@ import {
   FaIdCard,
   FaPrint,
   FaSpinner,
+  FaPlus,
+  FaCheckCircle,
+  FaEdit,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { pdf } from "@react-pdf/renderer";
@@ -30,6 +33,18 @@ const EmployeeDashboard = () => {
   const [stats, setStats] = useState({
     totalSaudas: 0,
     activeBids: 0,
+  });
+  const [works, setWorks] = useState([]);
+  const [worksLoading, setWorksLoading] = useState(false);
+  const [showAddWorkModal, setShowAddWorkModal] = useState(false);
+  const [newWork, setNewWork] = useState({
+    workType: "Custom Task",
+    title: "",
+    description: "",
+    status: "Pending",
+    priority: "Medium",
+    dueDate: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -88,6 +103,61 @@ const EmployeeDashboard = () => {
     };
     fetchStats();
   }, []);
+
+  const fetchWorks = async () => {
+    if (!user?._id) return;
+    setWorksLoading(true);
+    try {
+      const res = await api.get(`/employee-works/employee/${user._id}`);
+      setWorks(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching works:", error);
+      toast.error("Failed to fetch work status");
+    } finally {
+      setWorksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorks();
+  }, [user?._id]);
+
+  const handleAddWork = async (e) => {
+    e.preventDefault();
+    if (!user?._id) return;
+    try {
+      await api.post("/employee-works", {
+        ...newWork,
+        employeeId: user._id,
+      });
+      toast.success("Work added successfully!");
+      setShowAddWorkModal(false);
+      setNewWork({
+        workType: "Custom Task",
+        title: "",
+        description: "",
+        status: "Pending",
+        priority: "Medium",
+        dueDate: "",
+        notes: "",
+      });
+      fetchWorks();
+    } catch (error) {
+      console.error("Error adding work:", error);
+      toast.error("Failed to add work");
+    }
+  };
+
+  const handleUpdateWorkStatus = async (workId, newStatus) => {
+    try {
+      await api.put(`/employee-works/${workId}`, { status: newStatus });
+      toast.success("Status updated successfully!");
+      fetchWorks();
+    } catch (error) {
+      console.error("Error updating work status:", error);
+      toast.error("Failed to update status");
+    }
+  };
 
   const handlePrintIDCard = async () => {
     if (!user) {
@@ -154,6 +224,38 @@ const EmployeeDashboard = () => {
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Assigned":
+        return "bg-blue-100 text-blue-800";
+      case "In Progress":
+        return "bg-purple-100 text-purple-800";
+      case "Completed":
+        return "bg-green-100 text-green-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "Low":
+        return "bg-gray-100 text-gray-800";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "High":
+        return "bg-orange-100 text-orange-800";
+      case "Urgent":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
   return (
@@ -306,6 +408,178 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Work Status Section */}
+      <div className="relative z-10 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+        <div className="p-8 sm:p-10 border-b border-slate-100/60 flex items-center justify-between bg-gradient-to-r from-slate-50/50 to-transparent">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+              <FaClipboardList size={20} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                Work Status
+              </h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Track your assigned and ongoing work
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAddWorkModal(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+          >
+            <FaPlus />
+            Add Work
+          </button>
+        </div>
+
+        <div className="p-8 sm:p-10">
+          {worksLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <FaSpinner className="animate-spin text-indigo-600 text-3xl" />
+            </div>
+          ) : works.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-500 font-medium">No work items yet. Add your first task!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {works.map((work) => (
+                <div
+                  key={work._id}
+                  className="p-6 bg-slate-50/80 rounded-2xl border border-slate-100 hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-bold text-slate-900">{work.title}</h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(work.status)}`}>
+                          {work.status}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(work.priority)}`}>
+                          {work.priority}
+                        </span>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+                          {work.workType}
+                        </span>
+                      </div>
+                      {work.description && (
+                        <p className="text-slate-600 text-sm mb-3">{work.description}</p>
+                      )}
+                      {work.dueDate && (
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                          <FaCalendarCheck />
+                          <span>Due: {new Date(work.dueDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {work.status !== "Completed" && work.status !== "Cancelled" && (
+                        <select
+                          value={work.status}
+                          onChange={(e) => handleUpdateWorkStatus(work._id, e.target.value)}
+                          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Assigned">Assigned</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add Work Modal */}
+      {showAddWorkModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[2rem] max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100">
+              <h2 className="text-xl font-black text-slate-900">Add New Work</h2>
+            </div>
+            <form onSubmit={handleAddWork} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Work Type</label>
+                <select
+                  value={newWork.workType}
+                  onChange={(e) => setNewWork({ ...newWork, workType: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="Loading Entry">Loading Entry</option>
+                  <option value="Sauda Management">Sauda Management</option>
+                  <option value="Bid Participation">Bid Participation</option>
+                  <option value="Custom Task">Custom Task</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
+                <input
+                  type="text"
+                  value={newWork.title}
+                  onChange={(e) => setNewWork({ ...newWork, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <textarea
+                  value={newWork.description}
+                  onChange={(e) => setNewWork({ ...newWork, description: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Priority</label>
+                  <select
+                    value={newWork.priority}
+                    onChange={(e) => setNewWork({ ...newWork, priority: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Due Date</label>
+                  <input
+                    type="date"
+                    value={newWork.dueDate}
+                    onChange={(e) => setNewWork({ ...newWork, dueDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddWorkModal(false)}
+                  className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors"
+                >
+                  Add Work
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <DashboardBlogSection />
     </div>

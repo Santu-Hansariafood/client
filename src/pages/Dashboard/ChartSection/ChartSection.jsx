@@ -25,8 +25,24 @@ const PaymentAnalyticsChart = lazy(
 const CommodityPieChart = lazy(
   () => import("../../../common/Charts/CommodityPieChart/CommodityPieChart"),
 );
+const EmployeeWorkChart = lazy(
+  () => import("../../../common/Charts/EmployeeWorkChart/EmployeeWorkChart"),
+);
 
 const CHART_CARDS = [
+  {
+    id: "employee-work",
+    featured: true,
+    label: "Employee Work",
+    accent: "from-indigo-500 to-purple-600",
+    ring: "ring-indigo-100/80",
+    Component: EmployeeWorkChart,
+    props: (chartType, agentSaudas, dateWiseWorks, employeeWiseWorks) => ({ 
+      chartType, 
+      dateWiseData: dateWiseWorks, 
+      employeeWiseData: employeeWiseWorks 
+    }),
+  },
   {
     id: "payment",
     featured: true,
@@ -143,7 +159,7 @@ const ChartCard = memo(({ featured, label, accent, ring, children }) => (
 
 ChartCard.displayName = "ChartCard";
 
-const ChartSection = memo(({ agentSaudas = [] }) => {
+const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseWorks = [] }) => {
   const [chartType, setChartType] = useState("line");
   const [viewMode, setViewMode] = useState("grid");
 
@@ -265,7 +281,7 @@ const ChartSection = memo(({ agentSaudas = [] }) => {
                 accent={accent}
                 ring={ring}
               >
-                <Component {...props(chartType, agentSaudas)} />
+                <Component {...props(chartType, agentSaudas, dateWiseWorks, employeeWiseWorks)} />
               </ChartCard>
             ),
           )}
