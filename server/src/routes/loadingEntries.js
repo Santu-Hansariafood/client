@@ -714,7 +714,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       0,
     );
 
-    const qrCodeData = `Hansaria Food Private Limited\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}`;
+    const qrCodeData = `Hansaria Food Private Limited\nBrokerage Report\nType: ${type.toUpperCase()}\nDate: ${new Date().toLocaleDateString("en-GB")}\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}\nIFSC: ${hansariaBankDetails.ifscCode}\nBranch: ${hansariaBankDetails.branch}`;
     const qrCodeBase64 = await QRCode.toDataURL(qrCodeData);
 
     const drawTallyHeader = (doc) => {
@@ -723,47 +723,47 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
       // Add logo
       if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", margin + 5, margin + 2, 25, 25);
+        doc.addImage(logoBase64, "PNG", margin + 5, margin + 5, 25, 25);
       }
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 10, {
+      doc.setFontSize(18);
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 15, {
         align: "center",
       });
 
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.text(
         "207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007",
         pageWidth / 2,
-        margin + 15,
+        margin + 22,
         { align: "center" },
       );
       doc.text(
         "Contact: +91 98304 33535 | Email: info@hansariafood.com",
         pageWidth / 2,
-        margin + 19,
+        margin + 27,
         { align: "center" },
       );
 
       doc.setLineWidth(0.2);
-      doc.line(margin, margin + 22, pageWidth - margin, margin + 22);
+      doc.line(margin, margin + 32, pageWidth - margin, margin + 32);
 
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text(
         `${type.toUpperCase()} BROKERAGE ADVICE`,
         pageWidth / 2,
-        margin + 28,
+        margin + 40,
         {
           align: "center",
         },
       );
 
-      doc.line(margin, margin + 32, pageWidth - margin, margin + 32);
+      doc.line(margin, margin + 46, pageWidth - margin, margin + 46);
 
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       const partyName = isBuyerReport
         ? data[0].buyerCompany || "N/A"
         : data[0].supplierCompany || "N/A";
@@ -771,16 +771,16 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       doc.text(
         `Party Name: ${partyName.toUpperCase()}`,
         margin + 5,
-        margin + 38,
+        margin + 54,
       );
       doc.text(
         `Date: ${new Date().toLocaleDateString("en-GB")}`,
         pageWidth - margin - 5,
-        margin + 38,
+        margin + 54,
         { align: "right" },
       );
 
-      doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
+      doc.line(margin, margin + 60, pageWidth - margin, margin + 60);
     };
 
     drawTallyHeader(doc);
@@ -820,7 +820,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: margin + 45,
+      startY: margin + 65,
       theme: "grid",
       margin: { left: margin + 2, right: margin + 2 },
       styles: {
