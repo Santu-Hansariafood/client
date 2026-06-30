@@ -2,14 +2,36 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import "react-toastify/dist/ReactToastify.css";
 
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      return true;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+};
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("isAuthenticated"));
-      if (stored) {
+      const token = localStorage.getItem("token");
+      if (stored && !isTokenExpired(token)) {
         return true;
+      }
+      if (stored) {
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("mobile");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("loginDate");
       }
       return false;
     } catch {
@@ -28,7 +50,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
-      if (stored) {
+      const token = localStorage.getItem("token");
+      if (stored && !isTokenExpired(token)) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.role === "Employee" && !parsed.allowedPermissions) {
           parsed.allowedPermissions = [];
@@ -41,7 +64,13 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [token, setToken] = useState(() => {
+    const stored = localStorage.getItem("token");
+    if (isTokenExpired(stored)) {
+      return "";
+    }
+    return stored || "";
+  });
 
   const login = (userData) => {
     const role = userData.role || "";

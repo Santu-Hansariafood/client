@@ -43,6 +43,26 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+const handleLogout = () => {
+  localStorage.removeItem("isAuthenticated");
+  localStorage.removeItem("mobile");
+  localStorage.removeItem("userRole");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("loginDate");
+  window.location.href = "/login";
+};
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      handleLogout();
+    }
+    return Promise.reject(error);
+  }
+);
+
 registerSW({
   immediate: true,
   onRegisteredSW(swUrl, r) {},
