@@ -13,7 +13,10 @@ const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 35,
+    paddingTop: 35,
+    paddingBottom: 40,
+    paddingLeft: 35,
+    paddingRight: 35,
     color: "#1a1a1a",
     backgroundColor: "#ffffff",
   },
@@ -22,7 +25,7 @@ const styles = StyleSheet.create({
     top: 10,
     left: 10,
     right: 10,
-    bottom: 20,
+    bottom: 30,
     borderWidth: 1.5,
     borderColor: "#1a1a1a",
     borderStyle: "solid",
@@ -32,7 +35,7 @@ const styles = StyleSheet.create({
     top: 14,
     left: 14,
     right: 14,
-    bottom: 24,
+    bottom: 34,
     borderWidth: 0.5,
     borderColor: "#1a1a1a",
     borderStyle: "solid",
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 15,
+    bottom: 22,
     left: 35,
     right: 35,
     textAlign: "center",
@@ -312,12 +315,12 @@ const styles = StyleSheet.create({
   footerLine: {
     height: 0.5,
     backgroundColor: "#000000",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   footerText: {
-    fontSize: 5.5,
+    fontSize: 5,
     color: "#000000",
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
 });
 

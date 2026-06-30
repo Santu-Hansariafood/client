@@ -107,7 +107,7 @@ const SaudaDetails = ({ data }) => {
 
     if (panVal) parts.push(`PAN No: ${panVal}`);
     if (gstVal) parts.push(`GST: ${gstVal}`);
-    if (msme) parts.push(`MSME No: ${msme}`);
+    if (msme) parts.push(`Mandii License ${msme}`);
 
     if (parts.length === 0) return null;
 
