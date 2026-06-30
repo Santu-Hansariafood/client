@@ -397,7 +397,7 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
 
   const pipeline = [
     { $match: match },
-    { $sort: { loadingDate: -1, createdAt: -1 } },
+    { $sort: { saudaNo: 1 } },
   ];
 
   if (skip !== null) pipeline.push({ $skip: skip });
@@ -439,6 +439,7 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
     {
       $addFields: {
         sellerAccount: { $ifNull: ["$sellerInfo.sellerName", "N/A"] },
+        consignee: { $ifNull: ["$consignee", "$loadingFrom"] },
         place: { $ifNull: ["$loadingFrom", "$consignee"] },
         orderDate: { $ifNull: ["$sauda.poDate", "$loadingDate"] },
         brokerageRate: {
@@ -609,11 +610,16 @@ router.get("/brokerage-report/excel", async (req, res) => {
       { header: "Bill No", key: "billNo", width: 15 },
       { header: "Lorry No", key: "lorryNo", width: 15 },
       {
-        header: isBuyerReport ? "Seller Company" : "Buyer Company",
-        key: "counterParty",
+        header: "Buyer Company",
+        key: "buyerCompany",
         width: 30,
       },
-      { header: "PLACE", key: "place", width: 15 },
+      {
+        header: "Seller Company",
+        key: "sellerCompany",
+        width: 30,
+      },
+      { header: "CONSIGNEE NAME", key: "consignee", width: 20 },
       { header: "Item", key: "item", width: 15 },
       { header: "Weight", key: "weight", width: 12 },
       { header: "Rate", key: "rate", width: 10 },
@@ -631,10 +637,9 @@ router.get("/brokerage-report/excel", async (req, res) => {
         saudaNo: item.saudaNo || "N/A",
         billNo: item.billNumber || "N/A",
         lorryNo: item.lorryNumber || "N/A",
-        counterParty: isBuyerReport
-          ? item.supplierCompany || "N/A"
-          : item.buyerCompany || "N/A",
-        place: item.place || "N/A",
+        buyerCompany: item.buyerCompany || "N/A",
+        sellerCompany: item.supplierCompany || "N/A",
+        consignee: item.consignee || item.place || "N/A",
         item: item.commodity || "N/A",
         weight: item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0,
         rate: item.brokerageRate || 0,
@@ -716,6 +721,11 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       doc.setLineWidth(0.4);
       doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
 
+      // Add logo
+      if (logoBase64) {
+        doc.addImage(logoBase64, "PNG", margin + 5, margin + 2, 25, 25);
+      }
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 10, {
@@ -781,8 +791,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       "Sauda No",
       "Bill No",
       "Lorry No",
-      isBuyerReport ? "Seller Company" : "Buyer Company",
-      "PLACE",
+      "Buyer Company",
+      "Seller Company",
+      "CONSIGNEE NAME",
       "Item",
       "Weight",
       "Rate",
@@ -797,10 +808,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       item.saudaNo || "N/A",
       item.billNumber || "N/A",
       item.lorryNumber || "N/A",
-      isBuyerReport
-        ? item.supplierCompany || "N/A"
-        : item.buyerCompany || "N/A",
-      item.place || "N/A",
+      item.buyerCompany || "N/A",
+      item.supplierCompany || "N/A",
+      item.consignee || item.place || "N/A",
       item.commodity || "N/A",
       Number(item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0).toFixed(2),
       Number(item.brokerageRate || 0).toFixed(2),
