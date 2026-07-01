@@ -48,7 +48,6 @@ const EmployeeDashboard = () => {
   });
 
   useEffect(() => {
-    // Pre-convert logo to base64 for PDF reliability
     const convertLogo = async () => {
       try {
         const response = await fetch(logo);
@@ -186,10 +185,16 @@ const EmployeeDashboard = () => {
         },
       });
 
-      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logoBase64} />;
-      
+      const doc = (
+        <EmployeeIDCardPDF
+          user={user}
+          qrCodeData={qrCodeUrl}
+          logoUrl={logoBase64}
+        />
+      );
+
       const blob = await pdf(doc).toBlob();
-      
+
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -260,11 +265,8 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="relative min-h-screen p-4 sm:p-8 space-y-10 overflow-hidden bg-slate-50/50">
-      {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -mr-48 -mt-48 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 blur-[100px] rounded-full -ml-40 -mb-40 animate-pulse delay-700"></div>
-
-      {/* Header Section */}
       <header className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -276,10 +278,12 @@ const EmployeeDashboard = () => {
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            {getGreeting()}, <span className="text-indigo-600">{user?.name}</span>!
+            {getGreeting()},{" "}
+            <span className="text-indigo-600">{user?.name}</span>!
           </h1>
           <p className="text-slate-500 font-medium max-w-lg">
-            Ready to manage your operations? Here&apos;s your daily productivity snapshot.
+            Ready to manage your operations? Here&apos;s your daily productivity
+            snapshot.
           </p>
         </div>
 
@@ -302,8 +306,6 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </header>
-
-      {/* Stats Grid */}
       <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
         <StatCard
           icon={<FaClipboardList size={24} />}
@@ -330,10 +332,7 @@ const EmployeeDashboard = () => {
           glowColor="shadow-amber-200/50"
         />
       </div>
-
-      {/* Profile & Detailed Section */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
-        {/* Profile Card */}
         <div className="lg:col-span-2 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden group hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-700">
           <div className="p-8 sm:p-10 border-b border-slate-100/60 flex items-center justify-between bg-gradient-to-r from-slate-50/50 to-transparent">
             <div className="flex items-center gap-4">
@@ -368,48 +367,41 @@ const EmployeeDashboard = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="p-8 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-            <DetailItem icon={<FaUserTie className="text-indigo-500" />} label="Full Name" value={user?.name} />
-            <DetailItem icon={<FaShieldAlt className="text-blue-500" />} label="Employee ID" value={user?.employeeId} />
-            <DetailItem icon={<FaEnvelope className="text-emerald-500" />} label="Email Address" value={user?.email} />
-            <DetailItem icon={<FaPhone className="text-amber-500" />} label="Mobile Number" value={user?.mobile} />
-            <DetailItem icon={<FaVenusMars className="text-rose-500" />} label="Gender" value={user?.sex} />
-            <DetailItem icon={<FaShieldAlt className="text-violet-500" />} label="Current Role" value={user?.role || "Employee"} />
-          </div>
-        </div>
-
-        {/* Quick Actions / Tips Card */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden group shadow-2xl shadow-slate-300">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-1000"></div>
-          
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest text-indigo-300">
-              Quick Insights
-            </div>
-            <h3 className="text-2xl font-black tracking-tight leading-tight">
-              Operational <br /> Excellence Tip
-            </h3>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Did you know? You can use the **Saria AI Agent** at the bottom right to quickly track any vehicle or find sauda details just by typing its number.
-            </p>
-          </div>
-
-          <div className="relative z-10 mt-10 p-6 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <FaBolt size={14} />
-              </div>
-              <span className="text-xs font-black uppercase tracking-widest">Power Tool</span>
-            </div>
-            <p className="text-slate-300 text-xs font-bold leading-relaxed italic">
-              &quot;Efficiency is doing things right; effectiveness is doing the right things.&quot;
-            </p>
+            <DetailItem
+              icon={<FaUserTie className="text-indigo-500" />}
+              label="Full Name"
+              value={user?.name}
+            />
+            <DetailItem
+              icon={<FaShieldAlt className="text-blue-500" />}
+              label="Employee ID"
+              value={user?.employeeId}
+            />
+            <DetailItem
+              icon={<FaEnvelope className="text-emerald-500" />}
+              label="Email Address"
+              value={user?.email}
+            />
+            <DetailItem
+              icon={<FaPhone className="text-amber-500" />}
+              label="Mobile Number"
+              value={user?.mobile}
+            />
+            <DetailItem
+              icon={<FaVenusMars className="text-rose-500" />}
+              label="Gender"
+              value={user?.sex}
+            />
+            <DetailItem
+              icon={<FaShieldAlt className="text-violet-500" />}
+              label="Current Role"
+              value={user?.role || "Employee"}
+            />
           </div>
         </div>
       </div>
-
-      {/* Work Status Section */}
       <div className="relative z-10 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
         <div className="p-8 sm:p-10 border-b border-slate-100/60 flex items-center justify-between bg-gradient-to-r from-slate-50/50 to-transparent">
           <div className="flex items-center gap-4">
@@ -441,7 +433,9 @@ const EmployeeDashboard = () => {
             </div>
           ) : works.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-500 font-medium">No work items yet. Add your first task!</p>
+              <p className="text-slate-500 font-medium">
+                No work items yet. Add your first task!
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -453,11 +447,17 @@ const EmployeeDashboard = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-slate-900">{work.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(work.status)}`}>
+                        <h3 className="text-lg font-bold text-slate-900">
+                          {work.title}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(work.status)}`}
+                        >
                           {work.status}
                         </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(work.priority)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(work.priority)}`}
+                        >
                           {work.priority}
                         </span>
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
@@ -465,29 +465,36 @@ const EmployeeDashboard = () => {
                         </span>
                       </div>
                       {work.description && (
-                        <p className="text-slate-600 text-sm mb-3">{work.description}</p>
+                        <p className="text-slate-600 text-sm mb-3">
+                          {work.description}
+                        </p>
                       )}
                       {work.dueDate && (
                         <div className="flex items-center gap-2 text-sm text-slate-500">
                           <FaCalendarCheck />
-                          <span>Due: {new Date(work.dueDate).toLocaleDateString()}</span>
+                          <span>
+                            Due: {new Date(work.dueDate).toLocaleDateString()}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
-                      {work.status !== "Completed" && work.status !== "Cancelled" && (
-                        <select
-                          value={work.status}
-                          onChange={(e) => handleUpdateWorkStatus(work._id, e.target.value)}
-                          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Assigned">Assigned</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      )}
+                      {work.status !== "Completed" &&
+                        work.status !== "Cancelled" && (
+                          <select
+                            value={work.status}
+                            onChange={(e) =>
+                              handleUpdateWorkStatus(work._id, e.target.value)
+                            }
+                            className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -496,20 +503,24 @@ const EmployeeDashboard = () => {
           )}
         </div>
       </div>
-
-      {/* Add Work Modal */}
       {showAddWorkModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[2rem] max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100">
-              <h2 className="text-xl font-black text-slate-900">Add New Work</h2>
+              <h2 className="text-xl font-black text-slate-900">
+                Add New Work
+              </h2>
             </div>
             <form onSubmit={handleAddWork} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Work Type</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Work Type
+                </label>
                 <select
                   value={newWork.workType}
-                  onChange={(e) => setNewWork({ ...newWork, workType: e.target.value })}
+                  onChange={(e) =>
+                    setNewWork({ ...newWork, workType: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="Loading Entry">Loading Entry</option>
@@ -519,30 +530,42 @@ const EmployeeDashboard = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Title
+                </label>
                 <input
                   type="text"
                   value={newWork.title}
-                  onChange={(e) => setNewWork({ ...newWork, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewWork({ ...newWork, title: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Description
+                </label>
                 <textarea
                   value={newWork.description}
-                  onChange={(e) => setNewWork({ ...newWork, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewWork({ ...newWork, description: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   rows={3}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Priority</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Priority
+                  </label>
                   <select
                     value={newWork.priority}
-                    onChange={(e) => setNewWork({ ...newWork, priority: e.target.value })}
+                    onChange={(e) =>
+                      setNewWork({ ...newWork, priority: e.target.value })
+                    }
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     <option value="Low">Low</option>
@@ -552,11 +575,15 @@ const EmployeeDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Due Date</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Due Date
+                  </label>
                   <input
                     type="date"
                     value={newWork.dueDate}
-                    onChange={(e) => setNewWork({ ...newWork, dueDate: e.target.value })}
+                    onChange={(e) =>
+                      setNewWork({ ...newWork, dueDate: e.target.value })
+                    }
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
@@ -587,11 +614,17 @@ const EmployeeDashboard = () => {
 };
 
 const StatCard = ({ icon, label, value, trend, gradient, glowColor }) => (
-  <div className={`relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group hover:shadow-2xl transition-all duration-500 overflow-hidden ${glowColor}`}>
-    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] rounded-bl-[5rem] group-hover:opacity-[0.08] transition-opacity duration-500`}></div>
-    
+  <div
+    className={`relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group hover:shadow-2xl transition-all duration-500 overflow-hidden ${glowColor}`}
+  >
+    <div
+      className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] rounded-bl-[5rem] group-hover:opacity-[0.08] transition-opacity duration-500`}
+    ></div>
+
     <div className="relative z-10 flex items-start justify-between mb-6">
-      <div className={`p-4 rounded-2xl bg-gradient-to-br ${gradient} text-white shadow-xl shadow-current/20 group-hover:scale-110 transition-transform duration-500`}>
+      <div
+        className={`p-4 rounded-2xl bg-gradient-to-br ${gradient} text-white shadow-xl shadow-current/20 group-hover:scale-110 transition-transform duration-500`}
+      >
         {icon}
       </div>
       <div className="text-right">
@@ -603,7 +636,7 @@ const StatCard = ({ icon, label, value, trend, gradient, glowColor }) => (
         </h4>
       </div>
     </div>
-    
+
     <div className="relative z-10 flex items-center gap-2 mt-4">
       <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
