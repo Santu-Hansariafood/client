@@ -5,6 +5,8 @@ import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaTachometerAlt, FaClipboardList, FaCalendarCheck } from "react-icons/fa";
 import DashboardBlogSection from "../Blog/components/DashboardBlogSection";
+import DateRangeSelector from "../../common/DateSelector/DateRangeSelector";
+import Pagination from "../../common/Paginations/Paginations";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 
@@ -24,9 +26,14 @@ const Dashboard = () => {
   const [workFilters, setWorkFilters] = useState({
     status: "",
     workType: "",
-    employeeId: ""
+    employeeId: "",
+    startDate: "",
+    endDate: ""
   });
   const [employees, setEmployees] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalWorks, setTotalWorks] = useState(0);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -76,22 +83,34 @@ const Dashboard = () => {
       if (workFilters.status) params.append("status", workFilters.status);
       if (workFilters.workType) params.append("workType", workFilters.workType);
       if (workFilters.employeeId) params.append("employeeId", workFilters.employeeId);
+      if (workFilters.startDate) params.append("startDate", workFilters.startDate);
+      if (workFilters.endDate) params.append("endDate", workFilters.endDate);
+      params.append("page", currentPage.toString());
+      params.append("limit", itemsPerPage.toString());
       
       const response = await api.get(`/employee-works?${params.toString()}`);
       setWorks(response.data.data || []);
+      setTotalWorks(response.data.total || 0);
     } catch (error) {
       toast.error("Failed to fetch employee works");
       console.error(error);
     } finally {
       setWorksLoading(false);
     }
-  }, [workFilters]);
+  }, [workFilters, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchCounts();
     fetchEmployees();
+  }, [fetchCounts, fetchEmployees]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [workFilters]);
+
+  useEffect(() => {
     fetchWorks();
-  }, [fetchCounts, fetchEmployees, fetchWorks]);
+  }, [fetchWorks]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -223,7 +242,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 mb-6 items-end">
                   <select
                     value={workFilters.employeeId}
                     onChange={(e) => setWorkFilters({ ...workFilters, employeeId: e.target.value })}
@@ -264,6 +283,13 @@ const Dashboard = () => {
                     <option value="Custom Task">Custom Task</option>
                     <option value="Other Entry">Other Entry</option>
                   </select>
+                  <DateRangeSelector
+                    startDate={workFilters.startDate}
+                    endDate={workFilters.endDate}
+                    onStartDateChange={(date) => setWorkFilters({ ...workFilters, startDate: date })}
+                    onEndDateChange={(date) => setWorkFilters({ ...workFilters, endDate: date })}
+                    onClear={() => setWorkFilters({ ...workFilters, startDate: "", endDate: "" })}
+                  />
                 </div>
 
                 {/* Works List */}
@@ -327,6 +353,20 @@ const Dashboard = () => {
                       </div>
                     ))}
                   </div>
+                )}
+                
+                {/* Pagination */}
+                {!worksLoading && works.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={totalWorks}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    onPageSizeChange={(size) => {
+                      setItemsPerPage(size);
+                      setCurrentPage(1);
+                    }}
+                  />
                 )}
               </div>
             </div>

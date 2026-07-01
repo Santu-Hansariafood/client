@@ -7,12 +7,31 @@ const router = Router();
 // Get all works (admin) with employee details
 router.get("/", async (req, res) => {
   try {
-    const { employeeId, status, workType, page = 1, limit = 20 } = req.query;
+    const { employeeId, status, workType, startDate, endDate, page = 1, limit = 20 } = req.query;
     const filter = {};
     
     if (employeeId) filter.employeeId = employeeId;
     if (status) filter.status = status;
     if (workType) filter.workType = workType;
+    
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = {
+        $gte: start,
+        $lte: end
+      };
+    } else if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.createdAt = { $gte: start };
+    } else if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = { $lte: end };
+    }
 
     const skip = (page - 1) * limit;
 
