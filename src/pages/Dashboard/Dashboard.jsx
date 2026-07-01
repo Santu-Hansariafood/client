@@ -7,6 +7,7 @@ import { FaTachometerAlt, FaClipboardList, FaCalendarCheck } from "react-icons/f
 import DashboardBlogSection from "../Blog/components/DashboardBlogSection";
 import DateRangeSelector from "../../common/DateSelector/DateRangeSelector";
 import Pagination from "../../common/Paginations/Paginations";
+import DataDropdown from "../../common/DataDropdown/DataDropdown";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 
@@ -66,7 +67,7 @@ const Dashboard = () => {
 
   const fetchEmployees = useCallback(async () => {
     try {
-      const response = await api.get("/employees");
+      const response = await api.get("/employees?limit=1000");
       // Make sure we always get an array
       const empData = response.data;
       setEmployees(Array.isArray(empData) ? empData : Array.isArray(empData.data) ? empData.data : []);
@@ -243,18 +244,24 @@ const Dashboard = () => {
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-4 mb-6 items-end">
-                  <select
-                    value={workFilters.employeeId}
-                    onChange={(e) => setWorkFilters({ ...workFilters, employeeId: e.target.value })}
-                    className="px-4 py-3 border border-slate-200 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
-                  >
-                    <option value="">All Employees</option>
-                    {employees.map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name} ({emp.employeeId})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-64">
+                    <DataDropdown
+                      options={[
+                        { value: "", label: "All Employees" },
+                        ...employees.map((emp) => ({
+                          value: emp._id,
+                          label: `${emp.name} (${emp.employeeId})`
+                        }))
+                      ]}
+                      selectedOptions={workFilters.employeeId}
+                      onChange={(selected) => {
+                        const newEmployeeId = selected?.value || "";
+                        setWorkFilters({ ...workFilters, employeeId: newEmployeeId });
+                      }}
+                      placeholder="Select Employee"
+                      isClearable={true}
+                    />
+                  </div>
                   <select
                     value={workFilters.status}
                     onChange={(e) => setWorkFilters({ ...workFilters, status: e.target.value })}
