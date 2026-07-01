@@ -262,34 +262,48 @@ const Dashboard = () => {
                       isClearable={true}
                     />
                   </div>
-                  <select
-                    value={workFilters.status}
-                    onChange={(e) => setWorkFilters({ ...workFilters, status: e.target.value })}
-                    className="px-4 py-3 border border-slate-200 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Assigned">Assigned</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                  <select
-                    value={workFilters.workType}
-                    onChange={(e) => setWorkFilters({ ...workFilters, workType: e.target.value })}
-                    className="px-4 py-3 border border-slate-200 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
-                  >
-                    <option value="">All Types</option>
-                    <option value="Loading Entry">Loading Entry</option>
-                    <option value="Sauda Management">Sauda Management</option>
-                    <option value="Bid Creation">Bid Creation</option>
-                    <option value="Bid Management">Bid Management</option>
-                    <option value="Bid Participation">Bid Participation</option>
-                    <option value="Payment Entry">Payment Entry</option>
-                    <option value="Payment Management">Payment Management</option>
-                    <option value="Custom Task">Custom Task</option>
-                    <option value="Other Entry">Other Entry</option>
-                  </select>
+                  <div className="w-64">
+                    <DataDropdown
+                      options={[
+                        { value: "", label: "All Statuses" },
+                        { value: "Pending", label: "Pending" },
+                        { value: "Assigned", label: "Assigned" },
+                        { value: "In Progress", label: "In Progress" },
+                        { value: "Completed", label: "Completed" },
+                        { value: "Cancelled", label: "Cancelled" }
+                      ]}
+                      selectedOptions={workFilters.status}
+                      onChange={(selected) => {
+                        const newStatus = selected?.value || "";
+                        setWorkFilters({ ...workFilters, status: newStatus });
+                      }}
+                      placeholder="Select Status"
+                      isClearable={true}
+                    />
+                  </div>
+                  <div className="w-64">
+                    <DataDropdown
+                      options={[
+                        { value: "", label: "All Types" },
+                        { value: "Loading Entry", label: "Loading Entry" },
+                        { value: "Sauda Management", label: "Sauda Management" },
+                        { value: "Bid Creation", label: "Bid Creation" },
+                        { value: "Bid Management", label: "Bid Management" },
+                        { value: "Bid Participation", label: "Bid Participation" },
+                        { value: "Payment Entry", label: "Payment Entry" },
+                        { value: "Payment Management", label: "Payment Management" },
+                        { value: "Custom Task", label: "Custom Task" },
+                        { value: "Other Entry", label: "Other Entry" }
+                      ]}
+                      selectedOptions={workFilters.workType}
+                      onChange={(selected) => {
+                        const newWorkType = selected?.value || "";
+                        setWorkFilters({ ...workFilters, workType: newWorkType });
+                      }}
+                      placeholder="Select Work Type"
+                      isClearable={true}
+                    />
+                  </div>
                   <DateRangeSelector
                     startDate={workFilters.startDate}
                     endDate={workFilters.endDate}
