@@ -12,8 +12,13 @@ const employeeWorkSchema = new mongoose.Schema(
       enum: [
         "Loading Entry",
         "Sauda Management",
+        "Bid Creation",
+        "Bid Management",
         "Bid Participation",
         "Custom Task",
+        "Payment Entry",
+        "Payment Management",
+        "Other Entry",
       ],
       required: true,
     },
