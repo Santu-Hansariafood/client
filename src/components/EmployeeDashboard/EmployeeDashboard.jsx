@@ -264,7 +264,7 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen p-4 sm:p-8 space-y-10 overflow-hidden bg-slate-50/50">
+    <div className="relative min-h-screen px-4 sm:px-8 py-4 sm:py-8 space-y-10 overflow-hidden bg-slate-50/50">
       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -mr-48 -mt-48 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 blur-[100px] rounded-full -ml-40 -mb-40 animate-pulse delay-700"></div>
       <header className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -332,8 +332,8 @@ const EmployeeDashboard = () => {
           glowColor="shadow-amber-200/50"
         />
       </div>
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
-        <div className="lg:col-span-2 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden group hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-700">
+      <div className="relative z-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
+        <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden group hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-700">
           <div className="p-8 sm:p-10 border-b border-slate-100/60 flex items-center justify-between bg-gradient-to-r from-slate-50/50 to-transparent">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 rotate-3 group-hover:rotate-0 transition-transform duration-500">
