@@ -11,6 +11,8 @@ import ParticipateBid from "../models/ParticipateBid.js";
 import Company from "../models/Company.js";
 import Group from "../models/Group.js";
 import Buyer from "../models/Buyer.js";
+import authJwt from "../middleware/authJwt.js";
+import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const router = Router();
 
@@ -1417,7 +1419,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authJwt, async (req, res) => {
   try {
     const data = req.body;
 
@@ -1447,6 +1449,16 @@ router.post("/", async (req, res) => {
       data.status = "active";
     }
     const item = await SelfOrder.create(data);
+    
+    await trackEmployeeWork({
+      req,
+      workType: "Sauda Management",
+      title: `Created Sauda: ${item.saudaNo || 'New'}`,
+      description: `Created sauda for ${item.commodity} with ${item.buyerCompany || 'buyer'}`,
+      relatedId: item._id.toString(),
+      status: "Completed"
+    });
+    
     res.status(201).json(item);
   } catch (error) {
     res.status(400).json({ message: error.message });

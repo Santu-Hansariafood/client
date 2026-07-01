@@ -15,6 +15,8 @@ import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Transporter from "../models/Transporter.js";
 import SellerCompany from "../models/SellerCompany.js";
+import authJwt from "../middleware/authJwt.js";
+import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2704,7 +2706,7 @@ router.post("/bulk", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authJwt, async (req, res) => {
   try {
     const data = {
       ...req.body,
@@ -2753,13 +2755,22 @@ router.post("/", async (req, res) => {
       await selfOrder.save();
     }
 
+    await trackEmployeeWork({
+      req,
+      workType: "Loading Entry",
+      title: `Created Loading Entry: ${entry.loadingNo}`,
+      description: `Created loading entry for ${entry.commodity}, ${entry.lorryNumber || 'N/A'}, sauda: ${entry.saudaNo}`,
+      relatedId: entry._id.toString(),
+      status: "Completed"
+    });
+
     res.status(201).json(entry);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", authJwt, async (req, res) => {
   try {
     const oldEntry = await LoadingEntry.findById(req.params.id);
     if (!oldEntry) return res.status(404).json({ message: "Entry not found" });
@@ -2816,6 +2827,15 @@ router.put("/:id", async (req, res) => {
         await selfOrder.save();
       }
     }
+
+    await trackEmployeeWork({
+      req,
+      workType: "Loading Entry",
+      title: `Updated Loading Entry: ${updatedEntry.loadingNo}`,
+      description: `Updated loading entry for ${updatedEntry.commodity}, ${updatedEntry.lorryNumber || 'N/A'}, sauda: ${updatedEntry.saudaNo}`,
+      relatedId: updatedEntry._id.toString(),
+      status: "Completed"
+    });
 
     res.json(updatedEntry);
   } catch (error) {

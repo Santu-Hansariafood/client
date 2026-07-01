@@ -8,6 +8,8 @@ import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
 import Company from "../models/Company.js";
 import { adminOnly } from "../middleware/roleMiddleware.js";
+import authJwt from "../middleware/authJwt.js";
+import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const router = express.Router();
 
@@ -197,7 +199,7 @@ const resolveLedgerIdForPayment = async (
   return null;
 };
 
-router.post("/", async (req, res) => {
+router.post("/", authJwt, async (req, res) => {
   try {
     const {
       date,
@@ -338,6 +340,15 @@ router.post("/", async (req, res) => {
       });
       await Promise.all(updatePromises);
     }
+
+    await trackEmployeeWork({
+      req,
+      workType: "Payment Entry",
+      title: `Created Payment Voucher #${savedPayment.voucherNumber}`,
+      description: `Created payment voucher of ₹${savedPayment.amount} for ${savedPayment.buyerCompany || "ledger"}, type: ${savedPayment.paymentType}`,
+      relatedId: savedPayment._id.toString(),
+      status: "Completed"
+    });
 
     res.status(201).json(savedPayment);
   } catch (error) {

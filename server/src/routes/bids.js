@@ -8,6 +8,8 @@ import Group from "../models/Group.js";
 import ParticipateBid from "../models/ParticipateBid.js";
 import BidLocation from "../models/BidLocation.js";
 import { invalidate } from "../middleware/cache.js";
+import authJwt from "../middleware/authJwt.js";
+import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const router = Router();
 
@@ -309,7 +311,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authJwt, async (req, res) => {
   try {
     const { bidDate, endTime, status, ...otherFields } = req.body;
     const now = new Date();
@@ -398,6 +400,15 @@ router.post("/", async (req, res) => {
       console.error("Error creating bid notifications:", notifyError);
     }
 
+    await trackEmployeeWork({
+      req,
+      workType: "Bid Creation",
+      title: `Created Bid for ${item.commodity}`,
+      description: `Created bid for ${item.commodity} from ${item.origin} to ${item.consignee}`,
+      relatedId: item._id.toString(),
+      status: "Completed"
+    });
+
     invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {
@@ -405,7 +416,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", authJwt, async (req, res) => {
   try {
     const { endTime, quantity, rate, status, bidDate, ...otherFields } =
       req.body;
@@ -469,6 +480,15 @@ router.put("/:id", async (req, res) => {
         }),
       ),
     );
+
+    await trackEmployeeWork({
+      req,
+      workType: "Bid Management",
+      title: `Updated Bid for ${updated.commodity}`,
+      description: `Updated bid for ${updated.commodity} from ${updated.origin} to ${updated.consignee}, status: ${finalStatus}`,
+      relatedId: updated._id.toString(),
+      status: "Completed"
+    });
 
     invalidate("/api/bids");
     res.json(updated);
