@@ -647,17 +647,17 @@ const StatCard = ({ icon, label, value, trend, gradient, glowColor }) => (
 );
 
 const DetailItem = ({ icon, label, value }) => (
-  <div className="group/item flex items-center gap-5">
+  <div className="group/item flex items-center gap-5 w-full min-w-0">
     <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover/item:bg-white group-hover/item:shadow-lg transition-all duration-300 border border-transparent group-hover/item:border-slate-100">
       <span className="group-hover/item:scale-110 transition-transform duration-300">
         {icon}
       </span>
     </div>
-    <div className="space-y-0.5">
+    <div className="space-y-0.5 flex-1 min-w-0">
       <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">
         {label}
       </p>
-      <p className="text-base font-black text-slate-700 tracking-tight group-hover/item:text-indigo-600 transition-colors">
+      <p className="text-base font-black text-slate-700 tracking-tight group-hover/item:text-indigo-600 transition-colors break-words">
         {value || "Not Provided"}
       </p>
     </div>
