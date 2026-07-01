@@ -525,8 +525,13 @@ const EmployeeDashboard = () => {
                 >
                   <option value="Loading Entry">Loading Entry</option>
                   <option value="Sauda Management">Sauda Management</option>
+                  <option value="Bid Creation">Bid Creation</option>
+                  <option value="Bid Management">Bid Management</option>
                   <option value="Bid Participation">Bid Participation</option>
+                  <option value="Payment Entry">Payment Entry</option>
+                  <option value="Payment Management">Payment Management</option>
                   <option value="Custom Task">Custom Task</option>
+                  <option value="Other Entry">Other Entry</option>
                 </select>
               </div>
               <div>
