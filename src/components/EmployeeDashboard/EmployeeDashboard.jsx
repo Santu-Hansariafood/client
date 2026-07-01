@@ -368,7 +368,7 @@ const EmployeeDashboard = () => {
             </div>
           </div>
 
-          <div className="p-8 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          <div className="p-8 sm:p-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-8 w-full">
             <DetailItem
               icon={<FaUserTie className="text-indigo-500" />}
               label="Full Name"
