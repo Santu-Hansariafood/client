@@ -23,8 +23,10 @@ const Dashboard = () => {
   const [worksLoading, setWorksLoading] = useState(false);
   const [workFilters, setWorkFilters] = useState({
     status: "",
-    workType: ""
+    workType: "",
+    employeeId: ""
   });
+  const [employees, setEmployees] = useState([]);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -55,12 +57,22 @@ const Dashboard = () => {
     }
   }, []);
 
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const response = await api.get("/employees");
+      setEmployees(response.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch employees");
+    }
+  }, []);
+
   const fetchWorks = useCallback(async () => {
     setWorksLoading(true);
     try {
       const params = new URLSearchParams();
       if (workFilters.status) params.append("status", workFilters.status);
       if (workFilters.workType) params.append("workType", workFilters.workType);
+      if (workFilters.employeeId) params.append("employeeId", workFilters.employeeId);
       
       const response = await api.get(`/employee-works?${params.toString()}`);
       setWorks(response.data.data || []);
@@ -74,8 +86,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchCounts();
+    fetchEmployees();
     fetchWorks();
-  }, [fetchCounts, fetchWorks]);
+  }, [fetchCounts, fetchEmployees, fetchWorks]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -208,6 +221,18 @@ const Dashboard = () => {
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-4 mb-6">
+                  <select
+                    value={workFilters.employeeId}
+                    onChange={(e) => setWorkFilters({ ...workFilters, employeeId: e.target.value })}
+                    className="px-4 py-3 border border-slate-200 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
+                  >
+                    <option value="">All Employees</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.name} ({emp.employeeId})
+                      </option>
+                    ))}
+                  </select>
                   <select
                     value={workFilters.status}
                     onChange={(e) => setWorkFilters({ ...workFilters, status: e.target.value })}
