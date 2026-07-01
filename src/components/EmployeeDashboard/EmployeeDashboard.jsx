@@ -73,7 +73,7 @@ const EmployeeDashboard = () => {
       try {
         const [bidsRes, saudasRes] = await Promise.all([
           api.get("/bids"),
-          api.get("/sodabook"),
+          api.get("/self-order"),
         ]);
 
         const bids = bidsRes.data?.data || bidsRes.data || [];
