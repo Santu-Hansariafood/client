@@ -60,9 +60,12 @@ const Dashboard = () => {
   const fetchEmployees = useCallback(async () => {
     try {
       const response = await api.get("/employees");
-      setEmployees(response.data || []);
+      // Make sure we always get an array
+      const empData = response.data;
+      setEmployees(Array.isArray(empData) ? empData : Array.isArray(empData.data) ? empData.data : []);
     } catch (error) {
       toast.error("Failed to fetch employees");
+      setEmployees([]);
     }
   }, []);
 
