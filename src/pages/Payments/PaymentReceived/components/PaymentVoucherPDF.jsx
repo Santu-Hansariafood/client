@@ -543,7 +543,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             <Text style={styles.metaValue}>{formatDate(row.date)}</Text>
           </View>
           <View style={styles.metaItem}>
-            <Text style={styles.metaLabel}>Voucher No</Text>
+            <Text style={styles.metaLabel}>Ref. No</Text>
             <Text style={styles.metaValue}>{voucherNumber || "-"}</Text>
           </View>
           <View style={styles.metaItem}>
