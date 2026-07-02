@@ -494,7 +494,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.pageBorder} fixed />
         <View style={styles.innerBorder} fixed />
 
-        {/* Header with company info and logo */}
+        {/* Header with company info and logo 
         <View style={styles.headerRow}>
           <View style={styles.companySection}>
             <Text style={styles.companyName}>
@@ -511,6 +511,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             <Image src={logo} style={styles.logo} />
           </View>
         </View>
+        */}
 
         <View style={styles.titleContainer}>
           <Text style={styles.typeTitle}>PAYMENT DETAILS</Text>
