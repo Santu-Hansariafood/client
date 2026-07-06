@@ -497,8 +497,34 @@ const SellerDashboard = () => {
           return;
         }
 
+        const totalBrokerage = (data.entries || []).reduce(
+          (sum, entry) => sum + (Number(entry.sellerBrokerage) || 0),
+          0,
+        );
+        const upiId = "MSHANSARIAFOODPRIVATELIMITED.eazypay@icici";
+        const upiName = "M/S.HANSARIA FOOD PRIVATE LIMITED";
+        const upiTxnRef = "EZYS9330433535";
+        const upiAmount = totalBrokerage.toFixed(2);
+        const upiPaymentLink =
+          `upi://pay?pa=${encodeURIComponent(upiId)}` +
+          `&pn=${encodeURIComponent(upiName)}` +
+          `&tr=${encodeURIComponent(upiTxnRef)}` +
+          `&am=${encodeURIComponent(upiAmount)}` +
+          `&cu=INR&mc=5172`;
+        const upiQrCodeUrl = await QRCode.toDataURL(upiPaymentLink, {
+          margin: 1,
+          width: 180,
+          color: { dark: "#000000", light: "#ffffff" },
+        });
+
         const blob = await pdf(
-          <ProformaInvoicePDF entries={data.entries} company={data.company} />,
+          <ProformaInvoicePDF
+            entries={data.entries}
+            company={data.company}
+            upiQrCodeUrl={upiQrCodeUrl}
+            upiId={upiId}
+            upiAmount={upiAmount}
+          />,
         ).toBlob();
 
         downloadFile(

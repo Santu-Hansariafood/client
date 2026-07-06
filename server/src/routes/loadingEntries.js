@@ -710,13 +710,24 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       ifscCode: "ICIC0006279",
       branch: "BURRA BAZAR Branch",
     };
+    const hansariaUpiDetails = {
+      upiId: "MSHANSARIAFOODPRIVATELIMITED.eazypay@icici",
+      payeeName: "M/S.HANSARIA FOOD PRIVATE LIMITED",
+      transactionRef: "EZYS9330433535",
+      merchantCode: "5172",
+    };
 
     const totalBrokerageAmount = data.reduce(
       (sum, item) => sum + (item.totalBrokerage || 0),
       0,
     );
 
-    const qrCodeData = `Hansaria Food Private Limited\nBrokerage Report\nType: ${type.toUpperCase()}\nDate: ${new Date().toLocaleDateString("en-GB")}\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}\nIFSC: ${hansariaBankDetails.ifscCode}\nBranch: ${hansariaBankDetails.branch}`;
+    const qrCodeData =
+      `upi://pay?pa=${encodeURIComponent(hansariaUpiDetails.upiId)}` +
+      `&pn=${encodeURIComponent(hansariaUpiDetails.payeeName)}` +
+      `&tr=${encodeURIComponent(hansariaUpiDetails.transactionRef)}` +
+      `&am=${encodeURIComponent(totalBrokerageAmount.toFixed(2))}` +
+      `&cu=INR&mc=${encodeURIComponent(hansariaUpiDetails.merchantCode)}`;
     const qrCodeBase64 = await QRCode.toDataURL(qrCodeData);
 
     const drawTallyHeader = (doc) => {
@@ -916,6 +927,12 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       finalY + 49,
     );
     doc.text(`Branch: ${hansariaBankDetails.branch}`, margin + 5, finalY + 53);
+    doc.text(`UPI ID: ${hansariaUpiDetails.upiId}`, margin + 5, finalY + 57);
+    doc.text(
+      `UPI Amount: Rs. ${totalBrokerageAmount.toFixed(2)}`,
+      margin + 5,
+      finalY + 61,
+    );
 
     if (qrCodeBase64) {
       doc.addImage(
@@ -928,7 +945,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       );
       doc.setFontSize(7);
       doc.text(
-        "Scan for Details",
+        "Scan & Pay UPI",
         pageWidth - margin - 40 + 12.5,
         finalY + 60,
         {
@@ -937,20 +954,20 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       );
     }
 
-    doc.line(margin, finalY + 65, pageWidth - margin, finalY + 65);
+    doc.line(margin, finalY + 68, pageWidth - margin, finalY + 68);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(
       "For HANSARIA FOOD PRIVATE LIMITED",
       pageWidth - margin - 10,
-      finalY + 75,
+      finalY + 78,
       {
         align: "right",
       },
     );
     doc.setFont("helvetica", "normal");
-    doc.text("Authorised Signatory", pageWidth - margin - 10, finalY + 90, {
+    doc.text("Authorised Signatory", pageWidth - margin - 10, finalY + 93, {
       align: "right",
     });
 
@@ -963,7 +980,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       "This document does not constitute a legal contract, proof of payment, tax invoice, financial instrument, or acknowledgment of liability."
     ];
     
-    let disclaimerY = finalY + 100;
+    let disclaimerY = finalY + 103;
     disclaimerText.forEach((textLine) => {
       const lines = doc.splitTextToSize(textLine, pageWidth - 2 * margin - 10);
       lines.forEach((line) => {

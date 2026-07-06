@@ -187,8 +187,43 @@ const styles = StyleSheet.create({
   bankRight: {
     width: "40%",
     padding: 8,
-    textAlign: "center",
     justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  paymentBox: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#000",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+
+  paymentTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+
+  qrImage: {
+    width: 70,
+    height: 70,
+    marginBottom: 4,
+  },
+
+  paymentMeta: {
+    fontSize: 7,
+    textAlign: "center",
+    lineHeight: 1.3,
+    marginTop: 1,
+  },
+
+  signatoryBox: {
+    width: "100%",
+    alignItems: "center",
   },
 
   footer: {
@@ -202,7 +237,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
+const BuyerProformaInvoicePDF = ({
+  entries = [],
+  company = {},
+  upiQrCodeUrl = "",
+  upiId = "",
+  upiAmount = 0,
+}) => {
   const totalWeight = entries.reduce(
     (sum, entry) => sum + (Number(entry.unloadingWeight) || 0),
     0,
@@ -409,11 +450,25 @@ const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
             </Text>
           </View>
           <View style={styles.bankRight}>
-            <Text style={styles.bold}>For Hansaria Food Private Limited</Text>
-            <View style={{ height: 40 }} />
-            <Text style={[styles.bold, { borderTopWidth: 1, paddingTop: 4 }]}>
-              Authorized Signatory
-            </Text>
+            <View style={styles.paymentBox}>
+              <Text style={styles.paymentTitle}>Scan & Pay via UPI</Text>
+              {upiQrCodeUrl ? (
+                <Image src={upiQrCodeUrl} style={styles.qrImage} />
+              ) : (
+                <Text style={styles.paymentMeta}>QR unavailable</Text>
+              )}
+              <Text style={styles.paymentMeta}>UPI: {upiId || "N/A"}</Text>
+              <Text style={styles.paymentMeta}>
+                Amount: Rs. {Number(upiAmount || totalBrokerage).toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.signatoryBox}>
+              <Text style={styles.bold}>For Hansaria Food Private Limited</Text>
+              <View style={{ height: 18 }} />
+              <Text style={[styles.bold, { borderTopWidth: 1, paddingTop: 4 }]}>
+                Authorized Signatory
+              </Text>
+            </View>
           </View>
         </View>
 
