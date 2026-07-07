@@ -23,6 +23,8 @@ const MisVoucherLedger = ({
   buyerCompanies = [],
   onSendEmail,
   sendingEmailIds = new Set(),
+  onEdit,
+  onDelete,
 }) => {
   return (
     <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden min-h-[360px]">
@@ -65,6 +67,8 @@ const MisVoucherLedger = ({
           buyerCompanies={buyerCompanies}
           onSendEmail={onSendEmail}
           sendingEmailIds={sendingEmailIds}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
 
         {!loading && tallyRows.length > 0 && (

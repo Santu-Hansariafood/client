@@ -45,6 +45,16 @@ const ListPaymentReceived = () => {
   const [selectedLedger, setSelectedLedger] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    date: "",
+    sellerBillNo: "",
+    remarks: "",
+    amount: "",
+    claim: "",
+    tds: ""
+  });
 
   const [opposingLedgers, setOpposingLedgers] = useState([]);
   const [saudas, setSaudas] = useState([]);
@@ -1532,6 +1542,48 @@ const ListPaymentReceived = () => {
     }
   };
 
+  const handleEdit = (payment) => {
+    setSelectedPayment(payment);
+    setEditFormData({
+      date: payment.date ? new Date(payment.date).toISOString().split("T")[0] : "",
+      sellerBillNo: payment.sellerBillNo || "",
+      remarks: payment.remarks || "",
+      amount: payment.amount || "",
+      claim: payment.claim || "",
+      tds: payment.tds || ""
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this payment?")) {
+      try {
+        setLoading(true);
+        await api.delete(`/payment-received/${id}`);
+        toast.success("Payment deleted successfully!");
+        fetchPayments();
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Error deleting payment");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      setLoading(true);
+      await api.put(`/payment-received/${selectedPayment._id}`, editFormData);
+      toast.success("Payment updated successfully!");
+      setIsEditModalOpen(false);
+      fetchPayments();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error updating payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLedgerTypeChange = (value) => {
     setPage(1);
     setSelectedLedger(null);
@@ -1683,6 +1735,8 @@ const ListPaymentReceived = () => {
                   buyerCompanies={buyerCompanies}
                   onSendEmail={handleSendIndividualEmail}
                   sendingEmailIds={sendingEmailIds}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
                 />
               )}
             </>
@@ -1692,6 +1746,85 @@ const ListPaymentReceived = () => {
             </div>
           )}
         </div>
+
+        {/* Edit Payment Modal */}
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold text-slate-800 mb-4">Edit Payment</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={editFormData.date}
+                    onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Seller Bill No</label>
+                  <input
+                    type="text"
+                    value={editFormData.sellerBillNo}
+                    onChange={(e) => setEditFormData({ ...editFormData, sellerBillNo: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Amount</label>
+                  <input
+                    type="number"
+                    value={editFormData.amount}
+                    onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Claim</label>
+                  <input
+                    type="number"
+                    value={editFormData.claim}
+                    onChange={(e) => setEditFormData({ ...editFormData, claim: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">TDS</label>
+                  <input
+                    type="number"
+                    value={editFormData.tds}
+                    onChange={(e) => setEditFormData({ ...editFormData, tds: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Remarks</label>
+                  <textarea
+                    value={editFormData.remarks}
+                    onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminPageShell>
   );
