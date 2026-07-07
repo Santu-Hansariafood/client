@@ -315,6 +315,14 @@ _${fileUrl || "PDF Link Not Available"}_
 
 *https://bid.hansariafood.in*`;
 
+        // Call the automatic WhatsApp API
+        try {
+          const apiUrl = `http://wapp.nkinfo.in/wapp/v2/api/send?apikey=a44983c9243e434f9466158a2eca54d8&mobile=${finalMobile}&msg=${encodeURIComponent(finalMessage)}`;
+          await fetch(apiUrl);
+        } catch (apiErr) {
+          console.warn("Automatic WhatsApp API call failed", apiErr);
+        }
+
         const isMobileDevice =
           /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
             navigator.userAgent,
@@ -412,14 +420,12 @@ _${fileUrl || "PDF Link Not Available"}_
       "PO Number",
       "Buyer Company",
       userRole === "Admin" ? "Buyer Mobile" : null,
-      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
       "Consignee",
       "Commodity",
       "Quantity",
       "Rate",
       "Seller",
       userRole === "Admin" || userRole === "Employee" ? "Seller Mobile" : null,
-      userRole === "Admin" || userRole === "Employee" ? "Seller Emails" : null,
       "Agent Name",
       userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
       userRole === "Admin" || userRole === "Employee" ? "Action" : null,
@@ -609,15 +615,6 @@ _${fileUrl || "PDF Link Not Available"}_
             </div>
           ) : null,
 
-          userRole === "Admin" || userRole === "Employee" ? (
-            <span
-              key={`bemails-${item._id}`}
-              className="text-xs text-slate-500 line-clamp-1"
-            >
-              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
-            </span>
-          ) : null,
-
           getConsigneeDisplay(item) || "N/A",
           <span key={`comm-${item._id}`} className="font-bold text-slate-700">
             {item.commodity || "N/A"}
@@ -651,15 +648,6 @@ _${fileUrl || "PDF Link Not Available"}_
                 </button>
               )}
             </div>
-          ) : null,
-
-          userRole === "Admin" || userRole === "Employee" ? (
-            <span
-              key={`seller-emails-${item._id}`}
-              className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]"
-            >
-              {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
-            </span>
           ) : null,
 
           item.agentName || "N/A",
