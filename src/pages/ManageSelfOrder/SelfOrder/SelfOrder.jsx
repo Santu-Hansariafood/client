@@ -293,6 +293,70 @@ const SelfOrder = () => {
         } catch (emailError) {
           console.error("Auto email error:", emailError);
         }
+
+        // Function to send WhatsApp
+        const sendWhatsApp = async (mobileValue) => {
+          if (!mobileValue) return;
+          const cleanMobile = String(mobileValue).replace(/\D/g, "");
+          if (!cleanMobile || cleanMobile.length < 10) return;
+          let finalMobile = cleanMobile;
+          if (finalMobile.length === 10) {
+            finalMobile = `91${finalMobile}`;
+          }
+          finalMobile = finalMobile.replace(/^0+/, "");
+
+          const formattedSaudaDate = createdOrder.poDate
+            ? new Date(createdOrder.poDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
+            : createdOrder.createdAt
+              ? new Date(createdOrder.createdAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "N/A";
+
+          const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
+
+*SAUDA CONFIRMATION*
+
+*Date:* -  _${formattedSaudaDate}_
+*Sauda No:* -  _${createdOrder.saudaNo || "N/A"}_
+*PO Number:* -  _${createdOrder.poNumber || "N/A"}_
+*Buyer Company:* -  _${createdOrder.buyerCompany || createdOrder.buyer || "N/A"}_
+*Supplier Company:* -  _${createdOrder.supplierCompany || createdOrder.supplier || "N/A"}_
+*Delivery Address:* -  _${createdOrder.consignee || "N/A"}_
+*Commodity:* -  _${createdOrder.commodity || "N/A"}_
+*Quantity:* -  _${createdOrder.quantity || "0"} Tons_
+*Rate:* -  _₹${createdOrder.rate || "0"}${
+            Number(createdOrder.gst) > 0 ? ` + ${createdOrder.gst}% GST` : ""
+          }_
+${
+  createdOrder.cd && createdOrder.cd !== "0" && createdOrder.cd !== 0 && createdOrder.cd !== "N/A"
+    ? `*CD:* -  _${createdOrder.cd}_`
+    : ""
+}
+*Payment Terms:* -  _${createdOrder.paymentTerms || "N/A"} Days_
+
+*Thank You,*
+*Hansaria Food Private Limited*
+
+*https://bid.hansariafood.in*`;
+
+          try {
+            const apiUrl = `http://wapp.nkinfo.in/wapp/v2/api/send?apikey=a44983c9243e434f9466158a2eca54d8&mobile=${finalMobile}&msg=${encodeURIComponent(finalMessage)}`;
+            await fetch(apiUrl);
+          } catch (apiErr) {
+            console.warn("Automatic WhatsApp API call failed", apiErr);
+          }
+        };
+
+        // Send to both buyer and seller if mobile numbers are present
+        await sendWhatsApp(createdOrder.buyerMobile);
+        await sendWhatsApp(createdOrder.sellerMobile);
       });
 
       resetForm();

@@ -633,18 +633,18 @@ _${fileUrl || "PDF Link Not Available"}_
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
           </span>,
 
-          userRole === "Admin" || userRole === "Employee" ? (
+          userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`seller-mob-${item._id}`}>
-              <span className="font-bold text-slate-700 text-xs">
+              <span className="font-medium text-slate-600">
                 {item.sellerMobile || "N/A"}
               </span>
-              {item.sellerMobile && userRole === "Admin" && (
+              {item.sellerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "seller")}
-                  className="text-emerald-500 hover:scale-110 transition-transform"
+                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
                   title="Share on WhatsApp"
                 >
-                  <FaWhatsapp size={16} />
+                  <FaWhatsapp size={20} />
                 </button>
               )}
             </div>
