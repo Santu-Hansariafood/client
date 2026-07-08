@@ -1715,20 +1715,20 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                   Gross Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.grossAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-amber-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
                   Less: CD ({details.cdPercent}%)
                 </span>
-                <span className="h-6 px-2 rounded border border-amber-200 bg-amber-50 text-amber-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
                   Less: Bank Charges
                 </span>
                 <input
@@ -1744,30 +1744,30 @@ const AddPaymentReceived = () => {
                     ));
                   }}
                   disabled={row.isSaved && user?.role !== "Admin"}
-                  className="h-6 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[9px] font-bold outline-none tabular-nums"
+                  className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold outline-none tabular-nums"
                 />
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
                   Taxable Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.taxableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-blue-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
                   Add: GST ({details.gstPercent}%)
                 </span>
-                <span className="h-6 px-2 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-emerald-600 uppercase tracking-widest">
-                  Net Amount
+                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                  Claim Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>

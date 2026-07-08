@@ -609,11 +609,11 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             </View>
             <View style={styles.claimsTableRow}>
               <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
-              <Text style={[styles.col4, { color: "#991b1b" }]}>- {formatAmount(breakdown.cdAmount)}</Text>
+              <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
             </View>
             <View style={styles.claimsTableRow}>
               <Text style={styles.col1}>Less: Bank Charges</Text>
-              <Text style={[styles.col4, { color: "#991b1b" }]}>- {formatAmount(breakdown.bankCharges)}</Text>
+              <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
             </View>
             <View style={styles.claimsTableRow}>
               <Text style={styles.col1}>Taxable Amount</Text>
@@ -621,10 +621,10 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             </View>
             <View style={styles.claimsTableRow}>
               <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
-              <Text style={[styles.col4, { color: "#166534" }]}>+ {formatAmount(breakdown.gstAmount)}</Text>
+              <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
             </View>
             <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
-              <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount (Net Amount)</Text>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount</Text>
               <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
             </View>
           </View>

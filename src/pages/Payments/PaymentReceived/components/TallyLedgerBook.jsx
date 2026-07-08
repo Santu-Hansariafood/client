@@ -22,7 +22,7 @@ const TallyLedgerBook = ({
   const [qrLoading, setQrLoading] = useState({});
   const [voucherCounter, setVoucherCounter] = useState({});
 
-  const generateQRCode = async (row) => {
+  const generateQRCode = async (row, voucherNumber) => {
     // Extract payment details for QR code
     const getValue = (...candidates) => {
       for (const value of candidates) {
@@ -57,7 +57,7 @@ const TallyLedgerBook = ({
     const qrText = [
       "HANSARIA FOOD PRIVATE LIMITED",
       `Date: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-"}`,
-      `Voucher No: ${row.raw?.voucherNo || row.id || "-"}`,
+      `Voucher No: ${voucherNumber || row.raw?.voucherNo || row.id || "-"}`,
       `Buyer: ${row.buyerCompany || "-"}`,
       `Seller: ${row.supplierCompany || "-"}`,
       `Sauda No: ${saudaNo}`,
@@ -78,21 +78,9 @@ const TallyLedgerBook = ({
   };
 
   const handleDownloadClick = async (row) => {
-    // Generate QR code first if not in cache
-    if (!qrCache[row.id] && !qrLoading[row.id]) {
-      setQrLoading((prev) => ({ ...prev, [row.id]: true }));
-      try {
-        const qrUrl = await generateQRCode(row);
-        setQrCache((prev) => ({ ...prev, [row.id]: qrUrl }));
-      } catch (error) {
-        console.error("Error generating QR code:", error);
-      } finally {
-        setQrLoading((prev) => ({ ...prev, [row.id]: false }));
-      }
-    }
-
-    // Assign voucher number if not already assigned
-    if (!voucherCounter[row.id]) {
+    // Assign voucher number first if not already assigned
+    let currentVoucherNumber = voucherCounter[row.id];
+    if (!currentVoucherNumber) {
       const nonOpeningRows = rows.filter(r => !r.isOpening);
       const currentIndex = nonOpeningRows.findIndex(r => r.id === row.id);
       
@@ -106,11 +94,24 @@ const TallyLedgerBook = ({
         while (usedNumbers.has(nextNumber)) {
           nextNumber++;
         }
-        
+        currentVoucherNumber = nextNumber;
         setVoucherCounter((prev) => ({
           ...prev,
           [row.id]: nextNumber
         }));
+      }
+    }
+
+    // Generate QR code with the voucher number
+    if (!qrCache[row.id] && !qrLoading[row.id]) {
+      setQrLoading((prev) => ({ ...prev, [row.id]: true }));
+      try {
+        const qrUrl = await generateQRCode(row, currentVoucherNumber);
+        setQrCache((prev) => ({ ...prev, [row.id]: qrUrl }));
+      } catch (error) {
+        console.error("Error generating QR code:", error);
+      } finally {
+        setQrLoading((prev) => ({ ...prev, [row.id]: false }));
       }
     }
   };
@@ -268,6 +269,7 @@ const TallyLedgerBook = ({
                                   buyerCompany={buyerCompany}
                                   sellerCompany={sellerCompany}
                                   qrCodeUrl={qrCache[row.id]}
+                                  voucherNumber={voucherCounter[row.id]}
                                 />
                               }
                               fileName={`Payment_Voucher_${
