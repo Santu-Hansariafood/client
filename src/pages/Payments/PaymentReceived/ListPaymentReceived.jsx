@@ -889,29 +889,33 @@ const ListPaymentReceived = () => {
           "BILL NO",
           "BUYER",
           "SELLER",
-          "DEBIT",
-          "CREDIT",
-          "BALANCE",
+          "DEBIT (Rs.)",
+          "CREDIT (Rs.)",
+          "BALANCE (Rs.)",
           "REMARKS",
         ],
       ],
       body: tableData,
       theme: "grid",
       headStyles: {
-        fillColor: [30, 58, 95],
-        textColor: [255, 255, 255],
+        fillColor: [200, 200, 200],
+        textColor: [0, 0, 0],
         fontSize: 7,
         fontStyle: "bold",
         halign: "center",
-        lineWidth: 0.1,
-        lineColor: [0, 0, 0],
+        lineWidth: 0.2,
+        lineColor: [100, 100, 100],
       },
       styles: {
         fontSize: 6,
-        cellPadding: 1.5,
+        cellPadding: 2,
         valign: "middle",
         textColor: [0, 0, 0],
-        lineColor: [0, 0, 0],
+        lineColor: [100, 100, 100],
+        lineWidth: 0.1,
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
       },
       columnStyles: {
         0: { halign: "center", cellWidth: 8 },
@@ -929,24 +933,28 @@ const ListPaymentReceived = () => {
       margin: { left: margin, right: margin },
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
-        doc.setFontSize(8);
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(100, 100, 100);
+        doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+        doc.setFontSize(7);
         doc.setTextColor(0, 0, 0);
         doc.text(
           `Page ${data.pageNumber} of ${pageCount}`,
-          pageWidth - margin,
-          pageHeight - 10,
-          { align: "right" },
+          pageWidth / 2,
+          pageHeight - 8,
+          { align: "center" },
         );
         doc.text(
           `Printed on: ${new Date().toLocaleString()}`,
           margin,
-          pageHeight - 10,
+          pageHeight - 8,
         );
+        doc.text("Confidential", pageWidth - margin, pageHeight - 8, { align: "right" });
       },
     });
 
     const finalY = doc.lastAutoTable?.finalY || 70;
-    let summaryY = finalY + 15;
+    let summaryY = finalY + 12;
 
     let totalDebit = 0;
     let totalCredit = 0;
@@ -958,53 +966,45 @@ const ListPaymentReceived = () => {
     });
     const difference = totalDebit - totalCredit;
 
-    // Calculate column positions
-    const col1X = margin;
-    const col2X = pageWidth / 2;
-    const col3X = pageWidth - margin;
+    // Summary box
+    const boxHeight = 25;
+    doc.setFillColor(200, 200, 200);
+    doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
 
-    doc.setFillColor(230, 230, 230);
-    doc.roundedRect(col1X, summaryY - 8, pageWidth - 2 * margin, 40, 3, 3, "F");
+    // Draw borders and dividers
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
+    doc.line(margin + (pageWidth - 2 * margin) / 3, summaryY, margin + (pageWidth - 2 * margin) / 3, summaryY + boxHeight);
+    doc.line(margin + 2 * (pageWidth - 2 * margin) / 3, summaryY, margin + 2 * (pageWidth - 2 * margin) / 3, summaryY + boxHeight);
+    doc.line(margin, summaryY + boxHeight / 2, pageWidth - margin, summaryY + boxHeight / 2);
 
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    
+
     // Total Debit
-    doc.text("Total Debit:", col1X + 5, summaryY + 5);
-    doc.text(
-      `Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      col2X - 10,
-      summaryY + 5,
-      { align: "right" }
-    );
+    doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 6, summaryY + 8, { align: "center" });
+    doc.text(totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 6, summaryY + 18, { align: "center" });
 
     // Total Credit
-    doc.text("Total Credit:", col2X + 10, summaryY + 5);
-    doc.text(
-      `Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      col3X - 5,
-      summaryY + 5,
-      { align: "right" }
-    );
+    doc.text("TOTAL CREDIT", margin + (pageWidth - 2 * margin) / 2, summaryY + 8, { align: "center" });
+    doc.text(totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 2, summaryY + 18, { align: "center" });
 
     // Difference
-    doc.setFillColor(30, 58, 95);
     doc.setTextColor(255, 255, 255);
-    doc.roundedRect(col1X + 5, summaryY + 13, pageWidth - 2 * margin - 10, 18, 3, 3, "F");
-    
-    doc.setFontSize(12);
-    doc.text("Difference:", col1X + 10, summaryY + 25);
+    doc.setFillColor(30, 58, 95);
+    doc.rect(margin + 2 * (pageWidth - 2 * margin) / 3, summaryY, (pageWidth - 2 * margin) / 3, boxHeight, "F");
+    doc.text("DIFFERENCE", margin + 5 * (pageWidth - 2 * margin) / 6, summaryY + 8, { align: "center" });
     
     const differenceText = difference > 0 
-      ? `Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Debit Balance)`
+      ? `${difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Dr`
       : difference < 0
-      ? `Rs. ${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Credit Balance)`
-      : "Nil";
-    doc.text(differenceText, col3X - 10, summaryY + 25, { align: "right" });
-    
+      ? `${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })} Cr`
+      : "NIL";
+    doc.text(differenceText, margin + 5 * (pageWidth - 2 * margin) / 6, summaryY + 18, { align: "center" });
     doc.setTextColor(0, 0, 0);
-    summaryY += 35;
+    summaryY += boxHeight + 10;
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
