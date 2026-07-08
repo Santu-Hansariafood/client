@@ -484,8 +484,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
   };
 
   // Try to extract from mappings first (for PaymentReceived)
-  const firstMapping = row.raw?.mappings?.[0];
-  const loadingEntry = firstMapping?.loadingEntryId;
+  // firstMapping and loadingEntry already declared above!
   
   const billNo = getValue(
     loadingEntry?.billNumber,
