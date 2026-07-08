@@ -946,7 +946,7 @@ const ListPaymentReceived = () => {
     });
 
     const finalY = doc.lastAutoTable?.finalY || 70;
-    const summaryY = finalY + 10;
+    let summaryY = finalY + 15;
 
     let totalDebit = 0;
     let totalCredit = 0;
@@ -956,20 +956,55 @@ const ListPaymentReceived = () => {
         totalCredit += row.credit || 0;
       }
     });
+    const difference = totalDebit - totalCredit;
 
-    doc.setFontSize(10);
+    // Calculate column positions
+    const col1X = margin;
+    const col2X = pageWidth / 2;
+    const col3X = pageWidth - margin;
+
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(col1X, summaryY - 8, pageWidth - 2 * margin, 40, 3, 3, "F");
+
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    
+    // Total Debit
+    doc.text("Total Debit:", col1X + 5, summaryY + 5);
     doc.text(
-      `Total Debit: Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      margin,
-      summaryY,
+      `Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      col2X - 10,
+      summaryY + 5,
+      { align: "right" }
     );
+
+    // Total Credit
+    doc.text("Total Credit:", col2X + 10, summaryY + 5);
     doc.text(
-      `Total Credit: Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      pageWidth - margin,
-      summaryY,
-      { align: "right" },
+      `Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      col3X - 5,
+      summaryY + 5,
+      { align: "right" }
     );
+
+    // Difference
+    doc.setFillColor(30, 58, 95);
+    doc.setTextColor(255, 255, 255);
+    doc.roundedRect(col1X + 5, summaryY + 13, pageWidth - 2 * margin - 10, 18, 3, 3, "F");
+    
+    doc.setFontSize(12);
+    doc.text("Difference:", col1X + 10, summaryY + 25);
+    
+    const differenceText = difference > 0 
+      ? `Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Debit Balance)`
+      : difference < 0
+      ? `Rs. ${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Credit Balance)`
+      : "Nil";
+    doc.text(differenceText, col3X - 10, summaryY + 25, { align: "right" });
+    
+    doc.setTextColor(0, 0, 0);
+    summaryY += 35;
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
