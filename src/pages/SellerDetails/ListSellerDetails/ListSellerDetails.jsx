@@ -56,6 +56,7 @@ const ListSellerDetails = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
+  const [popupMode, setPopupMode] = useState("view");
 
   const statusOptions = [
     { value: "active", label: "Active" },

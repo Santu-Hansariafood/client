@@ -44,7 +44,7 @@ const EditSellerDetails = ({
   const [selectedCommodity, setSelectedCommodity] = useState([]);
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
   const [selectedCompany, setSelectedCompany] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState("active");
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [fullSellerData, setFullSellerData] = useState({});
@@ -125,7 +125,8 @@ const EditSellerDetails = ({
         const selectedCommNames = (sellerData.commodities || []).map(
           (c) => c.name || c,
         );
-        setSelectedCommodity(selectedCommNames);
+        const selectedCommoditiesObjs = commOpts.filter(opt => selectedCommNames.includes(opt.value));
+        setSelectedCommodity(selectedCommoditiesObjs);
 
         setBrokerageAmounts(
           (sellerData.commodities || []).reduce(
@@ -140,7 +141,8 @@ const EditSellerDetails = ({
         const selectedCompNames = (sellerData.companies || []).map(
           (c) => c.companyName || c.name || c,
         );
-        setSelectedCompany(selectedCompNames);
+        const selectedCompaniesObjs = compOpts.filter(opt => selectedCompNames.includes(opt.value));
+        setSelectedCompany(selectedCompaniesObjs);
 
         const selectedGroupIds = (sellerData.groups || [])
           .map((g) => {
@@ -151,9 +153,11 @@ const EditSellerDetails = ({
             return match ? match.value : null;
           })
           .filter(Boolean);
-        setSelectedGroups(selectedGroupIds);
+        const selectedGroupsObjs = grpOpts.filter(opt => selectedGroupIds.includes(opt.value));
+        setSelectedGroups(selectedGroupsObjs);
 
-        setSelectedStatus(sellerData.status || "active");
+        const statusObj = statusOptions.find(opt => opt.value === (sellerData.status || "active"));
+        setSelectedStatus(statusObj);
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error("Failed to load seller data from the server.");
@@ -166,7 +170,7 @@ const EditSellerDetails = ({
   }, [sellerId]);
 
   const handleCommodityChange = useCallback((selected) => {
-    setSelectedCommodity(selected ? selected.map((s) => s.value) : []);
+    setSelectedCommodity(selected || []);
   }, []);
 
   const handleBrokerageChange = useCallback((commodity, value) => {
@@ -205,7 +209,7 @@ const EditSellerDetails = ({
   }, []);
 
   const handleCompanyChange = useCallback((selected) => {
-    setSelectedCompany(selected ? selected.map((s) => s.value) : []);
+    setSelectedCompany(selected || []);
   }, []);
 
   const handleSubmit = async () => {
@@ -245,23 +249,19 @@ const EditSellerDetails = ({
         : [selectedCommodity]
       )
         .filter(Boolean)
-        .map((commodityName) => ({
-          name: commodityName,
-          brokerage: brokerageAmounts[commodityName] || 0,
+        .map((commodityObj) => ({
+          name: commodityObj.value,
+          brokerage: brokerageAmounts[commodityObj.value] || 0,
         })),
-      companies: selectedCompany,
-      status:
-        typeof selectedStatus === "string"
-          ? selectedStatus
-          : selectedStatus?.value,
+      companies: selectedCompany.map(obj => obj.value),
+      status: selectedStatus?.value,
       groups: (Array.isArray(selectedGroups)
         ? selectedGroups
         : [selectedGroups]
       )
         .filter(Boolean)
-        .map((groupId) => {
-          const group = groupOptions.find((g) => g.value === groupId);
-          return { name: group?.label || groupId };
+        .map((groupObj) => {
+          return { name: groupObj.label };
         }),
     };
 
@@ -437,22 +437,19 @@ const EditSellerDetails = ({
 
               {selectedCommodity.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  {selectedCommodity.map((commodityValue) => {
-                    const commodityLabel =
-                      commodityOptions.find((o) => o.value === commodityValue)
-                        ?.label || commodityValue;
+                  {selectedCommodity.map((commodityObj) => {
                     return (
-                      <div key={commodityValue} className="space-y-2">
+                      <div key={commodityObj.value} className="space-y-2">
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                          Brokerage for {commodityLabel}
+                          Brokerage for {commodityObj.label}
                         </label>
                         <DataInput
                           placeholder="0.00"
                           inputType="number"
-                          value={brokerageAmounts[commodityValue] || ""}
+                          value={brokerageAmounts[commodityObj.value] || ""}
                           onChange={(e) =>
                             handleBrokerageChange(
-                              commodityValue,
+                              commodityObj.value,
                               e.target.value,
                             )
                           }
