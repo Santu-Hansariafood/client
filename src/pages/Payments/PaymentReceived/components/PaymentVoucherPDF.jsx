@@ -624,7 +624,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
               <Text style={[styles.col4, { color: "#166534" }]}>+ {formatAmount(breakdown.gstAmount)}</Text>
             </View>
             <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
-              <Text style={[styles.col1, { fontWeight: "bold" }]}>Net Amount</Text>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount (Net Amount)</Text>
               <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
             </View>
           </View>
