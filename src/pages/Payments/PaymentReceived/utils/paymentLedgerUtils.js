@@ -131,29 +131,34 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
   }
 
   sorted.forEach((item) => {
-    let debit = 0;
-    let credit = 0;
-    let particulars = "";
-    let vchType = "";
-    let buyerCompany = "";
-    let supplierCompany = "";
-    let date = "";
-    let id = "";
-
     if (item.uiType === 'entry') {
       // It's a bill (Loading Entry) -> Debit for Buyer
       const weight = item.unloadingWeight || item.loadingWeight || 0;
       const rate = item.actualRate || item.rate || 0;
       const netAmount = weight * rate; // Simplified for ledger view, actual math is complex
       
-      debit = item.netAmount || netAmount;
-      credit = 0;
-      particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
-      vchType = "Bill";
-      buyerCompany = item.buyerCompany || "";
-      supplierCompany = item.supplierCompany || "";
-      date = item.loadingDate;
-      id = `entry-${item._id}`;
+      const debit = item.netAmount || netAmount;
+      const credit = 0;
+      const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+      const vchType = "Bill";
+      const buyerCompany = item.buyerCompany || "";
+      const supplierCompany = item.supplierCompany || "";
+      const date = item.loadingDate;
+      const id = `entry-${item._id}`;
+
+      balance = balance + debit - credit;
+      rows.push({
+        id,
+        date,
+        particulars,
+        vchType,
+        buyerCompany,
+        supplierCompany,
+        debit,
+        credit,
+        balance,
+        raw: item,
+      });
     } else {
       // It's a payment
       const payment = item;
@@ -161,50 +166,73 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         (sum, m) => sum + (Number(m.allocatedAmount) || 0),
         0,
       );
-      const amount = Number(payment.amount) || mappedTotal || 0;
+      const totalPaymentAmount = (Number(payment.amount) || 0) + (Number(payment.claim) || 0) + (Number(payment.tds) || 0);
       const isBuyer = payment.ledgerType === "Buyer";
       const paymentType = payment.paymentType || "";
 
-      if (isBuyer) {
-        if (paymentType === "Advance") {
-          credit = amount;
-        } else if (paymentType === "Adjustment") {
-          debit = amount;
+      const sellerFromMapping = payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
+      const buyerFromMapping = payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
+      const buyerCompany = payment.buyerCompany || buyerFromMapping || "";
+      const supplierCompany = payment.supplierCompany || sellerFromMapping || "";
+      const date = payment.date;
+
+      // First add row for mapped amount
+      if (mappedTotal > 0) {
+        let mappedCredit = 0;
+        let mappedDebit = 0;
+        if (isBuyer) {
+          if (paymentType === "Adjustment") {
+            mappedDebit = mappedTotal;
+          } else {
+            mappedCredit = mappedTotal;
+          }
         } else {
-          credit = amount;
+          mappedDebit = mappedTotal;
         }
-      } else {
-        debit = amount;
+        balance = balance + mappedDebit - mappedCredit;
+        rows.push({
+          id: `${payment._id}-mapped`,
+          date,
+          particulars: buildPaymentParticulars(payment),
+          vchType: payment.paymentType || payment.paymentMode || "—",
+          buyerCompany,
+          supplierCompany,
+          debit: mappedDebit,
+          credit: mappedCredit,
+          balance,
+          raw: item,
+        });
       }
-      
-      particulars = buildPaymentParticulars(payment);
-      vchType = payment.paymentType || payment.paymentMode || "—";
-      
-      const sellerFromMapping =
-        payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
-      const buyerFromMapping =
-        payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
-      
-      buyerCompany = payment.buyerCompany || buyerFromMapping || "";
-      supplierCompany = payment.supplierCompany || sellerFromMapping || "";
-      date = payment.date;
-      id = payment._id;
+
+      // Now add On Account row if there's unadjusted amount
+      const unadjustedAmount = totalPaymentAmount - mappedTotal;
+      if (unadjustedAmount > 0.01) { // Tolerance for floating point errors
+        let unadjustedCredit = 0;
+        let unadjustedDebit = 0;
+        if (isBuyer) {
+          if (paymentType === "Adjustment") {
+            unadjustedDebit = unadjustedAmount;
+          } else {
+            unadjustedCredit = unadjustedAmount;
+          }
+        } else {
+          unadjustedDebit = unadjustedAmount;
+        }
+        balance = balance + unadjustedDebit - unadjustedCredit;
+        rows.push({
+          id: `${payment._id}-on-account`,
+          date,
+          particulars: "On Account",
+          vchType: payment.paymentType || payment.paymentMode || "—",
+          buyerCompany,
+          supplierCompany,
+          debit: unadjustedDebit,
+          credit: unadjustedCredit,
+          balance,
+          raw: item,
+        });
+      }
     }
-
-    balance = balance + debit - credit;
-
-    rows.push({
-      id,
-      date,
-      particulars,
-      vchType,
-      buyerCompany,
-      supplierCompany,
-      debit,
-      credit,
-      balance,
-      raw: item,
-    });
   });
 
   return rows;
