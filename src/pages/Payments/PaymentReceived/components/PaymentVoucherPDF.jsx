@@ -433,7 +433,9 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
       .filter(c => Number(c.claimAmount) > 0)
       .reduce((sum, c) => sum + Number(c.claimAmount), 0);
   }
-  const finalAmount = hasClaims && totalAmount > 0 ? totalAmount - totalClaims : totalAmount;
+  const paymentClaim = Number(row.raw?.claim || 0);
+  const paymentTDS = Number(row.raw?.tds || 0);
+  const finalAmount = totalAmount - (totalClaims + paymentClaim + paymentTDS);
 
   // Calculate breakdown from first mapping's loading entry
   let breakdown = null;
@@ -682,40 +684,42 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             </Text>
           </View>
           <View style={styles.totalSection}>
+            {/* TDS and Claim from payment */}
+            {Number(row.raw?.claim || 0) > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.metaLabel}>Claim:</Text>
+                <Text style={styles.metaValue}>{formatAmount(row.raw.claim)}</Text>
+              </View>
+            )}
+            {Number(row.raw?.tds || 0) > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.metaLabel}>TDS:</Text>
+                <Text style={styles.metaValue}>{formatAmount(row.raw.tds)}</Text>
+              </View>
+            )}
+            {/* Quality claims */}
             {hasClaims && (
               <View style={styles.summaryRow}>
-                <Text style={styles.metaLabel}>Total Claims:</Text>
+                <Text style={styles.metaLabel}>Total Quality Claims:</Text>
                 <Text style={styles.metaValue}>
                   {formatAmount(totalClaims)}
                 </Text>
               </View>
             )}
             <View style={styles.summaryRow}>
-              <Text style={styles.metaLabel}>Total Amount:</Text>
-              <Text style={styles.metaValue}>{formatAmount(totalAmount)}</Text>
+              <Text style={styles.metaLabel}>Payment Amount:</Text>
+              <Text style={styles.metaValue}>{formatAmount(row.raw?.amount || totalAmount)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.metaLabel}>Payment Mode:</Text>
               <Text style={styles.metaValue}>{paymentMode}</Text>
             </View>
-            {hasClaims && totalAmount > 0 && (
-              <>
-                <View style={styles.grandTotalRow}>
-                  <Text style={styles.grandTotalLabel}>Net Payable:</Text>
-                  <Text style={styles.grandTotalValue}>
-                    Rs. {formatAmount(finalAmount)}
-                  </Text>
-                </View>
-              </>
-            )}
-            {(!hasClaims || totalAmount <= 0) && (
-              <View style={styles.grandTotalRow}>
-                <Text style={styles.grandTotalLabel}>Total:</Text>
-                <Text style={styles.grandTotalValue}>
-                  Rs. {formatAmount(finalAmount)}
-                </Text>
-              </View>
-            )}
+            <View style={styles.grandTotalRow}>
+              <Text style={styles.grandTotalLabel}>Total:</Text>
+              <Text style={styles.grandTotalValue}>
+                Rs. {formatAmount(finalAmount)}
+              </Text>
+            </View>
             <View style={styles.amountInWordsRow}>
               <Text style={styles.amountInWordsLabel}>Amount in Words</Text>
               <Text style={styles.amountInWordsValue}>
