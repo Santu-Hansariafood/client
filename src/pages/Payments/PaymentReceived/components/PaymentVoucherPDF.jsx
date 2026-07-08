@@ -424,16 +424,49 @@ const renderAddressDetails = (details, type = "buyer") => {
 const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, voucherNumber }) => {
   const hasClaims =
     row.raw?.qualityClaims &&
-    row.raw.qualityClaims.filter((c) => Number(c.claimAmount) > 0).length > 0;
+    row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
 
   const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
   let totalClaims = 0;
   if (hasClaims) {
     totalClaims = row.raw.qualityClaims
-      .filter((c) => Number(c.claimAmount) > 0)
+      .filter(c => Number(c.claimAmount) > 0)
       .reduce((sum, c) => sum + Number(c.claimAmount), 0);
   }
   const finalAmount = hasClaims && totalAmount > 0 ? totalAmount - totalClaims : totalAmount;
+
+  // Calculate breakdown from first mapping's loading entry
+  let breakdown = null;
+  const firstMapping = row.raw?.mappings?.[0];
+  const loadingEntry = firstMapping?.loadingEntryId;
+  if (loadingEntry) {
+    const weight = (loadingEntry.unloadingWeight || 0) > 0 ? loadingEntry.unloadingWeight : loadingEntry.loadingWeight || 0;
+    const rate = loadingEntry.actualRate || 0;
+    const cdPercent = loadingEntry.cd || 0;
+    const gstPercent = loadingEntry.gst || 0;
+    const bankCharges = Number(loadingEntry.bankCharges) || 0;
+
+    const grossAmount = weight * rate;
+    const cdAmount = grossAmount * (cdPercent / 100);
+    const amountAfterCd = grossAmount - cdAmount;
+    const amountAfterBankCharges = amountAfterCd - bankCharges;
+    const taxableAmount = amountAfterBankCharges;
+    const gstAmount = taxableAmount * (gstPercent / 100);
+    const netAmount = taxableAmount + gstAmount;
+
+    breakdown = {
+      grossAmount,
+      cdAmount,
+      cdPercent,
+      bankCharges,
+      amountAfterCd,
+      amountAfterBankCharges,
+      taxableAmount,
+      gstAmount,
+      gstPercent,
+      netAmount
+    };
+  }
   
   // Get payment mode from raw data
   const paymentMode = row.raw?.paymentMode || "—";
@@ -559,6 +592,44 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             <Text style={styles.metaValue}>{lorryNo}</Text>
           </View>
         </View>
+
+        {/* Bill Breakdown */}
+        {breakdown && (
+          <View style={styles.claimsTable}>
+            <View style={styles.claimsTableHeader}>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>
+                Particulars
+              </Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>
+                Amount (Rs)
+              </Text>
+            </View>
+            <View style={styles.claimsTableRow}>
+              <Text style={styles.col1}>Gross Amount</Text>
+              <Text style={styles.col4}>{formatAmount(breakdown.grossAmount)}</Text>
+            </View>
+            <View style={styles.claimsTableRow}>
+              <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
+              <Text style={[styles.col4, { color: "#991b1b" }]}>- {formatAmount(breakdown.cdAmount)}</Text>
+            </View>
+            <View style={styles.claimsTableRow}>
+              <Text style={styles.col1}>Less: Bank Charges</Text>
+              <Text style={[styles.col4, { color: "#991b1b" }]}>- {formatAmount(breakdown.bankCharges)}</Text>
+            </View>
+            <View style={styles.claimsTableRow}>
+              <Text style={styles.col1}>Taxable Amount</Text>
+              <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
+            </View>
+            <View style={styles.claimsTableRow}>
+              <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
+              <Text style={[styles.col4, { color: "#166534" }]}>+ {formatAmount(breakdown.gstAmount)}</Text>
+            </View>
+            <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>Net Amount</Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
+            </View>
+          </View>
+        )}
 
         {hasClaims && (
           <View style={styles.claimsTable}>

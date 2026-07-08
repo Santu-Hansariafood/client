@@ -115,21 +115,27 @@ const AddPaymentReceived = () => {
     const rate = entry.actualRate || 0;
     const cdPercent = entry.cd || 0;
     const gstPercent = entry.gst || 0;
+    const bankCharges = entry.bankCharges || 0; // New field for bank charges
 
     const grossAmount = weight * rate;
     const cdAmount = grossAmount * (cdPercent / 100);
-    const taxableAmount = grossAmount - cdAmount;
+    const amountAfterCd = grossAmount - cdAmount;
+    const amountAfterBankCharges = amountAfterCd - bankCharges;
+    const taxableAmount = amountAfterBankCharges; // Taxable after CD and bank charges
     const gstAmount = taxableAmount * (gstPercent / 100);
     const netAmount = taxableAmount + gstAmount;
 
     return {
       grossAmount,
       cdAmount,
+      cdPercent,
+      bankCharges,
+      amountAfterCd,
+      amountAfterBankCharges,
       taxableAmount,
       gstAmount,
-      netAmount,
-      cdPercent,
       gstPercent,
+      netAmount,
       dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
     };
   };
@@ -548,6 +554,7 @@ const AddPaymentReceived = () => {
             creditNote: "Allocation posted",
             rowRemarks: "",
             isSaved: item.paymentStatus === "done",
+            bankCharges: item.bankCharges || 0, // Initialize bank charges
           })),
         );
         setEntriesTotal(
@@ -1180,6 +1187,7 @@ const AddPaymentReceived = () => {
           : "Payment received · lorry adjustment"),
       rowRemarks: "",
       isSaved: false,
+      bankCharges: entry.bankCharges || 0, // Carry over bank charges to new row
     };
     const newEntries = [...entries];
     newEntries.splice(index + 1, 0, newRow);
@@ -1670,7 +1678,7 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[850px] uppercase">
+          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[1000px] uppercase">
             <div className="mb-1 flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
@@ -1699,6 +1707,69 @@ const AddPaymentReceived = () => {
                     </span>
                   </div>
                 )}
+              </div>
+            </div>
+            {/* Bill Breakdown */}
+            <div className="grid grid-cols-6 gap-2 bg-white border border-slate-200 rounded px-3 py-2 shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                  Gross Amount
+                </span>
+                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                  ₹{details.grossAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-amber-600 uppercase tracking-widest">
+                  Less: CD ({details.cdPercent}%)
+                </span>
+                <span className="h-6 px-2 rounded border border-amber-200 bg-amber-50 text-amber-700 text-[9px] font-bold flex items-center tabular-nums">
+                  ₹{details.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
+                  Less: Bank Charges
+                </span>
+                <input
+                  type="number"
+                  value={details.bankCharges}
+                  onChange={(e) => {
+                    // Update the entry's bank charges
+                    const newBankCharges = parseFloat(e.target.value) || 0;
+                    setEntries(prev => prev.map(e => 
+                      e.uiKey === row.uiKey 
+                        ? { ...e, bankCharges: newBankCharges } 
+                        : e
+                    ));
+                  }}
+                  disabled={row.isSaved && user?.role !== "Admin"}
+                  className="h-6 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[9px] font-bold outline-none tabular-nums"
+                />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                  Taxable Amount
+                </span>
+                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                  ₹{details.taxableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-blue-600 uppercase tracking-widest">
+                  Add: GST ({details.gstPercent}%)
+                </span>
+                <span className="h-6 px-2 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[9px] font-bold flex items-center tabular-nums">
+                  ₹{details.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-emerald-600 uppercase tracking-widest">
+                  Net Amount
+                </span>
+                <span className="h-6 px-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-[9px] font-bold flex items-center tabular-nums">
+                  ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
             <div className="grid grid-cols-6 gap-3 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
