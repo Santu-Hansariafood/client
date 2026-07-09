@@ -3,6 +3,9 @@ import Seller from "../models/Seller.js";
 
 const router = Router();
 
+const escapeRegex = (value = "") =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const mapSellerForClient = (seller) => {
   const brokerageByName = {};
   if (Array.isArray(seller.commodities)) {
@@ -18,11 +21,53 @@ const mapSellerForClient = (seller) => {
   };
 };
 
+const buildSellerQuery = ({ search, mobile, commodity, company, status }) => {
+  const conditions = [];
+
+  if (mobile) {
+    conditions.push({ "phoneNumbers.value": mobile });
+  } else if (search) {
+    conditions.push({
+      sellerName: { $regex: escapeRegex(search), $options: "i" },
+    });
+  }
+
+  if (commodity) {
+    conditions.push({
+      "commodities.name": {
+        $regex: `^${escapeRegex(commodity)}$`,
+        $options: "i",
+      },
+    });
+  }
+
+  if (company) {
+    conditions.push({
+      companies: {
+        $regex: `^${escapeRegex(company)}$`,
+        $options: "i",
+      },
+    });
+  }
+
+  if (status) {
+    conditions.push({ status: status.toLowerCase() });
+  }
+
+  if (conditions.length === 0) return {};
+  if (conditions.length === 1) return conditions[0];
+
+  return { $and: conditions };
+};
+
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
-    const search = req.query.search || "";
+    const search = String(req.query.search || "").trim();
+    const commodity = String(req.query.commodity || "").trim();
+    const company = String(req.query.company || "").trim();
+    const status = String(req.query.status || "").trim();
     let mobile = String(req.query.mobile || "").trim();
     const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
     const phoneMatch = mobile.match(phoneRegex);
@@ -30,11 +75,13 @@ router.get("/", async (req, res) => {
       mobile = phoneMatch[1];
     }
 
-    const query = mobile
-      ? { "phoneNumbers.value": mobile }
-      : search
-        ? { sellerName: { $regex: search, $options: "i" } }
-        : {};
+    const query = buildSellerQuery({
+      search,
+      mobile,
+      commodity,
+      company,
+      status,
+    });
 
     if (page > 0 && limit > 0) {
       const items = await Seller.find(query)
