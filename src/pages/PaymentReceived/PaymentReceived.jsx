@@ -66,7 +66,6 @@ const PaymentReceived = () => {
       noContentCard
     >
       <div className="max-w-[1700px] mx-auto space-y-8 p-4 sm:p-6 lg:p-10">
-        {/* Header Section */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
           <div className="relative space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -105,7 +104,6 @@ const PaymentReceived = () => {
           </div>
         </div>
 
-        {/* Payment List */}
         <Suspense fallback={<Loading />}>
           <PaymentList
             payments={payments}
@@ -123,7 +121,6 @@ const PaymentReceived = () => {
           />
         </Suspense>
 
-        {/* Payment Form Modal */}
         {showForm && (
           <Suspense fallback={<Loading />}>
             <PaymentForm
@@ -136,7 +133,6 @@ const PaymentReceived = () => {
           </Suspense>
         )}
 
-        {/* Payment Details Modal */}
         {showDetails && (
           <Suspense fallback={<Loading />}>
             <PaymentDetails

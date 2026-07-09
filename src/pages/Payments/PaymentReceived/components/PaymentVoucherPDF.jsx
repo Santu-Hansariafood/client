@@ -164,6 +164,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000000",
   },
+  entryHeader: {
+    width: "100%",
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    borderBottomWidth: 0,
+    padding: 6,
+    marginTop: 8,
+  },
   claimsTable: {
     width: "100%",
     marginBottom: 12,
@@ -437,19 +447,23 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
   const paymentTDS = Number(row.raw?.tds || 0);
   const finalAmount = totalAmount - (totalClaims + paymentClaim + paymentTDS);
 
-  // Calculate breakdown from either first mapping's loading entry OR if row is an entry itself
-  let breakdown = null;
-  let loadingEntry = null;
-  // Check if row is an entry (uiType === entry)
+  // Get all entries
+  let allEntries = [];
   if (row.uiType === 'entry' || (row.raw && !row.raw.mappings && row.raw.loadingWeight)) {
-    loadingEntry = row.raw;
+    allEntries = [{
+      loadingEntry: row.raw,
+      mapping: null
+    }];
   } else {
-    // Otherwise check mappings
-    const firstMapping = row.raw?.mappings?.[0];
-    loadingEntry = firstMapping?.loadingEntryId;
+    allEntries = (row.raw?.mappings || []).map(mapping => ({
+      loadingEntry: mapping.loadingEntryId,
+      mapping: mapping
+    }));
   }
-  
-  if (loadingEntry) {
+
+  // Helper to calculate breakdown for an entry
+  const calculateBreakdown = (loadingEntry) => {
+    if (!loadingEntry) return null;
     const weight = (loadingEntry.unloadingWeight || 0) > 0 ? loadingEntry.unloadingWeight : loadingEntry.loadingWeight || 0;
     const rate = loadingEntry.actualRate || 0;
     const cdPercent = loadingEntry.cd || 0;
@@ -464,7 +478,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
     const gstAmount = taxableAmount * (gstPercent / 100);
     const netAmount = taxableAmount + gstAmount;
 
-    breakdown = {
+    return {
       grossAmount,
       cdAmount,
       cdPercent,
@@ -476,7 +490,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
       gstPercent,
       netAmount
     };
-  }
+  };
   
   // Get payment mode from raw data
   const paymentMode = row.raw?.paymentMode || "—";
@@ -493,11 +507,10 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
     return "-";
   };
 
-  // Try to extract from mappings first (for Payment Received)
-  let firstMapping = null;
-  if (!(row.uiType === 'entry' || (row.raw && !row.raw.mappings && row.raw.loadingWeight))) {
-    firstMapping = row.raw?.mappings?.[0];
-  }
+  // Get values for first entry for top metadata
+  const firstEntry = allEntries[0];
+  const loadingEntry = firstEntry?.loadingEntry;
+  const firstMapping = firstEntry?.mapping;
   
   const billNo = getValue(
     loadingEntry?.billNumber,
@@ -538,25 +551,6 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
       <Page style={styles.page} size="A4">
         <View style={styles.pageBorder} fixed />
         <View style={styles.innerBorder} fixed />
-
-        {/* Header with company info and logo 
-        <View style={styles.headerRow}>
-          <View style={styles.companySection}>
-            <Text style={styles.companyName}>
-              HANSARIA FOOD PRIVATE LIMITED
-            </Text>
-            <Text style={styles.companyDetails}>
-              Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3
-            </Text>
-            <Text style={styles.companyDetails}>
-              Bidhannagar, Kolkata, West Bengal - 700106
-            </Text>
-          </View>
-          <View style={styles.logoSection}>
-            <Image src={logo} style={styles.logo} />
-          </View>
-        </View>
-        */}
 
         <View style={styles.titleContainer}>
           <Text style={styles.typeTitle}>PAYMENT DETAILS</Text>
@@ -605,8 +599,83 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
           </View>
         </View>
 
-        {/* Bill Breakdown */}
-        {breakdown && (
+        {/* Render each entry */}
+        {allEntries.map((entry, entryIndex) => {
+          const breakdown = calculateBreakdown(entry.loadingEntry);
+          const entryBillNo = getValue(
+            entry.loadingEntry?.billNumber,
+            entry.mapping?.billNumber
+          );
+          const entrySaudaNo = getValue(
+            entry.mapping?.saudaNo,
+            entry.loadingEntry?.saudaNo
+          );
+          const entryLorryNo = getValue(
+            entry.loadingEntry?.lorryNumber
+          );
+
+          return (
+            <View key={entryIndex}>
+              {/* Entry header */}
+              {allEntries.length > 1 && (
+                <View style={styles.entryHeader}>
+                  <Text style={{ fontWeight: "bold" }}>
+                    Entry {entryIndex + 1}: {entrySaudaNo || entryLorryNo || entryBillNo || "On Account"}
+                  </Text>
+                </View>
+              )}
+              
+              {/* Bill Breakdown */}
+              {breakdown ? (
+                <View style={styles.claimsTable}>
+                  <View style={styles.claimsTableHeader}>
+                    <Text style={[styles.col1, { fontWeight: "bold" }]}>
+                      Particulars
+                    </Text>
+                    <Text style={[styles.col4, { fontWeight: "bold" }]}>
+                      Amount (Rs)
+                    </Text>
+                  </View>
+                  <View style={styles.claimsTableRow}>
+                    <Text style={styles.col1}>Gross Amount</Text>
+                    <Text style={styles.col4}>{formatAmount(breakdown.grossAmount)}</Text>
+                  </View>
+                  <View style={styles.claimsTableRow}>
+                    <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
+                    <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
+                  </View>
+                  <View style={styles.claimsTableRow}>
+                    <Text style={styles.col1}>Less: Bank Charges</Text>
+                    <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
+                  </View>
+                  <View style={styles.claimsTableRow}>
+                    <Text style={styles.col1}>Taxable Amount</Text>
+                    <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
+                  </View>
+                  <View style={styles.claimsTableRow}>
+                    <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
+                    <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
+                  </View>
+                  <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
+                    <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount</Text>
+                    <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
+                  </View>
+                  {entry.mapping?.allocatedAmount && (
+                    <View style={styles.claimsTableRow}>
+                      <Text style={styles.col1}>Allocated Amount</Text>
+                      <Text style={[styles.col4, { color: "#2e7d32", fontWeight: "bold" }]}>
+                        {formatAmount(entry.mapping.allocatedAmount)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
+
+        {/* If no entries (pure on account payment) */}
+        {allEntries.length === 0 && (
           <View style={styles.claimsTable}>
             <View style={styles.claimsTableHeader}>
               <Text style={[styles.col1, { fontWeight: "bold" }]}>
@@ -616,29 +685,9 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                 Amount (Rs)
               </Text>
             </View>
-            <View style={styles.claimsTableRow}>
-              <Text style={styles.col1}>Gross Amount</Text>
-              <Text style={styles.col4}>{formatAmount(breakdown.grossAmount)}</Text>
-            </View>
-            <View style={styles.claimsTableRow}>
-              <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
-              <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
-            </View>
-            <View style={styles.claimsTableRow}>
-              <Text style={styles.col1}>Less: Bank Charges</Text>
-              <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
-            </View>
-            <View style={styles.claimsTableRow}>
-              <Text style={styles.col1}>Taxable Amount</Text>
-              <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
-            </View>
-            <View style={styles.claimsTableRow}>
-              <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
-              <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
-            </View>
             <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
-              <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount</Text>
-              <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>On Account Payment</Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(row.raw?.amount || totalAmount)}</Text>
             </View>
           </View>
         )}
