@@ -38,6 +38,28 @@ const toTitleCase = (str) => {
     .join(" ");
 };
 
+const getSellerItemsFromResponse = (payload) => {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload)) return payload;
+  return [];
+};
+
+const getSellerTotalFromResponse = (payload, itemsLength) => {
+  const possibleTotals = [
+    payload?.total,
+    payload?.count,
+    payload?.totalItems,
+    payload?.pagination?.total,
+    payload?.meta?.total,
+  ];
+
+  const validTotal = possibleTotals.find(
+    (value) => typeof value === "number" && Number.isFinite(value),
+  );
+
+  return validTotal ?? itemsLength;
+};
+
 const ListSellerDetails = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
@@ -93,24 +115,39 @@ const ListSellerDetails = () => {
     async (page = 1, search = "", filters = {}) => {
       setLoading(true);
       try {
-        const params = {
-          page,
-          limit: itemsPerPage,
+        const baseParams = {
           search,
           ...filters,
         };
+        const params = {
+          page,
+          limit: itemsPerPage,
+          ...baseParams,
+        };
 
         const response = await api.get("/sellers", { params });
+        const payload = response?.data;
+        let sellersList = getSellerItemsFromResponse(payload);
+        let total = getSellerTotalFromResponse(payload, sellersList.length);
 
-        let sellersList = [];
-        let total = 0;
+        const backendPaginationLooksBroken =
+          total === sellersList.length && total > itemsPerPage && page > 1;
 
-        if (response.data && response.data.data) {
-          sellersList = response.data.data;
-          total = response.data.total;
-        } else {
-          sellersList = response.data;
-          total = response.data.length;
+        if (
+          !Array.isArray(payload?.data) ||
+          typeof total !== "number" ||
+          backendPaginationLooksBroken
+        ) {
+          const allSellers = await fetchAllPages("/sellers", {
+            params: baseParams,
+            limit: Math.max(itemsPerPage, 200),
+          });
+
+          total = allSellers.length;
+          sellersList = allSellers.slice(
+            (page - 1) * itemsPerPage,
+            page * itemsPerPage,
+          );
         }
 
         const formattedData = sellersList.map((seller) => ({
@@ -140,20 +177,8 @@ const ListSellerDetails = () => {
   }, [fetchOptions]);
 
   useEffect(() => {
-    const filters = {};
-    if (selectedCommodity) filters.commodity = selectedCommodity.value;
-    if (selectedCompany) filters.company = selectedCompany.value;
-    if (selectedStatus) filters.status = selectedStatus.value;
-
-    fetchSellers(currentPage, searchTerm, filters);
-  }, [
-    currentPage,
-    searchTerm,
-    selectedCommodity,
-    selectedCompany,
-    selectedStatus,
-    fetchSellers,
-  ]);
+    fetchSellers(currentPage, searchTerm, activeFilters);
+  }, [currentPage, searchTerm, activeFilters, fetchSellers]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -169,7 +194,7 @@ const ListSellerDetails = () => {
     try {
       await api.delete(`/sellers/${sellerId}`);
       toast.success("Seller deleted successfully");
-      fetchSellers(currentPage, searchTerm);
+      fetchSellers(currentPage, searchTerm, activeFilters);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete seller");
     }
@@ -185,6 +210,14 @@ const ListSellerDetails = () => {
     "Status",
     "Actions",
   ];
+
+  const activeFilters = useMemo(() => {
+    const filters = {};
+    if (selectedCommodity) filters.commodity = selectedCommodity.value;
+    if (selectedCompany) filters.company = selectedCompany.value;
+    if (selectedStatus) filters.status = selectedStatus.value;
+    return filters;
+  }, [selectedCommodity, selectedCompany, selectedStatus]);
 
   const rows = useMemo(
     () =>
@@ -294,7 +327,10 @@ const ListSellerDetails = () => {
               options={commodityOptions}
               placeholder="All Commodities"
               selectedOptions={selectedCommodity}
-              onChange={setSelectedCommodity}
+              onChange={(option) => {
+                setSelectedCommodity(option);
+                setCurrentPage(1);
+              }}
               isClearable
             />
 
@@ -302,7 +338,10 @@ const ListSellerDetails = () => {
               options={companyOptions}
               placeholder="All Companies"
               selectedOptions={selectedCompany}
-              onChange={setSelectedCompany}
+              onChange={(option) => {
+                setSelectedCompany(option);
+                setCurrentPage(1);
+              }}
               isClearable
             />
 
@@ -310,7 +349,10 @@ const ListSellerDetails = () => {
               options={statusOptions}
               placeholder="All Status"
               selectedOptions={selectedStatus}
-              onChange={setSelectedStatus}
+              onChange={(option) => {
+                setSelectedStatus(option);
+                setCurrentPage(1);
+              }}
               isClearable
             />
           </div>
@@ -327,6 +369,7 @@ const ListSellerDetails = () => {
                 <button
                   onClick={() => {
                     setSearchTerm("");
+                    setCurrentPage(1);
                     setSelectedCommodity(null);
                     setSelectedCompany(null);
                     setSelectedStatus(null);
@@ -347,7 +390,10 @@ const ListSellerDetails = () => {
               totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
-              onPageSizeChange={setItemsPerPage}
+              onPageSizeChange={(size) => {
+                setItemsPerPage(size);
+                setCurrentPage(1);
+              }}
             />
           </div>
 
