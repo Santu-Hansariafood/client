@@ -437,10 +437,18 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
   const paymentTDS = Number(row.raw?.tds || 0);
   const finalAmount = totalAmount - (totalClaims + paymentClaim + paymentTDS);
 
-  // Calculate breakdown from first mapping's loading entry
+  // Calculate breakdown from either first mapping's loading entry OR if row is an entry itself
   let breakdown = null;
-  const firstMapping = row.raw?.mappings?.[0];
-  const loadingEntry = firstMapping?.loadingEntryId;
+  let loadingEntry = null;
+  // Check if row is an entry (uiType === entry)
+  if (row.uiType === 'entry' || (row.raw && !row.raw.mappings && row.raw.loadingWeight)) {
+    loadingEntry = row.raw;
+  } else {
+    // Otherwise check mappings
+    const firstMapping = row.raw?.mappings?.[0];
+    loadingEntry = firstMapping?.loadingEntryId;
+  }
+  
   if (loadingEntry) {
     const weight = (loadingEntry.unloadingWeight || 0) > 0 ? loadingEntry.unloadingWeight : loadingEntry.loadingWeight || 0;
     const rate = loadingEntry.actualRate || 0;
@@ -485,8 +493,11 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
     return "-";
   };
 
-  // Try to extract from mappings first (for PaymentReceived)
-  // firstMapping and loadingEntry already declared above!
+  // Try to extract from mappings first (for Payment Received)
+  let firstMapping = null;
+  if (!(row.uiType === 'entry' || (row.raw && !row.raw.mappings && row.raw.loadingWeight))) {
+    firstMapping = row.raw?.mappings?.[0];
+  }
   
   const billNo = getValue(
     loadingEntry?.billNumber,
