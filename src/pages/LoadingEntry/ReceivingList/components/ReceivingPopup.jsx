@@ -125,14 +125,56 @@ const ReceivingPopup = ({
       fileName += ".pdf";
 
       downloadFile(blob, fileName);
-      toast.update(toastId, {
-        render: "Report downloaded successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
-      });
+
+      // Now send the email automatically if selectedSellerEmail exists
+      if (selectedSellerEmail) {
+        // Convert blob to base64 for email
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = () => {
+            const base64data = reader.result.split(",")[1];
+            resolve(base64data);
+          };
+          reader.onerror = reject;
+        });
+
+        let sentByName = user?.name || "";
+        let sentByMobile = mobile || "";
+
+        await api.post("/email/send-receiving-report", {
+          pdf: base64,
+          sellerEmail: selectedSellerEmail,
+          saudaNo: selectedEntry.saudaNo,
+          billNo: selectedEntry.billNumber,
+          claimParameters: selectedEntry.qualityClaims || [],
+          sentByMobile,
+          sentByName,
+        });
+
+        // Update sent status
+        await api.put(`/loading-entries/${selectedEntry._id}`, {
+          sentStatus: "Sent",
+        });
+        fetchData();
+
+        toast.update(toastId, {
+          render: "Report downloaded, emailed, and status updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        toast.update(toastId, {
+          render: "Report downloaded successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
     } catch (error) {
-      toast.error("Error generating PDF");
+      console.error("Print Error:", error);
+      toast.error("Error generating PDF or sending email");
       toast.update(toastId, {
         render: "Failed to generate comprehensive report",
         type: "error",
@@ -140,7 +182,7 @@ const ReceivingPopup = ({
         autoClose: 3000,
       });
     }
-  }, [selectedEntry, getMasterData, cdValue, gstValue]);
+  }, [selectedEntry, getMasterData, cdValue, gstValue, selectedSellerEmail, user, mobile, fetchData]);
 
   const handleSendEmail = useCallback(async () => {
     if (!selectedEntry || !selectedSellerEmail) {
