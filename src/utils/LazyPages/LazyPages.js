@@ -116,6 +116,7 @@ const loaders = {
     import("../../pages/Payments/PaymentRelease/AddPaymentRelease"),
   ListPaymentRelease: () =>
     import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
+  NotFound: () => import("../../pages/NotFound/NotFound"),
 };
 
 const pathToKey = {
@@ -294,6 +295,7 @@ const LazyPages = {
   UnderDevelopment: lazy(loaders.UnderDevelopment),
   AddPaymentRelease: lazy(loaders.AddPaymentRelease),
   ListPaymentRelease: lazy(loaders.ListPaymentRelease),
+  NotFound: lazy(loaders.NotFound),
 };
 
 export default LazyPages;
