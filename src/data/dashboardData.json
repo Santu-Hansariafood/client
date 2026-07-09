@@ -248,7 +248,7 @@
           "roles": ["Admin", "Employee"]
         },
         {
-          "name": "Received List",
+          "name": "Ledger",
           "link": "/payments/received/list",
           "icon": "FaList",
           "roles": ["Admin", "Employee"]
