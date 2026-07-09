@@ -640,10 +640,12 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                     <Text style={styles.col1}>Gross Amount</Text>
                     <Text style={styles.col4}>{formatAmount(breakdown.grossAmount)}</Text>
                   </View>
-                  <View style={styles.claimsTableRow}>
-                    <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
-                    <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
-                  </View>
+                  {breakdown.cdAmount > 0 && (
+                    <View style={styles.claimsTableRow}>
+                      <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
+                      <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
+                    </View>
+                  )}
                   {breakdown.bankCharges > 0 && (
                     <View style={styles.claimsTableRow}>
                       <Text style={styles.col1}>Less: Bank Charges</Text>
@@ -654,15 +656,17 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                     <Text style={styles.col1}>Taxable Amount</Text>
                     <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
                   </View>
-                  <View style={styles.claimsTableRow}>
-                    <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
-                    <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
-                  </View>
+                  {breakdown.gstAmount > 0 && (
+                    <View style={styles.claimsTableRow}>
+                      <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
+                      <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
+                    </View>
+                  )}
                   <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
                     <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount</Text>
                     <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
                   </View>
-                  {entry.mapping?.allocatedAmount && (
+                  {entry.mapping?.allocatedAmount && Number(entry.mapping.allocatedAmount) > 0 && (
                     <View style={styles.claimsTableRow}>
                       <Text style={styles.col1}>Allocated Amount</Text>
                       <Text style={[styles.col4, { color: "#2e7d32", fontWeight: "bold" }]}>

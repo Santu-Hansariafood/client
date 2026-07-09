@@ -585,7 +585,7 @@ router.get("/", async (req, res) => {
       }
     }
 
-    const [payments, total, totalAmountSum, openingBalanceSum] = await Promise.all([
+    let [payments, total, totalAmountSum, openingBalanceSum] = await Promise.all([
       PaymentReceived.find(query)
         .sort({ date: -1, createdAt: -1 })
         .skip((page - 1) * limit)
@@ -594,7 +594,7 @@ router.get("/", async (req, res) => {
           "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds paymentMode paymentType mappings remarks createdAt",
         )
         .populate("ledgerId", "name sellerName")
-        .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight actualRate cd gst bankCharges")
+        .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight bankCharges")
         .lean(),
       PaymentReceived.countDocuments(query),
       PaymentReceived.aggregate([
@@ -639,6 +639,41 @@ router.get("/", async (req, res) => {
           ])
         : Promise.resolve([]),
     ]);
+
+    // Fetch SelfOrder data for each loading entry's saudaNo to get cd, gst, rate
+    const allSaudaNos = new Set();
+    payments.forEach(payment => {
+      (payment.mappings || []).forEach(mapping => {
+        if (mapping.loadingEntryId && mapping.loadingEntryId.saudaNo) {
+          allSaudaNos.add(mapping.loadingEntryId.saudaNo);
+        }
+      });
+    });
+
+    if (allSaudaNos.size > 0) {
+      const selfOrders = await SelfOrder.find({ saudaNo: { $in: Array.from(allSaudaNos) } })
+        .select("saudaNo rate cd gst")
+        .lean();
+      
+      const selfOrderMap = {};
+      selfOrders.forEach(order => {
+        selfOrderMap[order.saudaNo] = order;
+      });
+
+      // Attach SelfOrder data to each loading entry
+      payments = payments.map(payment => ({
+        ...payment,
+        mappings: (payment.mappings || []).map(mapping => ({
+          ...mapping,
+          loadingEntryId: mapping.loadingEntryId ? {
+            ...mapping.loadingEntryId,
+            actualRate: selfOrderMap[mapping.loadingEntryId.saudaNo]?.rate || 0,
+            cd: selfOrderMap[mapping.loadingEntryId.saudaNo]?.cd || 0,
+            gst: selfOrderMap[mapping.loadingEntryId.saudaNo]?.gst || 0,
+          } : null
+        }))
+      }));
+    }
 
     res.json({
       data: payments,
