@@ -594,7 +594,7 @@ router.get("/", async (req, res) => {
           "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds paymentMode paymentType mappings remarks createdAt",
         )
         .populate("ledgerId", "name sellerName")
-        .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany")
+        .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight actualRate cd gst bankCharges")
         .lean(),
       PaymentReceived.countDocuments(query),
       PaymentReceived.aggregate([
