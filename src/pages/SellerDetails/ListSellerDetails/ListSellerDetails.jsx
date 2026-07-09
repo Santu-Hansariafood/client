@@ -172,6 +172,14 @@ const ListSellerDetails = () => {
     [itemsPerPage],
   );
 
+  const activeFilters = useMemo(() => {
+    const filters = {};
+    if (selectedCommodity) filters.commodity = selectedCommodity.value;
+    if (selectedCompany) filters.company = selectedCompany.value;
+    if (selectedStatus) filters.status = selectedStatus.value;
+    return filters;
+  }, [selectedCommodity, selectedCompany, selectedStatus]);
+
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
@@ -210,14 +218,6 @@ const ListSellerDetails = () => {
     "Status",
     "Actions",
   ];
-
-  const activeFilters = useMemo(() => {
-    const filters = {};
-    if (selectedCommodity) filters.commodity = selectedCommodity.value;
-    if (selectedCompany) filters.company = selectedCompany.value;
-    if (selectedStatus) filters.status = selectedStatus.value;
-    return filters;
-  }, [selectedCommodity, selectedCompany, selectedStatus]);
 
   const rows = useMemo(
     () =>

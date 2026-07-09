@@ -87,7 +87,8 @@ export default defineConfig({
             options: { cacheName: "pages", networkTimeoutSeconds: 30 },
           },
           {
-            urlPattern: ({ request }) =>
+            urlPattern: ({ request, url }) =>
+              url.origin === self.location.origin &&
               ["style", "script", "worker"].includes(request.destination),
             handler: "StaleWhileRevalidate",
             options: { cacheName: "assets" },
