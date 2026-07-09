@@ -179,7 +179,7 @@ const ListSellerDetails = () => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-  }, [currentPage, itemsPerPage, totalItems]);
+  }, [itemsPerPage, totalItems]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
