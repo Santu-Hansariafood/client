@@ -128,38 +128,37 @@ const ListSellerDetails = () => {
     }
   }, []);
 
-  const fetchSellers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm,
-      };
-      if (selectedCommodity) params.commodity = selectedCommodity.value;
-      if (selectedCompany) params.company = selectedCompany.value;
-      if (selectedStatus) params.status = selectedStatus.value;
-
-      const response = await api.get("/sellers", { params });
-      const data = response.data?.data || response.data || [];
-      const total = response.data?.total || data.length;
-
-      setSellers(data.map(formatSeller));
-      setTotalItems(total);
-    } catch (error) {
-      toast.error("Failed to fetch seller data");
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus]);
-
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
 
   useEffect(() => {
+    const fetchSellers = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm,
+        };
+        if (selectedCommodity) params.commodity = selectedCommodity.value;
+        if (selectedCompany) params.company = selectedCompany.value;
+        if (selectedStatus) params.status = selectedStatus.value;
+
+        const response = await api.get("/sellers", { params });
+        const data = response.data?.data || response.data || [];
+        const total = response.data?.total || data.length;
+
+        setSellers(data.map(formatSeller));
+        setTotalItems(total);
+      } catch (error) {
+        toast.error("Failed to fetch seller data");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchSellers();
-  }, [fetchSellers]);
+  }, [currentPage, itemsPerPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -175,7 +174,21 @@ const ListSellerDetails = () => {
     try {
       await api.delete(`/sellers/${sellerId}`);
       toast.success("Seller deleted successfully");
-      fetchSellers();
+      // Re-fetch current page
+      const response = await api.get("/sellers", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm,
+          ...(selectedCommodity && { commodity: selectedCommodity.value }),
+          ...(selectedCompany && { company: selectedCompany.value }),
+          ...(selectedStatus && { status: selectedStatus.value }),
+        },
+      });
+      const data = response.data?.data || response.data || [];
+      const total = response.data?.total || data.length;
+      setSellers(data.map(formatSeller));
+      setTotalItems(total);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete seller");
     }
