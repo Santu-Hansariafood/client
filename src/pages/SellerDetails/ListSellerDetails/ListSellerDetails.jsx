@@ -38,35 +38,52 @@ const toTitleCase = (str) => {
     .join(" ");
 };
 
-const getSellerItemsFromResponse = (payload) => {
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload)) return payload;
-  return [];
+const normalizeEmail = (email) => {
+  if (typeof email === "string") return email.toLowerCase();
+  return String(email?.value || email?.email || "").toLowerCase();
 };
 
-const getSellerTotalFromResponse = (payload, itemsLength) => {
-  const possibleTotals = [
-    payload?.total,
-    payload?.count,
-    payload?.totalItems,
-    payload?.pagination?.total,
-    payload?.meta?.total,
-  ];
+const normalizePhone = (phone) => {
+  if (typeof phone === "string") return phone;
+  return String(phone?.value || phone?.number || "");
+};
 
-  const validTotal = possibleTotals.find(
-    (value) => typeof value === "number" && Number.isFinite(value),
-  );
+const formatSeller = (seller) => ({
+  ...seller,
+  sellerName: toTitleCase(seller.sellerName),
+  companies: (seller.companies || []).map((company) => toTitleCase(company)),
+  emails: (seller.emails || []).map(normalizeEmail).filter(Boolean),
+  phoneNumbers: (seller.phoneNumbers || []).map((phone) => ({
+    ...phone,
+    value: normalizePhone(phone),
+  })),
+});
 
-  return validTotal ?? itemsLength;
+const buildSellerSearchText = (seller) =>
+  [
+    seller?.sellerName,
+    ...(seller?.emails || []),
+    ...(seller?.phoneNumbers || []).map((phone) => phone?.value),
+    ...(seller?.companies || []),
+    ...(seller?.commodities || []).map((commodity) => commodity?.name),
+    ...(seller?.groups || []).map((group) => group?.name),
+    seller?.status,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const matchesSearch = (seller, query) => {
+  if (!query) return true;
+  return buildSellerSearchText(seller).includes(query);
 };
 
 const ListSellerDetails = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
+  const [allSellers, setAllSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedCommodity, setSelectedCommodity] = useState(null);
@@ -112,57 +129,15 @@ const ListSellerDetails = () => {
   }, []);
 
   const fetchSellers = useCallback(
-    async (page = 1, search = "", filters = {}) => {
+    async (filters = {}) => {
       setLoading(true);
       try {
-        const baseParams = {
-          search,
-          ...filters,
-        };
-        const params = {
-          page,
-          limit: itemsPerPage,
-          ...baseParams,
-        };
+        const sellers = await fetchAllPages("/sellers", {
+          params: filters,
+          limit: Math.max(itemsPerPage, 200),
+        });
 
-        const response = await api.get("/sellers", { params });
-        const payload = response?.data;
-        let sellersList = getSellerItemsFromResponse(payload);
-        let total = getSellerTotalFromResponse(payload, sellersList.length);
-
-        const backendPaginationLooksBroken =
-          total === sellersList.length && total > itemsPerPage && page > 1;
-
-        if (
-          !Array.isArray(payload?.data) ||
-          typeof total !== "number" ||
-          backendPaginationLooksBroken
-        ) {
-          const allSellers = await fetchAllPages("/sellers", {
-            params: baseParams,
-            limit: Math.max(itemsPerPage, 200),
-          });
-
-          total = allSellers.length;
-          sellersList = allSellers.slice(
-            (page - 1) * itemsPerPage,
-            page * itemsPerPage,
-          );
-        }
-
-        const formattedData = sellersList.map((seller) => ({
-          ...seller,
-          sellerName: toTitleCase(seller.sellerName),
-          companies: (seller.companies || []).map((company) =>
-            toTitleCase(company),
-          ),
-          emails: (seller.emails || []).map((email) =>
-            email.value.toLowerCase(),
-          ),
-        }));
-
-        setData(formattedData);
-        setTotalItems(total);
+        setAllSellers(sellers.map(formatSeller));
       } catch (error) {
         toast.error("Failed to fetch seller data");
       } finally {
@@ -185,8 +160,26 @@ const ListSellerDetails = () => {
   }, [fetchOptions]);
 
   useEffect(() => {
-    fetchSellers(currentPage, searchTerm, activeFilters);
-  }, [currentPage, searchTerm, activeFilters, fetchSellers]);
+    fetchSellers(activeFilters);
+  }, [activeFilters, fetchSellers]);
+
+  const filteredSellers = useMemo(() => {
+    const normalizedQuery = searchTerm.trim().toLowerCase();
+    return allSellers.filter((seller) => matchesSearch(seller, normalizedQuery));
+  }, [allSellers, searchTerm]);
+
+  const totalItems = filteredSellers.length;
+  const paginatedSellers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredSellers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredSellers, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, itemsPerPage, totalItems]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -202,7 +195,7 @@ const ListSellerDetails = () => {
     try {
       await api.delete(`/sellers/${sellerId}`);
       toast.success("Seller deleted successfully");
-      fetchSellers(currentPage, searchTerm, activeFilters);
+      fetchSellers(activeFilters);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete seller");
     }
@@ -221,7 +214,7 @@ const ListSellerDetails = () => {
 
   const rows = useMemo(
     () =>
-      data.map((item, index) => [
+      paginatedSellers.map((item, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
         <div key={item._id} className="font-bold text-slate-700">
           {item.sellerName}
@@ -284,7 +277,7 @@ const ListSellerDetails = () => {
           onDelete={() => handleDeleteSeller(item._id)}
         />,
       ]),
-    [data, currentPage, itemsPerPage],
+    [paginatedSellers, currentPage, itemsPerPage],
   );
 
   return (
@@ -300,6 +293,7 @@ const ListSellerDetails = () => {
             <div className="w-full lg:max-w-md">
               <SearchBox
                 placeholder="Search sellers by name..."
+                value={searchTerm}
                 onSearch={(q) => {
                   setSearchTerm(q);
                   setCurrentPage(1);
@@ -362,7 +356,7 @@ const ListSellerDetails = () => {
               <div className="h-64 flex items-center justify-center">
                 <Loading />
               </div>
-            ) : data.length === 0 ? (
+            ) : paginatedSellers.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
                 <FaSearch size={40} className="text-slate-200" />
                 <p className="font-medium text-lg">No sellers found</p>
