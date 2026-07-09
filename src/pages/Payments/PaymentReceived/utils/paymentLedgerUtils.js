@@ -169,6 +169,10 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const totalPaymentAmount = (Number(payment.amount) || 0) + (Number(payment.claim) || 0) + (Number(payment.tds) || 0);
       const isBuyer = payment.ledgerType === "Buyer";
       const paymentType = payment.paymentType || "";
+      // Use payment.unadjustedAmount if available, else calculate
+      const unadjustedAmount = payment.unadjustedAmount !== undefined 
+        ? Number(payment.unadjustedAmount) 
+        : Math.max(0, totalPaymentAmount - mappedTotal);
 
       const sellerFromMapping = payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
       const buyerFromMapping = payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
@@ -205,7 +209,6 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       }
 
       // Now add On Account row if there's unadjusted amount
-      const unadjustedAmount = totalPaymentAmount - mappedTotal;
       if (unadjustedAmount > 0.01) { // Tolerance for floating point errors
         let unadjustedCredit = 0;
         let unadjustedDebit = 0;

@@ -591,7 +591,7 @@ router.get("/", async (req, res) => {
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
         .select(
-          "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds paymentMode paymentType mappings remarks createdAt",
+          "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds unadjustedAmount paymentMode paymentType mappings remarks createdAt",
         )
         .populate("ledgerId", "name sellerName")
         .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight bankCharges")
@@ -823,7 +823,13 @@ router.get("/summary", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { sellerBillNo, date, entries, ...otherFields } = req.body;
+    const { sellerBillNo, date, entries, mappings, amount, claim, tds, paymentType, ...otherFields } = req.body;
+
+    // Find the existing payment first
+    const existingPayment = await PaymentReceived.findById(id);
+    if (!existingPayment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
 
     const updateData = {
       ...otherFields,
@@ -832,22 +838,40 @@ router.put("/:id", async (req, res) => {
     if (sellerBillNo !== undefined) updateData.sellerBillNo = sellerBillNo;
     if (date !== undefined) updateData.date = date;
     if (entries !== undefined) updateData.entries = entries;
+    if (mappings !== undefined) updateData.mappings = mappings;
+    if (amount !== undefined) updateData.amount = amount;
+    if (claim !== undefined) updateData.claim = claim;
+    if (tds !== undefined) updateData.tds = tds;
+    if (paymentType !== undefined) updateData.paymentType = paymentType;
 
     // Calculate total amount from entries
+    let paymentAmount = existingPayment.amount;
     if (entries) {
-      const total = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      updateData.amount = total;
+      paymentAmount = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      updateData.amount = paymentAmount;
+    } else if (amount !== undefined) {
+      paymentAmount = Number(amount);
     }
+
+    // Calculate total mapped amount
+    const totalMapped = (mappings || existingPayment.mappings || []).reduce(
+      (sum, m) => sum + (Number(m.allocatedAmount) || 0),
+      0
+    );
+
+    // Recalculate unadjustedAmount
+    const resolvedType = paymentType || existingPayment.paymentType;
+    const unadjustedAmount =
+      resolvedType === "Adjustment"
+        ? 0
+        : Math.max(0, paymentAmount - totalMapped);
+    updateData.unadjustedAmount = unadjustedAmount;
 
     const updatedPayment = await PaymentReceived.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     );
-
-    if (!updatedPayment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
 
     res.json(updatedPayment);
   } catch (error) {
