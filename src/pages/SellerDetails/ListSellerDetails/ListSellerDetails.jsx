@@ -7,7 +7,6 @@ import {
   useMemo,
 } from "react";
 import api from "../../../utils/apiClient/apiClient";
-import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
@@ -80,11 +79,12 @@ const matchesSearch = (seller, query) => {
 
 const ListSellerDetails = () => {
   const navigate = useNavigate();
-  const [allSellers, setAllSellers] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
 
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -128,58 +128,38 @@ const ListSellerDetails = () => {
     }
   }, []);
 
-  const fetchSellers = useCallback(
-    async (filters = {}) => {
-      setLoading(true);
-      try {
-        const sellers = await fetchAllPages("/sellers", {
-          params: filters,
-          limit: Math.max(itemsPerPage, 200),
-        });
+  const fetchSellers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+      };
+      if (selectedCommodity) params.commodity = selectedCommodity.value;
+      if (selectedCompany) params.company = selectedCompany.value;
+      if (selectedStatus) params.status = selectedStatus.value;
 
-        setAllSellers(sellers.map(formatSeller));
-      } catch (error) {
-        toast.error("Failed to fetch seller data");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [itemsPerPage],
-  );
+      const response = await api.get("/sellers", { params });
+      const data = response.data?.data || response.data || [];
+      const total = response.data?.total || data.length;
 
-  const activeFilters = useMemo(() => {
-    const filters = {};
-    if (selectedCommodity) filters.commodity = selectedCommodity.value;
-    if (selectedCompany) filters.company = selectedCompany.value;
-    if (selectedStatus) filters.status = selectedStatus.value;
-    return filters;
-  }, [selectedCommodity, selectedCompany, selectedStatus]);
+      setSellers(data.map(formatSeller));
+      setTotalItems(total);
+    } catch (error) {
+      toast.error("Failed to fetch seller data");
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, itemsPerPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus]);
 
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
 
   useEffect(() => {
-    fetchSellers(activeFilters);
-  }, [activeFilters, fetchSellers]);
-
-  const filteredSellers = useMemo(() => {
-    const normalizedQuery = searchTerm.trim().toLowerCase();
-    return allSellers.filter((seller) => matchesSearch(seller, normalizedQuery));
-  }, [allSellers, searchTerm]);
-
-  const totalItems = filteredSellers.length;
-  const paginatedSellers = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredSellers.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredSellers, currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [itemsPerPage, totalItems]);
+    fetchSellers();
+  }, [fetchSellers]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -195,7 +175,7 @@ const ListSellerDetails = () => {
     try {
       await api.delete(`/sellers/${sellerId}`);
       toast.success("Seller deleted successfully");
-      fetchSellers(activeFilters);
+      fetchSellers();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete seller");
     }
@@ -214,7 +194,7 @@ const ListSellerDetails = () => {
 
   const rows = useMemo(
     () =>
-      paginatedSellers.map((item, index) => [
+      sellers.map((item, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
         <div key={item._id} className="font-bold text-slate-700">
           {item.sellerName}
@@ -277,7 +257,7 @@ const ListSellerDetails = () => {
           onDelete={() => handleDeleteSeller(item._id)}
         />,
       ]),
-    [paginatedSellers, currentPage, itemsPerPage],
+    [sellers, currentPage, itemsPerPage],
   );
 
   return (
@@ -356,7 +336,7 @@ const ListSellerDetails = () => {
               <div className="h-64 flex items-center justify-center">
                 <Loading />
               </div>
-            ) : paginatedSellers.length === 0 ? (
+            ) : sellers.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
                 <FaSearch size={40} className="text-slate-200" />
                 <p className="font-medium text-lg">No sellers found</p>
@@ -384,7 +364,11 @@ const ListSellerDetails = () => {
               totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
-              showPageSize={false}
+              onPageSizeChange={(size) => {
+                setItemsPerPage(size);
+                setCurrentPage(1);
+              }}
+              pageSizeOptions={[10, 20, 50, 100]}
             />
           </div>
 
