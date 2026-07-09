@@ -644,10 +644,12 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                     <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
                     <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
                   </View>
-                  <View style={styles.claimsTableRow}>
-                    <Text style={styles.col1}>Less: Bank Charges</Text>
-                    <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
-                  </View>
+                  {breakdown.bankCharges > 0 && (
+                    <View style={styles.claimsTableRow}>
+                      <Text style={styles.col1}>Less: Bank Charges</Text>
+                      <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
+                    </View>
+                  )}
                   <View style={styles.claimsTableRow}>
                     <Text style={styles.col1}>Taxable Amount</Text>
                     <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
