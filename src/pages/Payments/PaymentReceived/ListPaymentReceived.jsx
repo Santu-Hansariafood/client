@@ -713,7 +713,10 @@ const ListPaymentReceived = () => {
       const gstPercent = e.gst || 0;
       const grossAmount = weight * rate;
       const cdAmount = grossAmount * (cdPercent / 100);
-      const taxableAmount = grossAmount - cdAmount;
+      const amountAfterCd = grossAmount - cdAmount;
+      const bankCharges = Number(e.bankCharges) || 0;
+      const amountAfterBankCharges = amountAfterCd - bankCharges;
+      const taxableAmount = amountAfterBankCharges;
       const gstAmount = taxableAmount * (gstPercent / 100);
       const netAmount = taxableAmount + gstAmount;
       
@@ -724,9 +727,6 @@ const ListPaymentReceived = () => {
           return sum + (Number(claim.claimAmount) || 0);
         }, 0);
       }
-      
-      // Get bank charges
-      const bankCharges = Number(e.bankCharges) || 0;
       
       return {
         netAmount,

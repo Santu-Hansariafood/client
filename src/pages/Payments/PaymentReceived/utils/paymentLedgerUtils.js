@@ -132,12 +132,20 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
 
   sorted.forEach((item) => {
     if (item.uiType === 'entry') {
-      // It's a bill (Loading Entry) -> Debit for Buyer
+      // It's a bill (Loading Entry) -> Debit for Buyer: (gross + gst - cd - bank charges)
       const weight = item.unloadingWeight || item.loadingWeight || 0;
       const rate = item.actualRate || item.rate || 0;
-      const netAmount = weight * rate; // Simplified for ledger view, actual math is complex
+      const grossAmount = weight * rate;
+      const cdPercent = item.cd || 0;
+      const gstPercent = item.gst || 0;
+      const cdAmount = grossAmount * (cdPercent / 100);
+      const amountAfterCd = grossAmount - cdAmount;
+      const bankCharges = Number(item.bankCharges) || 0;
+      const amountAfterBankCharges = amountAfterCd - bankCharges;
+      const taxableAmount = amountAfterBankCharges;
+      const gstAmount = taxableAmount * (gstPercent / 100);
+      const debit = taxableAmount + gstAmount;
       
-      const debit = item.netAmount || netAmount;
       const credit = 0;
       const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
       const vchType = "Bill";
