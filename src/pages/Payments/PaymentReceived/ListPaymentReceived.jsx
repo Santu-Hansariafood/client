@@ -685,7 +685,9 @@ const ListPaymentReceived = () => {
         cdAmount: 0, 
         gstAmount: 0, 
         cdPercent: 0, 
-        gstPercent: 0 
+        gstPercent: 0,
+        totalQualityClaims: 0,
+        bankCharges: 0,
       };
       const weight =
         (e.unloadingWeight || 0) > 0
@@ -699,6 +701,18 @@ const ListPaymentReceived = () => {
       const taxableAmount = grossAmount - cdAmount;
       const gstAmount = taxableAmount * (gstPercent / 100);
       const netAmount = taxableAmount + gstAmount;
+      
+      // Calculate total quality claims
+      let totalQualityClaims = 0;
+      if (e.qualityClaims && Array.isArray(e.qualityClaims)) {
+        totalQualityClaims = e.qualityClaims.reduce((sum, claim) => {
+          return sum + (Number(claim.claimAmount) || 0);
+        }, 0);
+      }
+      
+      // Get bank charges
+      const bankCharges = Number(e.bankCharges) || 0;
+      
       return {
         netAmount,
         dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)),
@@ -706,6 +720,8 @@ const ListPaymentReceived = () => {
         gstAmount,
         cdPercent,
         gstPercent,
+        totalQualityClaims,
+        bankCharges,
       };
     };
 
@@ -722,6 +738,9 @@ const ListPaymentReceived = () => {
       let gstAmount = 0;
       let cdPercent = 0;
       let gstPercent = 0;
+      let totalQualityClaims = 0;
+      let bankCharges = 0;
+      let paymentClaimAmount = 0; // Claim from PaymentReceived
 
       if (row.isOpening) {
         return {
@@ -737,6 +756,9 @@ const ListPaymentReceived = () => {
           gstAmount,
           cdPercent,
           gstPercent,
+          totalQualityClaims,
+          bankCharges,
+          paymentClaimAmount,
         };
       }
 
@@ -755,6 +777,8 @@ const ListPaymentReceived = () => {
         gstAmount = details.gstAmount;
         cdPercent = details.cdPercent;
         gstPercent = details.gstPercent;
+        totalQualityClaims = details.totalQualityClaims;
+        bankCharges = details.bankCharges;
       } else if (raw?.mappings?.length > 0) {
         const firstMapping = raw.mappings[0];
         const loadingEntry = firstMapping?.loadingEntryId;
@@ -771,6 +795,10 @@ const ListPaymentReceived = () => {
         gstAmount = details.gstAmount;
         cdPercent = details.cdPercent;
         gstPercent = details.gstPercent;
+        totalQualityClaims = details.totalQualityClaims;
+        bankCharges = details.bankCharges;
+        // Also get claim amount from PaymentReceived row
+        paymentClaimAmount = Number(raw?.claim) || 0;
       } else {
         remarks = row.particulars;
       }
@@ -788,6 +816,9 @@ const ListPaymentReceived = () => {
         gstAmount,
         cdPercent,
         gstPercent,
+        totalQualityClaims,
+        bankCharges,
+        paymentClaimAmount,
       };
     };
 
@@ -807,6 +838,8 @@ const ListPaymentReceived = () => {
     const saudaTotals = {};
     let grandTotalCd = 0;
     let grandTotalGst = 0;
+    let grandTotalQualityClaims = 0;
+    let grandTotalBankCharges = 0;
 
     Object.keys(groupedBySauda).forEach((saudaKey) => {
       const group = groupedBySauda[saudaKey];
@@ -815,11 +848,13 @@ const ListPaymentReceived = () => {
       let saudaPaidTotal = 0;
       let saudaCdTotal = 0;
       let saudaGstTotal = 0;
+      let saudaQualityClaimsTotal = 0;
+      let saudaBankChargesTotal = 0;
 
       tableData.push([
         {
           content: `SAUDA NO: ${saudaKey}`,
-          colSpan: 13,
+          colSpan: 15,
           styles: {
             fillColor: [200, 200, 200],
             fontStyle: "bold",
@@ -838,8 +873,12 @@ const ListPaymentReceived = () => {
         saudaPaidTotal += rowData.paidAmount;
         saudaCdTotal += rowData.cdAmount;
         saudaGstTotal += rowData.gstAmount;
+        saudaQualityClaimsTotal += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+        saudaBankChargesTotal += rowData.bankCharges;
         grandTotalCd += rowData.cdAmount;
         grandTotalGst += rowData.gstAmount;
+        grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+        grandTotalBankCharges += rowData.bankCharges;
 
         tableData.push([
           rowIdx,
@@ -860,6 +899,12 @@ const ListPaymentReceived = () => {
             : "",
           rowData.gstAmount > 0
             ? `Rs. ${rowData.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            : "",
+          (rowData.totalQualityClaims + rowData.paymentClaimAmount) > 0
+            ? `Rs. ${(rowData.totalQualityClaims + rowData.paymentClaimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            : "",
+          rowData.bankCharges > 0
+            ? `Rs. ${rowData.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
             : "",
           debit - credit !== 0
             ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
@@ -885,7 +930,9 @@ const ListPaymentReceived = () => {
               "",
               "",
               "",
-              `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+              "",
+              "",
+              "",
               "",
             ]);
           });
@@ -905,6 +952,8 @@ const ListPaymentReceived = () => {
         `Rs. ${saudaCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         `Rs. ${saudaCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         `Rs. ${saudaGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Rs. ${saudaQualityClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Rs. ${saudaBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         `Rs. ${(saudaDebitTotal - saudaCreditTotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         "",
       ]);
@@ -930,6 +979,8 @@ const ListPaymentReceived = () => {
           "CREDIT (Rs.)",
           "CD (Rs.)",
           "GST (Rs.)",
+          "CLAIMS (Rs.)",
+          "BANK CHARGES (Rs.)",
           "BALANCE (Rs.)",
           "REMARKS",
         ],
@@ -968,8 +1019,10 @@ const ListPaymentReceived = () => {
         8: { halign: "right", cellWidth: 22 },
         9: { halign: "right", cellWidth: 22 },
         10: { halign: "right", cellWidth: 22 },
-        11: { halign: "right", fontStyle: "bold", cellWidth: 25 },
-        12: { cellWidth: 40 },
+        11: { halign: "right", cellWidth: 22 },
+        12: { halign: "right", cellWidth: 22 },
+        13: { halign: "right", fontStyle: "bold", cellWidth: 25 },
+        14: { cellWidth: 40 },
       },
       margin: { left: margin, right: margin },
       didDrawPage: (data) => {
@@ -999,15 +1052,10 @@ const ListPaymentReceived = () => {
 
     let totalDebit = 0;
     let totalCredit = 0;
-    let totalCD = 0;
-    let totalGST = 0;
     reportRows.forEach((row) => {
       if (!row.isOpening) {
         totalDebit += row.debit || 0;
         totalCredit += row.credit || 0;
-        const rowData = extractRowData(row);
-        totalCD += rowData.cdAmount || 0;
-        totalGST += rowData.gstAmount || 0;
       }
     });
     const difference = totalDebit - totalCredit;
@@ -1017,15 +1065,17 @@ const ListPaymentReceived = () => {
     doc.setFillColor(200, 200, 200);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
 
-    // Draw borders and dividers (5 sections now)
+    // Draw borders and dividers (7 sections now)
     doc.setLineWidth(0.2);
     doc.setDrawColor(0, 0, 0);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
     // Vertical dividers
-    doc.line(margin + (pageWidth - 2 * margin) / 5, summaryY, margin + (pageWidth - 2 * margin) / 5, summaryY + boxHeight);
-    doc.line(margin + 2 * (pageWidth - 2 * margin) / 5, summaryY, margin + 2 * (pageWidth - 2 * margin) / 5, summaryY + boxHeight);
-    doc.line(margin + 3 * (pageWidth - 2 * margin) / 5, summaryY, margin + 3 * (pageWidth - 2 * margin) / 5, summaryY + boxHeight);
-    doc.line(margin + 4 * (pageWidth - 2 * margin) / 5, summaryY, margin + 4 * (pageWidth - 2 * margin) / 5, summaryY + boxHeight);
+    doc.line(margin + (pageWidth - 2 * margin) / 7, summaryY, margin + (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
+    doc.line(margin + 2 * (pageWidth - 2 * margin) / 7, summaryY, margin + 2 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
+    doc.line(margin + 3 * (pageWidth - 2 * margin) / 7, summaryY, margin + 3 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
+    doc.line(margin + 4 * (pageWidth - 2 * margin) / 7, summaryY, margin + 4 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
+    doc.line(margin + 5 * (pageWidth - 2 * margin) / 7, summaryY, margin + 5 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
+    doc.line(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, margin + 6 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
     // Horizontal divider
     doc.line(margin, summaryY + boxHeight / 2, pageWidth - margin, summaryY + boxHeight / 2);
 
@@ -1034,33 +1084,41 @@ const ListPaymentReceived = () => {
     doc.setTextColor(0, 0, 0);
 
     // Total Debit
-    doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 10, summaryY + 8, { align: "center" });
-    doc.text(totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 10, summaryY + 18, { align: "center" });
+    doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
     // Total Credit
-    doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 10, summaryY + 8, { align: "center" });
-    doc.text(totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 10, summaryY + 18, { align: "center" });
+    doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
     // Total CD
-    doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 10, summaryY + 8, { align: "center" });
-    doc.text(totalCD.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 10, summaryY + 18, { align: "center" });
+    doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(grandTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
     // Total GST
-    doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 10, summaryY + 8, { align: "center" });
-    doc.text(totalGST.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 10, summaryY + 18, { align: "center" });
+    doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(grandTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+
+    // Total Claims
+    doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(grandTotalQualityClaims.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+
+    // Total Bank Charges
+    doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+    doc.text(grandTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
     // Difference
     doc.setTextColor(255, 255, 255);
     doc.setFillColor(30, 58, 95);
-    doc.rect(margin + 4 * (pageWidth - 2 * margin) / 5, summaryY, (pageWidth - 2 * margin) / 5, boxHeight, "F");
-    doc.text("DIFFERENCE", margin + 9 * (pageWidth - 2 * margin) / 10, summaryY + 8, { align: "center" });
+    doc.rect(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, (pageWidth - 2 * margin) / 7, boxHeight, "F");
+    doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
     
     const differenceText = difference > 0 
       ? `${difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Dr`
       : difference < 0
       ? `${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })} Cr`
       : "NIL";
-    doc.text(differenceText, margin + 9 * (pageWidth - 2 * margin) / 10, summaryY + 18, { align: "center" });
+    doc.text(differenceText, margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
     doc.setTextColor(0, 0, 0);
     summaryY += boxHeight + 10;
 
