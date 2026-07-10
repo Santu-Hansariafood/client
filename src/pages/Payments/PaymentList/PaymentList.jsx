@@ -23,6 +23,7 @@ import logoUrl from "../../../assets/Hans.png";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
+const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -47,6 +48,12 @@ const PaymentList = () => {
   const [endDate, setEndDate] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(isReceivedPath ? "done" : "all");
   const [exporting, setExporting] = useState(false);
+  
+  // Company state
+  const [allCompanies, setAllCompanies] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
+  const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
 
   // Sync paymentStatus when location changes
   useEffect(() => {
@@ -57,6 +64,23 @@ const PaymentList = () => {
     }
     setCurrentPage(1);
   }, [location.pathname]);
+
+  // Fetch companies on mount
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const [companiesRes, sellerCompaniesRes] = await Promise.all([
+          api.get("/companies", { params: { limit: 0 } }),
+          api.get("/seller-company", { params: { limit: 0 } })
+        ]);
+        setAllCompanies(companiesRes.data.data || companiesRes.data || []);
+        setSellerCompanies(sellerCompaniesRes.data.data || sellerCompaniesRes.data || []);
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+      }
+    };
+    fetchCompanies();
+  }, []);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -69,6 +93,8 @@ const PaymentList = () => {
           startDate: startDate ? startDate.toISOString() : undefined,
           endDate: endDate ? endDate.toISOString() : undefined,
           paymentStatus,
+          buyerCompany: selectedBuyerCompany?.label || selectedBuyerCompany?.companyName || undefined,
+          sellerCompany: selectedSellerCompany?.label || selectedSellerCompany?.companyName || undefined,
         },
       });
       setData(response.data.data);
@@ -79,7 +105,7 @@ const PaymentList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, paymentStatus]);
+  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, paymentStatus, selectedBuyerCompany, selectedSellerCompany]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -250,7 +276,7 @@ const PaymentList = () => {
   };
 
   const headers = [
-    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Terms", "Due Date", "Unloading Date", "Unloading Qty", "Amount", "Status"
+    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Terms", "Due Date", "Unloading Date", "Unloading Qty", "Amount", "Due Amount", "Status"
   ];
 
   const rows = data.map((item) => [
@@ -266,6 +292,7 @@ const PaymentList = () => {
     formatDate(item.unloadingDate),
     <span key={`qty-${item._id}`} className="font-bold">{(item.unloadingWeight || 0).toFixed(2)} T</span>,
     <span key={`amt-${item._id}`} className="font-black text-emerald-700">Rs. {item.amount.toLocaleString("en-IN")}</span>,
+    <span key={`dueamt-${item._id}`} className={`font-bold ${item.dueAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>Rs. {Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
     <button
       key={`status-${item._id}`}
       onClick={() => toggleStatus(item._id, item.paymentStatus)}
@@ -355,7 +382,7 @@ const PaymentList = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mt-10">
             <div className="relative group/input">
               <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-emerald-500 transition-colors" />
               <input
@@ -384,6 +411,28 @@ const PaymentList = () => {
                 className="w-full"
               />
             </div>
+
+            <DataDropdown
+              options={allCompanies.map(c => ({ value: c._id, label: c.companyName }))}
+              selectedOptions={selectedBuyerCompany}
+              onChange={(option) => {
+                setSelectedBuyerCompany(option);
+                setCurrentPage(1);
+              }}
+              placeholder="Buyer Company"
+              isClearable
+            />
+
+            <DataDropdown
+              options={sellerCompanies.map(c => ({ value: c._id, label: c.companyName }))}
+              selectedOptions={selectedSellerCompany}
+              onChange={(option) => {
+                setSelectedSellerCompany(option);
+                setCurrentPage(1);
+              }}
+              placeholder="Seller Company"
+              isClearable
+            />
 
             <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">Status:</span>
