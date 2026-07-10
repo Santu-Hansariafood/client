@@ -681,11 +681,12 @@ const ListPaymentReceived = () => {
     currentY += 10;
 
     if (filters.ledgerId) {
+      const formattedOpeningBalance = Number(openingBalance.toFixed(2));
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Opening Balance:", margin, currentY + 5);
       doc.text(
-        `Rs. ${openingBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Rs. ${formattedOpeningBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         pageWidth - margin,
         currentY + 5,
         { align: "right" },
@@ -894,6 +895,22 @@ const ListPaymentReceived = () => {
           grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
           grandTotalBankCharges += rowData.bankCharges;
 
+          const claims = rowData.totalQualityClaims + rowData.paymentClaimAmount;
+          const cd = rowData.cdAmount;
+          const bankCharges = rowData.bankCharges;
+          const gst = rowData.gstAmount;
+          
+          // Calculate BALANCE as (DEBIT + GST - CLAIMS - CD - BANK CHGS)
+          const balance = Number((debit + gst - claims - cd - bankCharges).toFixed(2));
+          
+          // Ensure all values are rounded to 2 decimal places
+          const formattedDebit = Number(debit.toFixed(2));
+          const formattedCredit = Number(credit.toFixed(2));
+          const formattedGst = Number(gst.toFixed(2));
+          const formattedClaims = Number(claims.toFixed(2));
+          const formattedCd = Number(cd.toFixed(2));
+          const formattedBankCharges = Number(bankCharges.toFixed(2));
+          
           tableData.push([
             rowIdx,
             row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
@@ -902,26 +919,26 @@ const ListPaymentReceived = () => {
             rowData.billNo,
             (row.buyerCompany || "-").toUpperCase(),
             (row.supplierCompany || "-").toUpperCase(),
-            debit > 0
-              ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedDebit > 0
+              ? `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            credit > 0
-              ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedCredit > 0
+              ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            rowData.cdAmount > 0
-              ? `Rs. ${rowData.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedGst > 0
+              ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            rowData.gstAmount > 0
-              ? `Rs. ${rowData.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedClaims > 0
+              ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            (rowData.totalQualityClaims + rowData.paymentClaimAmount) > 0
-              ? `Rs. ${(rowData.totalQualityClaims + rowData.paymentClaimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedCd > 0
+              ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            rowData.bankCharges > 0
-              ? `Rs. ${rowData.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            formattedBankCharges > 0
+              ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            debit - credit !== 0
-              ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            balance !== 0
+              ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
             rowData.remarks,
           ]);
@@ -953,6 +970,7 @@ const ListPaymentReceived = () => {
         }
       });
 
+      const saudaBalance = Number((saudaDebitTotal + saudaGstTotal - saudaQualityClaimsTotal - saudaCdTotal - saudaBankChargesTotal).toFixed(2));
       tableData.push([
         {
           content: `TOTAL FOR SAUDA ${saudaKey}`,
@@ -962,13 +980,13 @@ const ListPaymentReceived = () => {
             halign: "right",
           },
         },
-        `Rs. ${saudaDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${saudaCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${saudaCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${saudaGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${saudaQualityClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${saudaBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        `Rs. ${(saudaDebitTotal - saudaCreditTotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaCdTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaBankChargesTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         "",
       ]);
 
@@ -991,9 +1009,9 @@ const ListPaymentReceived = () => {
           "SELLER",
           "DEBIT (Rs.)",
           "CREDIT (Rs.)",
-          "CD (Rs.)",
           "GST (Rs.)",
           "CLAIMS (Rs.)",
+          "CD (Rs.)",
           "BANK CHGS (Rs.)",
           "BALANCE (Rs.)",
           "REMARKS",
@@ -1100,65 +1118,55 @@ const ListPaymentReceived = () => {
     doc.setTextColor(0, 0, 0);
 
     // Total Debit
-    doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      const formattedTotalDebit = Number(totalDebit.toFixed(2));
+      doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Total Credit
-    doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Total Credit
+      const formattedTotalCredit = Number(totalCredit.toFixed(2));
+      doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Total CD
-    doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(grandTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Total CD
+      const formattedTotalCd = Number(grandTotalCd.toFixed(2));
+      doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Total GST
-    doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(grandTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Total GST
+      const formattedTotalGst = Number(grandTotalGst.toFixed(2));
+      doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Total Claims
-    doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(grandTotalQualityClaims.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Total Claims
+      const formattedTotalClaims = Number(grandTotalQualityClaims.toFixed(2));
+      doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Total Bank Charges
-    doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    doc.text(grandTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Total Bank Charges
+      const formattedTotalBankCharges = Number(grandTotalBankCharges.toFixed(2));
+      doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
-    // Difference
-    doc.setTextColor(255, 255, 255);
-    doc.setFillColor(30, 58, 95);
-    doc.rect(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, (pageWidth - 2 * margin) / 7, boxHeight, "F");
-    doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-    
-    const differenceText = difference > 0 
-      ? `${difference.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Dr`
-      : difference < 0
-      ? `${Math.abs(difference).toLocaleString("en-IN", { minimumFractionDigits: 2 })} Cr`
-      : "NIL";
-    doc.text(differenceText, margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      // Difference
+      const formattedDifference = Number(difference.toFixed(2));
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(30, 58, 95);
+      doc.rect(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, (pageWidth - 2 * margin) / 7, boxHeight, "F");
+      doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      
+      const differenceText = formattedDifference > 0 
+        ? `${formattedDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
+        : formattedDifference < 0
+        ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
+        : "NIL";
+      doc.text(differenceText, margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
     doc.setTextColor(0, 0, 0);
     summaryY += boxHeight + 10;
 
-    // New section: Separate Debit/Credit, Bank Details, QR
-    let newSectionY = summaryY;
-
-    // Left side: Debit/Credit totals and Bank Details
-    // Right side: QR and Signatory
-    // Debit and Credit separately
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("DEBIT TOTAL", margin + 10, newSectionY + 5);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, margin + 10, newSectionY + 14);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("CREDIT TOTAL", margin + 10, newSectionY + 24);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, margin + 10, newSectionY + 33);
-
-    // Bank details below debit/credit
+    // First section: Bank Account Details (separated)
+    let bankSectionY = summaryY;
+    
+    // Get seller company and bank details
     let sellerCompanyData = null;
     const sellerCompanyName =
       filters.ledgerType === "Buyer"
@@ -1181,46 +1189,74 @@ const ListPaymentReceived = () => {
 
     if (bankDetails) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("Bank Account Details:", margin + 10, newSectionY + 45);
+      doc.setFontSize(11);
+      doc.text("Bank Account Details", margin, bankSectionY + 5);
       
       doc.setLineWidth(0.2);
-      const leftPartWidth = (pageWidth - 2 * margin) * 0.6;
-      doc.rect(margin + 8, newSectionY + 49, leftPartWidth - 16, 45);
+      const bankBoxWidth = (pageWidth - 2 * margin);
+      doc.rect(margin, bankSectionY + 10, bankBoxWidth, 55);
       
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text("Bank Name:", margin + 15, newSectionY + 57);
+      doc.setFontSize(9);
+      doc.text("Bank Name:", margin + 10, bankSectionY + 20);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.bankName || "-", margin + 60, newSectionY + 57);
+      doc.text(bankDetails.bankName || "-", margin + 80, bankSectionY + 20);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Holder:", margin + 15, newSectionY + 65);
+      doc.text("Account Holder:", margin + 10, bankSectionY + 30);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 60, newSectionY + 65);
+      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 80, bankSectionY + 30);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Number:", margin + 15, newSectionY + 73);
+      doc.text("Account Number:", margin + 10, bankSectionY + 40);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountNumber || "-", margin + 60, newSectionY + 73);
+      doc.text(bankDetails.accountNumber || "-", margin + 80, bankSectionY + 40);
 
       doc.setFont("helvetica", "bold");
-      doc.text("IFSC Code:", margin + 15, newSectionY + 81);
+      doc.text("IFSC Code:", margin + 10, bankSectionY + 50);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.ifscCode || "-", margin + 60, newSectionY + 81);
+      doc.text(bankDetails.ifscCode || "-", margin + 80, bankSectionY + 50);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Branch:", margin + 15, newSectionY + 89);
+      doc.text("Branch:", pageWidth - margin - 150, bankSectionY + 20);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.branchName || "-", margin + 60, newSectionY + 89);
+      doc.text(bankDetails.branchName || "-", pageWidth - margin - 145, bankSectionY + 20);
     } else {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("Bank Account Details:", margin + 10, newSectionY + 45);
+      doc.setFontSize(11);
+      doc.text("Bank Account Details", margin, bankSectionY + 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("No bank details available", margin + 10, newSectionY + 55);
+      doc.text("No bank details available", margin + 10, bankSectionY + 15);
     }
+
+    // Separator line
+    const separatorY = bankDetails ? bankSectionY + 70 : bankSectionY + 30;
+    doc.setLineWidth(0.2);
+    doc.line(margin, separatorY, pageWidth - margin, separatorY);
+    
+    // Final calculation and QR
+    let finalSectionY = separatorY + 15;
+
+    // Ensure all totals are rounded to 2 decimal places
+    const summaryDebitTotal = Number(totalDebit.toFixed(2));
+    const summaryCreditTotal = Number(totalCredit.toFixed(2));
+
+    // Left side: Debit/Credit totals
+    // Right side: QR and Signatory
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DEBIT TOTAL", margin + 10, finalSectionY + 5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 14);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("CREDIT TOTAL", margin + 10, finalSectionY + 24);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 33);
 
     // Right part: QR code and Signatory
     try {
@@ -1228,7 +1264,7 @@ const ListPaymentReceived = () => {
         `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nDebit: ${totalDebit}\nCredit: ${totalCredit}`,
       );
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrText}`;
-      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 50 - 20, newSectionY, 50, 50);
+      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 50 - 20, finalSectionY, 50, 50);
     } catch (qrError) {
       console.log("QR code not added:", qrError);
     }
@@ -1239,18 +1275,18 @@ const ListPaymentReceived = () => {
     doc.text(
       `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
       pageWidth - margin,
-      newSectionY + 60,
+      finalSectionY + 60,
       { align: "right" },
     );
     doc.setFont("helvetica", "bold");
-    doc.text("Authorised Signatory", pageWidth - margin, newSectionY + 70, {
+    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 70, {
       align: "right",
     });
     doc.line(
       pageWidth - 80,
-      newSectionY + 67,
+      finalSectionY + 67,
       pageWidth - margin,
-      newSectionY + 67,
+      finalSectionY + 67,
     );
 
     return doc;
