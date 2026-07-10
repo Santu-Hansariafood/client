@@ -348,11 +348,8 @@ const PaymentList = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight italic uppercase">
-                  Payment <span className="text-emerald-600">{paymentStatus === 'done' ? 'Received' : 'Sync'}</span>
+                  Payment {paymentStatus === 'done' ? 'Received' : 'List'}
                 </h1>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">
-                  {paymentStatus === 'done' ? 'Verified Settlement Records' : 'Financial Settlement Tracker'}
-                </p>
               </div>
             </div>
 
