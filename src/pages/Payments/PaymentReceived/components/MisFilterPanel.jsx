@@ -150,11 +150,7 @@ const MisFilterPanel = ({
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-              {filters.ledgerType === "Buyer"
-                ? "Buyer company"
-                : filters.ledgerType === "Seller"
-                  ? "Seller company"
-                  : "Primary company"}
+              Buyer company
               {filters.ledgerType && (
                 <span className="text-rose-500 ml-0.5">*</span>
               )}
@@ -165,7 +161,7 @@ const MisFilterPanel = ({
                 selectedOptions={selectedCompany}
                 onChange={onCompanySelect}
                 placeholder={
-                  ledgerTypeDisabled ? "Select ledger type first" : "Select company…"
+                  ledgerTypeDisabled ? "Select ledger type first" : "Select buyer company…"
                 }
                 isMulti={false}
                 isDisabled={ledgerTypeDisabled}
@@ -176,22 +172,16 @@ const MisFilterPanel = ({
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-              {filters.ledgerType === "Buyer"
-                ? "Seller company"
-                : filters.ledgerType === "Seller"
-                  ? "Buyer company"
-                  : "Opposing company"}
+              Seller company
             </label>
             <div className="!mb-0">
               <DataDropdown
                 options={opposingCompanyOptions}
                 selectedOptions={selectedOpposingCompany}
                 onChange={onOpposingCompanySelect}
-                placeholder={
-                  selectedCompany ? "Optional filter…" : "Select primary company first"
-                }
+                placeholder="Optional seller company filter…"
                 isMulti={false}
-                isDisabled={!selectedCompany && Boolean(filters.ledgerType)}
+                isDisabled={false}
                 className="rounded-xl"
               />
             </div>

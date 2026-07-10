@@ -125,72 +125,46 @@ const ListPaymentReceived = () => {
     fetchOpposingLedgers();
   }, [filters.ledgerType]);
 
-  const primaryCompanyOptions = useMemo(() => {
-    if (!filters.ledgerType) {
-      return allCompanies.map((c) => ({
-        value: c._id,
-        label: c.companyName,
-      }));
-    }
-    if (filters.ledgerType === "Buyer") {
-      return allCompanies.map((c) => ({
-        value: c._id,
-        label: c.companyName,
-      }));
-    }
-    const names = new Set();
-    ledgers.forEach((l) => {
-      (l.companies || []).forEach((c) => {
-        const name = typeof c === "string" ? c : c?.companyName || c?.label;
-        if (name) names.add(name);
-      });
-    });
-    return Array.from(names)
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ value: name, label: name }));
-  }, [filters.ledgerType, allCompanies, ledgers]);
-
-  const opposingCompanyOptions = useMemo(() => {
-    if (!filters.ledgerType) return [];
-    if (filters.ledgerType === "Buyer") {
-      const names = new Set();
-      opposingLedgers.forEach((l) => {
-        (l.companies || []).forEach((c) => {
-          const name = typeof c === "string" ? c : c?.companyName || c?.label;
-          if (name) names.add(name);
-        });
-      });
-      return Array.from(names)
-        .sort((a, b) => a.localeCompare(b))
-        .map((name) => ({ value: name, label: name }));
-    }
+  // Buyer companies (always use allCompanies)
+  const buyerCompanyOptions = useMemo(() => {
     return allCompanies.map((c) => ({
       value: c._id,
       label: c.companyName,
     }));
-  }, [filters.ledgerType, opposingLedgers, allCompanies]);
+  }, [allCompanies]);
+
+  // Seller companies (always use sellerCompanies)
+  const sellerCompanyOptions = useMemo(() => {
+    return sellerCompanies.map((c) => ({
+      value: c.companyName,
+      label: c.companyName,
+    }));
+  }, [sellerCompanies]);
+
+  // Primary company options: always buyer companies (since that's primary)
+  const primaryCompanyOptions = useMemo(() => {
+    return buyerCompanyOptions;
+  }, [buyerCompanyOptions]);
+
+  // Opposing company options: always seller companies
+  const opposingCompanyOptions = useMemo(() => {
+    return sellerCompanyOptions;
+  }, [sellerCompanyOptions]);
 
   const resolveLedgerForCompany = useCallback(
-    (companyId, ledgerType, ledgerList) => {
+    (companyId, ledgerType, ledgerList, buyerCompanies) => {
       if (!companyId) return null;
-      if (ledgerType === "Buyer") {
+      // For buyer company selection, find the buyer ledger regardless of current ledgerType
+      if (true) { // Because primary dropdown is always buyer company
         return (
-          ledgerList.find((ledger) =>
-            (ledger.companies || []).some((c) => {
+          buyerCompanies.find((ledger) =>
+            (ledger.companyIds || ledger.companies || []).some((c) => {
               const id = typeof c === "string" ? c : c._id || c.value || c.id;
               return id === companyId;
             }),
           ) || null
         );
       }
-      return (
-        ledgerList.find((ledger) =>
-          (ledger.companies || []).some((c) => {
-            const name = typeof c === "string" ? c : c?.companyName || c?.label;
-            return name === companyId;
-          }),
-        ) || null
-      );
     },
     [],
   );
@@ -427,31 +401,31 @@ const ListPaymentReceived = () => {
 
   const handleCompanySelect = (opt) => {
     const companyId = opt?.value || "";
-    const ledger = resolveLedgerForCompany(
-      companyId,
-      filters.ledgerType,
-      ledgers,
-    );
+    const ledger = buyerCompanies.find((b) =>
+      (b.companyIds || b.companies || []).some((c) => {
+        const cId = typeof c === "string" ? c : c._id;
+        return cId === companyId;
+      })
+    ) || null;
     setSelectedCompany(opt);
-    setSelectedLedger(ledger);
+    setSelectedLedger(
+      ledger
+        ? {
+            value: ledger._id,
+            label: `${ledger.name} ${ledger.mobile ? `(${ledger.mobile})` : ""}`,
+            companies: ledger.companyIds || ledger.companies || [],
+          }
+        : null
+    );
     setSelectedOpposingCompany(null);
     setSelectedSauda(null);
     setPage(1);
     setFilters((prev) => ({
       ...prev,
       companyId,
-      ledgerId: ledger?.value || "",
-      supplierCompany: "",
-      buyerCompany: "",
-      ...(filters.ledgerType === "Buyer"
-        ? { buyerCompany: opt?.label || "" }
-        : {}),
-      ...(filters.ledgerType === "Seller"
-        ? { supplierCompany: opt?.label || "" }
-        : {}),
-      ...(!filters.ledgerType && opt?.label
-        ? { buyerCompany: opt.label, supplierCompany: "" }
-        : {}),
+      ledgerId: ledger?._id || "",
+      buyerCompany: opt?.label || "", // Always set buyerCompany
+      supplierCompany: "", // Reset supplier company when buyer changes
     }));
   };
 
@@ -459,14 +433,28 @@ const ListPaymentReceived = () => {
     setSelectedOpposingCompany(opt);
     setSelectedSauda(null);
     setPage(1);
+    
+    // If ledger type is Seller, set selectedLedger to the seller ledger
+    if (filters.ledgerType === "Seller" && opt) {
+      const sellerLedger = sellerCompanies.find((s) => s.companyName === opt.label);
+      if (sellerLedger) {
+        // Find the seller from sellers list (from fetchLedgers)
+        const ledger = ledgers.find((l) => l.companies?.some((c) => 
+          (typeof c === "string" ? c : c?.companyName) === opt.label
+        ));
+        setSelectedLedger(ledger || null);
+        setFilters((prev) => ({
+          ...prev,
+          supplierCompany: opt?.label || "",
+          ledgerId: ledger?.value || "",
+        }));
+        return;
+      }
+    }
+    
     setFilters((prev) => ({
       ...prev,
-      supplierCompany:
-        filters.ledgerType === "Buyer"
-          ? opt?.value || ""
-          : prev.supplierCompany,
-      buyerCompany:
-        filters.ledgerType === "Seller" ? opt?.label || "" : prev.buyerCompany,
+      supplierCompany: opt?.label || "", // Always set supplierCompany
     }));
   };
 
