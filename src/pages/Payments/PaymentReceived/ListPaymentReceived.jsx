@@ -879,53 +879,56 @@ const ListPaymentReceived = () => {
       ]);
 
       group.forEach(({ row, rowData }) => {
-        rowIdx++;
+          rowIdx++;
 
-        const debit = row.debit || 0;
-        const credit = row.credit || 0;
-        saudaDebitTotal += debit;
-        saudaCreditTotal += credit;
-        saudaPaidTotal += rowData.paidAmount;
-        saudaCdTotal += rowData.cdAmount;
-        saudaGstTotal += rowData.gstAmount;
-        saudaQualityClaimsTotal += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-        saudaBankChargesTotal += rowData.bankCharges;
-        grandTotalCd += rowData.cdAmount;
-        grandTotalGst += rowData.gstAmount;
-        grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-        grandTotalBankCharges += rowData.bankCharges;
+          let debit = row.debit || 0;
+          debit += rowData.gstAmount;
+          debit -= rowData.cdAmount;
+          debit -= rowData.bankCharges;
+          const credit = row.credit || 0;
+          saudaDebitTotal += debit;
+          saudaCreditTotal += credit;
+          saudaPaidTotal += rowData.paidAmount;
+          saudaCdTotal += rowData.cdAmount;
+          saudaGstTotal += rowData.gstAmount;
+          saudaQualityClaimsTotal += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+          saudaBankChargesTotal += rowData.bankCharges;
+          grandTotalCd += rowData.cdAmount;
+          grandTotalGst += rowData.gstAmount;
+          grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+          grandTotalBankCharges += rowData.bankCharges;
 
-        tableData.push([
-          rowIdx,
-          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
-          rowData.saudaNo,
-          rowData.lorryNo,
-          rowData.billNo,
-          (row.buyerCompany || "-").toUpperCase(),
-          (row.supplierCompany || "-").toUpperCase(),
-          debit > 0
-            ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          credit > 0
-            ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          rowData.cdAmount > 0
-            ? `Rs. ${rowData.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          rowData.gstAmount > 0
-            ? `Rs. ${rowData.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          (rowData.totalQualityClaims + rowData.paymentClaimAmount) > 0
-            ? `Rs. ${(rowData.totalQualityClaims + rowData.paymentClaimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          rowData.bankCharges > 0
-            ? `Rs. ${rowData.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          debit - credit !== 0
-            ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-            : "",
-          rowData.remarks,
-        ]);
+          tableData.push([
+            rowIdx,
+            row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
+            rowData.saudaNo,
+            rowData.lorryNo,
+            rowData.billNo,
+            (row.buyerCompany || "-").toUpperCase(),
+            (row.supplierCompany || "-").toUpperCase(),
+            debit > 0
+              ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            credit > 0
+              ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            rowData.cdAmount > 0
+              ? `Rs. ${rowData.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            rowData.gstAmount > 0
+              ? `Rs. ${rowData.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            (rowData.totalQualityClaims + rowData.paymentClaimAmount) > 0
+              ? `Rs. ${(rowData.totalQualityClaims + rowData.paymentClaimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            rowData.bankCharges > 0
+              ? `Rs. ${rowData.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            debit - credit !== 0
+              ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            rowData.remarks,
+          ]);
 
         // Add claim rows if any
         const validClaims = rowData.qualityClaims.filter(
@@ -1070,7 +1073,12 @@ const ListPaymentReceived = () => {
     let totalCredit = 0;
     reportRows.forEach((row) => {
       if (!row.isOpening) {
-        totalDebit += row.debit || 0;
+        const rowData = extractRowData(row);
+        let debit = row.debit || 0;
+        debit += rowData.gstAmount;
+        debit -= rowData.cdAmount;
+        debit -= rowData.bankCharges;
+        totalDebit += debit;
         totalCredit += row.credit || 0;
       }
     });
@@ -1138,30 +1146,28 @@ const ListPaymentReceived = () => {
     doc.setTextColor(0, 0, 0);
     summaryY += boxHeight + 10;
 
-    doc.setFontSize(8);
+    // New section: Separate Debit/Credit, Bank Details, QR
+    let newSectionY = summaryY;
+
+    // Left side: Debit/Credit totals and Bank Details
+    // Right side: QR and Signatory
+    // Debit and Credit separately
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DEBIT TOTAL", margin + 10, newSectionY + 5);
     doc.setFont("helvetica", "normal");
-    let currentWordsY = summaryY + 8;
+    doc.setFontSize(12);
+    doc.text(`Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, margin + 10, newSectionY + 14);
 
-    if (totalDebit > 0) {
-      doc.text(
-        `Total Debit in Words: ${numberToWords(totalDebit)}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 6;
-    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("CREDIT TOTAL", margin + 10, newSectionY + 24);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, margin + 10, newSectionY + 33);
 
-    if (totalCredit > 0) {
-      doc.text(
-        `Total Credit in Words: ${numberToWords(totalCredit)}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 10;
-    }
-
+    // Bank details below debit/credit
     let sellerCompanyData = null;
-
     const sellerCompanyName =
       filters.ledgerType === "Buyer"
         ? selectedOpposingCompany?.label
@@ -1179,80 +1185,58 @@ const ListPaymentReceived = () => {
       );
     }
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Seller Bank Details:", margin, currentWordsY);
-    currentWordsY += 7;
-
     const bankDetails = sellerCompanyData?.bankDetails?.[0];
 
     if (bankDetails) {
-      // Draw a box around bank details
-      doc.setLineWidth(0.3);
-      doc.rect(margin, currentWordsY - 4, pageWidth - margin * 2, 30);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Bank Account Details:", margin + 10, newSectionY + 45);
+      
+      doc.setLineWidth(0.2);
+      const leftPartWidth = (pageWidth - 2 * margin) * 0.6;
+      doc.rect(margin + 8, newSectionY + 49, leftPartWidth - 16, 45);
       
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.text("Bank Name:", margin + 5, currentWordsY + 3);
+      doc.text("Bank Name:", margin + 15, newSectionY + 57);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(bankDetails.bankName || "-", margin + 35, currentWordsY + 3);
-      
+      doc.text(bankDetails.bankName || "-", margin + 60, newSectionY + 57);
+
       doc.setFont("helvetica", "bold");
-      doc.text("Account Name:", pageWidth / 2 - 30, currentWordsY + 3, { align: "right" });
+      doc.text("Account Holder:", margin + 15, newSectionY + 65);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", pageWidth / 2 - 25, currentWordsY + 3);
-      
+      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 60, newSectionY + 65);
+
       doc.setFont("helvetica", "bold");
-      doc.text("Account Number:", margin + 5, currentWordsY + 10);
+      doc.text("Account Number:", margin + 15, newSectionY + 73);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountNumber || "-", margin + 48, currentWordsY + 10);
-      
+      doc.text(bankDetails.accountNumber || "-", margin + 60, newSectionY + 73);
+
       doc.setFont("helvetica", "bold");
-      doc.text("IFSC Code:", pageWidth / 2 - 30, currentWordsY + 10, { align: "right" });
+      doc.text("IFSC Code:", margin + 15, newSectionY + 81);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.ifscCode || "-", pageWidth / 2 - 25, currentWordsY + 10);
-      
+      doc.text(bankDetails.ifscCode || "-", margin + 60, newSectionY + 81);
+
       doc.setFont("helvetica", "bold");
-      doc.text("Branch:", margin + 5, currentWordsY + 17);
+      doc.text("Branch:", margin + 15, newSectionY + 89);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.branchName || "-", margin + 30, currentWordsY + 17);
-      
-      currentWordsY += 34;
+      doc.text(bankDetails.branchName || "-", margin + 60, newSectionY + 89);
     } else {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Bank Account Details:", margin + 10, newSectionY + 45);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("No bank details available", margin, currentWordsY);
-      currentWordsY += 8;
+      doc.text("No bank details available", margin + 10, newSectionY + 55);
     }
 
-    doc.setLineWidth(0.2);
-    doc.line(margin, currentWordsY, pageWidth - margin, currentWordsY);
-    currentWordsY += 8;
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(80, 80, 80);
-    doc.text(
-      "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
-      margin,
-      currentWordsY,
-      { align: "justify", maxWidth: pageWidth - margin * 2 },
-    );
-
-    const noteLines = doc.splitTextToSize(
-      "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
-      pageWidth - margin * 2,
-    );
-    currentWordsY += noteLines.length * 5 + 5;
-
+    // Right part: QR code and Signatory
     try {
       const qrText = encodeURIComponent(
-        "HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report",
+        `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nDebit: ${totalDebit}\nCredit: ${totalCredit}`,
       );
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
-
-      await doc.addImage(qrUrl, "PNG", margin, currentWordsY, 30, 30);
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrText}`;
+      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 50 - 20, newSectionY, 50, 50);
     } catch (qrError) {
       console.log("QR code not added:", qrError);
     }
@@ -1263,18 +1247,18 @@ const ListPaymentReceived = () => {
     doc.text(
       `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
       pageWidth - margin,
-      currentWordsY,
+      newSectionY + 60,
       { align: "right" },
     );
     doc.setFont("helvetica", "bold");
-    doc.text("Authorised Signatory", pageWidth - margin, currentWordsY + 10, {
+    doc.text("Authorised Signatory", pageWidth - margin, newSectionY + 70, {
       align: "right",
     });
     doc.line(
       pageWidth - 80,
-      currentWordsY + 7,
+      newSectionY + 67,
       pageWidth - margin,
-      currentWordsY + 7,
+      newSectionY + 67,
     );
 
     return doc;
