@@ -715,10 +715,9 @@ const ListPaymentReceived = () => {
       const cdAmount = grossAmount * (cdPercent / 100);
       const amountAfterCd = grossAmount - cdAmount;
       const bankCharges = Number(e.bankCharges) || 0;
-      const amountAfterBankCharges = amountAfterCd - bankCharges;
-      const taxableAmount = amountAfterBankCharges;
-      const gstAmount = taxableAmount * (gstPercent / 100);
-      const netAmount = taxableAmount + gstAmount;
+      const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
+      const gstAmount = debit * (gstPercent / 100);
+      const netAmount = debit + gstAmount; // Total value = debit + gst
       
       // Calculate total quality claims
       let totalQualityClaims = 0;
@@ -881,10 +880,7 @@ const ListPaymentReceived = () => {
       group.forEach(({ row, rowData }) => {
           rowIdx++;
 
-          let debit = row.debit || 0;
-          debit += rowData.gstAmount;
-          debit -= rowData.cdAmount;
-          debit -= rowData.bankCharges;
+          const debit = row.debit || 0; // DEBIT is already calculated as (gross - cd - bank charges)
           const credit = row.credit || 0;
           saudaDebitTotal += debit;
           saudaCreditTotal += credit;
@@ -1073,11 +1069,7 @@ const ListPaymentReceived = () => {
     let totalCredit = 0;
     reportRows.forEach((row) => {
       if (!row.isOpening) {
-        const rowData = extractRowData(row);
-        let debit = row.debit || 0;
-        debit += rowData.gstAmount;
-        debit -= rowData.cdAmount;
-        debit -= rowData.bankCharges;
+        const debit = row.debit || 0; // DEBIT is already calculated as (gross - cd - bank charges)
         totalDebit += debit;
         totalCredit += row.credit || 0;
       }
