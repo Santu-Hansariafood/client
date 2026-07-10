@@ -557,6 +557,12 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
           <View style={styles.titleDivider} />
         </View>
 
+        <View>
+          <Text style={styles.introText}>
+            Please find the below payment details
+          </Text>
+        </View>
+
         <View style={styles.partiesContainer}>
           <View style={styles.partyBox}>
             <Text style={styles.partyLabel}>FROM (BUYER)</Text>
