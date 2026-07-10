@@ -1,6 +1,8 @@
 import express from "express";
 import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
+import Company from "../models/Company.js";
+import SellerCompany from "../models/SellerCompany.js";
 import ExcelJS from "exceljs";
 
 const router = express.Router();
@@ -8,6 +10,9 @@ const router = express.Router();
 const escapeRegex = (string) => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
 };
+
+const companyRegex = (name) =>
+  new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
 
 router.get("/", async (req, res) => {
   try {
@@ -17,6 +22,8 @@ router.get("/", async (req, res) => {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const paymentStatus = req.query.paymentStatus;
+    const buyerCompany = req.query.buyerCompany;
+    const sellerCompany = req.query.sellerCompany;
 
     let query = {
       unloadingWeight: { $gt: 0 },
@@ -29,6 +36,14 @@ router.get("/", async (req, res) => {
     }
 
     const andParts = [query];
+
+    if (buyerCompany) {
+      andParts.push({ buyerCompany: companyRegex(buyerCompany) });
+    }
+
+    if (sellerCompany) {
+      andParts.push({ supplierCompany: companyRegex(sellerCompany) });
+    }
 
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
@@ -70,7 +85,7 @@ router.get("/", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo buyerCompany paymentTerms rate")
+      .select("saudaNo buyerCompany paymentTerms rate cd gst")
       .lean();
 
     const saudaMap = selfOrders.reduce((acc, so) => {
@@ -90,6 +105,23 @@ router.get("/", async (req, res) => {
 
       const isDue = item.paymentStatus === "pending" && today >= dueDate;
 
+      // Calculate netAmount and dueAmount
+      let netAmount = 0;
+      if (order) {
+        const weight = item.unloadingWeight || 0;
+        const rate = order.rate || 0;
+        const cdPercent = order.cd || 0;
+        const gstPercent = order.gst || 0;
+
+        const grossAmount = weight * rate;
+        const cdAmount = grossAmount * (cdPercent / 100);
+        const taxableAmount = grossAmount - cdAmount;
+        const gstAmount = taxableAmount * (gstPercent / 100);
+        netAmount = taxableAmount + gstAmount;
+      }
+
+      const dueAmount = Math.max(0, netAmount - (item.paidAmount || 0));
+
       return {
         ...item,
         paymentTerms: terms,
@@ -97,6 +129,8 @@ router.get("/", async (req, res) => {
         isDue,
         rate: order.rate || 0,
         amount: (item.unloadingWeight || 0) * (order.rate || 0),
+        netAmount,
+        dueAmount,
         buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
       };
     });
@@ -209,6 +243,8 @@ router.get("/export/excel", async (req, res) => {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const paymentStatus = req.query.paymentStatus;
+    const buyerCompany = req.query.buyerCompany;
+    const sellerCompany = req.query.sellerCompany;
 
     let query = { unloadingWeight: { $gt: 0 } };
     if (paymentStatus && paymentStatus !== "all") {
@@ -216,6 +252,15 @@ router.get("/export/excel", async (req, res) => {
     }
 
     const andParts = [query];
+
+    if (buyerCompany) {
+      andParts.push({ buyerCompany: companyRegex(buyerCompany) });
+    }
+
+    if (sellerCompany) {
+      andParts.push({ supplierCompany: companyRegex(sellerCompany) });
+    }
+
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
       andParts.push({
@@ -248,7 +293,7 @@ router.get("/export/excel", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo buyerCompany paymentTerms rate")
+      .select("saudaNo buyerCompany paymentTerms rate cd gst")
       .lean();
 
     const saudaMap = selfOrders.reduce((acc, so) => {
@@ -271,6 +316,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "Unloading Date", key: "unloadingDate", width: 15 },
       { header: "Unloading Qty (Tons)", key: "unloadingWeight", width: 20 },
       { header: "Amount (Rs)", key: "amount", width: 15 },
+      { header: "Due Amount (Rs)", key: "dueAmount", width: 15 },
       { header: "Status", key: "status", width: 15 },
     ];
 
@@ -278,6 +324,23 @@ router.get("/export/excel", async (req, res) => {
       const item = items[i];
       const order = saudaMap[item.saudaNo] || {};
       const amount = (item.unloadingWeight || 0) * (order.rate || 0);
+
+      // Calculate netAmount and dueAmount
+      let netAmount = 0;
+      if (order) {
+        const weight = item.unloadingWeight || 0;
+        const rate = order.rate || 0;
+        const cdPercent = order.cd || 0;
+        const gstPercent = order.gst || 0;
+
+        const grossAmount = weight * rate;
+        const cdAmount = grossAmount * (cdPercent / 100);
+        const taxableAmount = grossAmount - cdAmount;
+        const gstAmount = taxableAmount * (gstPercent / 100);
+        netAmount = taxableAmount + gstAmount;
+      }
+
+      const dueAmount = Math.max(0, netAmount - (item.paidAmount || 0));
 
       worksheet.addRow({
         slNo: i + 1,
@@ -293,6 +356,7 @@ router.get("/export/excel", async (req, res) => {
           : "N/A",
         unloadingWeight: (item.unloadingWeight || 0).toFixed(2),
         amount: amount.toFixed(2),
+        dueAmount: dueAmount.toFixed(2),
         status: (item.paymentStatus || "pending").toUpperCase(),
       });
     }
