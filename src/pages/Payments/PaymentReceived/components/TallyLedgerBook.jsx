@@ -273,7 +273,9 @@ const TallyLedgerBook = ({
                                 />
                               }
                               fileName={`Payment_Voucher_${
-                                row.vchType || "Voucher"
+                                (row.buyerCompany || "Buyer").replace(/[^a-zA-Z0-9]/g, "_")
+                              }_${
+                                (row.supplierCompany || "Seller").replace(/[^a-zA-Z0-9]/g, "_")
                               }_${
                                 row.date ? new Date(row.date).toISOString().split("T")[0] : ""
                               }.pdf`}
@@ -437,7 +439,9 @@ const TallyLedgerBook = ({
                 />
               }
                           fileName={`Payment_Voucher_${
-                            row.vchType || "Voucher"
+                            (row.buyerCompany || "Buyer").replace(/[^a-zA-Z0-9]/g, "_")
+                          }_${
+                            (row.supplierCompany || "Seller").replace(/[^a-zA-Z0-9]/g, "_")
                           }_${
                             row.date ? new Date(row.date).toISOString().split("T")[0] : ""
                           }.pdf`}

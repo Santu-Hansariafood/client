@@ -596,9 +596,9 @@ const ListPaymentReceived = () => {
     const margin = 10;
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.setTextColor(0, 0, 0);
-    doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 15, {
+    doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 14, {
       align: "center",
     });
 
@@ -607,22 +607,29 @@ const ListPaymentReceived = () => {
     doc.text(
       "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3",
       pageWidth / 2,
-      21,
+      20,
       { align: "center" },
     );
     doc.text(
       "Bidhannagar, Kolkata, West Bengal - 700106",
       pageWidth / 2,
-      26,
+      25,
       { align: "center" },
     );
 
-    doc.setLineWidth(0.5);
-    doc.line(margin, 31, pageWidth - margin, 31);
+    doc.setLineWidth(1);
+    doc.line(margin, 30, pageWidth - margin, 30);
 
-    let infoY = 34;
-    const buyerName = filters.buyerCompany || "N/A";
-    const sellerName = filters.supplierCompany || "N/A";
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 38, { align: "center" });
+
+    doc.setLineWidth(0.5);
+    doc.line(margin, 42, pageWidth - margin, 42);
+
+    let infoY = 46;
+    const buyerName = filters.buyerCompany || "All";
+    const sellerName = filters.supplierCompany || "All";
     const startDate = filters.startDate
       ? new Date(filters.startDate).toLocaleDateString("en-GB")
       : "All";
@@ -630,33 +637,41 @@ const ListPaymentReceived = () => {
       ? new Date(filters.endDate).toLocaleDateString("en-GB")
       : "All";
 
-    doc.rect(margin, infoY, pageWidth - margin * 2, 30);
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 32, "F");
+    doc.setLineWidth(0.5);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 32);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("Ledger", margin + 2, infoY + 8);
+    doc.text("Ledger", margin + 5, infoY + 9);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${selectedCompany?.label || ""}`, margin + 20, infoY + 8);
+    doc.text(`: ${selectedCompany?.label || "-"}`, margin + 25, infoY + 9);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Date Between", margin + 2, infoY + 18);
+    doc.text("Date Between", margin + 5, infoY + 23);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${startDate} To ${endDate}`, margin + 35, infoY + 18);
+    doc.text(`: ${startDate} To ${endDate}`, margin + 38, infoY + 23);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Branch", pageWidth / 2, infoY + 8, { align: "center" });
+    doc.text("Branch", pageWidth / 2, infoY + 9, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(": All", pageWidth / 2 + 18, infoY + 8);
+    doc.text(": All", pageWidth / 2 + 18, infoY + 9);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer", pageWidth / 2, infoY + 18, { align: "center" });
+    doc.text("Buyer Company", pageWidth / 2, infoY + 23, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${buyerName}`, pageWidth / 2 + 18, infoY + 18);
+    doc.text(`: ${buyerName}`, pageWidth / 2 + 32, infoY + 23);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Seller", pageWidth - 70, infoY + 8);
+    doc.text("Seller Company", pageWidth - 85, infoY + 9);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${sellerName}`, pageWidth - 40, infoY + 8);
+    doc.text(`: ${sellerName}`, pageWidth - 45, infoY + 9);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Report Date", pageWidth - 85, infoY + 23);
+    doc.setFont("helvetica", "normal");
+    doc.text(`: ${new Date().toLocaleDateString("en-GB")}`, pageWidth - 45, infoY + 23);
 
     let currentY = infoY + 38;
 
@@ -1165,47 +1180,48 @@ const ListPaymentReceived = () => {
     }
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.text("Seller Bank Details:", margin, currentWordsY);
-    currentWordsY += 6;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
+    currentWordsY += 7;
 
     const bankDetails = sellerCompanyData?.bankDetails?.[0];
 
     if (bankDetails) {
-      doc.text(
-        `Bank Name: ${bankDetails.bankName || "-"}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 5;
-      doc.text(
-        `Account Name: ${bankDetails.accountHolderName || sellerCompanyName || "-"}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 5;
-      doc.text(
-        `Account Number: ${bankDetails.accountNumber || "-"}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 5;
-      doc.text(
-        `IFSC Code: ${bankDetails.ifscCode || "-"}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 5;
-      doc.text(
-        `Branch: ${bankDetails.branchName || "-"}`,
-        margin,
-        currentWordsY,
-      );
-      currentWordsY += 8;
+      // Draw a box around bank details
+      doc.setLineWidth(0.3);
+      doc.rect(margin, currentWordsY - 4, pageWidth - margin * 2, 30);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("Bank Name:", margin + 5, currentWordsY + 3);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(bankDetails.bankName || "-", margin + 35, currentWordsY + 3);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Account Name:", pageWidth / 2 - 30, currentWordsY + 3, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", pageWidth / 2 - 25, currentWordsY + 3);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Account Number:", margin + 5, currentWordsY + 10);
+      doc.setFont("helvetica", "normal");
+      doc.text(bankDetails.accountNumber || "-", margin + 48, currentWordsY + 10);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("IFSC Code:", pageWidth / 2 - 30, currentWordsY + 10, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.text(bankDetails.ifscCode || "-", pageWidth / 2 - 25, currentWordsY + 10);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Branch:", margin + 5, currentWordsY + 17);
+      doc.setFont("helvetica", "normal");
+      doc.text(bankDetails.branchName || "-", margin + 30, currentWordsY + 17);
+      
+      currentWordsY += 34;
     } else {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
       doc.text("No bank details available", margin, currentWordsY);
       currentWordsY += 8;
     }
@@ -1484,8 +1500,12 @@ const ListPaymentReceived = () => {
     try {
       setPrinting(true);
       const doc = await generateMISReportPDF();
+      const buyerName = filters.buyerCompany ? filters.buyerCompany.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Buyers';
+      const sellerName = filters.supplierCompany ? filters.supplierCompany.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Sellers';
+      const startDate = filters.startDate ? filters.startDate : 'All';
+      const endDate = filters.endDate ? filters.endDate : 'All';
       doc.save(
-        `MIS_PaymentReceived_${filters.startDate || "All"}_to_${filters.endDate || "All"}.pdf`,
+        `MIS_PaymentReceived_${buyerName}_${sellerName}_${startDate}_to_${endDate}.pdf`,
       );
       toast.success("MIS Report generated successfully");
     } catch (error) {
