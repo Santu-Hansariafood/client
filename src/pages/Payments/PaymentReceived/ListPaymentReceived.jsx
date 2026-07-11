@@ -1164,10 +1164,10 @@ const ListPaymentReceived = () => {
         : "NIL";
       doc.text(differenceText, margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
     doc.setTextColor(0, 0, 0);
-    summaryY += boxHeight + 10;
+    summaryY += boxHeight + 5;
 
     // First section: Bank Account Details (separated)
-    let bankSectionY = summaryY + 40;
+    let bankSectionY = summaryY + 20;
     
     // Get seller company and bank details
     let sellerCompanyData = null;
@@ -1192,54 +1192,54 @@ const ListPaymentReceived = () => {
 
     if (bankDetails) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("Bank Account Details", margin, bankSectionY + 5);
+      doc.setFontSize(10);
+      doc.text("Bank Account Details", margin, bankSectionY + 3);
       
       doc.setLineWidth(0.2);
       const bankBoxWidth = (pageWidth - 2 * margin);
-      doc.rect(margin, bankSectionY + 10, bankBoxWidth, 55);
+      doc.rect(margin, bankSectionY + 8, bankBoxWidth, 48);
       
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("Bank Name:", margin + 10, bankSectionY + 20);
+      doc.setFontSize(8.5);
+      doc.text("Bank Name:", margin + 10, bankSectionY + 17);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.bankName || "-", margin + 80, bankSectionY + 20);
+      doc.text(bankDetails.bankName || "-", margin + 75, bankSectionY + 17);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Holder:", margin + 10, bankSectionY + 30);
+      doc.text("Account Holder:", margin + 10, bankSectionY + 27);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 80, bankSectionY + 30);
+      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 75, bankSectionY + 27);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Number:", margin + 10, bankSectionY + 40);
+      doc.text("Account Number:", margin + 10, bankSectionY + 37);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountNumber || "-", margin + 80, bankSectionY + 40);
+      doc.text(bankDetails.accountNumber || "-", margin + 75, bankSectionY + 37);
 
       doc.setFont("helvetica", "bold");
-      doc.text("IFSC Code:", margin + 10, bankSectionY + 50);
+      doc.text("IFSC Code:", margin + 10, bankSectionY + 47);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.ifscCode || "-", margin + 80, bankSectionY + 50);
+      doc.text(bankDetails.ifscCode || "-", margin + 75, bankSectionY + 47);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Branch:", pageWidth - margin - 150, bankSectionY + 20);
+      doc.text("Branch:", pageWidth - margin - 140, bankSectionY + 17);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.branchName || "-", pageWidth - margin - 145, bankSectionY + 20);
+      doc.text(bankDetails.branchName || "-", pageWidth - margin - 135, bankSectionY + 17);
     } else {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("Bank Account Details", margin, bankSectionY + 5);
+      doc.setFontSize(10);
+      doc.text("Bank Account Details", margin, bankSectionY + 3);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text("No bank details available", margin + 10, bankSectionY + 15);
+      doc.setFontSize(8.5);
+      doc.text("No bank details available", margin + 10, bankSectionY + 12);
     }
 
     // Separator line
-    const separatorY = bankDetails ? bankSectionY + 70 : bankSectionY + 30;
+    const separatorY = bankDetails ? bankSectionY + 62 : bankSectionY + 25;
     doc.setLineWidth(0.2);
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
     
     // Final calculation and QR
-    let finalSectionY = separatorY + 20;
+    let finalSectionY = separatorY + 12;
 
     // Ensure all totals are rounded to 2 decimal places
     const summaryDebitTotal = Number(totalDebit.toFixed(2));
@@ -1248,27 +1248,55 @@ const ListPaymentReceived = () => {
     const summaryCdTotal = Number(grandTotalCd.toFixed(2));
     const summaryClaimsTotal = Number(grandTotalQualityClaims.toFixed(2));
     const summaryBankChargesTotal = Number(grandTotalBankCharges.toFixed(2));
+    const totalLeftSide = Number((summaryDebitTotal + summaryGstTotal).toFixed(2));
+    const totalRightSide = Number((summaryCdTotal + summaryClaimsTotal + summaryBankChargesTotal + summaryCreditTotal).toFixed(2));
+    const finalDifference = Number((totalLeftSide - totalRightSide).toFixed(2));
 
     // Left side: Formula calculation
     // Right side: QR and Signatory
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL DEBIT + TOTAL GST - TOTAL CREDIT - TOTAL CD - TOTAL CLAIMS = TOTAL BANK CHGS", margin + 10, finalSectionY + 5);
+    doc.text("(TOTAL DEBIT + TOTAL GST) - (TOTAL CD + TOTAL CLAIMS + TOTAL BANK CHGS + TOTAL CREDIT) = DIFFERENCE", margin + 10, finalSectionY + 5);
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} = Rs. ${summaryBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 15);
+    const formulaLine1 = `(Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+    const formulaLine2 = ` - (Rs. ${summaryCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+    const formulaLine3 = ` = Rs. ${finalDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${finalDifference > 0 ? 'Dr' : finalDifference < 0 ? 'Cr' : 'NIL'})`;
+    doc.text(formulaLine1, margin + 10, finalSectionY + 15);
+    doc.text(formulaLine2, margin + 10, finalSectionY + 25);
+    doc.text(formulaLine3, margin + 10, finalSectionY + 35);
 
     // Right part: QR code and Signatory
     try {
       const qrText = encodeURIComponent(
         `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nDebit: ${totalDebit}\nCredit: ${totalCredit}`,
       );
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrText}`;
-      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 50 - 20, finalSectionY, 50, 50);
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
+      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 45 - 15, finalSectionY, 45, 45);
     } catch (qrError) {
       console.log("QR code not added:", qrError);
     }
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
+      pageWidth - margin,
+      finalSectionY + 55,
+      { align: "right" },
+    );
+    doc.setFont("helvetica", "bold");
+    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 64, {
+      align: "right",
+    });
+    doc.line(
+      pageWidth - 75,
+      finalSectionY + 61,
+      pageWidth - margin,
+      finalSectionY + 61,
+    );
 
     // Add page numbering to the new page
     const pageCount = doc.internal.getNumberOfPages();
@@ -1289,26 +1317,6 @@ const ListPaymentReceived = () => {
       pageHeight - 8,
     );
     doc.text("Confidential", pageWidth - margin, pageHeight - 8, { align: "right" });
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(
-      `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
-      pageWidth - margin,
-      finalSectionY + 70,
-      { align: "right" },
-    );
-    doc.setFont("helvetica", "bold");
-    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 80, {
-      align: "right",
-    });
-    doc.line(
-      pageWidth - 80,
-      finalSectionY + 77,
-      pageWidth - margin,
-      finalSectionY + 77,
-    );
 
     return doc;
   };
