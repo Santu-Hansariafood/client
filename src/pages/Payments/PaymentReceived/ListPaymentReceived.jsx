@@ -21,7 +21,7 @@ import MisFilterPanel from "./components/MisFilterPanel";
 import MisVoucherLedger from "./components/MisVoucherLedger";
 import MisLorryLedger from "./components/MisLorryLedger";
 import MisPageHeader from "./components/MisPageHeader";
-import { buildTallyVoucherRows } from "./utils/paymentLedgerUtils";
+import { buildTallyVoucherRows, calculateVoucherTotals, formatLedgerAmount } from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
 
 const ListPaymentReceived = () => {
@@ -368,6 +368,11 @@ const ListPaymentReceived = () => {
           : selectedCompany?.label || "",
     }),
     [filters.ledgerType, selectedCompany, selectedOpposingCompany],
+  );
+
+  const voucherTotals = useMemo(
+    () => calculateVoucherTotals(tallyListRows),
+    [tallyListRows],
   );
 
   const periodCredit = useMemo(
@@ -854,7 +859,7 @@ const ListPaymentReceived = () => {
 
     Object.keys(groupedBySauda).forEach((saudaKey) => {
       const group = groupedBySauda[saudaKey];
-      let saudaDebitTotal = 0;
+      let saudaGrossTotal = 0;
       let saudaCreditTotal = 0;
       let saudaPaidTotal = 0;
       let saudaCdTotal = 0;
@@ -877,26 +882,26 @@ const ListPaymentReceived = () => {
       group.forEach(({ row, rowData }) => {
           rowIdx++;
 
-          const debit = row.debit || 0; // DEBIT is already calculated as (gross - cd - bank charges)
+          const grossAmount = row.grossAmount || 0;
           const credit = row.credit || 0;
-          saudaDebitTotal += debit;
+          const gst = row.gstAmount || 0;
+          const claims = row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+          const cd = row.cdAmount || 0;
+          const bankCharges = row.bankCharges || 0;
+
+          saudaGrossTotal += grossAmount;
           saudaCreditTotal += credit;
           saudaPaidTotal += rowData.paidAmount;
-          saudaCdTotal += rowData.cdAmount;
-          saudaGstTotal += rowData.gstAmount;
-          saudaQualityClaimsTotal += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-          saudaBankChargesTotal += rowData.bankCharges;
-
-          const claims = rowData.totalQualityClaims + rowData.paymentClaimAmount;
-          const cd = rowData.cdAmount;
-          const bankCharges = rowData.bankCharges;
-          const gst = rowData.gstAmount;
+          saudaCdTotal += cd;
+          saudaGstTotal += gst;
+          saudaQualityClaimsTotal += claims;
+          saudaBankChargesTotal += bankCharges;
           
-          // Calculate BALANCE as (DEBIT + GST - CLAIMS - CD - BANK CHGS)
-          const balance = Number((debit + gst - claims - cd - bankCharges).toFixed(2));
+          // Calculate BALANCE as (GROSS + GST - CLAIMS - CD - BANK CHGS)
+          const balance = Number((grossAmount + gst - claims - cd - bankCharges).toFixed(2));
           
           // Ensure all values are rounded to 2 decimal places
-          const formattedDebit = Number(debit.toFixed(2));
+          const formattedGross = Number(grossAmount.toFixed(2));
           const formattedCredit = Number(credit.toFixed(2));
           const formattedGst = Number(gst.toFixed(2));
           const formattedClaims = Number(claims.toFixed(2));
@@ -911,8 +916,8 @@ const ListPaymentReceived = () => {
             rowData.billNo,
             (row.buyerCompany || "-").toUpperCase(),
             (row.supplierCompany || "-").toUpperCase(),
-            formattedDebit > 0
-              ? `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            formattedGross > 0
+              ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
             formattedCredit > 0
               ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -962,7 +967,7 @@ const ListPaymentReceived = () => {
         }
       });
 
-      const saudaBalance = Number((saudaDebitTotal + saudaGstTotal - saudaQualityClaimsTotal - saudaCdTotal - saudaBankChargesTotal).toFixed(2));
+      const saudaBalance = Number((saudaGrossTotal + saudaGstTotal - saudaQualityClaimsTotal - saudaCdTotal - saudaBankChargesTotal).toFixed(2));
       tableData.push([
         {
           content: `TOTAL FOR SAUDA ${saudaKey}`,
@@ -972,7 +977,7 @@ const ListPaymentReceived = () => {
             halign: "right",
           },
         },
-        `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaGrossTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -983,7 +988,7 @@ const ListPaymentReceived = () => {
       ]);
 
       saudaTotals[saudaKey] = {
-        debit: saudaDebitTotal,
+        debit: saudaGrossTotal,
         credit: saudaCreditTotal,
       };
     });
@@ -999,7 +1004,7 @@ const ListPaymentReceived = () => {
           "BILL NO",
           "BUYER",
           "SELLER",
-          "DEBIT (Rs.)",
+          "GROSS AMOUNT (Rs.)",
           "CREDIT (Rs.)",
           "GST (Rs.)",
           "CLAIMS (Rs.)",
@@ -1077,31 +1082,31 @@ const ListPaymentReceived = () => {
     let grandTotalGst = 0;
     let grandTotalQualityClaims = 0;
     let grandTotalBankCharges = 0;
-    let totalDebit = 0;
+    let totalGross = 0;
     let totalCredit = 0;
     
     reportRows.forEach((row) => {
       if (!row.isOpening) {
-        const debit = row.debit || 0; // DEBIT is already calculated as (gross - cd - bank charges)
-        totalDebit += debit;
+        const grossAmount = row.grossAmount || 0;
+        totalGross += grossAmount;
         totalCredit += row.credit || 0;
         
         const rowData = extractRowData(row);
-        grandTotalCd += rowData.cdAmount;
-        grandTotalGst += rowData.gstAmount;
-        grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-        grandTotalBankCharges += rowData.bankCharges;
+        grandTotalCd += row.cdAmount || 0;
+        grandTotalGst += row.gstAmount || 0;
+        grandTotalQualityClaims += row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+        grandTotalBankCharges += row.bankCharges || 0;
       }
     });
     
     // Use the same formula for both differences
-    const totalDebitNum = Number(totalDebit.toFixed(2));
+    const totalGrossNum = Number(totalGross.toFixed(2));
     const totalCreditNum = Number(totalCredit.toFixed(2));
     const totalGstNum = Number(grandTotalGst.toFixed(2));
     const totalCdNum = Number(grandTotalCd.toFixed(2));
     const totalClaimsNum = Number(grandTotalQualityClaims.toFixed(2));
     const totalBankChargesNum = Number(grandTotalBankCharges.toFixed(2));
-    const totalLeftSide = totalDebitNum + totalGstNum;
+    const totalLeftSide = totalGrossNum + totalGstNum;
     const totalRightSide = totalCdNum + totalClaimsNum + totalBankChargesNum + totalCreditNum;
     const difference = Number((totalLeftSide - totalRightSide).toFixed(2));
     
@@ -1134,10 +1139,10 @@ const ListPaymentReceived = () => {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
 
-    // Total Debit
-      const formattedTotalDebit = Number(totalDebit.toFixed(2));
-      doc.text("TOTAL DEBIT", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+    // Total Gross Amount
+      const formattedTotalGross = Number(totalGross.toFixed(2));
+      doc.text("TOTAL GROSS", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text(formattedTotalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
 
       // Total Credit
       const formattedTotalCredit = Number(totalCredit.toFixed(2));
@@ -1259,11 +1264,11 @@ const ListPaymentReceived = () => {
     // Right side: QR and Signatory
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("(TOTAL DEBIT + TOTAL GST) - (TOTAL CD + TOTAL CLAIMS + TOTAL BANK CHGS + TOTAL CREDIT) = DIFFERENCE", margin + 10, finalSectionY + 5);
+    doc.text("(TOTAL GROSS + TOTAL GST) - (TOTAL CD + TOTAL CLAIMS + TOTAL BANK CHGS + TOTAL CREDIT) = DIFFERENCE", margin + 10, finalSectionY + 5);
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    const formulaLine1 = `(Rs. ${totalDebitNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalGstNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+    const formulaLine1 = `(Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalGstNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
     const formulaLine2 = ` - (Rs. ${totalCdNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalClaimsNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalBankChargesNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
     const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? 'Dr' : difference < 0 ? 'Cr' : 'NIL'})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
@@ -1273,7 +1278,7 @@ const ListPaymentReceived = () => {
     // Right part: QR code and Signatory
     try {
       const qrText = encodeURIComponent(
-        `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nDebit: ${totalDebit}\nCredit: ${totalCredit}`,
+        `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nGross: ${totalGross}\nCredit: ${totalCredit}`,
       );
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
       await doc.addImage(qrUrl, "PNG", pageWidth - margin - 45 - 15, finalSectionY, 45, 45);
@@ -1953,6 +1958,7 @@ const ListPaymentReceived = () => {
                   sendingEmailIds={sendingEmailIds}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  totals={voucherTotals}
                 />
               )}
             </>

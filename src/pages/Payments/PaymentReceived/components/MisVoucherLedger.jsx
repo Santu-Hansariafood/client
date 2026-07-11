@@ -25,6 +25,7 @@ const MisVoucherLedger = ({
   sendingEmailIds = new Set(),
   onEdit,
   onDelete,
+  totals,
 }) => {
   return (
     <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden min-h-[360px]">
@@ -38,7 +39,7 @@ const MisVoucherLedger = ({
               Tally Payment Voucher Register
             </h4>
             <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">
-              Debit · Credit · Running balance
+              Gross Amount · GST · Claims · CD · Bank Charges · Credit · Balance
             </p>
           </div>
         </div>
@@ -73,29 +74,74 @@ const MisVoucherLedger = ({
 
         {!loading && tallyRows.length > 0 && (
           <>
+            {totals && (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200">
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Total GST
+                  </p>
+                  <p className="text-base font-black text-slate-900 tabular-nums mt-1">
+                    {formatLedgerAmount(totals.totalGst)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Total Claims
+                  </p>
+                  <p className="text-base font-black text-slate-900 tabular-nums mt-1">
+                    {formatLedgerAmount(totals.totalClaims)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Total CD
+                  </p>
+                  <p className="text-base font-black text-slate-900 tabular-nums mt-1">
+                    {formatLedgerAmount(totals.totalCd)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Total Bank Charges
+                  </p>
+                  <p className="text-base font-black text-slate-900 tabular-nums mt-1">
+                    {formatLedgerAmount(totals.totalBankCharges)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Period Receipts (Cr.)
+                  </p>
+                  <p className="text-base font-black text-emerald-600 tabular-nums mt-1">
+                    {formatLedgerAmount(totalCredit)}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-900 text-white">
               <div>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                  Period receipts (Cr.)
-                </p>
-                <p className="text-lg font-black text-emerald-400 tabular-nums mt-1">
-                  {formatLedgerAmount(totalCredit)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                  Closing balance
+                  Closing Balance
                 </p>
                 <p className="text-lg font-black tabular-nums mt-1">
                   {formatLedgerAmount(closingBalance)}
                 </p>
               </div>
-              <div className="sm:text-right">
+              <div className="sm:text-center">
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
                   Opening b/f
                 </p>
                 <p className="text-lg font-black tabular-nums mt-1">
                   {formatLedgerAmount(openingBalance)}
+                </p>
+              </div>
+              <div className="sm:text-right">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                  Total Vouchers
+                </p>
+                <p className="text-lg font-black text-emerald-400 tabular-nums mt-1">
+                  {voucherCount}
                 </p>
               </div>
             </div>

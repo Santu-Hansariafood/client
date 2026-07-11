@@ -127,6 +127,11 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       credit: balance < 0 ? Math.abs(balance) : 0,
       balance,
       isOpening: true,
+      grossAmount: 0,
+      gstAmount: 0,
+      totalClaims: 0,
+      cdAmount: 0,
+      bankCharges: 0,
     });
   }
 
@@ -143,6 +148,14 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const bankCharges = Number(item.bankCharges) || 0;
       const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
       const gstAmount = debit * (gstPercent / 100);
+      
+      // Calculate total quality claims
+      let totalClaims = 0;
+      if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
+        totalClaims = item.qualityClaims.reduce((sum, claim) => {
+          return sum + (Number(claim.claimAmount) || 0);
+        }, 0);
+      }
       
       const credit = 0;
       const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
@@ -164,6 +177,11 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         credit,
         balance,
         raw: item,
+        grossAmount,
+        gstAmount,
+        totalClaims,
+        cdAmount,
+        bankCharges,
       });
     } else {
       // It's a payment
@@ -185,6 +203,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const buyerCompany = payment.buyerCompany || buyerFromMapping || "";
       const supplierCompany = payment.supplierCompany || sellerFromMapping || "";
       const date = payment.date;
+      const paymentClaimAmount = Number(payment.claim) || 0;
 
       // First add row for mapped amount
       if (mappedTotal > 0) {
@@ -211,6 +230,11 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           credit: mappedCredit,
           balance,
           raw: item,
+          grossAmount: 0,
+          gstAmount: 0,
+          totalClaims: paymentClaimAmount,
+          cdAmount: 0,
+          bankCharges: 0,
         });
       }
 
@@ -239,12 +263,38 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           credit: unadjustedCredit,
           balance,
           raw: item,
+          grossAmount: 0,
+          gstAmount: 0,
+          totalClaims: 0,
+          cdAmount: 0,
+          bankCharges: 0,
         });
       }
     }
   });
 
   return rows;
+};
+
+/** Calculate totals from voucher rows */
+export const calculateVoucherTotals = (rows) => {
+  return rows.reduce(
+    (totals, row) => {
+      if (!row.isOpening) {
+        totals.totalGst += row.gstAmount || 0;
+        totals.totalClaims += row.totalClaims || 0;
+        totals.totalCd += row.cdAmount || 0;
+        totals.totalBankCharges += row.bankCharges || 0;
+      }
+      return totals;
+    },
+    {
+      totalGst: 0,
+      totalClaims: 0,
+      totalCd: 0,
+      totalBankCharges: 0,
+    }
+  );
 };
 
 /** Outstanding sauda lines: Dr = due, Cr = paid + allocation (Cr. posting). */

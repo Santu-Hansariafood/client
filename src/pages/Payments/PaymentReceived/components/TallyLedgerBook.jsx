@@ -137,7 +137,7 @@ const TallyLedgerBook = ({
 
   return (
     <div className="overflow-x-auto border border-slate-300 bg-[#fffef8] shadow-inner">
-      <table className="w-full min-w-[1100px] border-collapse text-left">
+      <table className="w-full min-w-[1700px] border-collapse text-left">
         <thead>
       <tr className="bg-[#1e3a5f] text-white">
         <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[88px]">
@@ -160,7 +160,19 @@ const TallyLedgerBook = ({
           Vch
         </th>
         <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-          Debit
+          Gross Amount
+        </th>
+        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+          GST
+        </th>
+        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+          Claims
+        </th>
+        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+          CD
+        </th>
+        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+          Bank Charges
         </th>
         <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
           Credit
@@ -168,13 +180,7 @@ const TallyLedgerBook = ({
         <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
           Balance
         </th>
-        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[150px]">
-          Claim Parameter
-        </th>
-        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px] text-right">
-          Claim Amount
-        </th>
-        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[100px] text-center">
+        <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-center">
           Download
         </th>
         <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[200px] text-center">
@@ -240,7 +246,19 @@ const TallyLedgerBook = ({
                       {row.vchType}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.debit > 0 ? formatLedgerAmount(row.debit) : ""}
+                      {row.grossAmount > 0 ? formatLedgerAmount(row.grossAmount) : ""}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                      {row.gstAmount > 0 ? formatLedgerAmount(row.gstAmount) : ""}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                      {row.totalClaims > 0 ? formatLedgerAmount(row.totalClaims) : ""}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                      {row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                      {row.bankCharges > 0 ? formatLedgerAmount(row.bankCharges) : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
                       {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
@@ -248,8 +266,6 @@ const TallyLedgerBook = ({
                     <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
                       {formatLedgerAmount(row.balance)}
                     </td>
-                    <td className="px-3 py-2 text-slate-600 border-r border-slate-200"></td>
-                    <td className="px-3 py-2 text-right border-r border-slate-200"></td>
                     <td className="px-3 py-2 text-center">
                       {!row.isOpening && (
                         <>
@@ -355,12 +371,10 @@ const TallyLedgerBook = ({
               <td className="px-3 py-1 border-r border-slate-200"></td>
               <td className="px-3 py-1 border-r border-slate-200"></td>
               <td className="px-3 py-1 border-r border-slate-200"></td>
-              <td className="px-3 py-1 text-slate-700 border-r border-slate-200">
-                {claim.parameterName || "Unnamed"}
-              </td>
-              <td className="px-3 py-1 text-right font-medium text-rose-700 tabular-nums">
-                {formatLedgerAmount(claim.claimAmount)}
-              </td>
+              <td className="px-3 py-1 border-r border-slate-200"></td>
+              <td className="px-3 py-1 border-r border-slate-200"></td>
+              <td className="px-3 py-1 border-r border-slate-200"></td>
+              <td className="px-3 py-1 border-r border-slate-200"></td>
               <td className="px-3 py-1"></td>
               <td className="px-3 py-1"></td>
               <td className="px-3 py-1"></td>
@@ -406,7 +420,19 @@ const TallyLedgerBook = ({
                   {row.vchType}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.debit > 0 ? formatLedgerAmount(row.debit) : ""}
+                  {row.grossAmount > 0 ? formatLedgerAmount(row.grossAmount) : ""}
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                  {row.gstAmount > 0 ? formatLedgerAmount(row.gstAmount) : ""}
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                  {row.totalClaims > 0 ? formatLedgerAmount(row.totalClaims) : ""}
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                  {row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}
+                </td>
+                <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
+                  {row.bankCharges > 0 ? formatLedgerAmount(row.bankCharges) : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
                   {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
@@ -414,8 +440,6 @@ const TallyLedgerBook = ({
                 <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
                   {formatLedgerAmount(row.balance)}
                 </td>
-                <td className="px-3 py-2 border-r border-slate-200"></td>
-                <td className="px-3 py-2 text-right border-r border-slate-200"></td>
                 <td className="px-3 py-2 text-center">
                   {!row.isOpening && (
                     <>
