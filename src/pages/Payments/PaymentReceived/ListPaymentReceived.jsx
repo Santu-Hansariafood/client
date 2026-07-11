@@ -851,10 +851,6 @@ const ListPaymentReceived = () => {
     let rowIdx = 0;
     const tableData = [];
     const saudaTotals = {};
-    let grandTotalCd = 0;
-    let grandTotalGst = 0;
-    let grandTotalQualityClaims = 0;
-    let grandTotalBankCharges = 0;
 
     Object.keys(groupedBySauda).forEach((saudaKey) => {
       const group = groupedBySauda[saudaKey];
@@ -890,10 +886,6 @@ const ListPaymentReceived = () => {
           saudaGstTotal += rowData.gstAmount;
           saudaQualityClaimsTotal += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
           saudaBankChargesTotal += rowData.bankCharges;
-          grandTotalCd += rowData.cdAmount;
-          grandTotalGst += rowData.gstAmount;
-          grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-          grandTotalBankCharges += rowData.bankCharges;
 
           const claims = rowData.totalQualityClaims + rowData.paymentClaimAmount;
           const cd = rowData.cdAmount;
@@ -1080,22 +1072,44 @@ const ListPaymentReceived = () => {
       },
     });
 
-    const finalY = doc.lastAutoTable?.finalY || 70;
-    
-    // Add a new page for the final section
-    doc.addPage();
-    let summaryY = 12;
-
+    // First calculate all grand totals that we need for both differences
+    let grandTotalCd = 0;
+    let grandTotalGst = 0;
+    let grandTotalQualityClaims = 0;
+    let grandTotalBankCharges = 0;
     let totalDebit = 0;
     let totalCredit = 0;
+    
     reportRows.forEach((row) => {
       if (!row.isOpening) {
         const debit = row.debit || 0; // DEBIT is already calculated as (gross - cd - bank charges)
         totalDebit += debit;
         totalCredit += row.credit || 0;
+        
+        const rowData = extractRowData(row);
+        grandTotalCd += rowData.cdAmount;
+        grandTotalGst += rowData.gstAmount;
+        grandTotalQualityClaims += (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+        grandTotalBankCharges += rowData.bankCharges;
       }
     });
-    const difference = totalDebit - totalCredit;
+    
+    // Use the same formula for both differences
+    const totalDebitNum = Number(totalDebit.toFixed(2));
+    const totalCreditNum = Number(totalCredit.toFixed(2));
+    const totalGstNum = Number(grandTotalGst.toFixed(2));
+    const totalCdNum = Number(grandTotalCd.toFixed(2));
+    const totalClaimsNum = Number(grandTotalQualityClaims.toFixed(2));
+    const totalBankChargesNum = Number(grandTotalBankCharges.toFixed(2));
+    const totalLeftSide = totalDebitNum + totalGstNum;
+    const totalRightSide = totalCdNum + totalClaimsNum + totalBankChargesNum + totalCreditNum;
+    const difference = Number((totalLeftSide - totalRightSide).toFixed(2));
+    
+    const finalY = doc.lastAutoTable?.finalY || 70;
+    
+    // Add a new page for the final section
+    doc.addPage();
+    let summaryY = 12;
 
     // Summary box
     const boxHeight = 25;
@@ -1241,17 +1255,6 @@ const ListPaymentReceived = () => {
     // Final calculation and QR
     let finalSectionY = separatorY + 12;
 
-    // Ensure all totals are rounded to 2 decimal places
-    const summaryDebitTotal = Number(totalDebit.toFixed(2));
-    const summaryCreditTotal = Number(totalCredit.toFixed(2));
-    const summaryGstTotal = Number(grandTotalGst.toFixed(2));
-    const summaryCdTotal = Number(grandTotalCd.toFixed(2));
-    const summaryClaimsTotal = Number(grandTotalQualityClaims.toFixed(2));
-    const summaryBankChargesTotal = Number(grandTotalBankCharges.toFixed(2));
-    const totalLeftSide = Number((summaryDebitTotal + summaryGstTotal).toFixed(2));
-    const totalRightSide = Number((summaryCdTotal + summaryClaimsTotal + summaryBankChargesTotal + summaryCreditTotal).toFixed(2));
-    const finalDifference = Number((totalLeftSide - totalRightSide).toFixed(2));
-
     // Left side: Formula calculation
     // Right side: QR and Signatory
     doc.setFontSize(9);
@@ -1260,9 +1263,9 @@ const ListPaymentReceived = () => {
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    const formulaLine1 = `(Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
-    const formulaLine2 = ` - (Rs. ${summaryCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
-    const formulaLine3 = ` = Rs. ${finalDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${finalDifference > 0 ? 'Dr' : finalDifference < 0 ? 'Cr' : 'NIL'})`;
+    const formulaLine1 = `(Rs. ${totalDebitNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalGstNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+    const formulaLine2 = ` - (Rs. ${totalCdNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalClaimsNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalBankChargesNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+    const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? 'Dr' : difference < 0 ? 'Cr' : 'NIL'})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
     doc.text(formulaLine2, margin + 10, finalSectionY + 25);
     doc.text(formulaLine3, margin + 10, finalSectionY + 35);
