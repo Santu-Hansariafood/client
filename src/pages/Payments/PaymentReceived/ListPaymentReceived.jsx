@@ -1241,22 +1241,20 @@ const ListPaymentReceived = () => {
     // Ensure all totals are rounded to 2 decimal places
     const summaryDebitTotal = Number(totalDebit.toFixed(2));
     const summaryCreditTotal = Number(totalCredit.toFixed(2));
+    const summaryGstTotal = Number(grandTotalGst.toFixed(2));
+    const summaryCdTotal = Number(grandTotalCd.toFixed(2));
+    const summaryClaimsTotal = Number(grandTotalQualityClaims.toFixed(2));
+    const summaryBankChargesTotal = Number(grandTotalBankCharges.toFixed(2));
 
-    // Left side: Debit/Credit totals
+    // Left side: Formula calculation
     // Right side: QR and Signatory
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("DEBIT TOTAL", margin + 10, finalSectionY + 5);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 14);
-
-    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL DEBIT + TOTAL GST - TOTAL CREDIT - TOTAL CD - TOTAL CLAIMS = TOTAL BANK CHGS", margin + 10, finalSectionY + 5);
+    
     doc.setFontSize(11);
-    doc.text("CREDIT TOTAL", margin + 10, finalSectionY + 24);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 33);
+    doc.text(`Rs. ${summaryDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${summaryGstTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryCdTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Rs. ${summaryClaimsTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} = Rs. ${summaryBankChargesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin + 10, finalSectionY + 15);
 
     // Right part: QR code and Signatory
     try {
@@ -1275,18 +1273,18 @@ const ListPaymentReceived = () => {
     doc.text(
       `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
       pageWidth - margin,
-      finalSectionY + 60,
+      finalSectionY + 70,
       { align: "right" },
     );
     doc.setFont("helvetica", "bold");
-    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 70, {
+    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 80, {
       align: "right",
     });
     doc.line(
       pageWidth - 80,
-      finalSectionY + 67,
+      finalSectionY + 77,
       pageWidth - margin,
-      finalSectionY + 67,
+      finalSectionY + 77,
     );
 
     return doc;
