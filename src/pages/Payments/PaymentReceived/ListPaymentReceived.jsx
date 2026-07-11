@@ -1081,7 +1081,10 @@ const ListPaymentReceived = () => {
     });
 
     const finalY = doc.lastAutoTable?.finalY || 70;
-    let summaryY = finalY + 12;
+    
+    // Add a new page for the final section
+    doc.addPage();
+    let summaryY = 12;
 
     let totalDebit = 0;
     let totalCredit = 0;
@@ -1164,7 +1167,7 @@ const ListPaymentReceived = () => {
     summaryY += boxHeight + 10;
 
     // First section: Bank Account Details (separated)
-    let bankSectionY = summaryY;
+    let bankSectionY = summaryY + 40;
     
     // Get seller company and bank details
     let sellerCompanyData = null;
@@ -1236,7 +1239,7 @@ const ListPaymentReceived = () => {
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
     
     // Final calculation and QR
-    let finalSectionY = separatorY + 15;
+    let finalSectionY = separatorY + 20;
 
     // Ensure all totals are rounded to 2 decimal places
     const summaryDebitTotal = Number(totalDebit.toFixed(2));
@@ -1266,6 +1269,26 @@ const ListPaymentReceived = () => {
     } catch (qrError) {
       console.log("QR code not added:", qrError);
     }
+
+    // Add page numbering to the new page
+    const pageCount = doc.internal.getNumberOfPages();
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(100, 100, 100);
+    doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+    doc.setFontSize(7);
+    doc.setTextColor(0, 0, 0);
+    doc.text(
+      `Page ${pageCount} of ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: "center" },
+    );
+    doc.text(
+      `Printed on: ${new Date().toLocaleString()}`,
+      margin,
+      pageHeight - 8,
+    );
+    doc.text("Confidential", pageWidth - margin, pageHeight - 8, { align: "right" });
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(9);
