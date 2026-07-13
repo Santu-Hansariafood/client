@@ -1490,8 +1490,8 @@ const ListPaymentReceived = () => {
         "PNG",
         pageWidth - margin - 45 - 15,
         finalSectionY,
-        45,
-        45,
+        35,
+        35,
       );
     } catch (qrError) {
       console.log("QR code not added:", qrError);
