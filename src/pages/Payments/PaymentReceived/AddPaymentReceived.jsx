@@ -544,8 +544,17 @@ const AddPaymentReceived = () => {
           return new Date(b.loadingDate) - new Date(a.loadingDate);
         });
 
+        // Filter out entries where Lorry Balance equals Credit Amount
+        const filteredItems = sortedItems.filter(item => {
+          const details = calculateTallyDetails(item);
+          // Since allocatedAmount is not set yet, use 0
+          const lorryBalance = Math.max(0, details.dueAmount);
+          const creditAmount = details.netAmount;
+          return Math.abs(lorryBalance - creditAmount) >= 0.01;
+        });
+
         setEntries(
-          sortedItems.map((item, index) => ({
+          filteredItems.map((item, index) => ({
             ...item,
             uiKey: `${item._id}-${index}-${Date.now()}`,
             allocatedAmount:
@@ -558,7 +567,7 @@ const AddPaymentReceived = () => {
           })),
         );
         setEntriesTotal(
-          useWideFetch ? items.length : (response.data.total ?? items.length),
+          useWideFetch ? filteredItems.length : (response.data.total ?? filteredItems.length),
         );
         setEntriesPage(useWideFetch ? 1 : page);
       } catch (error) {
@@ -900,11 +909,23 @@ const AddPaymentReceived = () => {
 
   const handleSaveAllAllocations = async () => {
     const allocations = entries.filter(
-      (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
+      (e) => {
+        if (e.isSaved) return false;
+        if (parseFloat(e.allocatedAmount) <= 0.01) return false;
+        
+        // Check condition for each entry
+        const details = calculateTallyDetails(e);
+        const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(e.allocatedAmount) || 0));
+        const creditAmount = details.netAmount;
+        if (Math.abs(lorryBalance - creditAmount) < 0.01) {
+          return false;
+        }
+        return true;
+      },
     );
 
     if (allocations.length === 0) {
-      toast.error("No new allocations to save");
+      toast.error("No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)");
       return;
     }
 
@@ -1107,6 +1128,17 @@ const AddPaymentReceived = () => {
     const numAmount = parseFloat(amount);
     let valueToStore = amount;
 
+    // Find the entry to check the condition
+    const entry = entries.find(e => e.uiKey === uiKey);
+    if (entry) {
+      const details = calculateTallyDetails(entry);
+      const lorryBalance = Math.max(0, details.dueAmount - numAmount);
+      const creditAmount = details.netAmount;
+      if (Math.abs(lorryBalance - creditAmount) < 0.01) {
+        toast.warning("Warning: Lorry Balance will equal Credit Amount, this entry cannot be saved");
+      }
+    }
+
     if (!Number.isNaN(numAmount)) {
       if (allocationSource === "advance") {
         if (pool <= 0.01 && numAmount > 0) {
@@ -1199,6 +1231,16 @@ const AddPaymentReceived = () => {
   };
 
   const handleSaveRow = async (entry) => {
+    const details = calculateTallyDetails(entry);
+    const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(entry.allocatedAmount) || 0));
+    const creditAmount = details.netAmount;
+    
+    // Check if Lorry Balance equals Credit Amount
+    if (Math.abs(lorryBalance - creditAmount) < 0.01) {
+      toast.error("Cannot save: Lorry Balance equals Credit Amount");
+      return;
+    }
+
     if (entry.allocatedAmount === "" && !entry.isSaved) {
       toast.error("Please enter an allocation amount");
       return;
@@ -1765,7 +1807,7 @@ const AddPaymentReceived = () => {
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
-                  Claim Amount
+                  Credit Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
