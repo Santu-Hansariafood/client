@@ -621,8 +621,8 @@ const ListPaymentReceived = () => {
     const logoBase64 = await getBase64("/logo/logo.png");
 
     // Header with logo
-    const logoWidth = 60;
-    const logoHeight = 40;
+    const logoWidth = 40;
+    const logoHeight = 20;
     const logoX = margin + 10;
     const logoY = 10;
     if (logoBase64) {
