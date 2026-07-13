@@ -1102,15 +1102,17 @@ const ListPaymentReceived = () => {
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
         
-        // Add the note just above the footer
-        doc.setFontSize(6);
-        doc.setTextColor(100, 100, 100);
-        doc.text(
-          "Note: This is based on the buyer company provided data. This is not for the actual data. This is for the reference purpose not for legal use.",
-          pageWidth / 2,
-          pageHeight - 20,
-          { align: "center" }
-        );
+        // Only add the note on the last page
+        if (data.pageNumber === pageCount) {
+          doc.setFontSize(6);
+          doc.setTextColor(100, 100, 100);
+          doc.text(
+            "Note: This is based on the buyer company provided data. This is not for the actual data. This is for the reference purpose not for legal use.",
+            pageWidth / 2,
+            pageHeight - 20,
+            { align: "center" }
+          );
+        }
         
         doc.setLineWidth(0.2);
         doc.setDrawColor(100, 100, 100);
