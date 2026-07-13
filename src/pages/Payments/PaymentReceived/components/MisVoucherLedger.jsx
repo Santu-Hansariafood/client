@@ -75,7 +75,15 @@ const MisVoucherLedger = ({
         {!loading && tallyRows.length > 0 && (
           <>
             {totals && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200">
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200">
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
+                    Total Bill Value
+                  </p>
+                  <p className="text-base font-black text-slate-900 tabular-nums mt-1">
+                    {formatLedgerAmount(totals.totalBillValue)}
+                  </p>
+                </div>
                 <div>
                   <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest">
                     Total GST

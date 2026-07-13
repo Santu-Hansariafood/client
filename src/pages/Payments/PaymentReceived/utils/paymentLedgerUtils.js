@@ -281,6 +281,7 @@ export const calculateVoucherTotals = (rows) => {
   return rows.reduce(
     (totals, row) => {
       if (!row.isOpening && row.raw?.uiType === 'entry') {
+        totals.totalBillValue += row.grossAmount || 0;
         totals.totalGst += row.gstAmount || 0;
         totals.totalClaims += row.totalClaims || 0;
         totals.totalCd += row.cdAmount || 0;
@@ -289,6 +290,7 @@ export const calculateVoucherTotals = (rows) => {
       return totals;
     },
     {
+      totalBillValue: 0,
       totalGst: 0,
       totalClaims: 0,
       totalCd: 0,

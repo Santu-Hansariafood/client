@@ -652,7 +652,7 @@ const ListPaymentReceived = () => {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(26, 58, 95);
-    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 49, {
+    doc.text("PARTY LEDGER", pageWidth / 2, 49, {
       align: "center",
     });
 
@@ -672,47 +672,28 @@ const ListPaymentReceived = () => {
 
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 34, "FD");
+    doc.rect(margin, infoY, pageWidth - margin * 2, 22, "FD");
     doc.setLineWidth(0.5);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 34);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 22);
 
     doc.setFontSize(8.5);
     doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text("Ledger", margin + 7, infoY + 10);
+    doc.text("Date Between", margin + 7, infoY + 14);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${selectedCompany?.label || "-"}`, margin + 27, infoY + 10);
+    doc.text(`: ${startDate} To ${endDate}`, margin + 40, infoY + 14);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Date Between", margin + 7, infoY + 24);
+    doc.text("Buyer Company", pageWidth / 2, infoY + 14, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${startDate} To ${endDate}`, margin + 40, infoY + 24);
+    doc.text(`: ${buyerName}`, pageWidth / 2 + 40, infoY + 14);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Branch", pageWidth / 2, infoY + 10, { align: "center" });
+    doc.text("Seller Company", pageWidth - 88, infoY + 14);
     doc.setFont("helvetica", "normal");
-    doc.text(": All", pageWidth / 2 + 18, infoY + 10);
+    doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 14);
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", pageWidth / 2, infoY + 24, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.text(`: ${buyerName}`, pageWidth / 2 + 34, infoY + 24);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Seller Company", pageWidth - 88, infoY + 10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Report Date", pageWidth - 88, infoY + 24);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `: ${new Date().toLocaleDateString("en-GB")}`,
-      pageWidth - 48,
-      infoY + 24,
-    );
-
-    let currentY = infoY + 42;
+    let currentY = infoY + 30;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
