@@ -21,7 +21,11 @@ import MisFilterPanel from "./components/MisFilterPanel";
 import MisVoucherLedger from "./components/MisVoucherLedger";
 import MisLorryLedger from "./components/MisLorryLedger";
 import MisPageHeader from "./components/MisPageHeader";
-import { buildTallyVoucherRows, calculateVoucherTotals, formatLedgerAmount } from "./utils/paymentLedgerUtils";
+import {
+  buildTallyVoucherRows,
+  calculateVoucherTotals,
+  formatLedgerAmount,
+} from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
 
 const ListPaymentReceived = () => {
@@ -37,7 +41,7 @@ const ListPaymentReceived = () => {
   const [openingBalance, setOpeningBalance] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [activeTab, setActiveTab] = useState("vouchers"); // vouchers, sauda
+  const [activeTab, setActiveTab] = useState("vouchers");
   const [ledgers, setLedgers] = useState([]);
   const [allCompanies, setAllCompanies] = useState([]);
   const [sellerCompanies, setSellerCompanies] = useState([]);
@@ -53,7 +57,7 @@ const ListPaymentReceived = () => {
     remarks: "",
     amount: "",
     claim: "",
-    tds: ""
+    tds: "",
   });
 
   const [opposingLedgers, setOpposingLedgers] = useState([]);
@@ -125,7 +129,6 @@ const ListPaymentReceived = () => {
     fetchOpposingLedgers();
   }, [filters.ledgerType]);
 
-  // Buyer companies (always use allCompanies)
   const buyerCompanyOptions = useMemo(() => {
     return allCompanies.map((c) => ({
       value: c._id,
@@ -133,7 +136,6 @@ const ListPaymentReceived = () => {
     }));
   }, [allCompanies]);
 
-  // Seller companies (always use sellerCompanies)
   const sellerCompanyOptions = useMemo(() => {
     return sellerCompanies.map((c) => ({
       value: c.companyName,
@@ -141,12 +143,10 @@ const ListPaymentReceived = () => {
     }));
   }, [sellerCompanies]);
 
-  // Primary company options: always buyer companies (since that's primary)
   const primaryCompanyOptions = useMemo(() => {
     return buyerCompanyOptions;
   }, [buyerCompanyOptions]);
 
-  // Opposing company options: always seller companies
   const opposingCompanyOptions = useMemo(() => {
     return sellerCompanyOptions;
   }, [sellerCompanyOptions]);
@@ -154,8 +154,7 @@ const ListPaymentReceived = () => {
   const resolveLedgerForCompany = useCallback(
     (companyId, ledgerType, ledgerList, buyerCompanies) => {
       if (!companyId) return null;
-      // For buyer company selection, find the buyer ledger regardless of current ledgerType
-      if (true) { // Because primary dropdown is always buyer company
+      if (true) {
         return (
           buyerCompanies.find((ledger) =>
             (ledger.companyIds || ledger.companies || []).some((c) => {
@@ -406,12 +405,13 @@ const ListPaymentReceived = () => {
 
   const handleCompanySelect = (opt) => {
     const companyId = opt?.value || "";
-    const ledger = buyerCompanies.find((b) =>
-      (b.companyIds || b.companies || []).some((c) => {
-        const cId = typeof c === "string" ? c : c._id;
-        return cId === companyId;
-      })
-    ) || null;
+    const ledger =
+      buyerCompanies.find((b) =>
+        (b.companyIds || b.companies || []).some((c) => {
+          const cId = typeof c === "string" ? c : c._id;
+          return cId === companyId;
+        }),
+      ) || null;
     setSelectedCompany(opt);
     setSelectedLedger(
       ledger
@@ -420,7 +420,7 @@ const ListPaymentReceived = () => {
             label: `${ledger.name} ${ledger.mobile ? `(${ledger.mobile})` : ""}`,
             companies: ledger.companyIds || ledger.companies || [],
           }
-        : null
+        : null,
     );
     setSelectedOpposingCompany(null);
     setSelectedSauda(null);
@@ -429,8 +429,8 @@ const ListPaymentReceived = () => {
       ...prev,
       companyId,
       ledgerId: ledger?._id || "",
-      buyerCompany: opt?.label || "", // Always set buyerCompany
-      supplierCompany: "", // Reset supplier company when buyer changes
+      buyerCompany: opt?.label || "",
+      supplierCompany: "",
     }));
   };
 
@@ -438,15 +438,17 @@ const ListPaymentReceived = () => {
     setSelectedOpposingCompany(opt);
     setSelectedSauda(null);
     setPage(1);
-    
-    // If ledger type is Seller, set selectedLedger to the seller ledger
+
     if (filters.ledgerType === "Seller" && opt) {
-      const sellerLedger = sellerCompanies.find((s) => s.companyName === opt.label);
+      const sellerLedger = sellerCompanies.find(
+        (s) => s.companyName === opt.label,
+      );
       if (sellerLedger) {
-        // Find the seller from sellers list (from fetchLedgers)
-        const ledger = ledgers.find((l) => l.companies?.some((c) => 
-          (typeof c === "string" ? c : c?.companyName) === opt.label
-        ));
+        const ledger = ledgers.find((l) =>
+          l.companies?.some(
+            (c) => (typeof c === "string" ? c : c?.companyName) === opt.label,
+          ),
+        );
         setSelectedLedger(ledger || null);
         setFilters((prev) => ({
           ...prev,
@@ -456,10 +458,10 @@ const ListPaymentReceived = () => {
         return;
       }
     }
-    
+
     setFilters((prev) => ({
       ...prev,
-      supplierCompany: opt?.label || "", // Always set supplierCompany
+      supplierCompany: opt?.label || "",
     }));
   };
 
@@ -547,8 +549,6 @@ const ListPaymentReceived = () => {
     return words + " Only";
   };
 
-
-
   const generateMISReportPDF = async () => {
     const params = {
       ...filters,
@@ -569,8 +569,7 @@ const ListPaymentReceived = () => {
         endDate: filters.endDate,
         limit: 1000,
       };
-      if (filters.buyerCompany)
-        entryParams.buyerCompany = filters.buyerCompany;
+      if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
       if (filters.supplierCompany)
         entryParams.supplierCompany = filters.supplierCompany;
 
@@ -600,7 +599,6 @@ const ListPaymentReceived = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
 
-    // Helper function to get base64 image
     const getBase64 = (img) =>
       new Promise((resolve) => {
         const image = new Image();
@@ -617,10 +615,8 @@ const ListPaymentReceived = () => {
         image.onerror = () => resolve(null);
       });
 
-    // Load logo
     const logoBase64 = await getBase64("/logo/logo.png");
 
-    // Header with logo
     const logoWidth = 40;
     const logoHeight = 20;
     const logoX = margin + 10;
@@ -645,12 +641,9 @@ const ListPaymentReceived = () => {
       29,
       { align: "center" },
     );
-    doc.text(
-      "Bidhannagar, Kolkata, West Bengal - 700106",
-      pageWidth / 2,
-      35,
-      { align: "center" },
-    );
+    doc.text("Bidhannagar, Kolkata, West Bengal - 700106", pageWidth / 2, 35, {
+      align: "center",
+    });
 
     doc.setLineWidth(0.5);
     doc.setDrawColor(220, 220, 220);
@@ -659,7 +652,9 @@ const ListPaymentReceived = () => {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(26, 58, 95);
-    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 49, { align: "center" });
+    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 49, {
+      align: "center",
+    });
 
     doc.setLineWidth(0.5);
     doc.setDrawColor(220, 220, 220);
@@ -711,7 +706,11 @@ const ListPaymentReceived = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Report Date", pageWidth - 88, infoY + 24);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${new Date().toLocaleDateString("en-GB")}`, pageWidth - 48, infoY + 24);
+    doc.text(
+      `: ${new Date().toLocaleDateString("en-GB")}`,
+      pageWidth - 48,
+      infoY + 24,
+    );
 
     let currentY = infoY + 42;
 
@@ -735,20 +734,19 @@ const ListPaymentReceived = () => {
     }
 
     const calculateTallyDetails = (e) => {
-      if (!e) return { 
-        netAmount: 0, 
-        dueAmount: 0, 
-        cdAmount: 0, 
-        gstAmount: 0, 
-        cdPercent: 0, 
-        gstPercent: 0,
-        totalQualityClaims: 0,
-        bankCharges: 0,
-      };
+      if (!e)
+        return {
+          netAmount: 0,
+          dueAmount: 0,
+          cdAmount: 0,
+          gstAmount: 0,
+          cdPercent: 0,
+          gstPercent: 0,
+          totalQualityClaims: 0,
+          bankCharges: 0,
+        };
       const weight =
-        (e.unloadingWeight || 0) > 0
-          ? e.unloadingWeight
-          : e.loadingWeight || 0;
+        (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
       const rate = e.actualRate || 0;
       const cdPercent = e.cd || 0;
       const gstPercent = e.gst || 0;
@@ -756,18 +754,17 @@ const ListPaymentReceived = () => {
       const cdAmount = grossAmount * (cdPercent / 100);
       const amountAfterCd = grossAmount - cdAmount;
       const bankCharges = Number(e.bankCharges) || 0;
-      const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
+      const debit = amountAfterCd - bankCharges;
       const gstAmount = debit * (gstPercent / 100);
-      const netAmount = debit + gstAmount; // Total value = debit + gst
-      
-      // Calculate total quality claims
+      const netAmount = debit + gstAmount;
+
       let totalQualityClaims = 0;
       if (e.qualityClaims && Array.isArray(e.qualityClaims)) {
         totalQualityClaims = e.qualityClaims.reduce((sum, claim) => {
           return sum + (Number(claim.claimAmount) || 0);
         }, 0);
       }
-      
+
       return {
         netAmount,
         dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)),
@@ -795,7 +792,7 @@ const ListPaymentReceived = () => {
       let gstPercent = 0;
       let totalQualityClaims = 0;
       let bankCharges = 0;
-      let paymentClaimAmount = 0; // Claim from PaymentReceived
+      let paymentClaimAmount = 0;
 
       if (row.isOpening) {
         return {
@@ -852,7 +849,6 @@ const ListPaymentReceived = () => {
         gstPercent = details.gstPercent;
         totalQualityClaims = details.totalQualityClaims;
         bankCharges = details.bankCharges;
-        // Also get claim amount from PaymentReceived row
         paymentClaimAmount = Number(raw?.claim) || 0;
       } else {
         remarks = row.particulars;
@@ -877,7 +873,6 @@ const ListPaymentReceived = () => {
       };
     };
 
-    // Group rows by sauda number
     const groupedBySauda = {};
     reportRows.forEach((row) => {
       const rowData = extractRowData(row);
@@ -915,78 +910,81 @@ const ListPaymentReceived = () => {
       ]);
 
       group.forEach(({ row, rowData }) => {
-          rowIdx++;
+        rowIdx++;
 
-          const credit = row.credit || 0;
-          const isEntryRow = row.raw?.uiType === 'entry';
-          
-          let grossAmount = 0;
-          let gst = 0;
-          let claims = 0;
-          let cd = 0;
-          let bankCharges = 0;
-          let balance = 0;
-          
-          if (isEntryRow) {
-            grossAmount = row.grossAmount || 0;
-            gst = row.gstAmount || 0;
-            claims = row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-            cd = row.cdAmount || 0;
-            bankCharges = row.bankCharges || 0;
-            // Calculate BALANCE as (GROSS + GST - CLAIMS - CD - BANK CHGS) only for entry rows
-            balance = Number((grossAmount + gst - claims - cd - bankCharges).toFixed(2));
-            
-            saudaGrossTotal += grossAmount;
-            saudaCdTotal += cd;
-            saudaGstTotal += gst;
-            saudaQualityClaimsTotal += claims;
-            saudaBankChargesTotal += bankCharges;
-          }
-          
-          saudaCreditTotal += credit;
-          saudaPaidTotal += rowData.paidAmount;
-          
-          // Ensure all values are rounded to 2 decimal places
-          const formattedGross = isEntryRow ? Number(grossAmount.toFixed(2)) : 0;
-          const formattedCredit = Number(credit.toFixed(2));
-          const formattedGst = isEntryRow ? Number(gst.toFixed(2)) : 0;
-          const formattedClaims = isEntryRow ? Number(claims.toFixed(2)) : 0;
-          const formattedCd = isEntryRow ? Number(cd.toFixed(2)) : 0;
-          const formattedBankCharges = isEntryRow ? Number(bankCharges.toFixed(2)) : 0;
-          
-          tableData.push([
-            rowIdx,
-            row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
-            rowData.saudaNo,
-            rowData.lorryNo,
-            rowData.billNo,
-            (row.buyerCompany || "-").toUpperCase(),
-            (row.supplierCompany || "-").toUpperCase(),
-            isEntryRow && formattedGross > 0
-              ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            formattedCredit > 0
-              ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            isEntryRow && formattedGst > 0
-              ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            isEntryRow && formattedClaims > 0
-              ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            isEntryRow && formattedCd > 0
-              ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            isEntryRow && formattedBankCharges > 0
-              ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            balance !== 0
-              ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            rowData.remarks,
-          ]);
+        const credit = row.credit || 0;
+        const isEntryRow = row.raw?.uiType === "entry";
 
-        // Add claim rows if any
+        let grossAmount = 0;
+        let gst = 0;
+        let claims = 0;
+        let cd = 0;
+        let bankCharges = 0;
+        let balance = 0;
+
+        if (isEntryRow) {
+          grossAmount = row.grossAmount || 0;
+          gst = row.gstAmount || 0;
+          claims =
+            row.totalClaims ||
+            rowData.totalQualityClaims + rowData.paymentClaimAmount;
+          cd = row.cdAmount || 0;
+          bankCharges = row.bankCharges || 0;
+          balance = Number(
+            (grossAmount + gst - claims - cd - bankCharges).toFixed(2),
+          );
+
+          saudaGrossTotal += grossAmount;
+          saudaCdTotal += cd;
+          saudaGstTotal += gst;
+          saudaQualityClaimsTotal += claims;
+          saudaBankChargesTotal += bankCharges;
+        }
+
+        saudaCreditTotal += credit;
+        saudaPaidTotal += rowData.paidAmount;
+
+        const formattedGross = isEntryRow ? Number(grossAmount.toFixed(2)) : 0;
+        const formattedCredit = Number(credit.toFixed(2));
+        const formattedGst = isEntryRow ? Number(gst.toFixed(2)) : 0;
+        const formattedClaims = isEntryRow ? Number(claims.toFixed(2)) : 0;
+        const formattedCd = isEntryRow ? Number(cd.toFixed(2)) : 0;
+        const formattedBankCharges = isEntryRow
+          ? Number(bankCharges.toFixed(2))
+          : 0;
+
+        tableData.push([
+          rowIdx,
+          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
+          rowData.saudaNo,
+          rowData.lorryNo,
+          rowData.billNo,
+          (row.buyerCompany || "-").toUpperCase(),
+          (row.supplierCompany || "-").toUpperCase(),
+          isEntryRow && formattedGross > 0
+            ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          formattedCredit > 0
+            ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          isEntryRow && formattedGst > 0
+            ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          isEntryRow && formattedClaims > 0
+            ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          isEntryRow && formattedCd > 0
+            ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          isEntryRow && formattedBankCharges > 0
+            ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          balance !== 0
+            ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          rowData.remarks,
+        ]);
+
         const validClaims = rowData.qualityClaims.filter(
           (c) => Number(c.claimAmount) > 0,
         );
@@ -1013,7 +1011,15 @@ const ListPaymentReceived = () => {
         }
       });
 
-      const saudaBalance = Number((saudaGrossTotal + saudaGstTotal - saudaQualityClaimsTotal - saudaCdTotal - saudaBankChargesTotal).toFixed(2));
+      const saudaBalance = Number(
+        (
+          saudaGrossTotal +
+          saudaGstTotal -
+          saudaQualityClaimsTotal -
+          saudaCdTotal -
+          saudaBankChargesTotal
+        ).toFixed(2),
+      );
       tableData.push([
         {
           content: `TOTAL FOR SAUDA ${saudaKey}`,
@@ -1119,36 +1125,38 @@ const ListPaymentReceived = () => {
           margin,
           pageHeight - 8,
         );
-        doc.text("Confidential", pageWidth - margin, pageHeight - 8, { align: "right" });
+        doc.text("Confidential", pageWidth - margin, pageHeight - 8, {
+          align: "right",
+        });
       },
     });
 
-    // First calculate all grand totals that we need for both differences
     let grandTotalCd = 0;
     let grandTotalGst = 0;
     let grandTotalQualityClaims = 0;
     let grandTotalBankCharges = 0;
     let totalGross = 0;
     let totalCredit = 0;
-    
+
     reportRows.forEach((row) => {
       if (!row.isOpening) {
         totalCredit += row.credit || 0;
-        
-        if (row.raw?.uiType === 'entry') {
+
+        if (row.raw?.uiType === "entry") {
           const grossAmount = row.grossAmount || 0;
           totalGross += grossAmount;
-          
+
           const rowData = extractRowData(row);
           grandTotalCd += row.cdAmount || 0;
           grandTotalGst += row.gstAmount || 0;
-          grandTotalQualityClaims += row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+          grandTotalQualityClaims +=
+            row.totalClaims ||
+            rowData.totalQualityClaims + rowData.paymentClaimAmount;
           grandTotalBankCharges += row.bankCharges || 0;
         }
       }
     });
-    
-    // Use the same formula for both differences
+
     const totalGrossNum = Number(totalGross.toFixed(2));
     const totalCreditNum = Number(totalCredit.toFixed(2));
     const totalGstNum = Number(grandTotalGst.toFixed(2));
@@ -1156,100 +1164,216 @@ const ListPaymentReceived = () => {
     const totalClaimsNum = Number(grandTotalQualityClaims.toFixed(2));
     const totalBankChargesNum = Number(grandTotalBankCharges.toFixed(2));
     const totalLeftSide = totalGrossNum + totalGstNum;
-    const totalRightSide = totalCdNum + totalClaimsNum + totalBankChargesNum + totalCreditNum;
+    const totalRightSide =
+      totalCdNum + totalClaimsNum + totalBankChargesNum + totalCreditNum;
     const difference = Number((totalLeftSide - totalRightSide).toFixed(2));
-    
+
     const finalY = doc.lastAutoTable?.finalY || 70;
-    
-    // Add a new page for the final section
     doc.addPage();
     let summaryY = 12;
 
-    // Summary box
     const boxHeight = 26;
     doc.setFillColor(248, 250, 252);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
 
-    // Draw borders and dividers (7 sections now)
     doc.setLineWidth(0.5);
     doc.setDrawColor(226, 232, 240);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
-    // Vertical dividers
-    doc.line(margin + (pageWidth - 2 * margin) / 7, summaryY, margin + (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    doc.line(margin + 2 * (pageWidth - 2 * margin) / 7, summaryY, margin + 2 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    doc.line(margin + 3 * (pageWidth - 2 * margin) / 7, summaryY, margin + 3 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    doc.line(margin + 4 * (pageWidth - 2 * margin) / 7, summaryY, margin + 4 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    doc.line(margin + 5 * (pageWidth - 2 * margin) / 7, summaryY, margin + 5 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    doc.line(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, margin + 6 * (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
-    // Horizontal divider
-    doc.line(margin, summaryY + boxHeight / 2, pageWidth - margin, summaryY + boxHeight / 2);
+    doc.line(
+      margin + (pageWidth - 2 * margin) / 7,
+      summaryY,
+      margin + (pageWidth - 2 * margin) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin + (2 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      margin + (2 * (pageWidth - 2 * margin)) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin + (3 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      margin + (3 * (pageWidth - 2 * margin)) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin + (4 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      margin + (4 * (pageWidth - 2 * margin)) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin + (5 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      margin + (5 * (pageWidth - 2 * margin)) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin + (6 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      margin + (6 * (pageWidth - 2 * margin)) / 7,
+      summaryY + boxHeight,
+    );
+    doc.line(
+      margin,
+      summaryY + boxHeight / 2,
+      pageWidth - margin,
+      summaryY + boxHeight / 2,
+    );
 
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 41, 59);
 
-    // Total Gross Amount
-      const formattedTotalGross = Number(totalGross.toFixed(2));
-      doc.text("TOTAL GROSS", margin + (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalGross = Number(totalGross.toFixed(2));
+    doc.text(
+      "TOTAL GROSS",
+      margin + (pageWidth - 2 * margin) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalGross.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (pageWidth - 2 * margin) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Total Credit
-      const formattedTotalCredit = Number(totalCredit.toFixed(2));
-      doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalCredit = Number(totalCredit.toFixed(2));
+    doc.text(
+      "TOTAL CREDIT",
+      margin + (3 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalCredit.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (3 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Total CD
-      const formattedTotalCd = Number(grandTotalCd.toFixed(2));
-      doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalCd = Number(grandTotalCd.toFixed(2));
+    doc.text(
+      "TOTAL CD",
+      margin + (5 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalCd.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (5 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Total GST
-      const formattedTotalGst = Number(grandTotalGst.toFixed(2));
-      doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalGst = Number(grandTotalGst.toFixed(2));
+    doc.text(
+      "TOTAL GST",
+      margin + (7 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalGst.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (7 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Total Claims
-      const formattedTotalClaims = Number(grandTotalQualityClaims.toFixed(2));
-      doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalClaims = Number(grandTotalQualityClaims.toFixed(2));
+    doc.text(
+      "TOTAL CLAIMS",
+      margin + (9 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalClaims.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (9 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Total Bank Charges
-      const formattedTotalBankCharges = Number(grandTotalBankCharges.toFixed(2));
-      doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.text(formattedTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
-      doc.setFont("helvetica", "bold");
+    const formattedTotalBankCharges = Number(grandTotalBankCharges.toFixed(2));
+    doc.text(
+      "TOTAL BANK CHGS",
+      margin + (11 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalBankCharges.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (11 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
 
-      // Difference
-      const formattedDifference = Number(difference.toFixed(2));
-      doc.setTextColor(255, 255, 255);
-      doc.setFillColor(26, 58, 95);
-      doc.rect(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, (pageWidth - 2 * margin) / 7, boxHeight, "F");
-      doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
-      
-      const differenceText = formattedDifference > 0 
+    const formattedDifference = Number(difference.toFixed(2));
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(26, 58, 95);
+    doc.rect(
+      margin + (6 * (pageWidth - 2 * margin)) / 7,
+      summaryY,
+      (pageWidth - 2 * margin) / 7,
+      boxHeight,
+      "F",
+    );
+    doc.text(
+      "DIFFERENCE",
+      margin + (13 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+
+    const differenceText =
+      formattedDifference > 0
         ? `${formattedDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
         : formattedDifference < 0
-        ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
-        : "NIL";
-      doc.text(differenceText, margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+          ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
+          : "NIL";
+    doc.text(
+      differenceText,
+      margin + (13 * (pageWidth - 2 * margin)) / 14,
+      summaryY + 18,
+      { align: "center" },
+    );
     doc.setTextColor(0, 0, 0);
     summaryY += boxHeight + 5;
 
-    // First section: Bank Account Details (separated)
     let bankSectionY = summaryY + 20;
-    
-    // Get seller company and bank details
+
     let sellerCompanyData = null;
     const sellerCompanyName =
       filters.ledgerType === "Buyer"
@@ -1274,40 +1398,54 @@ const ListPaymentReceived = () => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(26, 58, 95);
-      doc.text("Bank Account Details", margin, bankSectionY + 3);
-      
+      doc.text("BANK ACCOUNT DETAILS", margin, bankSectionY);
+
+      const boxY = bankSectionY + 5;
+      const boxHeight = 28;
+
       doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.5);
-      const bankBoxWidth = (pageWidth - 2 * margin);
-      doc.rect(margin, bankSectionY + 8, bankBoxWidth, 48, "FD");
-      
-      doc.setTextColor(30, 41, 59);
-      doc.setFont("helvetica", "bold");
+      doc.setDrawColor(210);
+      doc.roundedRect(
+        margin,
+        boxY,
+        pageWidth - margin * 2,
+        boxHeight,
+        2,
+        2,
+        "FD",
+      );
+
       doc.setFontSize(8.5);
-      doc.text("Bank Name:", margin + 12, bankSectionY + 18);
+      doc.setTextColor(40);
+
+      const leftX = margin + 8;
+      const rightX = pageWidth / 2 + 10;
+
+      // ---------- Row 1 ----------
+      doc.setFont("helvetica", "bold");
+      doc.text("Beneficiary :", leftX, boxY + 9);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.bankName || "-", margin + 80, bankSectionY + 18);
+      doc.text(
+        bankDetails.accountHolderName || sellerCompanyName || "-",
+        leftX + 28,
+        boxY + 9,
+      );
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Holder:", margin + 12, bankSectionY + 29);
+      doc.text("Bank :", rightX, boxY + 9);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 80, bankSectionY + 29);
+      doc.text(bankDetails.bankName || "-", rightX + 16, boxY + 9);
+
+      // ---------- Row 2 ----------
+      doc.setFont("helvetica", "bold");
+      doc.text("Account No. :", leftX, boxY + 19);
+      doc.setFont("courier", "bold");
+      doc.text(bankDetails.accountNumber || "-", leftX + 28, boxY + 19);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Number:", margin + 12, bankSectionY + 40);
-      doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountNumber || "-", margin + 80, bankSectionY + 40);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("IFSC Code:", margin + 12, bankSectionY + 51);
-      doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.ifscCode || "-", margin + 80, bankSectionY + 51);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Branch:", pageWidth - margin - 150, bankSectionY + 18);
-      doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.branchName || "-", pageWidth - margin - 145, bankSectionY + 18);
+      doc.text("IFSC :", rightX, boxY + 19);
+      doc.setFont("courier", "bold");
+      doc.text(bankDetails.ifscCode || "-", rightX + 16, boxY + 19);
     } else {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
@@ -1319,36 +1457,42 @@ const ListPaymentReceived = () => {
       doc.text("No bank details available", margin + 10, bankSectionY + 15);
     }
 
-    // Separator line
     const separatorY = bankDetails ? bankSectionY + 65 : bankSectionY + 28;
     doc.setLineWidth(0.2);
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
-    
-    // Final calculation and QR
+
     let finalSectionY = separatorY + 12;
 
-    // Left side: Formula calculation
-    // Right side: QR and Signatory
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("(TOTAL GROSS + TOTAL GST) - (TOTAL CD + TOTAL CLAIMS + TOTAL BANK CHGS + TOTAL CREDIT) = DIFFERENCE", margin + 10, finalSectionY + 5);
-    
+    doc.text(
+      "(TOTAL GROSS + TOTAL GST) - (TOTAL CD + TOTAL CLAIMS + TOTAL BANK CHGS + TOTAL CREDIT) = DIFFERENCE",
+      margin + 10,
+      finalSectionY + 5,
+    );
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     const formulaLine1 = `(Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalGstNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
     const formulaLine2 = ` - (Rs. ${totalCdNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalClaimsNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalBankChargesNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
-    const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? 'Dr' : difference < 0 ? 'Cr' : 'NIL'})`;
+    const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? "Dr" : difference < 0 ? "Cr" : "NIL"})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
     doc.text(formulaLine2, margin + 10, finalSectionY + 25);
     doc.text(formulaLine3, margin + 10, finalSectionY + 35);
 
-    // Right part: QR code and Signatory
     try {
       const qrText = encodeURIComponent(
         `HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report\nGross: ${totalGross}\nCredit: ${totalCredit}`,
       );
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
-      await doc.addImage(qrUrl, "PNG", pageWidth - margin - 45 - 15, finalSectionY, 45, 45);
+      await doc.addImage(
+        qrUrl,
+        "PNG",
+        pageWidth - margin - 45 - 15,
+        finalSectionY,
+        45,
+        45,
+      );
     } catch (qrError) {
       console.log("QR code not added:", qrError);
     }
@@ -1373,7 +1517,6 @@ const ListPaymentReceived = () => {
       finalSectionY + 61,
     );
 
-    // Add page numbering to the new page
     const pageCount = doc.internal.getNumberOfPages();
     doc.setLineWidth(0.2);
     doc.setDrawColor(100, 100, 100);
@@ -1391,7 +1534,9 @@ const ListPaymentReceived = () => {
       margin,
       pageHeight - 8,
     );
-    doc.text("Confidential", pageWidth - margin, pageHeight - 8, { align: "right" });
+    doc.text("Confidential", pageWidth - margin, pageHeight - 8, {
+      align: "right",
+    });
 
     return doc;
   };
@@ -1416,8 +1561,7 @@ const ListPaymentReceived = () => {
         endDate: filters.endDate,
         limit: 1000,
       };
-      if (filters.buyerCompany)
-        entryParams.buyerCompany = filters.buyerCompany;
+      if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
       if (filters.supplierCompany)
         entryParams.supplierCompany = filters.supplierCompany;
 
@@ -1616,10 +1760,14 @@ const ListPaymentReceived = () => {
     try {
       setPrinting(true);
       const doc = await generateMISReportPDF();
-      const buyerName = filters.buyerCompany ? filters.buyerCompany.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Buyers';
-      const sellerName = filters.supplierCompany ? filters.supplierCompany.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Sellers';
-      const startDate = filters.startDate ? filters.startDate : 'All';
-      const endDate = filters.endDate ? filters.endDate : 'All';
+      const buyerName = filters.buyerCompany
+        ? filters.buyerCompany.replace(/[^a-zA-Z0-9]/g, "_")
+        : "All_Buyers";
+      const sellerName = filters.supplierCompany
+        ? filters.supplierCompany.replace(/[^a-zA-Z0-9]/g, "_")
+        : "All_Sellers";
+      const startDate = filters.startDate ? filters.startDate : "All";
+      const endDate = filters.endDate ? filters.endDate : "All";
       doc.save(
         `MIS_PaymentReceived_${buyerName}_${sellerName}_${startDate}_to_${endDate}.pdf`,
       );
@@ -1660,7 +1808,6 @@ const ListPaymentReceived = () => {
     try {
       setSendingEmail(true);
 
-      // Get recipient email from seller company
       const sellerCompanyName =
         filters.ledgerType === "Buyer"
           ? selectedOpposingCompany?.label
@@ -1686,7 +1833,6 @@ const ListPaymentReceived = () => {
         return;
       }
 
-      // Generate PDF
       let doc;
       if (reportType === "MIS") {
         doc = await generateMISReportPDF();
@@ -1694,10 +1840,8 @@ const ListPaymentReceived = () => {
         doc = await generatePaymentAdvicePDF();
       }
 
-      // Convert PDF to base64
       const pdfBase64 = doc.output("datauristring").split(",")[1];
 
-      // Send email via API
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
         recipientEmail: sellerCompanyData.email,
@@ -1721,11 +1865,14 @@ const ListPaymentReceived = () => {
     }
   };
 
-  // Helper to generate QR code for individual voucher
   const generateIndividualQRCode = async (row) => {
     const getValue = (...candidates) => {
       for (const value of candidates) {
-        if (value && String(value).trim() !== "" && String(value).trim() !== "N/A") {
+        if (
+          value &&
+          String(value).trim() !== "" &&
+          String(value).trim() !== "N/A"
+        ) {
           return String(value).trim();
         }
       }
@@ -1738,21 +1885,24 @@ const ListPaymentReceived = () => {
       loadingEntry?.billNumber,
       row.raw?.billNo,
       row.raw?.billNumber,
-      row.billNo
+      row.billNo,
     );
     const saudaNo = getValue(
       firstMapping?.saudaNo,
       loadingEntry?.saudaNo,
       row.raw?.saudaNo,
-      row.saudaNo
+      row.saudaNo,
     );
     const lorryNo = getValue(
       loadingEntry?.lorryNumber,
       row.raw?.lorryNumber,
-      row.lorryNo
+      row.lorryNo,
     );
 
-    const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
+    const totalAmount = Math.max(
+      Number(row.debit || 0),
+      Number(row.credit || 0),
+    );
     const qrText = [
       "HANSARIA FOOD PRIVATE LIMITED",
       `Date: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-"}`,
@@ -1762,22 +1912,25 @@ const ListPaymentReceived = () => {
       `Sauda No: ${saudaNo}`,
       `Lorry No: ${lorryNo}`,
       `Bill No: ${billNo}`,
-      `Amount: Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+      `Amount: Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
     ].join("\n");
-    
+
     return await QRCode.toDataURL(qrText, {
       margin: 1,
       width: 200,
       color: {
         dark: "#000000",
-        light: "#ffffff"
-      }
+        light: "#ffffff",
+      },
     });
   };
 
-  const handleSendIndividualEmail = async ({ row, buyerCompany, sellerCompany }) => {
+  const handleSendIndividualEmail = async ({
+    row,
+    buyerCompany,
+    sellerCompany,
+  }) => {
     try {
-      // Mark this row as sending
       setSendingEmailIds((prev) => new Set([...prev, row.id]));
 
       if (!sellerCompany?.email) {
@@ -1785,21 +1938,18 @@ const ListPaymentReceived = () => {
         return;
       }
 
-      // Generate QR code
       const qrCodeUrl = await generateIndividualQRCode(row);
 
-      // Generate PDF using PaymentVoucherPDF component
       const blob = await pdf(
         <PaymentVoucherPDF
           row={row}
           buyerCompany={buyerCompany}
           sellerCompany={sellerCompany}
           qrCodeUrl={qrCodeUrl}
-          voucherNumber={1} // Simple voucher number for now
-        />
+          voucherNumber={1}
+        />,
       ).toBlob();
 
-      // Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       const pdfBase64 = await new Promise((resolve) => {
@@ -1808,7 +1958,6 @@ const ListPaymentReceived = () => {
         };
       });
 
-      // Send email via API
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
         recipientEmail: sellerCompany.email,
@@ -1821,7 +1970,6 @@ const ListPaymentReceived = () => {
       console.error("Send Individual Email Error:", error);
       toast.error("Failed to send email");
     } finally {
-      // Remove this row from sending state
       setSendingEmailIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(row.id);
@@ -1833,12 +1981,14 @@ const ListPaymentReceived = () => {
   const handleEdit = (payment) => {
     setSelectedPayment(payment);
     setEditFormData({
-      date: payment.date ? new Date(payment.date).toISOString().split("T")[0] : "",
+      date: payment.date
+        ? new Date(payment.date).toISOString().split("T")[0]
+        : "",
       sellerBillNo: payment.sellerBillNo || "",
       remarks: payment.remarks || "",
       amount: payment.amount || "",
       claim: payment.claim || "",
-      tds: payment.tds || ""
+      tds: payment.tds || "",
     });
     setIsEditModalOpen(true);
   };
@@ -2040,58 +2190,96 @@ const ListPaymentReceived = () => {
         {isEditModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <h3 className="text-xl font-bold text-slate-800 mb-4">Edit Payment</h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-4">
+                Edit Payment
+              </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Date
+                  </label>
                   <input
                     type="date"
                     value={editFormData.date}
-                    onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, date: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Seller Bill No</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Seller Bill No
+                  </label>
                   <input
                     type="text"
                     value={editFormData.sellerBillNo}
-                    onChange={(e) => setEditFormData({ ...editFormData, sellerBillNo: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        sellerBillNo: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Amount</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Amount
+                  </label>
                   <input
                     type="number"
                     value={editFormData.amount}
-                    onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        amount: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Claim</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Claim
+                  </label>
                   <input
                     type="number"
                     value={editFormData.claim}
-                    onChange={(e) => setEditFormData({ ...editFormData, claim: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        claim: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">TDS</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    TDS
+                  </label>
                   <input
                     type="number"
                     value={editFormData.tds}
-                    onChange={(e) => setEditFormData({ ...editFormData, tds: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, tds: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Remarks</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Remarks
+                  </label>
                   <textarea
                     value={editFormData.remarks}
-                    onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        remarks: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                   />
