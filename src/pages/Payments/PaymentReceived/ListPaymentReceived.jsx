@@ -600,39 +600,72 @@ const ListPaymentReceived = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
 
+    // Helper function to get base64 image
+    const getBase64 = (img) =>
+      new Promise((resolve) => {
+        const image = new Image();
+        image.src = img;
+        image.crossOrigin = "Anonymous";
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(image, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        image.onerror = () => resolve(null);
+      });
+
+    // Load logo
+    const logoBase64 = await getBase64("/logo/logo.png");
+
+    // Header with logo
+    const logoWidth = 60;
+    const logoHeight = 40;
+    const logoX = margin + 10;
+    const logoY = 10;
+    if (logoBase64) {
+      doc.addImage(logoBase64, "PNG", logoX, logoY, logoWidth, logoHeight);
+    }
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.setTextColor(0, 0, 0);
-    doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 14, {
+    doc.setTextColor(26, 58, 95);
+    doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 22, {
       align: "center",
     });
 
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "normal");
+    doc.setTextColor(64, 64, 64);
     doc.text(
       "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3",
       pageWidth / 2,
-      20,
+      29,
       { align: "center" },
     );
     doc.text(
       "Bidhannagar, Kolkata, West Bengal - 700106",
       pageWidth / 2,
-      25,
+      35,
       { align: "center" },
     );
 
-    doc.setLineWidth(1);
-    doc.line(margin, 30, pageWidth - margin, 30);
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, 40, pageWidth - margin, 40);
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 38, { align: "center" });
+    doc.setTextColor(26, 58, 95);
+    doc.text("PAYMENT RECEIVED MIS REPORT", pageWidth / 2, 49, { align: "center" });
 
     doc.setLineWidth(0.5);
-    doc.line(margin, 42, pageWidth - margin, 42);
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, 54, pageWidth - margin, 54);
 
-    let infoY = 46;
+    let infoY = 58;
     const buyerName = filters.buyerCompany || "All";
     const sellerName = filters.supplierCompany || "All";
     const startDate = filters.startDate
@@ -642,43 +675,45 @@ const ListPaymentReceived = () => {
       ? new Date(filters.endDate).toLocaleDateString("en-GB")
       : "All";
 
-    doc.setFillColor(245, 245, 245);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 32, "F");
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 34, "FD");
     doc.setLineWidth(0.5);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 32);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 34);
 
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text("Ledger", margin + 5, infoY + 9);
+    doc.text("Ledger", margin + 7, infoY + 10);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${selectedCompany?.label || "-"}`, margin + 25, infoY + 9);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Date Between", margin + 5, infoY + 23);
-    doc.setFont("helvetica", "normal");
-    doc.text(`: ${startDate} To ${endDate}`, margin + 38, infoY + 23);
+    doc.text(`: ${selectedCompany?.label || "-"}`, margin + 27, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Branch", pageWidth / 2, infoY + 9, { align: "center" });
+    doc.text("Date Between", margin + 7, infoY + 24);
     doc.setFont("helvetica", "normal");
-    doc.text(": All", pageWidth / 2 + 18, infoY + 9);
+    doc.text(`: ${startDate} To ${endDate}`, margin + 40, infoY + 24);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", pageWidth / 2, infoY + 23, { align: "center" });
+    doc.text("Branch", pageWidth / 2, infoY + 10, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${buyerName}`, pageWidth / 2 + 32, infoY + 23);
+    doc.text(": All", pageWidth / 2 + 18, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Seller Company", pageWidth - 85, infoY + 9);
+    doc.text("Buyer Company", pageWidth / 2, infoY + 24, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${sellerName}`, pageWidth - 45, infoY + 9);
+    doc.text(`: ${buyerName}`, pageWidth / 2 + 34, infoY + 24);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Report Date", pageWidth - 85, infoY + 23);
+    doc.text("Seller Company", pageWidth - 88, infoY + 10);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${new Date().toLocaleDateString("en-GB")}`, pageWidth - 45, infoY + 23);
+    doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
 
-    let currentY = infoY + 38;
+    doc.setFont("helvetica", "bold");
+    doc.text("Report Date", pageWidth - 88, infoY + 24);
+    doc.setFont("helvetica", "normal");
+    doc.text(`: ${new Date().toLocaleDateString("en-GB")}`, pageWidth - 48, infoY + 24);
+
+    let currentY = infoY + 42;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -1131,13 +1166,13 @@ const ListPaymentReceived = () => {
     let summaryY = 12;
 
     // Summary box
-    const boxHeight = 25;
-    doc.setFillColor(200, 200, 200);
+    const boxHeight = 26;
+    doc.setFillColor(248, 250, 252);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
 
     // Draw borders and dividers (7 sections now)
-    doc.setLineWidth(0.2);
-    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(226, 232, 240);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
     // Vertical dividers
     doc.line(margin + (pageWidth - 2 * margin) / 7, summaryY, margin + (pageWidth - 2 * margin) / 7, summaryY + boxHeight);
@@ -1149,46 +1184,58 @@ const ListPaymentReceived = () => {
     // Horizontal divider
     doc.line(margin, summaryY + boxHeight / 2, pageWidth - margin, summaryY + boxHeight / 2);
 
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(30, 41, 59);
 
     // Total Gross Amount
       const formattedTotalGross = Number(totalGross.toFixed(2));
-      doc.text("TOTAL GROSS", margin + (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL GROSS", margin + (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Total Credit
       const formattedTotalCredit = Number(totalCredit.toFixed(2));
-      doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL CREDIT", margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 3 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Total CD
       const formattedTotalCd = Number(grandTotalCd.toFixed(2));
-      doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL CD", margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 5 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Total GST
       const formattedTotalGst = Number(grandTotalGst.toFixed(2));
-      doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL GST", margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 7 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Total Claims
       const formattedTotalClaims = Number(grandTotalQualityClaims.toFixed(2));
-      doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL CLAIMS", margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 9 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Total Bank Charges
       const formattedTotalBankCharges = Number(grandTotalBankCharges.toFixed(2));
-      doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
-      doc.text(formattedTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 18, { align: "center" });
+      doc.text("TOTAL BANK CHGS", margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(formattedTotalBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), margin + 11 * (pageWidth - 2 * margin) / 14, summaryY + 19, { align: "center" });
+      doc.setFont("helvetica", "bold");
 
       // Difference
       const formattedDifference = Number(difference.toFixed(2));
       doc.setTextColor(255, 255, 255);
-      doc.setFillColor(30, 58, 95);
+      doc.setFillColor(26, 58, 95);
       doc.rect(margin + 6 * (pageWidth - 2 * margin) / 7, summaryY, (pageWidth - 2 * margin) / 7, boxHeight, "F");
-      doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8, { align: "center" });
+      doc.text("DIFFERENCE", margin + 13 * (pageWidth - 2 * margin) / 14, summaryY + 8.5, { align: "center" });
       
       const differenceText = formattedDifference > 0 
         ? `${formattedDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
@@ -1225,49 +1272,55 @@ const ListPaymentReceived = () => {
 
     if (bankDetails) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(11);
+      doc.setTextColor(26, 58, 95);
       doc.text("Bank Account Details", margin, bankSectionY + 3);
       
-      doc.setLineWidth(0.2);
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
       const bankBoxWidth = (pageWidth - 2 * margin);
-      doc.rect(margin, bankSectionY + 8, bankBoxWidth, 48);
+      doc.rect(margin, bankSectionY + 8, bankBoxWidth, 48, "FD");
       
+      doc.setTextColor(30, 41, 59);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);
-      doc.text("Bank Name:", margin + 10, bankSectionY + 17);
+      doc.text("Bank Name:", margin + 12, bankSectionY + 18);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.bankName || "-", margin + 75, bankSectionY + 17);
+      doc.text(bankDetails.bankName || "-", margin + 80, bankSectionY + 18);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Holder:", margin + 10, bankSectionY + 27);
+      doc.text("Account Holder:", margin + 12, bankSectionY + 29);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 75, bankSectionY + 27);
+      doc.text(bankDetails.accountHolderName || sellerCompanyName || "-", margin + 80, bankSectionY + 29);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Account Number:", margin + 10, bankSectionY + 37);
+      doc.text("Account Number:", margin + 12, bankSectionY + 40);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.accountNumber || "-", margin + 75, bankSectionY + 37);
+      doc.text(bankDetails.accountNumber || "-", margin + 80, bankSectionY + 40);
 
       doc.setFont("helvetica", "bold");
-      doc.text("IFSC Code:", margin + 10, bankSectionY + 47);
+      doc.text("IFSC Code:", margin + 12, bankSectionY + 51);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.ifscCode || "-", margin + 75, bankSectionY + 47);
+      doc.text(bankDetails.ifscCode || "-", margin + 80, bankSectionY + 51);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Branch:", pageWidth - margin - 140, bankSectionY + 17);
+      doc.text("Branch:", pageWidth - margin - 150, bankSectionY + 18);
       doc.setFont("helvetica", "normal");
-      doc.text(bankDetails.branchName || "-", pageWidth - margin - 135, bankSectionY + 17);
+      doc.text(bankDetails.branchName || "-", pageWidth - margin - 145, bankSectionY + 18);
     } else {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(11);
+      doc.setTextColor(26, 58, 95);
       doc.text("Bank Account Details", margin, bankSectionY + 3);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.text("No bank details available", margin + 10, bankSectionY + 12);
+      doc.setFontSize(9);
+      doc.setTextColor(107, 114, 128);
+      doc.text("No bank details available", margin + 10, bankSectionY + 15);
     }
 
     // Separator line
-    const separatorY = bankDetails ? bankSectionY + 62 : bankSectionY + 25;
+    const separatorY = bankDetails ? bankSectionY + 65 : bankSectionY + 28;
     doc.setLineWidth(0.2);
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
     
