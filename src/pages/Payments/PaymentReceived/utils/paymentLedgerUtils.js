@@ -280,7 +280,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
 export const calculateVoucherTotals = (rows) => {
   return rows.reduce(
     (totals, row) => {
-      if (!row.isOpening) {
+      if (!row.isOpening && row.raw?.uiType === 'entry') {
         totals.totalGst += row.gstAmount || 0;
         totals.totalClaims += row.totalClaims || 0;
         totals.totalCd += row.cdAmount || 0;

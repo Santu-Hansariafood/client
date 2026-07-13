@@ -882,31 +882,42 @@ const ListPaymentReceived = () => {
       group.forEach(({ row, rowData }) => {
           rowIdx++;
 
-          const grossAmount = row.grossAmount || 0;
           const credit = row.credit || 0;
-          const gst = row.gstAmount || 0;
-          const claims = row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-          const cd = row.cdAmount || 0;
-          const bankCharges = row.bankCharges || 0;
-
-          saudaGrossTotal += grossAmount;
+          const isEntryRow = row.raw?.uiType === 'entry';
+          
+          let grossAmount = 0;
+          let gst = 0;
+          let claims = 0;
+          let cd = 0;
+          let bankCharges = 0;
+          let balance = 0;
+          
+          if (isEntryRow) {
+            grossAmount = row.grossAmount || 0;
+            gst = row.gstAmount || 0;
+            claims = row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+            cd = row.cdAmount || 0;
+            bankCharges = row.bankCharges || 0;
+            // Calculate BALANCE as (GROSS + GST - CLAIMS - CD - BANK CHGS) only for entry rows
+            balance = Number((grossAmount + gst - claims - cd - bankCharges).toFixed(2));
+            
+            saudaGrossTotal += grossAmount;
+            saudaCdTotal += cd;
+            saudaGstTotal += gst;
+            saudaQualityClaimsTotal += claims;
+            saudaBankChargesTotal += bankCharges;
+          }
+          
           saudaCreditTotal += credit;
           saudaPaidTotal += rowData.paidAmount;
-          saudaCdTotal += cd;
-          saudaGstTotal += gst;
-          saudaQualityClaimsTotal += claims;
-          saudaBankChargesTotal += bankCharges;
-          
-          // Calculate BALANCE as (GROSS + GST - CLAIMS - CD - BANK CHGS)
-          const balance = Number((grossAmount + gst - claims - cd - bankCharges).toFixed(2));
           
           // Ensure all values are rounded to 2 decimal places
-          const formattedGross = Number(grossAmount.toFixed(2));
+          const formattedGross = isEntryRow ? Number(grossAmount.toFixed(2)) : 0;
           const formattedCredit = Number(credit.toFixed(2));
-          const formattedGst = Number(gst.toFixed(2));
-          const formattedClaims = Number(claims.toFixed(2));
-          const formattedCd = Number(cd.toFixed(2));
-          const formattedBankCharges = Number(bankCharges.toFixed(2));
+          const formattedGst = isEntryRow ? Number(gst.toFixed(2)) : 0;
+          const formattedClaims = isEntryRow ? Number(claims.toFixed(2)) : 0;
+          const formattedCd = isEntryRow ? Number(cd.toFixed(2)) : 0;
+          const formattedBankCharges = isEntryRow ? Number(bankCharges.toFixed(2)) : 0;
           
           tableData.push([
             rowIdx,
@@ -916,22 +927,22 @@ const ListPaymentReceived = () => {
             rowData.billNo,
             (row.buyerCompany || "-").toUpperCase(),
             (row.supplierCompany || "-").toUpperCase(),
-            formattedGross > 0
+            isEntryRow && formattedGross > 0
               ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
             formattedCredit > 0
               ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            formattedGst > 0
+            isEntryRow && formattedGst > 0
               ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            formattedClaims > 0
+            isEntryRow && formattedClaims > 0
               ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            formattedCd > 0
+            isEntryRow && formattedCd > 0
               ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            formattedBankCharges > 0
+            isEntryRow && formattedBankCharges > 0
               ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
             balance !== 0
@@ -1087,15 +1098,18 @@ const ListPaymentReceived = () => {
     
     reportRows.forEach((row) => {
       if (!row.isOpening) {
-        const grossAmount = row.grossAmount || 0;
-        totalGross += grossAmount;
         totalCredit += row.credit || 0;
         
-        const rowData = extractRowData(row);
-        grandTotalCd += row.cdAmount || 0;
-        grandTotalGst += row.gstAmount || 0;
-        grandTotalQualityClaims += row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
-        grandTotalBankCharges += row.bankCharges || 0;
+        if (row.raw?.uiType === 'entry') {
+          const grossAmount = row.grossAmount || 0;
+          totalGross += grossAmount;
+          
+          const rowData = extractRowData(row);
+          grandTotalCd += row.cdAmount || 0;
+          grandTotalGst += row.gstAmount || 0;
+          grandTotalQualityClaims += row.totalClaims || (rowData.totalQualityClaims + rowData.paymentClaimAmount);
+          grandTotalBankCharges += row.bankCharges || 0;
+        }
       }
     });
     
