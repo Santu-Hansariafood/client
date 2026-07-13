@@ -1394,6 +1394,9 @@ const ListPaymentReceived = () => {
 
     const bankDetails = sellerCompanyData?.bankDetails?.[0];
 
+    // Default separator position
+    let separatorY = bankSectionY + 30;
+
     if (bankDetails) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
@@ -1421,7 +1424,7 @@ const ListPaymentReceived = () => {
       const leftX = margin + 8;
       const rightX = pageWidth / 2 + 10;
 
-      // ---------- Row 1 ----------
+      // Row 1
       doc.setFont("helvetica", "bold");
       doc.text("Beneficiary :", leftX, boxY + 9);
       doc.setFont("helvetica", "normal");
@@ -1436,7 +1439,7 @@ const ListPaymentReceived = () => {
       doc.setFont("helvetica", "normal");
       doc.text(bankDetails.bankName || "-", rightX + 16, boxY + 9);
 
-      // ---------- Row 2 ----------
+      // Row 2
       doc.setFont("helvetica", "bold");
       doc.text("Account No. :", leftX, boxY + 19);
       doc.setFont("courier", "bold");
@@ -1446,22 +1449,28 @@ const ListPaymentReceived = () => {
       doc.text("IFSC :", rightX, boxY + 19);
       doc.setFont("courier", "bold");
       doc.text(bankDetails.ifscCode || "-", rightX + 16, boxY + 19);
+
+      // Separator just below the box
+      separatorY = boxY + boxHeight + 5;
     } else {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(26, 58, 95);
       doc.text("Bank Account Details", margin, bankSectionY + 3);
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(107, 114, 128);
       doc.text("No bank details available", margin + 10, bankSectionY + 15);
+
+      separatorY = bankSectionY + 25;
     }
 
-    const separatorY = bankDetails ? bankSectionY + 65 : bankSectionY + 28;
+    // Draw separator
     doc.setLineWidth(0.2);
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
 
-    let finalSectionY = separatorY + 12;
+    let finalSectionY = separatorY + 10;
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
