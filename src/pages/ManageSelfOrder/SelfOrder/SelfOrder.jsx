@@ -55,7 +55,7 @@ const INITIAL_FORM_DATA = {
   quantity: "",
   pendingQuantity: "",
   rate: "",
-  gst: "",
+  gst: 0,
   cd: "",
   weight: "",
   supplier: "",

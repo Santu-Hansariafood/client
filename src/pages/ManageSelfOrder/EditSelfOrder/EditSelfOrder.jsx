@@ -64,7 +64,7 @@ const INITIAL_FORM_DATA = {
   quantity: "",
   pendingQuantity: "",
   rate: "",
-  gst: "",
+  gst: 0,
   cd: "",
   weight: "",
   supplier: "",
@@ -112,6 +112,7 @@ const EditSelfOrder = () => {
   });
 
   const abortControllerRef = useRef(null);
+  const hasFetchedInitialData = useRef(false);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -148,6 +149,10 @@ const EditSelfOrder = () => {
     if (!id && !orderFromState) {
       toast.error("Missing order id. Open edit from the order list.");
       navigate("/manage-order/list-self-order", { replace: true });
+      return;
+    }
+
+    if (hasFetchedInitialData.current) {
       return;
     }
 
@@ -206,9 +211,14 @@ const EditSelfOrder = () => {
 
         const data = orderRes.data;
         if (data) {
+          const allowedGstValues = [0, 5, 18, 40];
+          const processedGst = allowedGstValues.includes(Number(data.gst))
+            ? Number(data.gst)
+            : 0;
           const processedData = {
             ...INITIAL_FORM_DATA,
             ...data,
+            gst: processedGst,
             consignee: data.consignee || "",
             poDate: data.poDate ? new Date(data.poDate) : new Date(),
             deliveryDate: data.deliveryDate
@@ -232,6 +242,8 @@ const EditSelfOrder = () => {
         if (needsSellerCompanies) setSellerCompanies(sellerCompaniesRows);
         if (needsCompanies) setCompanies(companiesRows);
         if (needsCommodities) setAllCommodities(commoditiesRows);
+
+        hasFetchedInitialData.current = true;
       } catch (error) {
         if (api.isCancel(error)) return;
         console.error("Error fetching data:", error);
@@ -248,7 +260,7 @@ const EditSelfOrder = () => {
         abortControllerRef.current.abort();
       }
     };
-  }, [id, navigate, state?.orderData]);
+  }, [id, navigate]);
 
   const handleChange = useCallback((field, value) => {
     if (field === "buyerBrokerageMap") {
