@@ -127,6 +127,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "commodity/edit/:id",
+    component: LazyPages.EditCommodity,
+    roles: ["Admin", "Employee"],
+  },
+  {
     path: "commodity/list",
     component: LazyPages.ListCommodity,
     roles: ["Admin", "Employee"],

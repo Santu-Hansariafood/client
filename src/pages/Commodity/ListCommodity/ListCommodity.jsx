@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import { toast } from "react-toastify";
@@ -12,15 +13,12 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
-const EditCommodityPopup = lazy(
-  () => import("../EditCommodityPopup/EditCommodityPopup"),
-);
 
 const ListCommodity = () => {
+  const navigate = useNavigate();
   const [commodities, setCommodities] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,8 +70,7 @@ const ListCommodity = () => {
   };
 
   const handleEdit = (id) => {
-    setSelectedCommodity({ _id: id });
-    setIsEditPopupOpen(true);
+    navigate(`/commodity/edit/${id}`);
   };
 
   const handleDelete = async (id) => {
@@ -198,12 +195,6 @@ const ListCommodity = () => {
                 </div>
               )}
             </PopupBox>
-            <EditCommodityPopup
-              isOpen={isEditPopupOpen}
-              onClose={() => setIsEditPopupOpen(false)}
-              commodityId={selectedCommodity?._id || null}
-              onUpdate={fetchCommodities}
-            />
           </div>
         </div>
       </AdminPageShell>

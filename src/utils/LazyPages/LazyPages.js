@@ -6,6 +6,7 @@ const loaders = {
   AddBuyer: () => import("../../pages/Buyer/AddBuyer/AddBuyer"),
   ListBuyer: () => import("../../pages/Buyer/BuyerList/BuyerList"),
   AddCommodity: () => import("../../pages/Commodity/AddCommodity/AddCommodity"),
+  EditCommodity: () => import("../../pages/Commodity/EditCommodity/EditCommodity"),
   ListCommodity: () =>
     import("../../pages/Commodity/ListCommodity/ListCommodity"),
   AddCompany: () => import("../../pages/Company/AddCompany/AddCompany"),
@@ -136,6 +137,7 @@ const pathToKey = {
   "/consignee/add": "AddConsignee",
   "/consignee/list": "ListConsignee",
   "/commodity/add": "AddCommodity",
+  "/commodity/edit/:id": "EditCommodity",
   "/commodity/list": "ListCommodity",
   "/quality-parameter/add": "AddQualityParameter",
   "/quality-parameter/list": "ListQualityParameter",
@@ -216,6 +218,7 @@ export function prefetchRouteByPathname(pathname) {
     key = "EditSelfOrder";
   if (!key && pathname.startsWith("/loading-entry-sauda/"))
     key = "LoadingEntrySauda";
+  if (!key && pathname.startsWith("/commodity/edit/")) key = "EditCommodity";
   if (key && loaders[key]) {
     prefetched.add(pathname);
     loaders[key]();
@@ -228,6 +231,7 @@ const LazyPages = {
   AddBuyer: lazy(loaders.AddBuyer),
   ListBuyer: lazy(loaders.ListBuyer),
   AddCommodity: lazy(loaders.AddCommodity),
+  EditCommodity: lazy(loaders.EditCommodity),
   ListCommodity: lazy(loaders.ListCommodity),
   AddCompany: lazy(loaders.AddCompany),
   ListCompany: lazy(loaders.ListCompany),
