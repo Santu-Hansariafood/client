@@ -839,7 +839,6 @@ const ListPaymentReceived = () => {
         remarks = row.particulars;
       }
 
-      // Combine lorryNo and unloadingWeight
       let displayLorryNo = lorryNo;
       if (unloadingWeight) {
         displayLorryNo = `${lorryNo} (${unloadingWeight} T)`;
@@ -1100,7 +1099,7 @@ const ListPaymentReceived = () => {
       tableWidth: "wrap",
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
-        
+
         doc.setLineWidth(0.2);
         doc.setDrawColor(100, 100, 100);
         doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
@@ -1386,7 +1385,6 @@ const ListPaymentReceived = () => {
 
     const bankDetails = sellerCompanyData?.bankDetails?.[0];
 
-    // Default separator position
     let separatorY = bankSectionY + 30;
 
     if (bankDetails) {
@@ -1416,7 +1414,6 @@ const ListPaymentReceived = () => {
       const leftX = margin + 8;
       const rightX = pageWidth / 2 + 10;
 
-      // Row 1
       doc.setFont("helvetica", "bold");
       doc.text("Beneficiary :", leftX, boxY + 9);
       doc.setFont("helvetica", "normal");
@@ -1431,7 +1428,6 @@ const ListPaymentReceived = () => {
       doc.setFont("helvetica", "normal");
       doc.text(bankDetails.bankName || "-", rightX + 16, boxY + 9);
 
-      // Row 2
       doc.setFont("helvetica", "bold");
       doc.text("Account No. :", leftX, boxY + 19);
       doc.setFont("courier", "bold");
@@ -1442,7 +1438,6 @@ const ListPaymentReceived = () => {
       doc.setFont("courier", "bold");
       doc.text(bankDetails.ifscCode || "-", rightX + 16, boxY + 19);
 
-      // Separator just below the box
       separatorY = boxY + boxHeight + 5;
     } else {
       doc.setFont("helvetica", "bold");
@@ -1458,7 +1453,6 @@ const ListPaymentReceived = () => {
       separatorY = bankSectionY + 25;
     }
 
-    // Draw separator
     doc.setLineWidth(0.2);
     doc.line(margin, separatorY, pageWidth - margin, separatorY);
 
@@ -1519,18 +1513,17 @@ const ListPaymentReceived = () => {
     );
 
     const pageCount = doc.internal.getNumberOfPages();
-    
-    // Add the note only on the last page
-    doc.setPage(pageCount); // Go to the last page
+
+    doc.setPage(pageCount);
     doc.setFontSize(6);
     doc.setTextColor(100, 100, 100);
     doc.text(
-      "Note: This is based on the buyer company provided data. This is not for the actual data. This is for the reference purpose not for legal use.",
+      "Note: This is based on the buyer or supplier company provided data. This is not for the actual data. This is for the reference purpose not for legal use.",
       pageWidth / 2,
       pageHeight - 20,
-      { align: "center" }
+      { align: "center" },
     );
-    
+
     doc.setLineWidth(0.2);
     doc.setDrawColor(100, 100, 100);
     doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
