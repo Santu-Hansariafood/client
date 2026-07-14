@@ -672,28 +672,38 @@ const ListPaymentReceived = () => {
 
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 24, "FD");
+    doc.rect(margin, infoY, pageWidth - margin * 2, 32, "FD");
     doc.setLineWidth(0.5);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 24);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 32);
 
     doc.setFontSize(8.5);
     doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text("Company Name", margin + 7, infoY + 14);
+    doc.text("Buyer Company", margin + 7, infoY + 10);
     doc.setFont("helvetica", "normal");
-    doc.text(`: HANSARIA FOOD PRIVATE LIMITED`, margin + 40, infoY + 14);
+    doc.text(`: ${buyerName}`, margin + 40, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Date Between", pageWidth / 2, infoY + 14, { align: "center" });
+    doc.text("Date Between", pageWidth / 2, infoY + 10, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${startDate} To ${endDate}`, pageWidth / 2 + 40, infoY + 14);
+    doc.text(`: ${startDate} To ${endDate}`, pageWidth / 2 + 40, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", pageWidth - 88, infoY + 14);
+    doc.text("Seller Company", pageWidth - 88, infoY + 10);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${buyerName}`, pageWidth - 48, infoY + 14);
+    doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
 
-    let currentY = infoY + 32;
+    doc.setFont("helvetica", "bold");
+    doc.text("Seller Company", margin + 7, infoY + 22);
+    doc.setFont("helvetica", "normal");
+    doc.text(`: ${sellerName}`, margin + 40, infoY + 22);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Buyer Company", pageWidth - 88, infoY + 22);
+    doc.setFont("helvetica", "normal");
+    doc.text(`: ${buyerName}`, pageWidth - 48, infoY + 22);
+
+    let currentY = infoY + 40;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -841,7 +851,8 @@ const ListPaymentReceived = () => {
 
       let displayLorryNo = lorryNo;
       if (unloadingWeight) {
-        displayLorryNo = `${lorryNo} (${unloadingWeight} T)`;
+        const formattedWeight = Number(unloadingWeight).toFixed(3);
+        displayLorryNo = `${lorryNo} (${formattedWeight} T)`;
       }
 
       return {
@@ -954,11 +965,11 @@ const ListPaymentReceived = () => {
           isEntryRow && formattedGross > 0
             ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          formattedCredit > 0
-            ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
           isEntryRow && formattedGst > 0
             ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "",
+          formattedCredit > 0
+            ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
           isEntryRow && formattedClaims > 0
             ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -1020,8 +1031,8 @@ const ListPaymentReceived = () => {
           },
         },
         `Rs. ${Number(saudaGrossTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaCdTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaBankChargesTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -1047,8 +1058,8 @@ const ListPaymentReceived = () => {
           "BUYER",
           "SELLER",
           "GROSS AMOUNT (Rs.)",
-          "CREDIT (Rs.)",
           "GST (Rs.)",
+          "CREDIT (Rs.)",
           "CLAIMS (Rs.)",
           "CD (Rs.)",
           "BANK CHGS (Rs.)",
@@ -1110,11 +1121,6 @@ const ListPaymentReceived = () => {
           pageWidth / 2,
           pageHeight - 8,
           { align: "center" },
-        );
-        doc.text(
-          `Printed on: ${new Date().toLocaleString()}`,
-          margin,
-          pageHeight - 8,
         );
         doc.text("Confidential", pageWidth - margin, pageHeight - 8, {
           align: "right",
