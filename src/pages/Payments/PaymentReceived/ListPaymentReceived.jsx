@@ -669,42 +669,31 @@ const ListPaymentReceived = () => {
     const endDate = filters.endDate
       ? new Date(filters.endDate).toLocaleDateString("en-GB")
       : "All";
-    const printDate = new Date().toLocaleDateString("en-GB");
 
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 34, "FD");
+    doc.rect(margin, infoY, pageWidth - margin * 2, 24, "FD");
     doc.setLineWidth(0.5);
-    doc.rect(margin, infoY, pageWidth - margin * 2, 34);
+    doc.rect(margin, infoY, pageWidth - margin * 2, 24);
 
     doc.setFontSize(8.5);
     doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text("Company Name", margin + 7, infoY + 10);
+    doc.text("Company Name", margin + 7, infoY + 14);
     doc.setFont("helvetica", "normal");
-    doc.text(`: HANSARIA FOOD PRIVATE LIMITED`, margin + 40, infoY + 10);
+    doc.text(`: HANSARIA FOOD PRIVATE LIMITED`, margin + 40, infoY + 14);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Date Between", margin + 7, infoY + 22);
+    doc.text("Date Between", pageWidth / 2, infoY + 14, { align: "center" });
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${startDate} To ${endDate}`, margin + 40, infoY + 22);
+    doc.text(`: ${startDate} To ${endDate}`, pageWidth / 2 + 40, infoY + 14);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", pageWidth / 2, infoY + 10, { align: "center" });
+    doc.text("Buyer Company", pageWidth - 88, infoY + 14);
     doc.setFont("helvetica", "normal");
-    doc.text(`: ${buyerName}`, pageWidth / 2 + 40, infoY + 10);
+    doc.text(`: ${buyerName}`, pageWidth - 48, infoY + 14);
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Print Date", pageWidth / 2, infoY + 22, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.text(`: ${printDate}`, pageWidth / 2 + 40, infoY + 22);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Seller Company", pageWidth - 88, infoY + 10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
-
-    let currentY = infoY + 42;
+    let currentY = infoY + 32;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -772,6 +761,7 @@ const ListPaymentReceived = () => {
     const extractRowData = (row) => {
       let saudaNo = "-";
       let lorryNo = "-";
+      let unloadingWeight = null;
       let billNo = "-";
       let billAmount = 0;
       let paidAmount = 0;
@@ -790,6 +780,7 @@ const ListPaymentReceived = () => {
         return {
           saudaNo,
           lorryNo,
+          unloadingWeight,
           billNo,
           billAmount,
           paidAmount,
@@ -811,6 +802,7 @@ const ListPaymentReceived = () => {
         const details = calculateTallyDetails(raw);
         saudaNo = raw.saudaNo || "-";
         lorryNo = raw.lorryNumber || "-";
+        unloadingWeight = raw.unloadingWeight || null;
         billNo = raw.billNumber || "-";
         billAmount = details.netAmount;
         paidAmount = raw.paidAmount || 0;
@@ -829,6 +821,7 @@ const ListPaymentReceived = () => {
         const details = calculateTallyDetails(loadingEntry);
         saudaNo = firstMapping?.saudaNo || loadingEntry?.saudaNo || "-";
         lorryNo = loadingEntry?.lorryNumber || "-";
+        unloadingWeight = loadingEntry?.unloadingWeight || null;
         billNo = loadingEntry?.billNumber || "-";
         billAmount = details.netAmount;
         paidAmount = Number(firstMapping?.allocatedAmount || 0);
@@ -846,9 +839,15 @@ const ListPaymentReceived = () => {
         remarks = row.particulars;
       }
 
+      // Combine lorryNo and unloadingWeight
+      let displayLorryNo = lorryNo;
+      if (unloadingWeight) {
+        displayLorryNo = `${lorryNo} (${unloadingWeight})`;
+      }
+
       return {
         saudaNo,
-        lorryNo,
+        lorryNo: displayLorryNo,
         billNo,
         billAmount,
         paidAmount,
