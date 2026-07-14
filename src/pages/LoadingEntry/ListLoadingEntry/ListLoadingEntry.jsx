@@ -785,9 +785,11 @@ const ListLoadingEntry = () => {
               claimAmount = calculateClaimAmount(
                 claim.paramValues,
                 actual,
+                claim.standardValue,
                 saudaRate,
                 manualRate,
                 weight,
+                claim.parameterName,
               );
             }
             return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
@@ -856,9 +858,11 @@ const ListLoadingEntry = () => {
               claimAmount = calculateClaimAmount(
                 claim.paramValues,
                 actual,
+                claim.standardValue,
                 saudaRate,
                 manualRate,
                 weight,
+                claim.parameterName,
               );
             }
             return {
@@ -950,6 +954,7 @@ const ListLoadingEntry = () => {
               saudaRate,
               manualRate,
               weight,
+              newClaims[index].parameterName,
             );
           }
 

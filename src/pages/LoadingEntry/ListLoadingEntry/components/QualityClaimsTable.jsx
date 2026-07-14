@@ -47,6 +47,7 @@ const calculateClaimAmount = (
   saudaRate,
   manualRate,
   weight,
+  parameterName,
 ) => {
   if (!actualValue || !standardValue) return 0;
 
@@ -55,7 +56,25 @@ const calculateClaimAmount = (
   const standard = parseFloat(standardValue);
   const difference = actual - standard;
 
-  if (difference > 0) {
+  let applyClaim = false;
+  let claimDifference = 0;
+
+  // Check if parameter is Protein
+  if (parameterName?.toLowerCase() === "protein") {
+    // For Protein: apply claim if actual < standard (reverse)
+    if (difference < 0) {
+      applyClaim = true;
+      claimDifference = Math.abs(difference);
+    }
+  } else {
+    // For other parameters: apply claim if actual > standard
+    if (difference > 0) {
+      applyClaim = true;
+      claimDifference = difference;
+    }
+  }
+
+  if (applyClaim) {
     const effectiveRate = parseFloat(manualRate) || saudaRate;
 
     let ratioLeft = 1;
@@ -71,7 +90,7 @@ const calculateClaimAmount = (
 
     if (ratioRight > 0 && effectiveRate > 0 && weight > 0) {
       totalClaim =
-        (difference / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
+        (claimDifference / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
     }
   }
 
@@ -237,6 +256,7 @@ const QualityClaimsTable = ({
                       if (
                         !isNaN(actualNum) &&
                         !isNaN(baseNum) &&
+                        claim.parameterName?.toLowerCase() !== "protein" &&
                         actualNum < baseNum
                       ) {
                         toast.error(

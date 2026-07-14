@@ -842,7 +842,7 @@ const ListPaymentReceived = () => {
       // Combine lorryNo and unloadingWeight
       let displayLorryNo = lorryNo;
       if (unloadingWeight) {
-        displayLorryNo = `${lorryNo} (${unloadingWeight})`;
+        displayLorryNo = `${lorryNo} (${unloadingWeight} T)`;
       }
 
       return {
