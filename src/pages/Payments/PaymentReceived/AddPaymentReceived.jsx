@@ -500,7 +500,6 @@ const AddPaymentReceived = () => {
         const params = {
           page: useWideFetch ? 1 : page,
           limit: useWideFetch ? 500 : ENTRIES_PAGE_SIZE,
-          paymentStatus: "pending",
         };
 
         if (tableSearch.trim()) {
@@ -1140,14 +1139,22 @@ const AddPaymentReceived = () => {
     }
 
     if (!Number.isNaN(numAmount)) {
-      if (allocationSource === "advance") {
+      // First, check if amount exceeds dueAmount (Lorry Balance)
+      if (numAmount > dueAmount + 0.01) { // small tolerance for floating point errors
+        valueToStore = String(
+          Math.round(Math.min(numAmount, dueAmount) * 100) / 100,
+        );
+        toast.warning(
+          `Max Cr. Rs. ${dueAmount.toLocaleString("en-IN")} (Lorry Balance) on this row`,
+        );
+      } else if (allocationSource === "advance") {
         if (pool <= 0.01 && numAmount > 0) {
           toast.error(
             fullCompanyMapping
               ? "No Credit (Advance) balance for this buyer → seller"
               : "Select seller and use From Advance",
           );
-        } else if (numAmount > remaining + 1) { // Increased tolerance to 1
+        } else if (numAmount > remaining) { 
           valueToStore = String(
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
@@ -1160,9 +1167,9 @@ const AddPaymentReceived = () => {
       } else {
         const maxAllowed = Math.min(
           remaining,
-          dueAmount > 1 ? dueAmount : remaining, // Increased tolerance
+          dueAmount,
         );
-        if (numAmount > maxAllowed + 1) { // Increased tolerance
+        if (numAmount > maxAllowed) { 
           valueToStore = String(
             Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
           );
