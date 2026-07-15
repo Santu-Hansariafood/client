@@ -1,5 +1,5 @@
 import { FaSave, FaMoneyBillWave, FaHistory, FaArrowRight } from "react-icons/fa";
-import DateSelector from "../../../common/DateSelector/DateSelector";
+import DateSelector from "../../../../common/DateSelector/DateSelector";
 
 const PaymentRecordingPanel = ({
   formData,
