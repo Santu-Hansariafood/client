@@ -1744,7 +1744,10 @@ router.get("/", async (req, res) => {
 
     if (isUnloaded) {
       andParts.push({
-        $or: [{ unloadingWeight: { $gt: 0 } }, { loadingWeight: { $gt: 0 } }],
+        $or: [
+          { unloadingWeight: { $gt: 0 } },
+          { unloadingDate: { $exists: true, $ne: null } },
+        ],
       });
     }
 
