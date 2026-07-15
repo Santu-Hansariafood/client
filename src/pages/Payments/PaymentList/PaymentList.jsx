@@ -69,7 +69,7 @@ const PaymentList = () => {
     if (location.pathname.includes("/payments/received")) {
       setPaymentStatus("done");
     } else {
-      setPaymentStatus("all");
+      setPaymentStatus("due");
     }
     setCurrentPage(1);
   }, [location.pathname]);

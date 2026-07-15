@@ -29,8 +29,12 @@ router.get("/", async (req, res) => {
       unloadingWeight: { $gt: 0 },
     };
 
-    if (paymentStatus && paymentStatus !== "all" && paymentStatus !== "due") {
-      query.paymentStatus = paymentStatus;
+    if (paymentStatus === "done") {
+      // For Received List: include entries where paidAmount > 0 OR paymentStatus is "done"
+      query.$or = [
+        { paymentStatus: "done" },
+        { paidAmount: { $gt: 0 } }
+      ];
     } else if (paymentStatus === "due") {
       query.paymentStatus = "pending"; // Due is a subset of pending
     }
@@ -311,8 +315,12 @@ router.get("/export/excel", async (req, res) => {
     const sellerCompany = req.query.sellerCompany;
 
     let query = { unloadingWeight: { $gt: 0 } };
-    if (paymentStatus && paymentStatus !== "all" && paymentStatus !== "due") {
-      query.paymentStatus = paymentStatus;
+    if (paymentStatus === "done") {
+      // For Received List: include entries where paidAmount > 0 OR paymentStatus is "done"
+      query.$or = [
+        { paymentStatus: "done" },
+        { paidAmount: { $gt: 0 } }
+      ];
     } else if (paymentStatus === "due") {
       query.paymentStatus = "pending"; // Due is a subset of pending
     }
