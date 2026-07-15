@@ -236,7 +236,7 @@
       "icon": "FaMoneyCheckAlt",
       "actions": [
         {
-          "name": "Payment List",
+          "name": "Due List",
           "link": "/payments/list",
           "icon": "FaList",
           "roles": ["Admin", "Employee"]
