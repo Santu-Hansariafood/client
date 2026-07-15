@@ -506,6 +506,7 @@ const AddLoadingEntry = () => {
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
     unloadingDate: "",
+    dueDate: "",
     deliveryDate: "",
     loadingWeight: "",
     unloadingWeight: "",
@@ -526,6 +527,24 @@ const AddLoadingEntry = () => {
     sellerBrokerage: 0,
     loadingFrom: "",
     status: "open",
+  };
+
+  const getPaymentTermsDays = (paymentTerms) => {
+    if (paymentTerms === null || paymentTerms === undefined) return 0;
+    const numericValue =
+      typeof paymentTerms === "number"
+        ? paymentTerms
+        : parseInt(String(paymentTerms).match(/\d+/)?.[0] || "0", 10);
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  };
+
+  const calculateDueDate = (baseDate, paymentTerms) => {
+    if (!baseDate) return "";
+    const parsedDate = new Date(baseDate);
+    if (Number.isNaN(parsedDate.getTime())) return "";
+    parsedDate.setHours(0, 0, 0, 0);
+    parsedDate.setDate(parsedDate.getDate() + getPaymentTermsDays(paymentTerms));
+    return parsedDate.toISOString().split("T")[0];
   };
 
   const stateOptions = useMemo(() => {
@@ -619,7 +638,8 @@ const AddLoadingEntry = () => {
       field === "loadingDate" ||
       field === "unloadingDate" ||
       field === "dateOfIssue" ||
-      field === "deliveryDate"
+      field === "deliveryDate" ||
+      field === "dueDate"
     ) {
       const d = new Date(value);
       newEntries[index][field] = !isNaN(d.getTime())
@@ -631,6 +651,13 @@ const AddLoadingEntry = () => {
       newEntries[index][field] = digitsOnly.slice(0, maxLength);
     } else {
       newEntries[index][field] = value;
+    }
+
+    if (field === "unloadingDate") {
+      newEntries[index].dueDate = calculateDueDate(
+        newEntries[index].unloadingDate,
+        selectedOrder?.paymentTerms,
+      );
     }
 
     if (
@@ -776,6 +803,14 @@ const AddLoadingEntry = () => {
       unloadingDate: entry.unloadingDate
         ? new Date(entry.unloadingDate).toISOString().split("T")[0]
         : "",
+      dueDate: entry.dueDate
+        ? new Date(entry.dueDate).toISOString().split("T")[0]
+        : calculateDueDate(
+            entry.unloadingDate
+              ? new Date(entry.unloadingDate).toISOString().split("T")[0]
+              : "",
+            selectedOrder?.paymentTerms,
+          ),
       dateOfIssue: entry.dateOfIssue
         ? new Date(entry.dateOfIssue).toISOString().split("T")[0]
         : "",
@@ -980,6 +1015,28 @@ const AddLoadingEntry = () => {
                       setEditingEntry({
                         ...editingEntry,
                         unloadingDate: date
+                          ? new Date(date).toISOString().split("T")[0]
+                          : "",
+                        dueDate: date
+                          ? calculateDueDate(
+                              new Date(date).toISOString().split("T")[0],
+                              selectedOrder?.paymentTerms,
+                            )
+                          : "",
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Due Date
+                  </label>
+                  <DateSelector
+                    selectedDate={editingEntry.dueDate}
+                    onChange={(date) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        dueDate: date
                           ? new Date(date).toISOString().split("T")[0]
                           : "",
                       })
@@ -1544,6 +1601,20 @@ const AddLoadingEntry = () => {
                                   ₹{entry.sellerBrokerage || 0}
                                 </p>
                               </div>
+                            </div>
+                            <div className="col-span-2 space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Due Date
+                              </label>
+                              <DateSelector
+                                selectedDate={entry.dueDate}
+                                onChange={(date) =>
+                                  handleEntryChange(index, "dueDate", date)
+                                }
+                              />
+                              <p className="text-[9px] text-slate-400 italic">
+                                Auto-calculated from unloading date + payment terms. You can edit it.
+                              </p>
                             </div>
                           </div>
                         </div>

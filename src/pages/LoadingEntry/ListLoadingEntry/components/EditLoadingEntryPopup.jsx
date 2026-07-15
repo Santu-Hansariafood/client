@@ -8,6 +8,9 @@ const DataDropdown = lazy(
 const FileUpload = lazy(
   () => import("../../../../common/FileUpload/FileUpload"),
 );
+const DateSelector = lazy(
+  () => import("../../../../common/DateSelector/DateSelector"),
+);
 
 const EditLoadingEntryPopup = ({
   editEntry,
@@ -424,10 +427,26 @@ const EditLoadingEntryPopup = ({
             type="number"
             name="sellerBrokerage"
             value={editEntry.sellerBrokerage || ""}
-            onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            readOnly
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
             aria-label="Seller Brokerage"
             step="0.01"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">
+            Due Date
+          </label>
+          <DateSelector
+            selectedDate={editEntry.dueDate || null}
+            onChange={(date) =>
+              handleEditFieldChange({
+                target: {
+                  name: "dueDate",
+                  value: date ? new Date(date).toISOString().split("T")[0] : "",
+                },
+              })
+            }
           />
         </div>
       </div>

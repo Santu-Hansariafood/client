@@ -63,6 +63,24 @@ const formatDate = (date) => {
   }
 };
 
+const getPaymentTermsDays = (paymentTerms) => {
+  if (paymentTerms === null || paymentTerms === undefined) return 0;
+  const numericValue =
+    typeof paymentTerms === "number"
+      ? paymentTerms
+      : parseInt(String(paymentTerms).match(/\d+/)?.[0] || "0", 10);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const calculateDueDate = (baseDate, paymentTerms) => {
+  if (!baseDate) return "";
+  const parsedDate = new Date(baseDate);
+  if (Number.isNaN(parsedDate.getTime())) return "";
+  parsedDate.setHours(0, 0, 0, 0);
+  parsedDate.setDate(parsedDate.getDate() + getPaymentTermsDays(paymentTerms));
+  return parsedDate.toISOString().slice(0, 10);
+};
+
 const validateEntryData = (entry) => {
   const errors = [];
   if (!entry.saudaNo?.trim()) errors.push("Sauda number is required");
@@ -493,6 +511,9 @@ const ListLoadingEntry = () => {
         unloadingDate: latestEntry.unloadingDate
           ? new Date(latestEntry.unloadingDate).toISOString().slice(0, 10)
           : "",
+        dueDate: latestEntry.dueDate
+          ? new Date(latestEntry.dueDate).toISOString().slice(0, 10)
+          : "",
         deliveryDate: latestEntry.deliveryDate
           ? new Date(latestEntry.deliveryDate).toISOString().slice(0, 10)
           : "",
@@ -802,6 +823,13 @@ const ListLoadingEntry = () => {
             newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
             newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
           }
+
+          if (!newEditEntry.dueDate) {
+            newEditEntry.dueDate = calculateDueDate(
+              newEditEntry.unloadingDate,
+              selfOrder?.paymentTerms,
+            );
+          }
         } catch (error) {
           console.error("Error fetching data:", error);
           setCurrentSelfOrder(null);
@@ -871,6 +899,13 @@ const ListLoadingEntry = () => {
             };
           });
           updated.qualityClaims = newClaims;
+        }
+
+        if (name === "unloadingDate") {
+          updated.dueDate = calculateDueDate(
+            value,
+            currentSelfOrder?.paymentTerms,
+          );
         }
 
         return updated;
@@ -992,6 +1027,7 @@ const ListLoadingEntry = () => {
         unloadingDate: editEntry.unloadingDate
           ? new Date(editEntry.unloadingDate).toISOString()
           : null,
+        dueDate: editEntry.dueDate ? new Date(editEntry.dueDate).toISOString() : null,
         deliveryDate: editEntry.deliveryDate
           ? new Date(editEntry.deliveryDate).toISOString()
           : null,
