@@ -585,10 +585,6 @@ const ListPaymentReceived = () => {
       allEntries,
     );
 
-    if (reportRows.length === 0) {
-      throw new Error("No records found");
-    }
-
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -1045,6 +1041,19 @@ const ListPaymentReceived = () => {
         credit: saudaCreditTotal,
       };
     });
+
+    if (tableData.length === 0) {
+      tableData.push([
+        {
+          content: "No records found",
+          colSpan: 15,
+          styles: {
+            halign: "center",
+            fontStyle: "bold",
+          },
+        },
+      ]);
+    }
 
     autoTable(doc, {
       startY: currentY,
