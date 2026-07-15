@@ -46,8 +46,17 @@ const PaymentList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState(isReceivedPath ? "done" : "all");
+  const [paymentStatus, setPaymentStatus] = useState(isReceivedPath ? "done" : "due"); // Default to due list
   const [exporting, setExporting] = useState(false);
+  const [totals, setTotals] = useState({
+    totalGross: 0,
+    totalCd: 0,
+    totalGst: 0,
+    totalClaims: 0,
+    totalBankCharges: 0,
+    totalCredit: 0,
+    totalDue: 0
+  });
   
   // Company state
   const [allCompanies, setAllCompanies] = useState([]);
@@ -99,6 +108,9 @@ const PaymentList = () => {
       });
       setData(response.data.data);
       setTotalItems(response.data.total);
+      if (response.data.totals) {
+        setTotals(response.data.totals);
+      }
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to load payments");
@@ -275,6 +287,502 @@ const PaymentList = () => {
     doc.save(`SaudaWise_Payments_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
+  const handleDownloadMISPDF = async () => {
+    try {
+      setExporting(true);
+      const toastId = toast.loading("Generating MIS report...");
+
+      // Fetch all data without pagination for PDF
+      const response = await api.get("/payments", {
+        params: {
+          page: 1,
+          limit: 5000,
+          search: searchInput,
+          startDate: startDate ? startDate.toISOString() : undefined,
+          endDate: endDate ? endDate.toISOString() : undefined,
+          paymentStatus,
+          buyerCompany: selectedBuyerCompany?.label || selectedBuyerCompany?.companyName || undefined,
+          sellerCompany: selectedSellerCompany?.label || selectedSellerCompany?.companyName || undefined,
+        },
+      });
+
+      const allItems = response.data.data || [];
+      const pdfTotals = response.data.totals || totals;
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+
+      // Add company header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(26, 58, 95);
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 20, {
+        align: "center",
+      });
+
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(64, 64, 64);
+      doc.text(
+        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3",
+        pageWidth / 2,
+        27,
+        { align: "center" },
+      );
+      doc.text("Bidhannagar, Kolkata, West Bengal - 700106", pageWidth / 2, 33, {
+        align: "center",
+      });
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(220, 220, 220);
+      doc.line(margin, 38, pageWidth - margin, 38);
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(26, 58, 95);
+      doc.text("DUE LIST REPORT", pageWidth / 2, 46, {
+        align: "center",
+      });
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(220, 220, 220);
+      doc.line(margin, 51, pageWidth - margin, 51);
+
+      // Add filter info
+      let infoY = 55;
+      const buyerName = selectedBuyerCompany?.label || "All";
+      const sellerName = selectedSellerCompany?.label || "All";
+      const startDateStr = startDate ? new Date(startDate).toLocaleDateString("en-GB") : "All";
+      const endDateStr = endDate ? new Date(endDate).toLocaleDateString("en-GB") : "All";
+
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin, infoY, pageWidth - margin * 2, 32, "FD");
+      doc.setLineWidth(0.5);
+      doc.rect(margin, infoY, pageWidth - margin * 2, 32);
+
+      doc.setFontSize(8.5);
+      doc.setTextColor(30, 41, 59);
+      doc.setFont("helvetica", "bold");
+      doc.text("Buyer Company", margin + 7, infoY + 10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${buyerName}`, margin + 40, infoY + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Date Between", pageWidth / 2, infoY + 10, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${startDateStr} To ${endDateStr}`, pageWidth / 2 + 40, infoY + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Seller Company", pageWidth - 88, infoY + 10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Seller Company", margin + 7, infoY + 22);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${sellerName}`, margin + 40, infoY + 22);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Buyer Company", pageWidth - 88, infoY + 22);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${buyerName}`, pageWidth - 48, infoY + 22);
+
+      let currentY = infoY + 42;
+
+      // Group items by sauda
+      const groupedBySauda = {};
+      allItems.forEach((item) => {
+        const saudaKey = item.saudaNo || "NO SAUDA";
+        if (!groupedBySauda[saudaKey]) {
+          groupedBySauda[saudaKey] = [];
+        }
+        groupedBySauda[saudaKey].push(item);
+      });
+
+      let rowIdx = 0;
+      const tableData = [];
+
+      Object.keys(groupedBySauda).forEach((saudaKey) => {
+        const group = groupedBySauda[saudaKey];
+        
+        tableData.push([
+          {
+            content: `SAUDA NO: ${saudaKey}`,
+            colSpan: 15,
+            styles: {
+              fillColor: [200, 200, 200],
+              fontStyle: "bold",
+              halign: "center",
+            },
+          },
+        ]);
+
+        group.forEach((item) => {
+          rowIdx++;
+          
+          let grossAmount = item.grossAmount || 0;
+          let gstAmount = item.gstAmount || 0;
+          let claims = item.totalQualityClaims || 0;
+          let cdAmount = item.cdAmount || 0;
+          let bankCharges = Number(item.bankCharges) || 0;
+          let balance = Number((grossAmount + gstAmount - claims - cdAmount - bankCharges).toFixed(2));
+
+          tableData.push([
+            rowIdx,
+            item.unloadingDate ? new Date(item.unloadingDate).toLocaleDateString("en-GB") : "-",
+            item.saudaNo,
+            `${item.lorryNumber || "-"} (${(item.unloadingWeight || 0).toFixed(3)} T)`,
+            item.billNumber || "-",
+            (item.buyerCompany || "-").toUpperCase(),
+            (item.supplierCompany || "-").toUpperCase(),
+            grossAmount > 0 ? `Rs. ${Number(grossAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            gstAmount > 0 ? `Rs. ${Number(gstAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            "",
+            claims > 0 ? `Rs. ${Number(claims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            cdAmount > 0 ? `Rs. ${Number(cdAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            bankCharges > 0 ? `Rs. ${Number(bankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            balance !== 0 ? `Rs. ${Number(balance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            item.generalRemarks || "-",
+          ]);
+        });
+      });
+
+      if (tableData.length === 0) {
+        tableData.push([
+          {
+            content: "No records found",
+            colSpan: 15,
+            styles: {
+              halign: "center",
+              fontStyle: "bold",
+            },
+          },
+        ]);
+      }
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [
+          [
+            "NO",
+            "DATE",
+            "SAUDA NO",
+            "LORRY NO",
+            "BILL NO",
+            "BUYER",
+            "SELLER",
+            "GROSS AMOUNT (Rs.)",
+            "GST (Rs.)",
+            "CREDIT (Rs.)",
+            "CLAIMS (Rs.)",
+            "CD (Rs.)",
+            "BANK CHGS (Rs.)",
+            "BALANCE (Rs.)",
+            "REMARKS",
+          ],
+        ],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+          fillColor: [200, 200, 200],
+          textColor: [0, 0, 0],
+          fontSize: 6.5,
+          fontStyle: "bold",
+          halign: "center",
+          lineWidth: 0.2,
+          lineColor: [100, 100, 100],
+        },
+        styles: {
+          fontSize: 5.5,
+          cellPadding: 1.5,
+          valign: "middle",
+          textColor: [0, 0, 0],
+          lineColor: [100, 100, 100],
+          lineWidth: 0.1,
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+        columnStyles: {
+          0: { halign: "center", cellWidth: 7 },
+          1: { halign: "center", cellWidth: 16 },
+          2: { halign: "center", cellWidth: 16 },
+          3: { halign: "center", cellWidth: 30 },
+          4: { halign: "center", cellWidth: 16 },
+          5: { cellWidth: 22 },
+          6: { cellWidth: 22 },
+          7: { halign: "right", cellWidth: 18 },
+          8: { halign: "right", cellWidth: 18 },
+          9: { halign: "right", cellWidth: 18 },
+          10: { halign: "right", cellWidth: 18 },
+          11: { halign: "right", cellWidth: 18 },
+          12: { halign: "right", cellWidth: 18 },
+          13: { halign: "right", fontStyle: "bold", cellWidth: 20 },
+          14: { cellWidth: 35 },
+        },
+        margin: { left: 7, right: 7, top: 7, bottom: 15 },
+        tableWidth: "wrap",
+      });
+
+      // Add grand totals summary
+      const finalY = doc.lastAutoTable?.finalY || 70;
+      doc.addPage();
+      let summaryY = 12;
+
+      const boxHeight = 26;
+      doc.setFillColor(248, 250, 252);
+      doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
+      doc.line(
+        margin + (pageWidth - 2 * margin) / 7,
+        summaryY,
+        margin + (pageWidth - 2 * margin) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin + (2 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        margin + (2 * (pageWidth - 2 * margin)) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin + (3 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        margin + (3 * (pageWidth - 2 * margin)) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin + (4 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        margin + (4 * (pageWidth - 2 * margin)) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin + (5 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        margin + (5 * (pageWidth - 2 * margin)) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin + (6 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        margin + (6 * (pageWidth - 2 * margin)) / 7,
+        summaryY + boxHeight,
+      );
+      doc.line(
+        margin,
+        summaryY + boxHeight / 2,
+        pageWidth - margin,
+        summaryY + boxHeight / 2,
+      );
+
+      doc.setFontSize(8.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 41, 59);
+
+      const formattedTotalGross = Number(pdfTotals.totalGross.toFixed(2));
+      doc.text(
+        "TOTAL GROSS",
+        margin + (pageWidth - 2 * margin) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalGross.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (pageWidth - 2 * margin) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const formattedTotalCredit = Number(pdfTotals.totalCredit.toFixed(2));
+      doc.text(
+        "TOTAL CREDIT",
+        margin + (3 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalCredit.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (3 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const formattedTotalCd = Number(pdfTotals.totalCd.toFixed(2));
+      doc.text(
+        "TOTAL CD",
+        margin + (5 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalCd.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (5 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const formattedTotalGst = Number(pdfTotals.totalGst.toFixed(2));
+      doc.text(
+        "TOTAL GST",
+        margin + (7 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalGst.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (7 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const formattedTotalClaims = Number(pdfTotals.totalClaims.toFixed(2));
+      doc.text(
+        "TOTAL CLAIMS",
+        margin + (9 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalClaims.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (9 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const formattedTotalBankCharges = Number(pdfTotals.totalBankCharges.toFixed(2));
+      doc.text(
+        "TOTAL BANK CHGS",
+        margin + (11 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        formattedTotalBankCharges.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        margin + (11 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 19,
+        { align: "center" },
+      );
+      doc.setFont("helvetica", "bold");
+
+      const totalLeftSide = pdfTotals.totalGross + pdfTotals.totalGst;
+      const totalRightSide = pdfTotals.totalCd + pdfTotals.totalClaims + pdfTotals.totalBankCharges + pdfTotals.totalCredit;
+      const difference = Number((totalLeftSide - totalRightSide).toFixed(2));
+      const formattedDifference = Number(difference.toFixed(2));
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(26, 58, 95);
+      doc.rect(
+        margin + (6 * (pageWidth - 2 * margin)) / 7,
+        summaryY,
+        (pageWidth - 2 * margin) / 7,
+        boxHeight,
+        "F",
+      );
+      doc.text(
+        "DIFFERENCE",
+        margin + (13 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 8.5,
+        { align: "center" },
+      );
+
+      const differenceText =
+        formattedDifference > 0
+          ? `${formattedDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
+          : formattedDifference < 0
+            ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
+            : "NIL";
+      doc.text(
+        differenceText,
+        margin + (13 * (pageWidth - 2 * margin)) / 14,
+        summaryY + 18,
+        { align: "center" },
+      );
+
+      doc.setTextColor(0, 0, 0);
+      summaryY += boxHeight + 5;
+
+      // Add total due
+      let dueSummaryY = summaryY + 10;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(185, 28, 28);
+      doc.text("TOTAL DUE AMOUNT:", margin + 10, dueSummaryY);
+      doc.setFontSize(14);
+      doc.text(`Rs. ${Number(pdfTotals.totalDue.toFixed(2)).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`, margin + 60, dueSummaryY);
+
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(100, 100, 100);
+        doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+        doc.setFontSize(7);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          pageHeight - 8,
+          { align: "center" },
+        );
+        doc.text("Confidential", pageWidth - margin, pageHeight - 8, {
+          align: "right",
+        });
+      }
+
+      doc.save(`Due_List_MIS_Report_${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.update(toastId, { render: "MIS report downloaded successfully!", type: "success", isLoading: false, autoClose: 3000 });
+    } catch (error) {
+      console.error("Error generating MIS PDF:", error);
+      toast.error("Failed to generate MIS report");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const headers = [
     "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Terms", "Due Date", "Unloading Date", "Unloading Qty", "Amount", "Due Amount", "Status"
   ];
@@ -376,6 +884,14 @@ const PaymentList = () => {
                 <FaFilePdf />
                 Sauda-wise PDF
               </button>
+              <button
+                onClick={handleDownloadMISPDF}
+                disabled={exporting}
+                className="px-6 py-3 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-700 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 disabled:opacity-50"
+              >
+                <FaFilePdf />
+                MIS PDF
+              </button>
             </div>
           </div>
 
@@ -436,6 +952,52 @@ const PaymentList = () => {
               <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-amber-600' : 'text-blue-600'}`}>
                 {paymentStatus === 'all' ? 'All Records' : paymentStatus}
               </span>
+            </div>
+          </div>
+
+          {/* Totals Display */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Gross</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalGross.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total CD</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalCd.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total GST</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalGst.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Claims</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalClaims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Bank Charges</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalBankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Credit</div>
+              <div className="text-lg font-black text-slate-800">
+                Rs. {Number(totals.totalCredit.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-rose-50 rounded-xl p-4 border border-rose-200">
+              <div className="text-xs font-black text-rose-600 uppercase tracking-widest mb-1">Total Due</div>
+              <div className="text-xl font-black text-rose-700">
+                Rs. {Number(totals.totalDue.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
             </div>
           </div>
         </div>
