@@ -886,7 +886,8 @@ const PaymentList = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mt-10">
+          {/* Filters Section - First Line */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
             <div className="relative group/input">
               <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-emerald-500 transition-colors" />
               <input
@@ -916,6 +917,16 @@ const PaymentList = () => {
               />
             </div>
 
+            <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">Status:</span>
+              <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-amber-600' : 'text-blue-600'}`}>
+                {paymentStatus === 'all' ? 'All Records' : paymentStatus}
+              </span>
+            </div>
+          </div>
+
+          {/* Filters Section - Second Line */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
             <DataDropdown
               options={allCompanies.map(c => ({ value: c._id, label: c.companyName }))}
               selectedOptions={selectedBuyerCompany}
@@ -937,57 +948,54 @@ const PaymentList = () => {
               placeholder="Seller Company"
               isClearable
             />
-
-            <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">Status:</span>
-              <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-amber-600' : 'text-blue-600'}`}>
-                {paymentStatus === 'all' ? 'All Records' : paymentStatus}
-              </span>
-            </div>
           </div>
 
-          {/* Totals Display */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Gross</div>
-              <div className="text-lg font-black text-slate-800">
+          {/* Totals Display - Always Visible with Better Design */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Gross</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalGross.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total CD</div>
-              <div className="text-lg font-black text-slate-800">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total CD</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalCd.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total GST</div>
-              <div className="text-lg font-black text-slate-800">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total GST</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalGst.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Claims</div>
-              <div className="text-lg font-black text-slate-800">
+            <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-6 border border-rose-300 shadow-md">
+              <div className="text-xs font-bold text-rose-600 uppercase tracking-widest mb-2">Total Due</div>
+              <div className="text-3xl font-black text-rose-700">
+                Rs. {Number(totals.totalDue.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Totals Row */}
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Claims</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalClaims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Bank Charges</div>
-              <div className="text-lg font-black text-slate-800">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Bank Charges</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalBankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Credit</div>
-              <div className="text-lg font-black text-slate-800">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Credit</div>
+              <div className="text-2xl font-black text-slate-800">
                 Rs. {Number(totals.totalCredit.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div className="bg-rose-50 rounded-xl p-4 border border-rose-200">
-              <div className="text-xs font-black text-rose-600 uppercase tracking-widest mb-1">Total Due</div>
-              <div className="text-xl font-black text-rose-700">
-                Rs. {Number(totals.totalDue.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>
