@@ -170,22 +170,25 @@ const PaymentList = () => {
     doc.setFont("helvetica");
 
     const tableColumn = [
-      "Sl No", "Sauda No", "Lorry No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Due Date", "Qty", "Amount", "Status"
+      "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Remarks"
     ];
 
     const tableRows = data.map((item) => [
       item.slNo,
+      formatDate(item.unloadingDate),
       item.saudaNo,
       item.lorryNumber || "N/A",
+      item.billNumber || "-",
       item.buyerCompany,
-      item.consignee,
-      item.supplier?.sellerName || "N/A",
       item.supplierCompany,
-      `${item.paymentTerms} Days`,
-      formatDate(item.dueDate),
-      `${(item.unloadingWeight || 0).toFixed(2)} T`,
-      `Rs. ${(item.amount || 0).toLocaleString("en-IN")}`,
-      item.paymentStatus.toUpperCase()
+      `Rs. ${Number(item.grossAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.gstAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.paidAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.totalQualityClaims || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.cdAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.bankCharges || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      item.generalRemarks || "-"
     ]);
 
     doc.setFontSize(18);
@@ -784,42 +787,30 @@ const PaymentList = () => {
   };
 
   const headers = [
-    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Terms", "Due Date", "Unloading Date", "Unloading Qty", "Amount", "Due Amount", "Status"
+    "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Remarks"
   ];
 
   const rows = data.map((item) => [
     item.slNo,
+    formatDate(item.unloadingDate),
     item.saudaNo,
     <span key={`lorry-${item._id}`} className="font-bold text-slate-600 uppercase">{item.lorryNumber || "N/A"}</span>,
+    item.billNumber || "-",
     <span key={`buyer-${item._id}`} className="font-semibold text-slate-700">{item.buyerCompany}</span>,
-    item.consignee,
-    item.supplier?.sellerName || "N/A",
     item.supplierCompany,
-    <span key={`terms-${item._id}`} className="text-xs text-blue-600 font-bold">{item.paymentTerms} Days</span>,
-    <span key={`due-${item._id}`} className={`font-bold ${item.isDue ? 'text-rose-600' : 'text-slate-500'}`}>{formatDate(item.dueDate)}</span>,
-    formatDate(item.unloadingDate),
-    <span key={`qty-${item._id}`} className="font-bold">{(item.unloadingWeight || 0).toFixed(2)} T</span>,
-    <span key={`amt-${item._id}`} className="font-black text-emerald-700">Rs. {item.amount.toLocaleString("en-IN")}</span>,
+    <span key={`gross-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.grossAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
+    <span key={`gst-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.gstAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
+    <span key={`credit-${item._id}`} className="font-black text-emerald-700">Rs. {Number(item.paidAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
+    <span key={`claims-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.totalQualityClaims || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
+    <span key={`cd-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.cdAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
+    <span key={`bank-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.bankCharges || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
     <span key={`dueamt-${item._id}`} className={`font-bold ${item.dueAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>Rs. {Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
-    <button
-      key={`status-${item._id}`}
-      onClick={() => toggleStatus(item._id, item.paymentStatus)}
-      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm ${
-        item.paymentStatus === "done"
-          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-          : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-      }`}
-    >
-      {item.paymentStatus === "done" ? <FaCheckCircle /> : <FaClock />}
-      {item.paymentStatus}
-    </button>
+    item.generalRemarks || "-"
   ]);
 
   const tabs = [
-    { id: "all", label: "All Payments", icon: <FaClipboardList />, link: "/payments/list" },
-    { id: "pending", label: "Pending", icon: <FaClock />, link: "/payments/list" },
-    { id: "due", label: "Due Now", icon: <FaClock className="text-rose-500" />, link: "/payments/list" },
-    { id: "done", label: "Received", icon: <FaCheckDouble />, link: "/payments/received/list" },
+    { id: "due", label: "Due List", icon: <FaClock className="text-rose-500" />, link: "/payments/list" },
+    { id: "done", label: "Received List", icon: <FaCheckDouble />, link: "/payments/received/list" },
   ];
 
   return (

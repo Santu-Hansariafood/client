@@ -311,8 +311,10 @@ router.get("/export/excel", async (req, res) => {
     const sellerCompany = req.query.sellerCompany;
 
     let query = { unloadingWeight: { $gt: 0 } };
-    if (paymentStatus && paymentStatus !== "all") {
+    if (paymentStatus && paymentStatus !== "all" && paymentStatus !== "due") {
       query.paymentStatus = paymentStatus;
+    } else if (paymentStatus === "due") {
+      query.paymentStatus = "pending"; // Due is a subset of pending
     }
 
     const andParts = [query];
@@ -333,28 +335,20 @@ router.get("/export/excel", async (req, res) => {
           { buyerCompany: { $regex: searchRegex } },
           { supplierCompany: { $regex: searchRegex } },
           { consignee: { $regex: searchRegex } },
+          { lorryNumber: { $regex: searchRegex } },
         ],
       });
     }
 
-    if (startDate || endDate) {
-      const dateFilter = {};
-      if (startDate) dateFilter.$gte = new Date(startDate);
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.$lte = end;
-      }
-      andParts.push({ unloadingDate: dateFilter });
-    }
-
-    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
-
-    const items = await LoadingEntry.find(finalQuery)
-      .sort({ unloadingDate: 1, createdAt: 1 })
+    // Get all loading entries first without date filtering to calculate due dates
+    const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
+    let items = await LoadingEntry.find(tempQuery)
+      .sort({ unloadingDate: -1, createdAt: -1 })
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges")
       .populate("supplier", "sellerName")
       .lean();
 
+    // Get all sauda orders
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo buyerCompany paymentTerms rate cd gst")
@@ -365,63 +359,147 @@ router.get("/export/excel", async (req, res) => {
       return acc;
     }, {});
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Payments");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    worksheet.columns = [
-      { header: "Sl No", key: "slNo", width: 10 },
-      { header: "Sauda No", key: "saudaNo", width: 15 },
-      { header: "Lorry No", key: "lorryNumber", width: 15 },
-      { header: "Buyer Company", key: "buyerCompany", width: 30 },
-      { header: "Consignee", key: "consignee", width: 30 },
-      { header: "Seller Name", key: "sellerName", width: 30 },
-      { header: "Seller Company", key: "sellerCompany", width: 30 },
-      { header: "Payment Terms", key: "paymentTerms", width: 30 },
-      { header: "Unloading Date", key: "unloadingDate", width: 15 },
-      { header: "Unloading Qty (Tons)", key: "unloadingWeight", width: 20 },
-      { header: "Amount (Rs)", key: "amount", width: 15 },
-      { header: "Due Amount (Rs)", key: "dueAmount", width: 15 },
-      { header: "Status", key: "status", width: 15 },
-    ];
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    // Calculate due dates for all items
+    let processedItems = items.map((item) => {
       const order = saudaMap[item.saudaNo] || {};
-      const amount = (item.unloadingWeight || 0) * (order.rate || 0);
+      const terms = parseInt(order.paymentTerms) || 0;
+      const unloadingDate = new Date(item.unloadingDate);
+      const dueDate = new Date(unloadingDate);
+      dueDate.setDate(unloadingDate.getDate() + terms);
 
-      // Calculate netAmount and dueAmount
+      const isDue = item.paymentStatus === "pending" && today >= dueDate;
+
+      // Calculate detailed amounts for MIS format
+      let grossAmount = 0;
+      let cdAmount = 0;
+      let gstAmount = 0;
       let netAmount = 0;
+      let totalQualityClaims = 0;
+      let bankCharges = 0;
+
       if (order) {
         const weight = item.unloadingWeight || 0;
         const rate = order.rate || 0;
         const cdPercent = order.cd || 0;
         const gstPercent = order.gst || 0;
+        bankCharges = Number(item.bankCharges) || 0;
 
-        const grossAmount = weight * rate;
-        const cdAmount = grossAmount * (cdPercent / 100);
-        const taxableAmount = grossAmount - cdAmount;
-        const gstAmount = taxableAmount * (gstPercent / 100);
+        grossAmount = weight * rate;
+        cdAmount = grossAmount * (cdPercent / 100);
+        const taxableAmount = grossAmount - cdAmount - bankCharges;
+        gstAmount = taxableAmount * (gstPercent / 100);
         netAmount = taxableAmount + gstAmount;
+
+        if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
+          totalQualityClaims = item.qualityClaims.reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0);
+        }
       }
 
       const dueAmount = Math.max(0, netAmount - (item.paidAmount || 0));
 
+      return {
+        ...item,
+        paymentTerms: terms,
+        dueDate,
+        isDue,
+        rate: order.rate || 0,
+        amount: (item.unloadingWeight || 0) * (order.rate || 0),
+        grossAmount,
+        cdAmount,
+        gstAmount,
+        netAmount,
+        totalQualityClaims,
+        bankCharges,
+        dueAmount,
+        buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
+      };
+    });
+
+    // Apply date filtering based on payment status
+    if (startDate || endDate) {
+      const dateFilter = {};
+      if (startDate) dateFilter.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.$lte = end;
+      }
+      
+      if (paymentStatus === "due") {
+        processedItems = processedItems.filter(item => {
+          if (!item.dueDate) return false;
+          const dueDate = new Date(item.dueDate);
+          let matchesStart = true;
+          let matchesEnd = true;
+          if (dateFilter.$gte) matchesStart = dueDate >= dateFilter.$gte;
+          if (dateFilter.$lte) matchesEnd = dueDate <= dateFilter.$lte;
+          return matchesStart && matchesEnd;
+        });
+      } else {
+        processedItems = processedItems.filter(item => {
+          if (!item.unloadingDate) return false;
+          const unloadDate = new Date(item.unloadingDate);
+          let matchesStart = true;
+          let matchesEnd = true;
+          if (dateFilter.$gte) matchesStart = unloadDate >= dateFilter.$gte;
+          if (dateFilter.$lte) matchesEnd = unloadDate <= dateFilter.$lte;
+          return matchesStart && matchesEnd;
+        });
+      }
+    }
+
+    // If "due" filter is applied, filter only due items
+    if (paymentStatus === "due") {
+      processedItems = processedItems.filter((item) => item.isDue);
+    }
+
+    // Sort items
+    processedItems.sort((a, b) => new Date(b.unloadingDate) - new Date(a.unloadingDate));
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Payments");
+
+    worksheet.columns = [
+      { header: "No", key: "slNo", width: 8 },
+      { header: "Date", key: "unloadingDate", width: 12 },
+      { header: "Sauda No", key: "saudaNo", width: 12 },
+      { header: "Lorry No", key: "lorryNumber", width: 15 },
+      { header: "Bill No", key: "billNumber", width: 12 },
+      { header: "Buyer", key: "buyerCompany", width: 25 },
+      { header: "Seller", key: "sellerCompany", width: 25 },
+      { header: "Gross Amt", key: "grossAmount", width: 15 },
+      { header: "GST", key: "gstAmount", width: 12 },
+      { header: "Credit", key: "paidAmount", width: 12 },
+      { header: "Claims", key: "totalQualityClaims", width: 12 },
+      { header: "CD", key: "cdAmount", width: 12 },
+      { header: "Bank Chgs", key: "bankCharges", width: 12 },
+      { header: "Balance", key: "dueAmount", width: 15 },
+      { header: "Remarks", key: "generalRemarks", width: 30 },
+    ];
+
+    for (let i = 0; i < processedItems.length; i++) {
+      const item = processedItems[i];
       worksheet.addRow({
         slNo: i + 1,
-        saudaNo: item.saudaNo || "N/A",
-        lorryNumber: item.lorryNumber || "N/A",
-        buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
-        consignee: item.consignee || "N/A",
-        sellerName: item.supplier?.sellerName || "N/A",
-        sellerCompany: item.supplierCompany || "N/A",
-        paymentTerms: order.paymentTerms || "N/A",
         unloadingDate: item.unloadingDate
           ? new Date(item.unloadingDate).toLocaleDateString("en-GB")
           : "N/A",
-        unloadingWeight: (item.unloadingWeight || 0).toFixed(2),
-        amount: amount.toFixed(2),
-        dueAmount: dueAmount.toFixed(2),
-        status: (item.paymentStatus || "pending").toUpperCase(),
+        saudaNo: item.saudaNo || "N/A",
+        lorryNumber: item.lorryNumber || "N/A",
+        billNumber: item.billNumber || "-",
+        buyerCompany: item.buyerCompany || "N/A",
+        sellerCompany: item.supplierCompany || "N/A",
+        grossAmount: Number(item.grossAmount || 0).toFixed(2),
+        gstAmount: Number(item.gstAmount || 0).toFixed(2),
+        paidAmount: Number(item.paidAmount || 0).toFixed(2),
+        totalQualityClaims: Number(item.totalQualityClaims || 0).toFixed(2),
+        cdAmount: Number(item.cdAmount || 0).toFixed(2),
+        bankCharges: Number(item.bankCharges || 0).toFixed(2),
+        dueAmount: Number(item.dueAmount || 0).toFixed(2),
+        generalRemarks: item.generalRemarks || "-"
       });
     }
 
