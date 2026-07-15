@@ -398,10 +398,10 @@ const BuyerInformation = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-            Select Buyer
+            Select Buyer Group
           </label>
           <DataDropdown
-            placeholder="Select Buyer"
+            placeholder="Select Buyer Group"
             options={buyerOptions}
             selectedOptions={
               buyerOptions.find(({ value }) => value === selectedBuyerId) ||
