@@ -16,7 +16,7 @@ import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { downloadFile } from "../../../utils/fileDownloader";
 import logoUrl from "../../../assets/Hans.png";
 
@@ -295,6 +295,8 @@ const PaymentList = () => {
       setExporting(true);
       const toastId = toast.loading("Generating MIS report...");
 
+      console.log("Starting MIS PDF download...");
+
       // Fetch all data without pagination for PDF
       const response = await api.get("/payments", {
         params: {
@@ -309,8 +311,11 @@ const PaymentList = () => {
         },
       });
 
+      console.log("API response received:", response);
       const allItems = response.data.data || [];
       const pdfTotals = response.data.totals || totals;
+      console.log("All items:", allItems);
+      console.log("PDF totals:", pdfTotals);
 
       const doc = new jsPDF({
         orientation: "landscape",
@@ -322,6 +327,7 @@ const PaymentList = () => {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 10;
 
+      console.log("Doc created, adding header...");
       // Add company header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
@@ -400,6 +406,7 @@ const PaymentList = () => {
 
       let currentY = infoY + 42;
 
+      console.log("Grouping items by sauda...");
       // Group items by sauda
       const groupedBySauda = {};
       allItems.forEach((item) => {
@@ -413,6 +420,7 @@ const PaymentList = () => {
       let rowIdx = 0;
       const tableData = [];
 
+      console.log("Building table data...");
       Object.keys(groupedBySauda).forEach((saudaKey) => {
         const group = groupedBySauda[saudaKey];
         
@@ -469,6 +477,19 @@ const PaymentList = () => {
             },
           },
         ]);
+      }
+
+      console.log("Table data ready, adding table...");
+      console.log("tableData length:", tableData.length);
+
+      // Check if autoTable exists
+      console.log("About to call autoTable, autoTable is:", typeof autoTable);
+      
+      if (typeof autoTable !== "function") {
+        console.error("autoTable is not a function!");
+        toast.error("Failed to generate PDF: autoTable not loaded");
+        setExporting(false);
+        return;
       }
 
       autoTable(doc, {
@@ -534,6 +555,8 @@ const PaymentList = () => {
         margin: { left: 7, right: 7, top: 7, bottom: 15 },
         tableWidth: "wrap",
       });
+
+      console.log("Table added, adding totals...");
 
       // Add grand totals summary
       const finalY = doc.lastAutoTable?.finalY || 70;
@@ -776,11 +799,13 @@ const PaymentList = () => {
         });
       }
 
+      console.log("Saving PDF...");
       doc.save(`Due_List_MIS_Report_${new Date().toISOString().split("T")[0]}.pdf`);
       toast.update(toastId, { render: "MIS report downloaded successfully!", type: "success", isLoading: false, autoClose: 3000 });
+      console.log("PDF saved!");
     } catch (error) {
       console.error("Error generating MIS PDF:", error);
-      toast.error("Failed to generate MIS report");
+      toast.error("Failed to generate MIS report: " + error.message);
     } finally {
       setExporting(false);
     }
@@ -860,20 +885,6 @@ const PaymentList = () => {
               >
                 <FaDownload className="text-emerald-600" />
                 {exporting ? "Exporting..." : "Excel"}
-              </button>
-              <button
-                onClick={handleDownloadPDF}
-                className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
-              >
-                <FaFilePdf className="text-emerald-600" />
-                Standard PDF
-              </button>
-              <button
-                onClick={handleDownloadSaudaWisePDF}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200"
-              >
-                <FaFilePdf />
-                Sauda-wise PDF
               </button>
               <button
                 onClick={handleDownloadMISPDF}
