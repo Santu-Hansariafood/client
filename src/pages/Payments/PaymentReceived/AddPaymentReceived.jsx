@@ -543,17 +543,8 @@ const AddPaymentReceived = () => {
           return new Date(b.loadingDate) - new Date(a.loadingDate);
         });
 
-        // Filter out entries where Lorry Balance equals Credit Amount
-        const filteredItems = sortedItems.filter(item => {
-          const details = calculateTallyDetails(item);
-          // Since allocatedAmount is not set yet, use 0
-          const lorryBalance = Math.max(0, details.dueAmount);
-          const creditAmount = details.netAmount;
-          return Math.abs(lorryBalance - creditAmount) >= 0.01;
-        });
-
         setEntries(
-          filteredItems.map((item, index) => ({
+          sortedItems.map((item, index) => ({
             ...item,
             uiKey: `${item._id}-${index}-${Date.now()}`,
             allocatedAmount:
@@ -566,7 +557,7 @@ const AddPaymentReceived = () => {
           })),
         );
         setEntriesTotal(
-          useWideFetch ? filteredItems.length : (response.data.total ?? filteredItems.length),
+          useWideFetch ? sortedItems.length : (response.data.total ?? sortedItems.length),
         );
         setEntriesPage(useWideFetch ? 1 : page);
       } catch (error) {
