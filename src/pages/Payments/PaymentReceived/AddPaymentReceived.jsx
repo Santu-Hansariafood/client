@@ -500,7 +500,6 @@ const AddPaymentReceived = () => {
         const params = {
           page: useWideFetch ? 1 : page,
           limit: useWideFetch ? 500 : ENTRIES_PAGE_SIZE,
-          isUnloaded: "true",
         };
 
         if (tableSearch.trim()) {
@@ -1647,7 +1646,7 @@ const AddPaymentReceived = () => {
               {row.commodity}
             </span>
             <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase">
-              {row.unloadingWeight || 0} MT
+              {((row.unloadingWeight || 0) > 0 ? row.unloadingWeight : row.loadingWeight) || 0} MT
             </span>
           </div>
         </div>
