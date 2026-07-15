@@ -96,7 +96,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-            Brokerage Per Ton (Supplier)
+            Brokerage Per Ton (Seller)
           </label>
           <DataInput
             placeholder="₹ 0"

@@ -34,9 +34,9 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
         type: "number",
       },
       {
-        label: "Rate (per ton)",
+        label: "Rate (per Ton)",
         field: "rate",
-        placeholder: "Rate (per ton)",
+        placeholder: "Rate (per Ton)",
         type: "number",
       },
       {
@@ -46,9 +46,9 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
         type: "number",
       },
       {
-        label: "Weight (tons)",
+        label: "Weight (Tons)",
         field: "weight",
-        placeholder: "Weight (tons)",
+        placeholder: "Weight (Tons)",
         type: "text",
       },
     ],

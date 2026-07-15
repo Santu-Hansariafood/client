@@ -167,7 +167,7 @@ const SupplierInformation = ({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-            Payment Terms (in days)
+            Payment Terms (in Days)
           </label>
           <DataInput
             placeholder="Payment Terms"
