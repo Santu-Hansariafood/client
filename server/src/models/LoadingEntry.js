@@ -67,7 +67,7 @@ const loadingEntrySchema = new mongoose.Schema(
     secondClaimRemarks: { type: String, default: "" },
     otherCharges: { type: Number, default: 0 },
     otherChargesRemarks: { type: String, default: "" },
-    bankCharges: { type: String, default: "" },
+    bankCharges: { type: Number, default: 0 },
     bankChargesRemarks: { type: String, default: "" },
     tds: { type: Number, default: 0 },
     tdsRemarks: { type: String, default: "" },

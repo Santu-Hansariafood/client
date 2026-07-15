@@ -115,7 +115,7 @@ const AddPaymentReceived = () => {
     const rate = entry.actualRate || 0;
     const cdPercent = entry.cd || 0;
     const gstPercent = entry.gst || 0;
-    const bankCharges = entry.bankCharges || 0; // New field for bank charges
+    const bankCharges = Number(entry.bankCharges) || 0; // New field for bank charges
 
     const grossAmount = weight * rate;
     const cdAmount = grossAmount * (cdPercent / 100);
@@ -562,7 +562,7 @@ const AddPaymentReceived = () => {
             creditNote: "Allocation posted",
             rowRemarks: "",
             isSaved: item.paymentStatus === "done",
-            bankCharges: item.bankCharges || 0, // Initialize bank charges
+            bankCharges: Number(item.bankCharges) || 0, // Initialize bank charges
           })),
         );
         setEntriesTotal(

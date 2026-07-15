@@ -1809,7 +1809,7 @@ router.get("/", async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole",
+        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole bankCharges",
       )
       .populate("supplier", "sellerName")
       .lean();
@@ -1835,6 +1835,7 @@ router.get("/", async (req, res) => {
         gst: order.gst || 0,
         cd: order.cd || 0,
         commodity: item.commodity || order.commodity || "",
+        bankCharges: Number(item.bankCharges) || 0,
       };
     });
 
