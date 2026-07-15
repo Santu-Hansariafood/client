@@ -2130,12 +2130,11 @@ const ListPaymentReceived = () => {
                 onOpposingCompanySelect={handleOpposingSelect}
                 onSaudaChange={setSelectedSauda}
                 onPrint={handlePrintReport}
-                onDownloadPaymentAdvice={handleDownloadPaymentAdvice}
                 onRecordPayment={() => navigate("/payments/received/add")}
                 onSendEmail={handleSendEmail}
                 printing={printing}
                 sendingEmail={sendingEmail}
-                printDisabled={loading || printing || payments.length === 0}
+                printDisabled={loading || printing}
                 ledgerTypeDisabled={false}
               />
 
