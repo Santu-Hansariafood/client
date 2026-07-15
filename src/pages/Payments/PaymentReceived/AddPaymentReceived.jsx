@@ -500,6 +500,7 @@ const AddPaymentReceived = () => {
         const params = {
           page: useWideFetch ? 1 : page,
           limit: useWideFetch ? 500 : ENTRIES_PAGE_SIZE,
+          isUnloaded: "true",
         };
 
         if (tableSearch.trim()) {
