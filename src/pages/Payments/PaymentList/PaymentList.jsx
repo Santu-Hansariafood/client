@@ -964,26 +964,26 @@ const PaymentList = () => {
           {/* Totals Display - Always Visible with Better Design */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Gross</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Gross</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalGross.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total CD</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total CD</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalCd.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total GST</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total GST</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalGst.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-6 border border-rose-300 shadow-md">
-              <div className="text-xs font-bold text-rose-600 uppercase tracking-widest mb-2">Total Due</div>
-              <div className="text-3xl font-black text-rose-700">
+              <div className="text-sm font-bold text-rose-600 uppercase tracking-widest mb-2">Total Due</div>
+              <div className="text-xs font-black text-rose-700">
                 Rs. {Number(totals.totalDue.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
@@ -992,20 +992,20 @@ const PaymentList = () => {
           {/* Additional Totals Row */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Claims</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Claims</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalClaims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Bank Charges</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Bank Charges</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalBankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Credit</div>
-              <div className="text-2xl font-black text-slate-800">
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Credit</div>
+              <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalCredit.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
