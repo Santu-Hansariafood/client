@@ -1,4 +1,5 @@
-import { FaSave, FaMoneyBillWave, FaCoins, FaHistory, FaArrowRight } from "react-icons/fa";
+import { FaSave, FaMoneyBillWave, FaHistory, FaArrowRight } from "react-icons/fa";
+import DateSelector from "../../../common/DateSelector/DateSelector";
 
 const PaymentRecordingPanel = ({
   formData,
@@ -19,10 +20,10 @@ const PaymentRecordingPanel = ({
 
   const pendingAmount = ledgerTopSummary.creditBalanceRemaining ?? 0;
 
-  // Filter history for incoming payments (Advance or Sauda-wise with positive amount)
-  const incomingPayments = history
-    .filter((p) => p.paymentType === "Advance" || p.paymentType === "Sauda-wise")
-    .slice(0, 5);
+  const handleDateChange = (date, name) => {
+    const formattedDate = date ? new Date(date).toISOString().split("T")[0] : "";
+    handleInputChange({ target: { name, value: formattedDate } });
+  };
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -90,8 +91,8 @@ const PaymentRecordingPanel = ({
 
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-12 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                   Credit amount
@@ -159,6 +160,15 @@ const PaymentRecordingPanel = ({
                   className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 shadow-sm"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                  Credit date
+                </label>
+                <DateSelector
+                  selectedDate={formData.allocationDate}
+                  onChange={(date) => handleDateChange(date, "allocationDate")}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl">
@@ -183,44 +193,6 @@ const PaymentRecordingPanel = ({
                 <FaSave />
                 {loading ? "Saving..." : "Record Credit Entry"}
               </button>
-            </div>
-          </div>
-
-          <div className="lg:col-span-4 bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Recent Incoming Credits
-              </h4>
-              <FaCoins className="text-amber-400" size={12} />
-            </div>
-            
-            <div className="space-y-2">
-              {incomingPayments.length > 0 ? (
-                incomingPayments.map((payment) => (
-                  <div key={payment._id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-[10px] font-black text-slate-900 tabular-nums">
-                        ₹{Number((payment.amount || 0) + (payment.claim || 0) + (payment.tds || 0)).toLocaleString("en-IN")}
-                      </span>
-                      <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded uppercase">
-                        {payment.paymentMode}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase">
-                        {new Date(payment.date).toLocaleDateString("en-GB")}
-                      </span>
-                      <span className="text-[8px] font-bold text-blue-500 uppercase truncate max-w-[100px]">
-                        {payment.buyerCompany}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">No recent payments</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
