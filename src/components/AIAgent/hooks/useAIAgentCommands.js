@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import dashboardData from "../../../data/dashboardData.json";
 
 export const useAIAgentCommands = ({
@@ -14,6 +14,7 @@ export const useAIAgentCommands = ({
   pageHistory
 }) => {
   const debounceTimerRef = useRef(null);
+  const typoCacheRef = useRef({});
   const sidebarModules = dashboardData.sections;
 
   const SYSTEM_DICTIONARY = [
@@ -23,28 +24,39 @@ export const useAIAgentCommands = ({
     "menu", "modules", "weather", "account", "status", "loading", "unloading", "dispatch"
   ];
 
-  const getLevenshteinDistance = (a, b) => {
+  // Optimized Levenshtein distance with early exit
+  const getLevenshteinDistance = (a, b, maxDistance = 2) => {
+    // Early exit if lengths differ by more than maxDistance
+    if (Math.abs(a.length - b.length) > maxDistance) return maxDistance + 1;
+    
+    // Ensure a is the shorter string to minimize matrix size
+    if (a.length > b.length) [a, b] = [b, a];
+    
     const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-
+    for (let i = 0; i <= a.length; i++) matrix[i] = i;
+    
     for (let i = 1; i <= b.length; i++) {
+      let prev = i;
+      let minRow = Infinity;
       for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
+        const curr = a[j - 1] === b[i - 1] 
+          ? matrix[j - 1] 
+          : Math.min(matrix[j - 1], matrix[j], prev) + 1;
+        matrix[j - 1] = prev;
+        prev = curr;
+        if (curr < minRow) minRow = curr;
       }
+      matrix[a.length] = prev;
+      // Early exit if all values in row exceed maxDistance
+      if (minRow > maxDistance) return maxDistance + 1;
     }
-    return matrix[b.length][a.length];
+    return matrix[a.length];
   };
 
   const rectifyTypo = (text) => {
+    // Check cache first
+    if (typoCacheRef.current[text]) return typoCacheRef.current[text];
+    
     const words = text.split(/\s+/);
     const correctedWords = words.map(word => {
       if (word.length < 3 || /^\d+$/.test(word)) return word;
@@ -52,29 +64,38 @@ export const useAIAgentCommands = ({
       let bestMatch = word;
       let minDistance = 2;
 
-      SYSTEM_DICTIONARY.forEach(term => {
-        const distance = getLevenshteinDistance(word, term);
+      for (const term of SYSTEM_DICTIONARY) {
+        const distance = getLevenshteinDistance(word.toLowerCase(), term, minDistance);
         if (distance < minDistance) {
           minDistance = distance;
           bestMatch = term;
         }
-      });
+        // Early exit if perfect match found
+        if (minDistance === 0) break;
+      }
       return bestMatch;
     });
-    return correctedWords.join(" ");
+    
+    const result = correctedWords.join(" ");
+    // Cache the result
+    typoCacheRef.current[text] = result;
+    // Limit cache size
+    if (Object.keys(typoCacheRef.current).length > 100) {
+      typoCacheRef.current = {};
+    }
+    return result;
   };
 
-  // Helper function to find sidebar link by path or name
+  // Helper function to find sidebar link by path or name with enhanced matching
   const findSidebarLink = (query) => {
     const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
-
+    
+    // First, try exact matches
     for (const section of sidebarModules) {
       for (const action of section.actions) {
         const actionName = action.name.toLowerCase().replace(/\s+/g, "");
         if (
           cleanQuery === actionName ||
-          cleanQuery.includes(actionName) ||
-          actionName.includes(cleanQuery) ||
           action.link === query
         ) {
           return action;
@@ -82,6 +103,20 @@ export const useAIAgentCommands = ({
       }
     }
 
+    // Then try partial matches
+    for (const section of sidebarModules) {
+      for (const action of section.actions) {
+        const actionName = action.name.toLowerCase().replace(/\s+/g, "");
+        if (
+          cleanQuery.includes(actionName) ||
+          actionName.includes(cleanQuery)
+        ) {
+          return action;
+        }
+      }
+    }
+
+    // Finally try section matches
     for (const section of sidebarModules) {
       const sectionName = section.section.toLowerCase().replace(/\s+/g, "");
       if (
@@ -93,6 +128,45 @@ export const useAIAgentCommands = ({
       }
     }
     return null;
+  };
+
+  // New: Context-aware navigation suggestions
+  const getContextualNavigationSuggestions = () => {
+    const suggestions = [];
+    
+    // Based on current path
+    if (currentPath) {
+      const currentAction = findSidebarLink(currentPath);
+      if (currentAction) {
+        // Find related actions in the same section
+        for (const section of sidebarModules) {
+          if (section.actions.some(a => a.link === currentPath)) {
+            // Add other actions from the same section
+            section.actions.forEach(action => {
+              if (action.link !== currentPath && suggestions.length < 2) {
+                suggestions.push(`Go to ${action.name}`);
+              }
+            });
+            break;
+          }
+        }
+      }
+    }
+    
+    // Add recent pages
+    if (pageHistory && pageHistory.length > 0) {
+      pageHistory.slice(0, 3).forEach(page => {
+        const action = findSidebarLink(page.path);
+        if (action) {
+          const suggestion = `Go back to ${action.name}`;
+          if (!suggestions.includes(suggestion)) {
+            suggestions.push(suggestion);
+          }
+        }
+      });
+    }
+    
+    return suggestions.slice(0, 4);
   };
 
   const getSidebarSummary = () => {
@@ -524,17 +598,26 @@ export const useAIAgentCommands = ({
     }
   };
 
-  const handleSend = (text) => {
+  const handleSend = (text, immediate = false) => {
     const userMessage = text || input.trim();
-    if (!userMessage || isLoadingData) return;
+    if (!userMessage) return;
 
+    // Clear any existing debounce timer
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
-    debounceTimerRef.current = setTimeout(() => {
+    const sendMessage = () => {
       setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
       setInput("");
       processCommand(userMessage.toLowerCase());
-    }, 300);
+    };
+
+    if (immediate) {
+      // Send immediately for button clicks, etc.
+      sendMessage();
+    } else {
+      // Debounce for text input
+      debounceTimerRef.current = setTimeout(sendMessage, 150); // Reduced from 300ms to 150ms for better responsiveness
+    }
   };
 
   return { handleSend, processCommand };

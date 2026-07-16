@@ -1,4 +1,5 @@
 import api from "../../../utils/apiClient/apiClient";
+import { useRef } from "react";
 
 export const useAIAgentAPI = (
   setIsLoadingData,
@@ -6,6 +7,35 @@ export const useAIAgentAPI = (
   getApiSignal,
   getDynamicSuggestions,
 ) => {
+  const responseCacheRef = useRef({});
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+  // Helper function to get cached response
+  const getCachedResponse = (key) => {
+    const cached = responseCacheRef.current[key];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    // Remove stale entry
+    delete responseCacheRef.current[key];
+    return null;
+  };
+
+  // Helper function to set cached response
+  const setCachedResponse = (key, data) => {
+    responseCacheRef.current[key] = {
+      data,
+      timestamp: Date.now()
+    };
+    // Limit cache size to 50 entries
+    const keys = Object.keys(responseCacheRef.current);
+    if (keys.length > 50) {
+      const oldestKey = keys.sort((a, b) => 
+        responseCacheRef.current[a].timestamp - responseCacheRef.current[b].timestamp
+      )[0];
+      delete responseCacheRef.current[oldestKey];
+    }
+  };
   const fetchCommodities = async () => {
     setIsLoadingData(true);
     setThinkingPath("Listing all system commodities...");
@@ -939,16 +969,25 @@ export const useAIAgentAPI = (
   };
 
   const fetchTodaySaudas = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const cacheKey = `today_saudas_${today}`;
+    
+    // Check cache first
+    const cached = getCachedResponse(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     setIsLoadingData(true);
     setThinkingPath("Calculating today's sauda statistics...");
     try {
-      const today = new Date().toISOString().split("T")[0];
       const response = await api.get(
         `/self-order?startDate=${today}&endDate=${today}`,
         { signal: getApiSignal() },
       );
       const saudas = response.data.data || response.data;
 
+      let result;
       if (saudas && saudas.length > 0) {
         let content = `*System Sauda Summary (${new Date().toLocaleDateString("en-GB")})*\n\n`;
         content += `Total Count: *${saudas.length}*\n\n`;
@@ -956,7 +995,7 @@ export const useAIAgentAPI = (
           content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
 
-        return {
+        result = {
           role: "assistant",
           content: content,
           suggestions: getDynamicSuggestions([
@@ -964,11 +1003,15 @@ export const useAIAgentAPI = (
           ]),
         };
       } else {
-        return {
+        result = {
           role: "assistant",
           content: "System shows 0 saudas created today.",
         };
       }
+
+      // Cache the result
+      setCachedResponse(cacheKey, result);
+      return result;
     } catch (error) {
       if (error.name === "AbortError") return null;
       return {

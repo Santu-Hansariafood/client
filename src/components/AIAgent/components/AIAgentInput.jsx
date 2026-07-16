@@ -30,12 +30,12 @@ const AIAgentInput = ({
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSend()}
+          onKeyPress={(e) => e.key === "Enter" && handleSend(null, true)}
           placeholder="Type a command..."
           className="flex-1 bg-slate-100 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-slate-400"
         />
         <button
-          onClick={() => handleSend()}
+          onClick={() => handleSend(null, true)}
           disabled={!input.trim()}
           className="w-11 h-11 bg-emerald-600 text-white rounded-2xl flex items-center justify-center hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-200"
         >
