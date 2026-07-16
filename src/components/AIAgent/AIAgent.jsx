@@ -33,6 +33,8 @@ const AIAgent = () => {
     scrollRef,
     getApiSignal,
     clearHistory,
+    pageHistory,
+    currentPath
   } = useAIAgentCore(userName);
 
   const { trackInteraction, getDynamicSuggestions, checkSafety } = useAIAgentLearning();
@@ -42,7 +44,8 @@ const AIAgent = () => {
     setIsLoadingData,
     setThinkingPath,
     getApiSignal,
-    getDynamicSuggestions
+    (contextSuggestions, responseText) => 
+      getDynamicSuggestions(contextSuggestions, responseText, currentPath, pageHistory)
   );
 
   // Commands Hook
@@ -53,8 +56,10 @@ const AIAgent = () => {
     isLoadingData,
     navigate,
     apiMethods,
-    learningMethods: { trackInteraction, getDynamicSuggestions, checkSafety },
-    userName
+    learningMethods: { trackInteraction, checkSafety, getDynamicSuggestions },
+    userName,
+    currentPath,
+    pageHistory
   });
 
   const { startListening } = useAIAgentVoice(
@@ -68,13 +73,14 @@ const AIAgent = () => {
   if (userRole !== "Admin" && userRole !== "Employee") return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end">
       {isOpen && !isMinimized && (
-        <div className="mb-4 w-[350px] sm:w-[400px] h-[500px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
+        <div className="mb-4 w-[90vw] sm:w-[400px] max-w-[450px] h-[70vh] sm:h-[500px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
           <AIAgentHeader
             setIsMinimized={setIsMinimized}
             clearHistory={clearHistory}
             setIsOpen={setIsOpen}
+            currentPath={currentPath}
           />
 
           <AIAgentMessages

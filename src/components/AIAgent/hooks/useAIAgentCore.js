@@ -1,14 +1,27 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 
 export const useAIAgentCore = (userName) => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [thinkingPath, setThinkingPath] = useState("");
+  const [pageHistory, setPageHistory] = useState([]);
   const abortControllerRef = useRef(null);
   const scrollRef = useRef(null);
+
+  // Track page history
+  useEffect(() => {
+    const currentPath = location.pathname;
+    setPageHistory((prev) => {
+      const newHistory = prev.filter((p) => p.path !== currentPath);
+      newHistory.unshift({ path: currentPath, timestamp: Date.now() });
+      return newHistory.slice(0, 10); // Keep last 10 pages
+    });
+  }, [location.pathname]);
 
   const [messages, setMessages] = useState([
     {
@@ -72,6 +85,8 @@ export const useAIAgentCore = (userName) => {
     messages, setMessages,
     scrollRef,
     getApiSignal,
-    clearHistory
+    clearHistory,
+    pageHistory,
+    currentPath: location.pathname
   };
 };

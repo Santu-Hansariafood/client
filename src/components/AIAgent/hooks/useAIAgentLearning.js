@@ -213,10 +213,32 @@ export const useAIAgentLearning = () => {
   const getDynamicSuggestions = (
     contextSuggestions = [],
     responseText = "",
+    currentPath = "",
+    pageHistory = []
   ) => {
     let suggestions = [...contextSuggestions];
     const { entityMemory, workflowScores, intentPatterns, recentQueries } =
       learningData;
+
+    // Add context-aware suggestions based on current page
+    if (currentPath) {
+      const pageSuggestions = getPageSpecificSuggestions(currentPath);
+      pageSuggestions.forEach(s => {
+        if (!suggestions.includes(s)) suggestions.push(s);
+      });
+    }
+
+    // Add page history suggestions (recent pages)
+    if (pageHistory && pageHistory.length > 0) {
+      const recentPageLinks = pageHistory.slice(1, 4).map(page => {
+        const action = findActionByPath(page.path);
+        return action ? `Go back to ${action.name}` : null;
+      }).filter(Boolean);
+      
+      recentPageLinks.forEach(s => {
+        if (!suggestions.includes(s)) suggestions.push(s);
+      });
+    }
 
     if (entityMemory.saudaNo) {
       if (
@@ -318,6 +340,64 @@ export const useAIAgentLearning = () => {
     }
 
     return [...new Set(suggestions)].slice(0, 5);
+  };
+
+  // Helper function to get page-specific suggestions
+  const getPageSpecificSuggestions = (path) => {
+    const suggestions = [];
+    
+    // Dashboard
+    if (path.includes("/dashboard")) {
+      suggestions.push("Show recent saudas");
+      suggestions.push("Check loading entries");
+      suggestions.push("View payment status");
+    }
+    
+    // Loading Entry pages
+    if (path.includes("/Loading-Entry/")) {
+      if (path.includes("add")) {
+        suggestions.push("View recent loadings");
+      } else if (path.includes("list")) {
+        suggestions.push("Add a new loading entry");
+      }
+      suggestions.push("Check pending saudas");
+    }
+    
+    // Payments pages
+    if (path.includes("/payments/")) {
+      if (path.includes("received")) {
+        suggestions.push("View payment ledger");
+      }
+      suggestions.push("Check due payments");
+    }
+    
+    // Buyer/Seller pages
+    if (path.includes("/buyer/")) {
+      suggestions.push("Add a new buyer");
+    }
+    if (path.includes("/seller-")) {
+      suggestions.push("Add a new seller company");
+    }
+    
+    return suggestions;
+  };
+
+  // Helper function to find action by path
+  const findActionByPath = (path) => {
+    // Import dashboard data here or pass it in
+    // For now, we'll create a simple mapping
+    const pathMap = {
+      "/dashboard": { name: "Dashboard" },
+      "/buyer/list": { name: "Buyer List" },
+      "/buyer/add": { name: "Add Buyer" },
+      "/company/list": { name: "Company List" },
+      "/Loading-Entry/list-loading-entry": { name: "Loading Entry List" },
+      "/Loading-Entry/add-loading-entry": { name: "Add Loading Entry" },
+      "/manage-order/list-self-order": { name: "Self Order List" },
+      "/manage-order/add-self-order": { name: "Add Self Order" },
+      "/payments/received/list": { name: "Payment Ledger" },
+    };
+    return pathMap[path] || null;
   };
 
   return { 

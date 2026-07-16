@@ -9,7 +9,9 @@ export const useAIAgentCommands = ({
   navigate,
   apiMethods,
   learningMethods,
-  userName
+  userName,
+  currentPath,
+  pageHistory
 }) => {
   const debounceTimerRef = useRef(null);
   const sidebarModules = dashboardData.sections;
@@ -62,6 +64,7 @@ export const useAIAgentCommands = ({
     return correctedWords.join(" ");
   };
 
+  // Helper function to find sidebar link by path or name
   const findSidebarLink = (query) => {
     const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
 
@@ -71,7 +74,8 @@ export const useAIAgentCommands = ({
         if (
           cleanQuery === actionName ||
           cleanQuery.includes(actionName) ||
-          actionName.includes(cleanQuery)
+          actionName.includes(cleanQuery) ||
+          action.link === query
         ) {
           return action;
         }
@@ -203,6 +207,70 @@ export const useAIAgentCommands = ({
         content: `Okay! I've learned that when you say '${trigger}', you want me to '${action}'. I'll remember that! 📝`,
         suggestions: ["Total sauda today", "Active bids"],
       };
+    }
+
+    // Handle "Go back to..." commands for page history
+    if (cleanCmd.includes("go back to") || cleanCmd.includes("back to")) {
+      const targetName = cleanCmd.replace("go back to", "").replace("back to", "").trim();
+      let targetPath = null;
+      
+      // Look for matching page in history
+      for (const page of pageHistory) {
+        const action = findSidebarLink(page.path);
+        if (action && action.name.toLowerCase().includes(targetName)) {
+          targetPath = page.path;
+          break;
+        }
+      }
+      
+      if (!targetPath) {
+        // Try to find by path or name directly
+        const action = findSidebarLink(targetName);
+        if (action) {
+          targetPath = action.link;
+        }
+      }
+      
+      if (targetPath) {
+        response = {
+          role: "assistant",
+          content: `Going back to ${findSidebarLink(targetPath)?.name || targetPath}...`,
+          action: () => {
+            navigate(targetPath);
+          },
+        };
+      } else {
+        response = {
+          role: "assistant",
+          content: `I couldn't find the page "${targetName}" in your history. Try another page!`,
+          suggestions: ["Show sidebar menu"],
+        };
+      }
+    }
+
+    // Handle "Show page history" or "Recent pages" commands
+    if (cleanCmd.includes("page history") || cleanCmd.includes("recent pages") || cleanCmd.includes("history")) {
+      if (pageHistory.length === 0) {
+        response = {
+          role: "assistant",
+          content: "No page history available yet!",
+        };
+      } else {
+        let historyText = "*Your Recent Pages:*\n\n";
+        pageHistory.slice(0, 5).forEach((page, idx) => {
+          const action = findSidebarLink(page.path);
+          historyText += `${idx + 1}. ${action?.name || page.path}\n`;
+        });
+        historyText += "\nUse 'Go back to [page name]' to navigate!";
+        response = {
+          role: "assistant",
+          content: historyText,
+          suggestions: pageHistory.slice(1, 3).map(page => {
+            const action = findSidebarLink(page.path);
+            return action ? `Go back to ${action.name}` : null;
+          }).filter(Boolean),
+        };
+      }
     }
 
     if (cleanCmd !== rawCmd) {
