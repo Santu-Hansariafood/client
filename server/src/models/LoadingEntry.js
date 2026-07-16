@@ -100,6 +100,10 @@ const loadingEntrySchema = new mongoose.Schema(
       enum: ["Admin", "Employee", "Seller", "Buyer"],
       default: "Admin",
     },
+    isCancelled: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

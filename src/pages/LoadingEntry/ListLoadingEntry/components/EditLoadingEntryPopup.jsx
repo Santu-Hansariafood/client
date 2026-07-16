@@ -33,6 +33,10 @@ const EditLoadingEntryPopup = ({
         .toFixed(2);
 
   const calculatePayableAmount = () => {
+    if (editEntry.isCancelled) {
+      return "0.00";
+    }
+    
     const rate = Number(currentSelfOrder?.rate || 0);
     const weight = Number(editEntry.unloadingWeight || 0);
     const totalBill = rate * weight;
@@ -61,6 +65,28 @@ const EditLoadingEntryPopup = ({
       bankCharges -
       tds
     ).toFixed(2);
+  };
+
+  const handleCancelSauda = () => {
+    if (window.confirm("Are you sure you want to cancel this sauda? This will set all brokerage and payable amounts to 0.")) {
+      setEditEntry((prev) => ({
+        ...prev,
+        isCancelled: true,
+        buyerBrokerage: 0,
+        sellerBrokerage: 0,
+        totalFreight: 0,
+        balance: 0,
+        manualClaimAmount: 0,
+        secondClaim: 0,
+        otherCharges: 0,
+        bankCharges: 0,
+        tds: 0,
+        qualityClaims: (prev.qualityClaims || []).map(claim => ({
+          ...claim,
+          claimAmount: 0
+        }))
+      }));
+    }
   };
 
   const handleManualRateChange = (e) => {
@@ -923,20 +949,36 @@ const EditLoadingEntryPopup = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleUpdateEntry}
-          disabled={isSaving}
-          className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-        >
-          {isSaving ? "Saving..." : "Update Entry"}
-        </button>
+      {editEntry.isCancelled && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 font-semibold">This sauda has been cancelled. All amounts are set to 0.</p>
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center pt-4 border-t mt-4">
+        {!editEntry.isCancelled && (
+          <button
+            onClick={handleCancelSauda}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700 transition-colors"
+          >
+            Cancel Sauda
+          </button>
+        )}
+        <div className="flex gap-3 ml-auto">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdateEntry}
+            disabled={isSaving}
+            className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSaving ? "Saving..." : "Update Entry"}
+          </button>
+        </div>
       </div>
     </div>
   );

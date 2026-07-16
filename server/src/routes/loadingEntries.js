@@ -2801,7 +2801,22 @@ router.put("/:id", authJwt, async (req, res) => {
       saudaNo: data.saudaNo || oldEntry.saudaNo,
     });
 
-    if (selfOrder && data.unloadingWeight) {
+    if (data.isCancelled) {
+      // If cancelled, set brokerages and other amounts to 0
+      data.buyerBrokerage = 0;
+      data.sellerBrokerage = 0;
+      data.totalFreight = 0;
+      data.balance = 0;
+      data.manualClaimAmount = 0;
+      data.secondClaim = 0;
+      data.otherCharges = 0;
+      data.bankCharges = 0;
+      data.tds = 0;
+      data.qualityClaims = (data.qualityClaims || []).map(claim => ({
+        ...claim,
+        claimAmount: 0
+      }));
+    } else if (selfOrder && data.unloadingWeight) {
       const uWeight = parseFloat(data.unloadingWeight) || 0;
       const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
       let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;

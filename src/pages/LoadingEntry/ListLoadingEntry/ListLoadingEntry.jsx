@@ -536,6 +536,7 @@ const ListLoadingEntry = () => {
         tdsRemarks: latestEntry.tdsRemarks || "",
         generalRemarks: latestEntry.generalRemarks || "",
         showAllQualityParameters: latestEntry.showAllQualityParameters || false,
+        isCancelled: latestEntry.isCancelled || false,
       };
 
       if (entry.saudaNo) {
@@ -849,6 +850,11 @@ const ListLoadingEntry = () => {
       const { name, value } = e.target;
       setEditEntry((prev) => {
         const updated = { ...prev, [name]: value };
+
+        // If cancelled, don't recalculate anything
+        if (prev.isCancelled) {
+          return updated;
+        }
 
         if (
           name === "loadingWeight" ||
@@ -1274,12 +1280,18 @@ const ListLoadingEntry = () => {
         <span
           key={`status-${entry._id}`}
           className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            statusMap[entry.saudaNo] === "closed"
+            entry.isCancelled
+              ? "bg-red-200 text-red-800"
+              : statusMap[entry.saudaNo] === "closed"
               ? "bg-red-100 text-red-700"
               : "bg-emerald-100 text-emerald-700"
           }`}
         >
-          {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
+          {entry.isCancelled
+            ? "Cancelled"
+            : statusMap[entry.saudaNo] === "closed"
+            ? "Closed"
+            : "Active"}
         </span>,
         entry.lorryNumber,
         transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
