@@ -428,6 +428,7 @@ const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
   const entryQuery = {
     paymentStatus: "pending",
     unloadingWeight: { $gt: 0 },
+    isCancelled: { $ne: true },
   };
 
   if (buyerCompany || supplierCompany) {

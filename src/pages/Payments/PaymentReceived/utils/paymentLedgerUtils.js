@@ -137,52 +137,80 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
 
   sorted.forEach((item) => {
     if (item.uiType === 'entry') {
-      // It's a bill (Loading Entry): DEBIT = gross - cd - bank charges; Total = DEBIT + GST
-      const weight = item.unloadingWeight || item.loadingWeight || 0;
-      const rate = item.actualRate || item.rate || 0;
-      const grossAmount = weight * rate;
-      const cdPercent = item.cd || 0;
-      const gstPercent = item.gst || 0;
-      const cdAmount = grossAmount * (cdPercent / 100);
-      const amountAfterCd = grossAmount - cdAmount;
-      const bankCharges = Number(item.bankCharges) || 0;
-      const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
-      const gstAmount = debit * (gstPercent / 100);
-      
-      // Calculate total quality claims
-      let totalClaims = 0;
-      if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
-        totalClaims = item.qualityClaims.reduce((sum, claim) => {
-          return sum + (Number(claim.claimAmount) || 0);
-        }, 0);
-      }
-      
-      const credit = 0;
-      const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
-      const vchType = "Bill";
-      const buyerCompany = item.buyerCompany || "";
-      const supplierCompany = item.supplierCompany || "";
-      const date = item.loadingDate;
-      const id = `entry-${item._id}`;
+      // Check if entry is cancelled
+      if (item.isCancelled) {
+        const particulars = `Cancelled: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+        const vchType = "Cancelled";
+        const buyerCompany = item.buyerCompany || "";
+        const supplierCompany = item.supplierCompany || "";
+        const date = item.loadingDate;
+        const id = `entry-${item._id}`;
 
-      balance = balance + debit - credit;
-      rows.push({
-        id,
-        date,
-        particulars,
-        vchType,
-        buyerCompany,
-        supplierCompany,
-        debit,
-        credit,
-        balance,
-        raw: item,
-        grossAmount,
-        gstAmount,
-        totalClaims,
-        cdAmount,
-        bankCharges,
-      });
+        rows.push({
+          id,
+          date,
+          particulars,
+          vchType,
+          buyerCompany,
+          supplierCompany,
+          debit: 0,
+          credit: 0,
+          balance,
+          raw: item,
+          grossAmount: 0,
+          gstAmount: 0,
+          totalClaims: 0,
+          cdAmount: 0,
+          bankCharges: 0,
+        });
+      } else {
+        // It's a bill (Loading Entry): DEBIT = gross - cd - bank charges; Total = DEBIT + GST
+        const weight = item.unloadingWeight || item.loadingWeight || 0;
+        const rate = item.actualRate || item.rate || 0;
+        const grossAmount = weight * rate;
+        const cdPercent = item.cd || 0;
+        const gstPercent = item.gst || 0;
+        const cdAmount = grossAmount * (cdPercent / 100);
+        const amountAfterCd = grossAmount - cdAmount;
+        const bankCharges = Number(item.bankCharges) || 0;
+        const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
+        const gstAmount = debit * (gstPercent / 100);
+        
+        // Calculate total quality claims
+        let totalClaims = 0;
+        if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
+          totalClaims = item.qualityClaims.reduce((sum, claim) => {
+            return sum + (Number(claim.claimAmount) || 0);
+          }, 0);
+        }
+        
+        const credit = 0;
+        const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+        const vchType = "Bill";
+        const buyerCompany = item.buyerCompany || "";
+        const supplierCompany = item.supplierCompany || "";
+        const date = item.loadingDate;
+        const id = `entry-${item._id}`;
+
+        balance = balance + debit - credit;
+        rows.push({
+          id,
+          date,
+          particulars,
+          vchType,
+          buyerCompany,
+          supplierCompany,
+          debit,
+          credit,
+          balance,
+          raw: item,
+          grossAmount,
+          gstAmount,
+          totalClaims,
+          cdAmount,
+          bankCharges,
+        });
+      }
     } else {
       // It's a payment
       const payment = item;
@@ -302,6 +330,21 @@ export const calculateVoucherTotals = (rows) => {
 /** Outstanding sauda lines: Dr = due, Cr = paid + allocation (Cr. posting). */
 export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
   entries.map((entry) => {
+    if (entry.isCancelled) {
+      return {
+        id: entry.uiKey || entry._id,
+        date: entry.loadingDate,
+        particulars: `Cancelled: ${entry.saudaNo} | ${entry.lorryNumber}${entry.billNumber ? ` | Bill ${entry.billNumber}` : ""} | ${entry.commodity || ""}`,
+        vchType: "Cancelled",
+        buyerCompany: entry.buyerCompany || "—",
+        supplierCompany: entry.supplierCompany || "—",
+        debit: 0,
+        credit: 0,
+        balance: 0,
+        entry,
+        details: { dueAmount: 0, netAmount: 0, grossAmount: 0, gstAmount: 0 },
+      };
+    }
     const details = calculateTallyDetails(entry);
     const paid = Number(entry.paidAmount) || 0;
     const alloc = Number(entry.allocatedAmount) || 0;
@@ -419,6 +462,7 @@ export const filterEntriesForCompanyScope = (
 
 /** Due amount from enriched loading row (self-order rate on API). */
 export const calculateEntryDueAmount = (item) => {
+  if (item.isCancelled) return 0;
   const weight =
     (item.unloadingWeight || 0) > 0
       ? item.unloadingWeight

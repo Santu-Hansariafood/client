@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     const allItems = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isCancelled")
       .populate("supplier", "sellerName")
       .lean();
 
@@ -86,6 +86,25 @@ router.get("/", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = allItems.map((item) => {
+      if (item.isCancelled) {
+        return {
+          ...item,
+          paymentTerms: 0,
+          dueDate: null,
+          isDue: false,
+          rate: 0,
+          amount: 0,
+          grossAmount: 0,
+          cdAmount: 0,
+          gstAmount: 0,
+          netAmount: 0,
+          totalQualityClaims: 0,
+          bankCharges: 0,
+          dueAmount: 0,
+          buyerCompany: item.buyerCompany || "N/A",
+        };
+      }
+
       const order = saudaMap[item.saudaNo] || {};
       const terms = parseInt(order.paymentTerms) || 0;
       const unloadingDate = new Date(item.unloadingDate);
@@ -352,7 +371,7 @@ router.get("/export/excel", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     let items = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isCancelled")
       .populate("supplier", "sellerName")
       .lean();
 
@@ -372,6 +391,25 @@ router.get("/export/excel", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = items.map((item) => {
+      if (item.isCancelled) {
+        return {
+          ...item,
+          paymentTerms: 0,
+          dueDate: null,
+          isDue: false,
+          rate: 0,
+          amount: 0,
+          grossAmount: 0,
+          cdAmount: 0,
+          gstAmount: 0,
+          netAmount: 0,
+          totalQualityClaims: 0,
+          bankCharges: 0,
+          dueAmount: 0,
+          buyerCompany: item.buyerCompany || "N/A",
+        };
+      }
+
       const order = saudaMap[item.saudaNo] || {};
       const terms = parseInt(order.paymentTerms) || 0;
       const unloadingDate = new Date(item.unloadingDate);
