@@ -464,6 +464,20 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
   // Helper to calculate breakdown for an entry
   const calculateBreakdown = (loadingEntry) => {
     if (!loadingEntry) return null;
+    if (loadingEntry.isCancelled) {
+      return {
+        grossAmount: 0,
+        cdAmount: 0,
+        cdPercent: 0,
+        bankCharges: 0,
+        amountAfterCd: 0,
+        amountAfterBankCharges: 0,
+        taxableAmount: 0,
+        gstAmount: 0,
+        gstPercent: 0,
+        netAmount: 0,
+      };
+    }
     const weight = (loadingEntry.unloadingWeight || 0) > 0 ? loadingEntry.unloadingWeight : loadingEntry.loadingWeight || 0;
     const rate = loadingEntry.actualRate || 0;
     const cdPercent = loadingEntry.cd || 0;

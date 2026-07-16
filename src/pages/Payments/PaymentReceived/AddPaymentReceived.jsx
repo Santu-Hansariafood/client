@@ -108,6 +108,21 @@ const AddPaymentReceived = () => {
   };
 
   const calculateTallyDetails = (entry) => {
+    if (entry?.isCancelled) {
+      return {
+        grossAmount: 0,
+        cdAmount: 0,
+        cdPercent: 0,
+        bankCharges: 0,
+        amountAfterCd: 0,
+        amountAfterBankCharges: 0,
+        taxableAmount: 0,
+        gstAmount: 0,
+        gstPercent: 0,
+        netAmount: 0,
+        dueAmount: 0,
+      };
+    }
     const weight =
       (entry.unloadingWeight || 0) > 0
         ? entry.unloadingWeight

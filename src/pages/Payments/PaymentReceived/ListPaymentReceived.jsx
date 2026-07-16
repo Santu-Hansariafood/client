@@ -732,6 +732,17 @@ const ListPaymentReceived = () => {
           totalQualityClaims: 0,
           bankCharges: 0,
         };
+      if (e.isCancelled)
+        return {
+          netAmount: 0,
+          dueAmount: 0,
+          cdAmount: 0,
+          gstAmount: 0,
+          cdPercent: 0,
+          gstPercent: 0,
+          totalQualityClaims: 0,
+          bankCharges: 0,
+        };
       const weight =
         (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
       const rate = e.actualRate || 0;
