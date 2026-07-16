@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { FaArrowLeft, FaPrint, FaUser, FaBookmark, FaRegBookmark, FaEye, FaCalendarAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../utils/apiClient/apiClient";
@@ -63,7 +64,52 @@ const BlogDetail = () => {
   const galleryImages = blog.images?.length > 0 ? blog.images : (blog.imageUrl ? [blog.imageUrl] : []);
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] py-10 px-4 print:bg-white print:py-0 print:px-0">
+    <>
+      {blog && (
+        <Helmet>
+          <title>{blog.title} | Hansaria Food News</title>
+          <meta name="description" content={blog.heading || blog.content?.[0]?.text || "Latest news from Hansaria Food"} />
+          <meta property="og:title" content={blog.title} />
+          <meta property="og:description" content={blog.heading || blog.content?.[0]?.text || "Latest news from Hansaria Food"} />
+          <meta property="og:type" content="article" />
+          <meta property="og:url" content={`https://bid.hansariafood.in/blog/${id}`} />
+          <meta property="og:image" content={blog.imageUrl || blog.images?.[0] || "https://bid.hansariafood.in/images/og-image.png"} />
+          <meta property="article:published_time" content={blog.date} />
+          <meta property="article:author" content={blog.author?.name || "Hansaria Food"} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={blog.title} />
+          <meta name="twitter:description" content={blog.heading || blog.content?.[0]?.text || "Latest news from Hansaria Food"} />
+          <meta name="twitter:image" content={blog.imageUrl || blog.images?.[0] || "https://bid.hansariafood.in/images/og-image.png"} />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": blog.title,
+              "description": blog.heading || blog.content?.[0]?.text,
+              "image": blog.imageUrl || blog.images?.[0] || "https://bid.hansariafood.in/images/og-image.png",
+              "author": {
+                "@type": "Person",
+                "name": blog.author?.name || "Hansaria Food"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Hansaria Food Private Limited",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://bid.hansariafood.in/icons/android-chrome-512x512.png"
+                }
+              },
+              "datePublished": blog.date,
+              "dateModified": blog.updatedAt || blog.date,
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `https://bid.hansariafood.in/blog/${id}`
+              }
+            })}
+          </script>
+        </Helmet>
+      )}
+      <div className="min-h-screen bg-[#f4f1ea] py-10 px-4 print:bg-white print:py-0 print:px-0">
       <div className="max-w-4xl mx-auto bg-white shadow-2xl border-x border-slate-200 min-h-[1000px] print:shadow-none print:border-none">
         <div className="p-8 border-b-4 border-double border-slate-900 text-center">
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 print:hidden">
@@ -285,7 +331,8 @@ const BlogDetail = () => {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

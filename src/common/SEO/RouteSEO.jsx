@@ -4,12 +4,12 @@ import { useLocation } from "react-router-dom";
 const SITE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL) ||
   "https://bid.hansariafood.in";
-const OG_IMAGE = `${SITE_URL}/icons/android-chrome-512x512.png`;
+const OG_IMAGE = `${SITE_URL}/images/og-image.png`; // Use proper 1200x630 OG image
 const OG_IMAGE_192 = `${SITE_URL}/icons/android-chrome-192x192.png`;
 
-const DEFAULT_TITLE = "Hansaria Food Private Limited | Bid Portal";
+const DEFAULT_TITLE = "Hansaria Food Private Limited | India's Leading Poultry & Feed Meal Trading Portal";
 const DEFAULT_DESC =
-  "Hansaria Food bid portal — poultry, feed meal, and agricultural commodity trading & brokerage across India. Manage commodities, bids, buyers, and consignees.";
+  "Hansaria Food Private Limited (HFPL) is India's premier B2B portal for poultry, feed meal, and agricultural commodity trading. Secure, transparent, and efficient brokerage services connecting buyers and sellers nationwide.";
 
 const COMMODITY_LIST_DESC =
   "Browse Hansaria Food commodity catalog — HSN codes, quality parameters, poultry & feed ingredients. Commodity list for trading and brokerage on bid.hansariafood.in.";
@@ -23,14 +23,27 @@ const PUBLIC_ROUTES = [
   /^\/terms-conditions$/,
   /^\/broker-commission-policy$/,
   /^\/teams$/,
+  /^\/blog\/.*/,
+  /^\/news-archive$/,
 ];
 
 const ROUTE_META = [
-  { match: /^\/$/, title: DEFAULT_TITLE, desc: DEFAULT_DESC },
+  { match: /^\/$/, title: DEFAULT_TITLE, desc: DEFAULT_DESC, keywords: "Hansaria Food, HFPL, poultry trading India, feed meal brokerage, agricultural commodity portal, B2B trading India, poultry feed ingredients, maize trading, soya meal trading, Hansaria bid portal" },
   {
     match: /^\/login$/,
     title: "Login | Hansaria Food Bid Portal",
     desc: "Secure login to Hansaria Food bid portal — commodity trading & brokerage.",
+  },
+  {
+    match: /^\/news-archive$/,
+    title: "News Archive | Hansaria Food",
+    desc: "Browse latest news and updates from Hansaria Food — poultry, feed meal, and commodity trading insights.",
+    keywords: "Hansaria Food news, poultry industry news, feed meal updates, commodity trading news",
+  },
+  {
+    match: /^\/blog\/.*/,
+    title: "News | Hansaria Food",
+    desc: "Read latest news and insights from Hansaria Food — poultry, feed meal, and commodity trading.",
   },
   {
     match: /^\/dashboard$/,
