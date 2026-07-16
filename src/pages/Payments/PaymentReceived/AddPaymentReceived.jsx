@@ -108,7 +108,7 @@ const AddPaymentReceived = () => {
   };
 
   const calculateTallyDetails = (entry) => {
-    if (entry?.isCancelled) {
+    if (entry?.isRejected) {
       return {
         grossAmount: 0,
         cdAmount: 0,

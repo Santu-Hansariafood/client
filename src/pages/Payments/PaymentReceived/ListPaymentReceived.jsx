@@ -732,7 +732,7 @@ const ListPaymentReceived = () => {
           totalQualityClaims: 0,
           bankCharges: 0,
         };
-      if (e.isCancelled)
+      if (e.isRejected)
         return {
           netAmount: 0,
           dueAmount: 0,

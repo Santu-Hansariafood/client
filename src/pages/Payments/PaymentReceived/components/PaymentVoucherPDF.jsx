@@ -464,7 +464,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
   // Helper to calculate breakdown for an entry
   const calculateBreakdown = (loadingEntry) => {
     if (!loadingEntry) return null;
-    if (loadingEntry.isCancelled) {
+    if (loadingEntry.isRejected) {
       return {
         grossAmount: 0,
         cdAmount: 0,

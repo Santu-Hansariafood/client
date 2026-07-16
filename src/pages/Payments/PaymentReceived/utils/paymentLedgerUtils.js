@@ -138,9 +138,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
   sorted.forEach((item) => {
     if (item.uiType === 'entry') {
       // Check if entry is cancelled
-      if (item.isCancelled) {
-        const particulars = `Cancelled: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
-        const vchType = "Cancelled";
+      if (item.isRejected) {
+        const particulars = `Rejected: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+        const vchType = "Rejected";
         const buyerCompany = item.buyerCompany || "";
         const supplierCompany = item.supplierCompany || "";
         const date = item.loadingDate;
@@ -330,12 +330,12 @@ export const calculateVoucherTotals = (rows) => {
 /** Outstanding sauda lines: Dr = due, Cr = paid + allocation (Cr. posting). */
 export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
   entries.map((entry) => {
-    if (entry.isCancelled) {
+    if (entry.isRejected) {
       return {
         id: entry.uiKey || entry._id,
         date: entry.loadingDate,
-        particulars: `Cancelled: ${entry.saudaNo} | ${entry.lorryNumber}${entry.billNumber ? ` | Bill ${entry.billNumber}` : ""} | ${entry.commodity || ""}`,
-        vchType: "Cancelled",
+        particulars: `Rejected: ${entry.saudaNo} | ${entry.lorryNumber}${entry.billNumber ? ` | Bill ${entry.billNumber}` : ""} | ${entry.commodity || ""}`,
+        vchType: "Rejected",
         buyerCompany: entry.buyerCompany || "—",
         supplierCompany: entry.supplierCompany || "—",
         debit: 0,
@@ -462,7 +462,7 @@ export const filterEntriesForCompanyScope = (
 
 /** Due amount from enriched loading row (self-order rate on API). */
 export const calculateEntryDueAmount = (item) => {
-  if (item.isCancelled) return 0;
+  if (item.isRejected) return 0;
   const weight =
     (item.unloadingWeight || 0) > 0
       ? item.unloadingWeight

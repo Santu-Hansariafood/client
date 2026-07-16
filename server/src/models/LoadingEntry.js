@@ -100,7 +100,7 @@ const loadingEntrySchema = new mongoose.Schema(
       enum: ["Admin", "Employee", "Seller", "Buyer"],
       default: "Admin",
     },
-    isCancelled: {
+    isRejected: {
       type: Boolean,
       default: false,
     },

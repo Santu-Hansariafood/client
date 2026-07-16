@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     const allItems = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isCancelled")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected")
       .populate("supplier", "sellerName")
       .lean();
 
@@ -86,7 +86,7 @@ router.get("/", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = allItems.map((item) => {
-      if (item.isCancelled) {
+      if (item.isRejected) {
         return {
           ...item,
           paymentTerms: 0,
@@ -371,7 +371,7 @@ router.get("/export/excel", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     let items = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isCancelled")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected")
       .populate("supplier", "sellerName")
       .lean();
 
@@ -391,7 +391,7 @@ router.get("/export/excel", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = items.map((item) => {
-      if (item.isCancelled) {
+      if (item.isRejected) {
         return {
           ...item,
           paymentTerms: 0,

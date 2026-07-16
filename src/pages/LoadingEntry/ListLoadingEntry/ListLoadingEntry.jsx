@@ -536,7 +536,7 @@ const ListLoadingEntry = () => {
         tdsRemarks: latestEntry.tdsRemarks || "",
         generalRemarks: latestEntry.generalRemarks || "",
         showAllQualityParameters: latestEntry.showAllQualityParameters || false,
-        isCancelled: latestEntry.isCancelled || false,
+        isRejected: latestEntry.isRejected || false,
       };
 
       if (entry.saudaNo) {
@@ -852,7 +852,7 @@ const ListLoadingEntry = () => {
         const updated = { ...prev, [name]: value };
 
         // If cancelled, don't recalculate anything
-        if (prev.isCancelled) {
+        if (prev.isRejected) {
           return updated;
         }
 
@@ -1280,15 +1280,15 @@ const ListLoadingEntry = () => {
         <span
           key={`status-${entry._id}`}
           className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            entry.isCancelled
+            entry.isRejected
               ? "bg-red-200 text-red-800"
               : statusMap[entry.saudaNo] === "closed"
               ? "bg-red-100 text-red-700"
               : "bg-emerald-100 text-emerald-700"
           }`}
         >
-          {entry.isCancelled
-            ? "Cancelled"
+          {entry.isRejected
+            ? "Rejected"
             : statusMap[entry.saudaNo] === "closed"
             ? "Closed"
             : "Active"}

@@ -1809,7 +1809,7 @@ router.get("/", async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole bankCharges isCancelled",
+        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole bankCharges isRejected",
       )
       .populate("supplier", "sellerName")
       .lean();
@@ -2801,7 +2801,7 @@ router.put("/:id", authJwt, async (req, res) => {
       saudaNo: data.saudaNo || oldEntry.saudaNo,
     });
 
-    if (data.isCancelled) {
+    if (data.isRejected) {
       // If cancelled, set brokerages and other amounts to 0
       data.buyerBrokerage = 0;
       data.sellerBrokerage = 0;

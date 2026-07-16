@@ -33,7 +33,7 @@ const EditLoadingEntryPopup = ({
         .toFixed(2);
 
   const calculatePayableAmount = () => {
-    if (editEntry.isCancelled) {
+    if (editEntry.isRejected) {
       return "0.00";
     }
     
@@ -67,11 +67,11 @@ const EditLoadingEntryPopup = ({
     ).toFixed(2);
   };
 
-  const handleCancelSauda = () => {
-    if (window.confirm("Are you sure you want to cancel this sauda? This will set all brokerage and payable amounts to 0.")) {
+  const handleRejectLorry = () => {
+    if (window.confirm("Are you sure you want to reject this lorry? This will set all brokerage and payable amounts to 0.")) {
       setEditEntry((prev) => ({
         ...prev,
-        isCancelled: true,
+        isRejected: true,
         buyerBrokerage: 0,
         sellerBrokerage: 0,
         totalFreight: 0,
@@ -949,19 +949,19 @@ const EditLoadingEntryPopup = ({
         </div>
       )}
 
-      {editEntry.isCancelled && (
+      {editEntry.isRejected && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-semibold">This sauda has been cancelled. All amounts are set to 0.</p>
+          <p className="text-red-800 font-semibold">This lorry has been rejected. All amounts are set to 0.</p>
         </div>
       )}
       
       <div className="flex justify-between items-center pt-4 border-t mt-4">
-        {!editEntry.isCancelled && (
+        {!editEntry.isRejected && (
           <button
-            onClick={handleCancelSauda}
+            onClick={handleRejectLorry}
             className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700 transition-colors"
           >
-            Cancel Sauda
+            Reject Lorry
           </button>
         )}
         <div className="flex gap-3 ml-auto">
