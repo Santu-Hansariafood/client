@@ -1,6 +1,8 @@
 import { FaRobot, FaMinus, FaTrash, FaTimes } from "react-icons/fa";
+import React from "react";
 
-const AIAgentHeader = ({ setIsMinimized, clearHistory, setIsOpen }) => {
+// eslint-disable-next-line react/display-name
+const AIAgentHeader = React.memo(({ setIsMinimized, clearHistory, setIsOpen }) => {
   return (
     <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 flex items-center justify-between text-white shadow-lg">
       <div className="flex items-center gap-3">
@@ -42,6 +44,6 @@ const AIAgentHeader = ({ setIsMinimized, clearHistory, setIsOpen }) => {
       </div>
     </div>
   );
-};
+});
 
 export default AIAgentHeader;

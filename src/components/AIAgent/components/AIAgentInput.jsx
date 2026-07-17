@@ -1,6 +1,8 @@
 import { FaMicrophone, FaMicrophoneSlash, FaPaperPlane } from "react-icons/fa";
+import React from "react";
 
-const AIAgentInput = ({
+// eslint-disable-next-line react/display-name
+const AIAgentInput = React.memo(({
   input,
   setInput,
   handleSend,
@@ -47,6 +49,6 @@ const AIAgentInput = ({
       </p>
     </div>
   );
-};
+});
 
 export default AIAgentInput;

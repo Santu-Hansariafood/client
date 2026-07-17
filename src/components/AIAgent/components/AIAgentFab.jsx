@@ -1,6 +1,8 @@
 import { FaRobot, FaTimes } from "react-icons/fa";
+import React from "react";
 
-const AIAgentFab = ({ isOpen, isMinimized, setIsMinimized, setIsOpen }) => {
+// eslint-disable-next-line react/display-name
+const AIAgentFab = React.memo(({ isOpen, isMinimized, setIsMinimized, setIsOpen }) => {
   return (
     <div className="flex flex-col items-end gap-3">
       {isMinimized && isOpen && (
@@ -41,6 +43,6 @@ const AIAgentFab = ({ isOpen, isMinimized, setIsMinimized, setIsOpen }) => {
       </button>
     </div>
   );
-};
+});
 
 export default AIAgentFab;

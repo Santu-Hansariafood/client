@@ -1,4 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+};
 
 export const useAIAgentLearning = () => {
   const [learningData, setLearningData] = useState(() => {
@@ -15,6 +23,28 @@ export const useAIAgentLearning = () => {
           customIntents: [], // New field for user-trained intents
         };
   });
+
+  // Ref to hold latest learningData for debounced save
+  const latestLearningDataRef = useRef(learningData);
+  useEffect(() => {
+    latestLearningDataRef.current = learningData;
+  }, [learningData]);
+
+  // Debounced save to localStorage
+  const debouncedSaveToLocalStorage = useRef(
+    debounce(() => {
+      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(latestLearningDataRef.current));
+    }, 500)
+  ).current;
+
+  // Save to localStorage whenever learningData changes (debounced)
+  useEffect(() => {
+    debouncedSaveToLocalStorage();
+    // Cleanup debounce on unmount
+    return () => {
+      debouncedSaveToLocalStorage.cancel?.();
+    };
+  }, [learningData, debouncedSaveToLocalStorage]);
 
   const INTENT_CLUSTERS = {
     commercial: [
@@ -66,13 +96,13 @@ export const useAIAgentLearning = () => {
     "fuck", "shit", "bitch", "asshole", "bastard", "idiot", "stupid", "dumb"
   ];
 
-  const checkSafety = (text) => {
+  const checkSafety = useCallback((text) => {
     const lowerText = text.toLowerCase();
     return HARMFUL_CONTENT_LIST.some(harm => lowerText.includes(harm));
-  };
+  }, []);
 
   // New function: Extract entities from query
-  const extractEntities = (query) => {
+  const extractEntities = useCallback((query) => {
     const lowerQuery = query.toLowerCase();
     const entities = {
       saudaNo: null,
@@ -90,9 +120,9 @@ export const useAIAgentLearning = () => {
     if (lorryMatch) entities.lorryNo = lorryMatch[1].toUpperCase();
 
     return entities;
-  };
+  }, []);
 
-  const trackInteraction = (text, responseContent = "") => {
+  const trackInteraction = useCallback((text, responseContent = "") => {
     if (!text || text.length < 3) return;
 
     const query = text.toLowerCase();
@@ -145,13 +175,12 @@ export const useAIAgentLearning = () => {
         workflowScores: newWorkflowScores,
       };
 
-      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
       return newState;
     });
-  };
+  }, [extractEntities]);
 
   // New function: Record user feedback
-  const recordFeedback = (query, response, isHelpful, correction = "") => {
+  const recordFeedback = useCallback((query, response, isHelpful, correction = "") => {
     setLearningData((prev) => {
       const newFeedback = [
         {
@@ -169,13 +198,12 @@ export const useAIAgentLearning = () => {
         userFeedback: newFeedback,
       };
 
-      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
       return newState;
     });
-  };
+  }, []);
 
   // New function: Train custom intent
-  const trainCustomIntent = (query, expectedAction) => {
+  const trainCustomIntent = useCallback((query, expectedAction) => {
     setLearningData((prev) => {
       const newCustomIntents = [
         ...prev.customIntents,
@@ -191,13 +219,12 @@ export const useAIAgentLearning = () => {
         customIntents: newCustomIntents,
       };
 
-      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
       return newState;
     });
-  };
+  }, []);
 
   // New function: Clear all learning data
-  const clearLearningData = () => {
+  const clearLearningData = useCallback(() => {
     setLearningData({
       recentQueries: [],
       frequentTopics: {},
@@ -208,9 +235,9 @@ export const useAIAgentLearning = () => {
       customIntents: [],
     });
     localStorage.removeItem("saria_ai_learning_v3");
-  };
+  }, []);
 
-  const getDynamicSuggestions = (
+  const getDynamicSuggestions = useCallback((
     contextSuggestions = [],
     responseText = "",
     currentPath = "",
@@ -340,7 +367,7 @@ export const useAIAgentLearning = () => {
     }
 
     return [...new Set(suggestions)].slice(0, 5);
-  };
+  }, [learningData]);
 
   // Helper function to get page-specific suggestions
   const getPageSpecificSuggestions = (path) => {

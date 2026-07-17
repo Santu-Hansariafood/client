@@ -50,7 +50,7 @@ export const useAIAgentCore = (userName) => {
     }
   }, []);
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     setMessages([
       {
         role: "assistant",
@@ -63,7 +63,7 @@ export const useAIAgentCore = (userName) => {
         ],
       },
     ]);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
