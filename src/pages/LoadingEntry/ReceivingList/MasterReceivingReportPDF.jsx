@@ -614,7 +614,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
     <Document title="Master Receiving Report">
       {entries.map((data, index) => {
         const rate = Number(data.actualRate || data.rate || 0);
-        const weight = Number(data.loadingWeight || 0);
+        const weight = (data.unloadingWeight && data.unloadingWeight > 0) ? Number(data.unloadingWeight) : Number(data.loadingWeight || 0);
         const baseAmount = weight * rate;
 
         const cdPercent = Number(data.cd || 0);
@@ -655,7 +655,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             !d.url.endsWith(".pdf"),
         );
 
-        const weight = (data.unloadingWeight && data.unloadingWeight > 0) ? data.unloadingWeight : data.loadingWeight || 0;
         const receivingBaseAmount = weight * (data.actualRate || 0);
         const totalAmount = cdPercent > 0 || gstPercent > 0 ? totalBillAmount : receivingBaseAmount;
         const amountInWords = numberToWords(totalAmount);

@@ -16,7 +16,7 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
   ) || 0;
   const secondClaim = Number(selectedEntry.secondClaim || 0);
   const otherCharges = Number(selectedEntry.otherCharges || 0);
-  const bankCharges = Number(selectedEntry.bankCharges || 200);
+  const bankCharges = Number(selectedEntry.bankCharges || 0);
   const totalDeductions = qualityClaims + secondClaim + otherCharges + bankCharges;
   const payableAmount = totalBillAmount - totalDeductions;
 
