@@ -138,7 +138,7 @@ export const useReceivingList = (userRole) => {
           attachmentCount,
           loadingDateFormatted: formatDate(entry.loadingDate),
           unloadingDateFormatted: formatDate(entry.unloadingDate),
-          amountFormatted: ((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2),
+          amountFormatted: ((entry.unloadingWeight && entry.unloadingWeight > 0 ? entry.unloadingWeight : entry.loadingWeight || 0) * (entry.actualRate || 0)).toFixed(2),
         };
       }),
     [loadingEntries],

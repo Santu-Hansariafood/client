@@ -655,8 +655,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             !d.url.endsWith(".pdf"),
         );
 
-        const receivingBaseAmount =
-          (data.unloadingWeight || 0) * (data.actualRate || 0);
+        const weight = (data.unloadingWeight && data.unloadingWeight > 0) ? data.unloadingWeight : data.loadingWeight || 0;
+        const receivingBaseAmount = weight * (data.actualRate || 0);
         const totalAmount = cdPercent > 0 || gstPercent > 0 ? totalBillAmount : receivingBaseAmount;
         const amountInWords = numberToWords(totalAmount);
 

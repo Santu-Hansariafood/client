@@ -3,7 +3,8 @@ import React from "react";
 const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
   if (!selectedEntry) return null;
 
-  const grossAmount = (selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0);
+  const weight = (selectedEntry.unloadingWeight && selectedEntry.unloadingWeight > 0) ? selectedEntry.unloadingWeight : selectedEntry.loadingWeight || 0;
+  const grossAmount = weight * (selectedEntry.actualRate || 0);
   const cdAmount = grossAmount * (cdValue / 100);
   const afterCD = grossAmount - cdAmount;
   const gstAmount = afterCD * (gstValue / 100);

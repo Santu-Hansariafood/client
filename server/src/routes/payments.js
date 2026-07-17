@@ -122,7 +122,10 @@ router.get("/", async (req, res) => {
       let bankCharges = 0;
 
       if (order) {
-        const weight = item.unloadingWeight || 0;
+        const weight =
+          item.unloadingWeight && item.unloadingWeight > 0
+            ? item.unloadingWeight
+            : item.loadingWeight || 0;
         const rate = order.rate || 0;
         const cdPercent = order.cd || 0;
         const gstPercent = order.gst || 0;
@@ -147,7 +150,10 @@ router.get("/", async (req, res) => {
         dueDate,
         isDue,
         rate: order.rate || 0,
-        amount: (item.unloadingWeight || 0) * (order.rate || 0),
+        amount:
+          (item.unloadingWeight && item.unloadingWeight > 0
+            ? item.unloadingWeight
+            : item.loadingWeight || 0) * (order.rate || 0),
         grossAmount,
         cdAmount,
         gstAmount,
@@ -427,7 +433,10 @@ router.get("/export/excel", async (req, res) => {
       let bankCharges = 0;
 
       if (order) {
-        const weight = item.unloadingWeight || 0;
+        const weight =
+          item.unloadingWeight && item.unloadingWeight > 0
+            ? item.unloadingWeight
+            : item.loadingWeight || 0;
         const rate = order.rate || 0;
         const cdPercent = order.cd || 0;
         const gstPercent = order.gst || 0;
@@ -452,7 +461,10 @@ router.get("/export/excel", async (req, res) => {
         dueDate,
         isDue,
         rate: order.rate || 0,
-        amount: (item.unloadingWeight || 0) * (order.rate || 0),
+        amount:
+          (item.unloadingWeight && item.unloadingWeight > 0
+            ? item.unloadingWeight
+            : item.loadingWeight || 0) * (order.rate || 0),
         grossAmount,
         cdAmount,
         gstAmount,

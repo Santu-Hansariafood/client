@@ -112,7 +112,7 @@ const ReceivingList = () => {
       formatDate(entry.loadingDate),
       formatDate(entry.unloadingDate),
       `Rs. ${entry.actualRate || 0}`,
-      `Rs. ${((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}`,
+      `Rs. ${((entry.unloadingWeight && entry.unloadingWeight > 0 ? entry.unloadingWeight : entry.loadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}`,
       entry.supplierCompany || "N/A",
       entry.buyerCompany || "N/A",
     ]);

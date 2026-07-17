@@ -308,7 +308,7 @@ router.post("/", authJwt, async (req, res) => {
             const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
             let netAmount = 0;
             if (selfOrder) {
-              const weight = entry.unloadingWeight || 0;
+              const weight = (entry.unloadingWeight && entry.unloadingWeight > 0) ? entry.unloadingWeight : entry.loadingWeight || 0;
               const rate = selfOrder.rate || 0;
               const cdPercent = selfOrder.cd || 0;
               const gstPercent = selfOrder.gst || 0;
@@ -427,7 +427,6 @@ const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
 
   const entryQuery = {
     paymentStatus: "pending",
-    unloadingWeight: { $gt: 0 },
     isRejected: { $ne: true },
   };
 
@@ -465,7 +464,7 @@ const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
   pendingEntries.forEach((entry) => {
     const order = saudaMap[entry.saudaNo];
     if (order) {
-      const weight = entry.unloadingWeight || 0;
+      const weight = (entry.unloadingWeight && entry.unloadingWeight > 0) ? entry.unloadingWeight : entry.loadingWeight || 0;
       const rate = order.rate || 0;
       const cdPercent = order.cd || 0;
       const gstPercent = order.gst || 0;

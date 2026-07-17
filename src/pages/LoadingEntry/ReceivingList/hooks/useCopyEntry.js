@@ -36,7 +36,8 @@ export const useCopyEntry = () => {
       console.error("Error fetching sauda for copy:", e);
     }
 
-    const grossAmount = (entry.unloadingWeight || 0) * (entry.actualRate || 0);
+    const weight = (entry.unloadingWeight && entry.unloadingWeight > 0) ? entry.unloadingWeight : entry.loadingWeight || 0;
+    const grossAmount = weight * (entry.actualRate || 0);
     const cdDeduction = grossAmount * (cdValue / 100);
     const taxableValue = grossAmount - cdDeduction;
     const gstAmount = taxableValue * (gstValue / 100);
