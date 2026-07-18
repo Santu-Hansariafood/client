@@ -97,6 +97,20 @@ const BuyerList = () => {
   const rows = useMemo(() => {
     return filteredData.map((buyer, index) => {
       const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+      
+      // Get commodities with brokerage
+      const commodityDisplay = (buyer.commodityIds || []).map(c => {
+        const cid = c?._id?.toString() || c?.toString();
+        const name = c?.name || "";
+        const brokerage = buyer.brokerageByName?.[name] ?? 
+          (buyer.brokerage?.[cid] !== undefined ? buyer.brokerage[cid] : null);
+        let display = toTitleCase(name || "N/A");
+        if (brokerage !== null && brokerage !== undefined) {
+          display += ` (${brokerage})`;
+        }
+        return display;
+      }).filter(Boolean).join(", ");
+
       return [
         <span key={`sl-${buyer._id || index}`} className="font-black text-slate-400">
           {slNo}
@@ -106,7 +120,7 @@ const BuyerList = () => {
         buyer.email?.join(", ").toLowerCase() || "N/A",
         (buyer.companyNames || []).join(", ") || "N/A",
         toTitleCase(buyer.group || "N/A"),
-        toTitleCase(buyer.commodity?.join(", ") || "N/A"),
+        commodityDisplay || "N/A",
         <div key={`consignee-${buyer._id || index}`} className="space-y-1">
           {buyer.consignee?.map((c) => (
             <div key={c.value} className="text-xs">

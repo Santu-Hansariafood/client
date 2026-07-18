@@ -487,9 +487,7 @@ const EditSellerDetails = ({
                 isMulti
                 placeholder="Select group associations"
                 onChange={(selected) =>
-                  setSelectedGroups(
-                    selected ? selected.map((s) => s.value) : [],
-                  )
+                  setSelectedGroups(selected || [])
                 }
               />
               <DataDropdown
@@ -498,7 +496,7 @@ const EditSellerDetails = ({
                 selectedOptions={selectedStatus}
                 placeholder="Select status"
                 onChange={(selected) =>
-                  setSelectedStatus(selected?.value || selected)
+                  setSelectedStatus(selected)
                 }
               />
             </div>

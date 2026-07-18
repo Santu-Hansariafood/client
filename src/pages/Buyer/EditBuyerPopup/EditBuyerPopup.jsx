@@ -16,6 +16,7 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
+const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
@@ -54,34 +55,76 @@ const buildConsigneeListFromBuyer = (buyer) => {
   return [];
 };
 
-const buildFormStateFromBuyer = (buyer) => ({
-  ...buyer,
-  mobile: Array.isArray(buyer.mobile) ? buyer.mobile : [""],
-  email: Array.isArray(buyer.email) ? buyer.email : [""],
-  password: buyer.password || "",
-  commodity: Array.isArray(buyer.commodity) ? buyer.commodity : [""],
-  consignee: buildConsigneeListFromBuyer(buyer),
-  selectedCompanies: buyer.companyIds?.length
-    ? (buyer.companyIds || []).map((id, idx) => ({
-        value: String(id),
-        label: (buyer.companyNames || [])[idx] || "Unknown Company",
-      }))
-    : buyer.companyId
-      ? [
-          {
-            value: String(buyer.companyId),
-            label: buyer.companyName || "Unknown Company",
-          },
-        ]
-      : [],
-  group: buyer.group || "",
-});
+const buildFormStateFromBuyer = (buyer, companiesData = []) => {
+  // Find the selected companies' data
+  const selectedCompanyIds = (buyer.companyIds || []).map(id => String(id));
+  const selectedCompaniesData = companiesData.filter(c => 
+    selectedCompanyIds.includes(String(c._id))
+  );
+  
+  // Create commodity options
+  const allCommoditiesMap = new Map();
+  selectedCompaniesData.forEach(c => {
+    (c.commodities || []).forEach(commodity => {
+      const cid = String(commodity._id || commodity.commodityId);
+      if (!allCommoditiesMap.has(cid)) {
+        allCommoditiesMap.set(cid, {
+          value: cid,
+          label: commodity.name,
+          brokerage: commodity.brokerage ?? 0
+        });
+      }
+    });
+  });
+  const commodityOptions = Array.from(allCommoditiesMap.values());
+  
+  // Build selected commodities
+  const existingCommodityIds = (buyer.commodityIds || []).map(id => String(id));
+  const selectedCommodities = commodityOptions.filter(c => 
+    existingCommodityIds.includes(c.value));
+  
+  // Build brokerage map
+  const brokerage = {};
+  commodityOptions.forEach(c => {
+    brokerage[c.value] = buyer.brokerage?.[c.value] ?? c.brokerage ?? 0;
+  });
+  (buyer.commodityIds || []).forEach(cid => {
+    const cidStr = String(cid);
+    if (buyer.brokerage?.[cidStr] !== undefined) {
+      brokerage[cidStr] = buyer.brokerage[cidStr];
+    }
+  });
+
+  return {
+    ...buyer,
+    mobile: Array.isArray(buyer.mobile) ? buyer.mobile : [""],
+    email: Array.isArray(buyer.email) ? buyer.email : [""],
+    password: buyer.password || "",
+    commodity: selectedCommodities,
+    brokerage,
+    consignee: buildConsigneeListFromBuyer(buyer),
+    selectedCompanies: buyer.companyIds?.length
+      ? (buyer.companyIds || []).map((id, idx) => ({
+          value: String(id),
+          label: (buyer.companyNames || [])[idx] || "Unknown Company",
+        }))
+      : buyer.companyId
+        ? [
+            {
+              value: String(buyer.companyId),
+              label: buyer.companyName || "Unknown Company",
+            },
+          ]
+        : [],
+    group: buyer.group || "",
+  };
+};
 
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [commodities, setCommodities] = useState([]);
+  const [commodityOptions, setCommodityOptions] = useState([]);
   const [allConsignees, setAllConsignees] = useState([]);
   const [companiesData, setCompaniesData] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
@@ -101,9 +144,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !buyerRef.current?._id) return;
-    setFormData(buildFormStateFromBuyer(buyerRef.current));
-  }, [isOpen, buyer?._id]);
+    if (!isOpen || !buyerRef.current?._id || companiesData.length === 0) return;
+    setFormData(buildFormStateFromBuyer(buyerRef.current, companiesData));
+  }, [isOpen, buyer?._id, companiesData]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -164,8 +207,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           await Promise.all([
             fetchAllPages("/groups", { signal }).catch(() => []),
             fetchAllPages("/commodities", { signal }).catch(() => []),
-            fetchAllPages("/consignees", { limit: 200, signal }).catch(() => []),
-            fetchAllPages("/companies", { limit: 200, signal }).catch(() => []),
+            fetchAllPages("/consignees", { signal }).catch(() => []),
+            fetchAllPages("/companies", { signal }).catch(() => []),
           ]);
 
         if (!alive) return;
@@ -177,12 +220,28 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
             label: group.groupName,
           })),
         );
-        setCommodities(
-          commoditiesData.map((c) => ({
-            value: String(c._id),
-            label: c.name,
-          })),
-        );
+        
+        // Initialize commodity options based on current buyer's selected companies
+        if (buyerRef.current) {
+          const selectedCompanyIds = (buyerRef.current.companyIds?.map(id => String(id)) || []);
+          const selectedCompaniesData = companiesRows.filter(c => 
+            selectedCompanyIds.includes(String(c._id))
+          );
+          const allCommoditiesMap = new Map();
+          selectedCompaniesData.forEach(c => {
+            (c.commodities || []).forEach(commodity => {
+              const cid = String(commodity._id || commodity.commodityId);
+              if (!allCommoditiesMap.has(cid)) {
+                allCommoditiesMap.set(cid, {
+                  value: cid,
+                  label: commodity.name,
+                  brokerage: commodity.brokerage ?? 0
+                });
+              }
+            });
+          });
+          setCommodityOptions(Array.from(allCommoditiesMap.values()));
+        }
         setAllConsignees(
           consigneesRows.map((c) => ({
             value: String(c._id),
@@ -289,16 +348,93 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   const handleCompanyChange = (selectedCompanies) => {
     const next = selectedCompanies || [];
+    
+    // Compute new commodity options
+    const selectedCompanyIds = next.map(c => String(c.value));
+    const selectedCompaniesData = companiesData.filter(c => 
+      selectedCompanyIds.includes(String(c._id))
+    );
+    
+    const allCommoditiesMap = new Map();
+    const allConsigneesMap = new Map();
+    const labelById = new Map(allConsignees.map(o => [String(o.value), o.label]));
+    
+    selectedCompaniesData.forEach(company => {
+      (company.commodities || []).forEach(c => {
+        const cid = String(c._id || c.commodityId);
+        if (!allCommoditiesMap.has(cid)) {
+          allCommoditiesMap.set(cid, {
+            value: cid,
+            label: c.name,
+            brokerage: c.brokerage ?? 0
+          });
+        }
+      });
+      
+      if (Array.isArray(company.consigneeIds)) {
+        company.consigneeIds.forEach((id, idx) => {
+          const consigneeId = String(id);
+          if (!allConsigneesMap.has(consigneeId)) {
+            const fromCompany = company.consignee?.[idx];
+            const label = (typeof fromCompany === "string" && fromCompany) ||
+              labelById.get(consigneeId) || "Consignee";
+            allConsigneesMap.set(consigneeId, { value: consigneeId, label });
+          }
+        });
+      }
+    });
+    
+    const newCommodityOptions = Array.from(allCommoditiesMap.values());
+    setCommodityOptions(newCommodityOptions);
+    setConsigneeOptions(Array.from(allConsigneesMap.values()).sort((a,b)=>a.label.localeCompare(b.label)));
+    
+    // Update brokerage map
+    const newBrokerage = {};
+    newCommodityOptions.forEach(c => {
+      newBrokerage[c.value] = c.brokerage ?? 0;
+    });
+    
+    // Auto-set group if one company selected
+    let autoGroup = null;
+    if (selectedCompaniesData.length === 1) {
+      const c = selectedCompaniesData[0];
+      if (c.groupId) {
+        autoGroup = groups.find(g => String(g.value) === String(c.groupId)) || null;
+      }
+    }
+
     setFormData((prevData) => {
       if (!prevData) return prevData;
       const prevKey = sortIdsKey(prevData.selectedCompanies);
       const nextKey = sortIdsKey(next);
+      
+      // Keep selected commodities that are still in the new options
+      const currentCommodityIds = new Set(newCommodityOptions.map(c => c.value));
+      const newSelectedCommodities = prevData.commodity?.filter(c => 
+        currentCommodityIds.has(typeof c === "object" ? c.value : c)
+      ) || [];
+      
       return {
         ...prevData,
         selectedCompanies: next,
+        commodity: newSelectedCommodities,
+        brokerage: newBrokerage,
+        group: autoGroup ? autoGroup.label : prevData.group,
+        groupId: autoGroup ? autoGroup.value : prevData.groupId,
         consignee: prevKey === nextKey ? prevData.consignee : [],
       };
     });
+  };
+
+  const handleBrokerageChange = (e, commodityId) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      brokerage: {
+        ...prev.brokerage,
+        [commodityId]: Number(value) || 0
+      }
+    }));
   };
 
   const addField = (name) => {
@@ -389,7 +525,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     try {
       const commodityIds = (formData.commodity || []).map((comm) => {
         if (typeof comm === "string") {
-          const match = commodities.find((c) => c.label === comm);
+          const match = commodityOptions.find((c) => c.label === comm);
           return match ? match.value : comm;
         }
         if (comm && typeof comm === "object") {
@@ -623,43 +759,42 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold tracking-wide text-slate-600">
-                      Commodities
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => addField("commodity")}
-                      className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
-                    >
-                      + Add commodity
-                    </button>
-                  </div>
-                  {(formData.commodity || []).map((comm, index) => (
-                    <div key={index} className="flex items-center gap-2 mb-2">
-                      <select
-                        value={comm}
-                        onChange={(e) =>
-                          handleArrayChange("commodity", index, e.target.value)
-                        }
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                      >
-                        <option value="">Select commodity</option>
-                        {(commodities || []).map((commodity) => (
-                          <option key={commodity.value} value={commodity.label}>
-                            {commodity.label}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => removeField("commodity", index)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white text-xs shadow-sm hover:bg-rose-600 transition"
-                      >
-                        ✖
-                      </button>
-                    </div>
-                  ))}
+                  <label className="text-xs font-semibold tracking-wide text-slate-600">
+                    Commodities
+                  </label>
+                  <DataDropdown
+                    options={commodityOptions}
+                    selectedOptions={formData.commodity}
+                    onChange={(selectedCommodities) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        commodity: selectedCommodities || []
+                      }));
+                    }}
+                    placeholder="Select commodities"
+                    isMulti
+                    isDisabled={referenceDataLoading || isSubmitting}
+                  />
+                  
+                  {(formData.commodity || []).map(comm => {
+                    const cid = typeof comm === "object" ? comm.value : comm;
+                    const label = typeof comm === "object" ? comm.label : comm;
+                    
+                    return (
+                      <div key={cid} className="mt-3">
+                        <label className="block text-xs font-semibold tracking-wide text-slate-600 mb-1">
+                          Brokerage for {label}
+                        </label>
+                        <DataInput
+                          placeholder="Brokerage per ton"
+                          value={formData.brokerage?.[cid] ?? 0}
+                          onChange={(e) => handleBrokerageChange(e, cid)}
+                          inputType="number"
+                          isDisabled={referenceDataLoading || isSubmitting}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
