@@ -78,8 +78,13 @@ const buildFormStateFromBuyer = (buyer, companiesData = []) => {
   });
   const commodityOptions = Array.from(allCommoditiesMap.values());
   
-  // Build selected commodities
-  const existingCommodityIds = (buyer.commodityIds || []).map(id => String(id));
+  // Build selected commodities - handle both cases: commodityIds is array of objects or array of strings
+  const existingCommodityIds = (buyer.commodityIds || []).map(id => {
+    if (typeof id === 'object' && id?._id) {
+      return String(id._id);
+    }
+    return String(id);
+  });
   const selectedCommodities = commodityOptions.filter(c => 
     existingCommodityIds.includes(c.value));
   
@@ -89,7 +94,7 @@ const buildFormStateFromBuyer = (buyer, companiesData = []) => {
     brokerage[c.value] = buyer.brokerage?.[c.value] ?? c.brokerage ?? 0;
   });
   (buyer.commodityIds || []).forEach(cid => {
-    const cidStr = String(cid);
+    const cidStr = typeof cid === 'object' && cid?._id ? String(cid._id) : String(cid);
     if (buyer.brokerage?.[cidStr] !== undefined) {
       brokerage[cidStr] = buyer.brokerage[cidStr];
     }
