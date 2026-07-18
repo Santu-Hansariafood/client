@@ -100,15 +100,11 @@ const BuyerList = () => {
       
       // Get commodities with brokerage
       const commodityDisplay = (buyer.commodityIds || []).map(c => {
-        const cid = c?._id?.toString() || c?.toString();
-        const name = c?.name || "";
+        const cid = c?._id?.toString();
+        const name = c?.name || "N/A";
         const brokerage = buyer.brokerageByName?.[name] ?? 
-          (buyer.brokerage?.[cid] !== undefined ? buyer.brokerage[cid] : null);
-        let display = toTitleCase(name || "N/A");
-        if (brokerage !== null && brokerage !== undefined) {
-          display += ` (${brokerage})`;
-        }
-        return display;
+          (buyer.brokerage?.[cid] !== undefined ? buyer.brokerage[cid] : 0);
+        return `${toTitleCase(name)} (${brokerage})`;
       }).filter(Boolean).join(", ");
 
       return [

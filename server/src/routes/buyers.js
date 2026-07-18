@@ -31,9 +31,17 @@ const mapBuyerForClient = (buyer) => {
     .map((c) => c?._id || c)
     .filter(Boolean);
   const groupId = buyer.groupId?._id || buyer.groupId || null;
+  
+  // Make commodityIds an array of { _id, name } instead of just ids
   const commodityIds = (buyer.commodityIds || [])
-    .map((c) => c?._id || c)
+    .map((c) => {
+      if (c && c._id) {
+        return { _id: c._id, name: c.name || "N/A" };
+      }
+      return null;
+    })
     .filter(Boolean);
+  
   const consigneeIds = (buyer.consigneeIds || [])
     .map((c) => c?._id || c)
     .filter(Boolean);
@@ -43,13 +51,13 @@ const mapBuyerForClient = (buyer) => {
   if (buyer.brokerage) {
     const rawBrokerage = buyer.brokerage;
     (buyer.commodityIds || []).forEach((c) => {
-      if (c && c.name) {
-        const cid = c._id ? c._id.toString() : c.toString();
+      if (c && c._id) {
+        const cid = c._id.toString();
         const value =
           typeof rawBrokerage.get === "function"
             ? rawBrokerage.get(cid)
             : rawBrokerage[cid];
-        if (value !== undefined) brokerageByName[c.name] = value;
+        brokerageByName[c.name || "N/A"] = value ?? 0;
       }
     });
   }
