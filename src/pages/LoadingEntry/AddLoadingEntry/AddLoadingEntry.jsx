@@ -15,7 +15,7 @@ import {
   FaTruckLoading,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
@@ -752,6 +752,7 @@ const AddLoadingEntry = () => {
       };
 
       await api.post("/loading-entries/bulk", payload);
+      clearApiCache();
       toast.success("All loading entries saved successfully");
       setActiveView("list");
       setSelectedOrder(null);
@@ -822,6 +823,7 @@ const AddLoadingEntry = () => {
     if (window.confirm("Are you sure you want to delete this loading entry?")) {
       try {
         await api.delete(`/loading-entries/${id}`);
+        clearApiCache();
         toast.success("Entry deleted successfully");
         const response = await api.get(
           `/loading-entries/sauda/${selectedOrder.saudaNo}`,
@@ -858,6 +860,7 @@ const AddLoadingEntry = () => {
       };
 
       await api.put(`/loading-entries/${editingEntry._id}`, payload);
+      clearApiCache();
       toast.success("Entry updated successfully");
       setActiveView("add");
       setEditingEntry(null);

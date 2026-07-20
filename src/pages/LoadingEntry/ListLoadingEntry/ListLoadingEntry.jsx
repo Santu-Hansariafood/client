@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { useLocation } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import {
   MdVisibility,
   MdEdit,
@@ -1040,6 +1040,7 @@ const ListLoadingEntry = () => {
       };
 
       await api.put(`/loading-entries/${editEntry._id}`, payload);
+      clearApiCache();
       toast.success("Entry updated successfully");
       setPopupType("");
       setSelectedEntry(null);
@@ -1066,6 +1067,7 @@ const ListLoadingEntry = () => {
 
       try {
         await api.delete(`/loading-entries/${id}`);
+        clearApiCache();
         toast.success("Entry deleted successfully");
         await fetchData();
       } catch (error) {
