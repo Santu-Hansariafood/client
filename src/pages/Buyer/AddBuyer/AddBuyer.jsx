@@ -155,8 +155,9 @@ const AddBuyer = () => {
       const newBrokerage = { ...formData.brokerage };
 
       selectedCommodities.forEach((commodity) => {
-        if (!newBrokerage[commodity.value]) {
-          newBrokerage[commodity.value] = "";
+        if (newBrokerage[commodity.value] === undefined || newBrokerage[commodity.value] === null || newBrokerage[commodity.value] === "") {
+          // Only set default if value is not already set or is empty
+          newBrokerage[commodity.value] = commodity.brokerage ?? 0;
         }
       });
 
@@ -461,8 +462,8 @@ const AddBuyer = () => {
                         placeholder={`Brokerage for ${commodity.label}`}
                         value={formData.brokerage[commodity.value]}
                         inputType="number"
-                        readOnly
-                        className="w-full rounded-lg border-gray-300 bg-gray-100"
+                        onChange={(e) => handleBrokerageChange(e, commodity.value)}
+                        className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       />
                     </div>
                   ))}
