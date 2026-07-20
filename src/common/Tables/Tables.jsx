@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
+import React from "react";
 
-const Tables = ({ headers, rows }) => {
+// eslint-disable-next-line react/display-name
+const Tables = React.memo(({ headers, rows }) => {
   return (
     <div className="w-full">
       <div className="md:hidden space-y-2.5">
@@ -83,7 +85,7 @@ const Tables = ({ headers, rows }) => {
       </div>
     </div>
   );
-};
+});
 
 Tables.propTypes = {
   headers: PropTypes.arrayOf(PropTypes.string).isRequired,

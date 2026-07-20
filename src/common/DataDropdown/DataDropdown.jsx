@@ -1,7 +1,9 @@
 import Select from "react-select";
 import PropTypes from "prop-types";
+import React, { useMemo } from "react";
 
-const DataDropdown = ({
+// eslint-disable-next-line react/display-name
+const DataDropdown = React.memo(({
   options = [],
   selectedOptions,
   onChange,
@@ -16,42 +18,46 @@ const DataDropdown = ({
   value,
   disabled = false,
 }) => {
-  const safeOptions = Array.isArray(options) ? options : [];
-  const formattedOptions = safeOptions
-    .map((option) => ({
-      ...option,
-      value: option?.value || option?._id || option,
-      label: option?.label || option?.name || option?.groupName || option,
-    }))
-    .sort((a, b) => {
-      if (disableSorting) return 0;
-      return String(a.label || "").localeCompare(String(b.label || ""));
-    });
+  const formattedOptions = useMemo(() => {
+    const safeOptions = Array.isArray(options) ? options : [];
+    return safeOptions
+      .map((option) => ({
+        ...option,
+        value: option?.value || option?._id || option,
+        label: option?.label || option?.name || option?.groupName || option,
+      }))
+      .sort((a, b) => {
+        if (disableSorting) return 0;
+        return String(a.label || "").localeCompare(String(b.label || ""));
+      });
+  }, [options, disableSorting]);
 
-  const selectedValue = isMulti
-    ? Array.isArray(selectedOptions)
-      ? selectedOptions
-          .map((so) =>
-            formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
+  const selectedValue = useMemo(() => {
+    return isMulti
+      ? Array.isArray(selectedOptions)
+        ? selectedOptions
+            .map((so) =>
+              formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
+            )
+            .filter(Boolean)
+        : [selectedOptions]
+            .filter(Boolean)
+            .map((so) =>
+              formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
+            )
+            .filter(Boolean)
+      : Array.isArray(selectedOptions)
+        ? formattedOptions.find(
+            (fo) =>
+              fo.value === (selectedOptions[0]?.value ?? selectedOptions[0]),
           )
-          .filter(Boolean)
-      : [selectedOptions]
-          .filter(Boolean)
-          .map((so) =>
-            formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
-          )
-          .filter(Boolean)
-    : Array.isArray(selectedOptions)
-      ? formattedOptions.find(
-          (fo) =>
-            fo.value === (selectedOptions[0]?.value ?? selectedOptions[0]),
-        )
-      : typeof selectedOptions === "string" ||
-          typeof selectedOptions === "number"
-        ? formattedOptions.find((fo) => fo.value === selectedOptions)
-        : formattedOptions.find(
-            (fo) => fo.value === (selectedOptions?.value ?? selectedOptions),
-          );
+        : typeof selectedOptions === "string" ||
+            typeof selectedOptions === "number"
+          ? formattedOptions.find((fo) => fo.value === selectedOptions)
+          : formattedOptions.find(
+              (fo) => fo.value === (selectedOptions?.value ?? selectedOptions),
+            );
+  }, [isMulti, selectedOptions, formattedOptions]);
 
   return (
     <div className="mb-5 w-full">
@@ -175,7 +181,7 @@ const DataDropdown = ({
       </div>
     </div>
   );
-};
+});
 
 DataDropdown.propTypes = {
   options: PropTypes.arrayOf(

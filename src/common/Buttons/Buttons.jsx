@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
+import React, { useMemo } from "react";
 
-const Buttons = ({
+// eslint-disable-next-line react/display-name
+const Buttons = React.memo(({
   label,
   onClick = () => {},
   type = "button",
@@ -43,7 +45,7 @@ const Buttons = ({
       {label}
     </button>
   );
-};
+});
 
 Buttons.propTypes = {
   label: PropTypes.string.isRequired,

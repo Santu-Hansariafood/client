@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { FaArrowRight, FaSpinner, FaCopy, FaCheck } from "react-icons/fa";
+import React from "react";
 
-const AIAgentMessages = ({
+// eslint-disable-next-line react/display-name
+const AIAgentMessages = React.memo(({
   messages,
   isLoadingData,
   thinkingPath,
@@ -10,11 +12,11 @@ const AIAgentMessages = ({
 }) => {
   const [copiedIndex, setCopiedIndex] = useState(null);
 
-  const handleCopy = (text, index) => {
+  const handleCopy = useCallback((text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
-  };
+  }, []);
 
   return (
     <div
@@ -93,6 +95,6 @@ const AIAgentMessages = ({
       )}
     </div>
   );
-};
+});
 
 export default AIAgentMessages;

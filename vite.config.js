@@ -5,7 +5,11 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   envDir: ".",
   plugins: [
-    react(),
+    react({
+      babel: {
+        compact: true,
+      },
+    }),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
@@ -109,6 +113,17 @@ export default defineConfig({
     }),
   ],
   build: {
+    target: "es2020",
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    cssMinify: true,
+    sourcemap: false,
+    reportCompressedSize: true,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
