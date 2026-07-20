@@ -16,9 +16,7 @@ import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import DataDropdown from "../../common/DataDropdown/DataDropdown";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
-const Pagination = lazy(
-  () => import("../../common/Paginations/Paginations"),
-);
+const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
 const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
@@ -61,10 +59,12 @@ const SellerBrokerage = () => {
         // The backend returns 'sellers', and each seller has 'sellerName'
         // We also want to include all unique supplierCompany names from the sellers' companies if needed,
         // but for now let's fix the property name and mapping.
-        const sellers = (response.data?.sellers || []).map(s => ({
-          value: s.sellerName,
-          label: s.sellerName
-        })).sort((a, b) => a.label.localeCompare(b.label));
+        const sellers = (response.data?.sellers || [])
+          .map((s) => ({
+            value: s.sellerName,
+            label: s.sellerName,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
         setSellerOptions(sellers);
       } catch (error) {
         console.error("Error fetching filters:", error);
@@ -97,7 +97,14 @@ const SellerBrokerage = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, debouncedSearchInput, startDate, endDate, selectedSeller]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    debouncedSearchInput,
+    startDate,
+    endDate,
+    selectedSeller,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -226,125 +233,128 @@ const SellerBrokerage = () => {
   }, [searchInput, startDate, endDate, selectedSeller, selectedIds, exporting]);
 
   const headers = [
-      <input
-        key="select-all"
-        type="checkbox"
-        className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
-        checked={data.length > 0 && selectedIds.length === data.length}
-        onChange={handleSelectAll}
-      />,
-      "Sl No",
-      "Loading Date",
-      "Sauda No",
-      "Bill No",
-      "Lorry No",
-      "Seller Name",
-      "Buyer Company",
-      "Commodity",
-      "Loading Wt",
-      "Unloading Wt",
-      "Calculated Wt",
-      "Brokerage / Ton",
-      "Total Brokerage",
-    ];
+    <input
+      key="select-all"
+      type="checkbox"
+      className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+      checked={data.length > 0 && selectedIds.length === data.length}
+      onChange={handleSelectAll}
+    />,
+    "Sl No",
+    "Loading Date",
+    "Sauda No",
+    "Bill No",
+    "Lorry No",
+    "Seller Name",
+    "Buyer Company",
+    "Commodity",
+    "Loading Wt",
+    "Unloading Wt",
+    "Calculated Wt",
+    "Brokerage / Ton",
+    "Total Brokerage",
+  ];
 
-    const rows = useMemo(
-      () =>
-        data.map((item, index) => {
-          const slNo = (currentPage - 1) * itemsPerPage + index + 1;
-          const formattedDate = item.loadingDate
-            ? new Date(item.loadingDate).toLocaleDateString("en-GB")
-            : "N/A";
-          const calculatedWeight = item.calculatedWeight || 
-            (item.unloadingWeight || item.unloadingWeight === 0 ? item.unloadingWeight : item.loadingWeight);
+  const rows = useMemo(
+    () =>
+      data.map((item, index) => {
+        const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+        const formattedDate = item.loadingDate
+          ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+          : "N/A";
+        const calculatedWeight =
+          item.calculatedWeight ||
+          (item.unloadingWeight || item.unloadingWeight === 0
+            ? item.unloadingWeight
+            : item.loadingWeight);
 
-          return [
-            <input
-              key={`select-${item._id}`}
-              type="checkbox"
-              className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
-              checked={selectedIds.includes(item._id)}
-              onChange={() => handleSelect(item._id)}
-            />,
-            <span key={`sl-${item._id}`} className="font-black text-slate-400">
-              {slNo}
-            </span>,
-            <span
-              key={`date-${item._id}`}
-              className="font-bold text-slate-600 text-[11px]"
-            >
-              {formattedDate}
-            </span>,
-            <span
-              key={`sauda-${item._id}`}
-              className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 text-[11px]"
-            >
-              {item.saudaNo || "N/A"}
-            </span>,
-            <span
-              key={`bill-${item._id}`}
-              className="font-black text-slate-900 text-[11px] uppercase tracking-tighter"
-            >
-              {item.billNumber || "---"}
-            </span>,
-            <span
-              key={`lorry-${item._id}`}
-              className="font-bold text-slate-700 text-[11px]"
-            >
-              {item.lorryNumber || "N/A"}
-            </span>,
-            <span
-              key={`seller-${item._id}`}
-              className="font-bold text-slate-800 text-[11px]"
-            >
-              {item.sellerAccount || "N/A"}
-            </span>,
-            <span
-              key={`buyer-${item._id}`}
-              className="font-medium text-slate-600 text-[11px]"
-            >
-              {item.buyerCompany || "N/A"}
-            </span>,
-            <span
-              key={`comm-${item._id}`}
-              className="font-bold text-slate-700 text-[11px]"
-            >
-              {item.commodity || "N/A"}
-            </span>,
-            <span
-              key={`lwt-${item._id}`}
-              className="font-medium text-slate-600 text-[11px]"
-            >
-              {item.loadingWeight || 0} T
-            </span>,
-            <span
-              key={`uwt-${item._id}`}
-              className="font-black text-slate-900 text-[11px]"
-            >
-              {item.unloadingWeight || 0} T
-            </span>,
-            <span
-              key={`cwt-${item._id}`}
-              className="font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 text-[11px]"
-            >
-              {calculatedWeight || 0} T
-            </span>,
-            <span
-              key={`brk-${item._id}`}
-              className="font-bold text-orange-600 text-[11px]"
-            >
-              ₹{item.brokerageRate || 0} / T
-            </span>,
-            <span
-              key={`total-${item._id}`}
-              className="font-black text-orange-700 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 text-[11px]"
-            >
-              ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
-            </span>,
-          ];
-        }),
-      [data, currentPage, itemsPerPage, selectedIds],
-    );
+        return [
+          <input
+            key={`select-${item._id}`}
+            type="checkbox"
+            className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+            checked={selectedIds.includes(item._id)}
+            onChange={() => handleSelect(item._id)}
+          />,
+          <span key={`sl-${item._id}`} className="font-black text-slate-400">
+            {slNo}
+          </span>,
+          <span
+            key={`date-${item._id}`}
+            className="font-bold text-slate-600 text-[11px]"
+          >
+            {formattedDate}
+          </span>,
+          <span
+            key={`sauda-${item._id}`}
+            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 text-[11px]"
+          >
+            {item.saudaNo || "N/A"}
+          </span>,
+          <span
+            key={`bill-${item._id}`}
+            className="font-black text-slate-900 text-[11px] uppercase tracking-tighter"
+          >
+            {item.billNumber || "---"}
+          </span>,
+          <span
+            key={`lorry-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
+            {item.lorryNumber || "N/A"}
+          </span>,
+          <span
+            key={`seller-${item._id}`}
+            className="font-bold text-slate-800 text-[11px]"
+          >
+            {item.sellerAccount || "N/A"}
+          </span>,
+          <span
+            key={`buyer-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
+            {item.buyerCompany || "N/A"}
+          </span>,
+          <span
+            key={`comm-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
+            {item.commodity || "N/A"}
+          </span>,
+          <span
+            key={`lwt-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
+            {item.loadingWeight || 0} T
+          </span>,
+          <span
+            key={`uwt-${item._id}`}
+            className="font-black text-slate-900 text-[11px]"
+          >
+            {item.unloadingWeight || 0} T
+          </span>,
+          <span
+            key={`cwt-${item._id}`}
+            className="font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 text-[11px]"
+          >
+            {calculatedWeight || 0} T
+          </span>,
+          <span
+            key={`brk-${item._id}`}
+            className="font-bold text-orange-600 text-[11px]"
+          >
+            ₹{item.brokerageRate || 0} / T
+          </span>,
+          <span
+            key={`total-${item._id}`}
+            className="font-black text-orange-700 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 text-[11px]"
+          >
+            ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
+          </span>,
+        ];
+      }),
+    [data, currentPage, itemsPerPage, selectedIds],
+  );
 
   return (
     <Suspense fallback={<Loading />}>
@@ -412,9 +422,15 @@ const SellerBrokerage = () => {
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
                         End Date
                       </span>
-                      <DateSelector selectedDate={endDate} onChange={setEndDate} />
+                      <DateSelector
+                        selectedDate={endDate}
+                        onChange={setEndDate}
+                      />
                     </div>
-                    {(startDate || endDate || searchInput || selectedSeller) && (
+                    {(startDate ||
+                      endDate ||
+                      searchInput ||
+                      selectedSeller) && (
                       <button
                         onClick={handleClearFilters}
                         className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"

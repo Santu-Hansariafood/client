@@ -1,28 +1,35 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  FaRegCalendarAlt, 
-  FaBookmark, 
-  FaRegBookmark, 
-  FaEye, 
-  FaChevronLeft, 
-  FaChevronRight, 
+import {
+  FaRegCalendarAlt,
+  FaBookmark,
+  FaRegBookmark,
+  FaEye,
+  FaChevronLeft,
+  FaChevronRight,
   FaFilter,
   FaSearch,
   FaNewspaper,
-  FaTags
+  FaTags,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
-const CATEGORIES = ["All", "General", "Commodity", "Logistics", "Market Analysis", "Company Update"];
+const CATEGORIES = [
+  "All",
+  "General",
+  "Commodity",
+  "Logistics",
+  "Market Analysis",
+  "Company Update",
+];
 
 const NewsArchive = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [blogs, setBlogs] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +52,7 @@ const NewsArchive = () => {
         page,
         limit: 9,
         date: filterDate,
-        category: category === "All" ? "" : category
+        category: category === "All" ? "" : category,
       };
       const res = await api.get("/blogs", { params });
       setBlogs(res.data.blogs);
@@ -100,11 +107,13 @@ const NewsArchive = () => {
             </div>
             <div>
               <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase">
-                {viewMode === "archive" ? "Hansaria News Archive" : "My Bookmarks"}
+                {viewMode === "archive"
+                  ? "Hansaria News Archive"
+                  : "My Bookmarks"}
               </h1>
               <p className="text-sm text-slate-500 font-medium">
-                {viewMode === "archive" 
-                  ? "Browse historical news and daily bulletins" 
+                {viewMode === "archive"
+                  ? "Browse historical news and daily bulletins"
                   : "Your curated list of saved news and reports"}
               </p>
             </div>
@@ -112,17 +121,27 @@ const NewsArchive = () => {
 
           <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
             <button
-              onClick={() => { setViewMode("archive"); setPage(1); }}
+              onClick={() => {
+                setViewMode("archive");
+                setPage(1);
+              }}
               className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                viewMode === "archive" ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100" : "text-slate-400 hover:text-slate-600"
+                viewMode === "archive"
+                  ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
               All News
             </button>
             <button
-              onClick={() => { setViewMode("bookmarks"); setPage(1); }}
+              onClick={() => {
+                setViewMode("bookmarks");
+                setPage(1);
+              }}
               className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                viewMode === "bookmarks" ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100" : "text-slate-400 hover:text-slate-600"
+                viewMode === "bookmarks"
+                  ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
               Saved
@@ -138,7 +157,10 @@ const NewsArchive = () => {
               <input
                 type="date"
                 value={filterDate}
-                onChange={(e) => { setFilterDate(e.target.value); setPage(1); }}
+                onChange={(e) => {
+                  setFilterDate(e.target.value);
+                  setPage(1);
+                }}
                 className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10"
               />
             </div>
@@ -148,13 +170,16 @@ const NewsArchive = () => {
             <div className="flex items-center gap-3">
               <FaTags className="text-slate-400" />
               <div className="flex gap-2 overflow-x-auto max-w-md scrollbar-hide">
-                {CATEGORIES.map(cat => (
+                {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => { setCategory(cat); setPage(1); }}
+                    onClick={() => {
+                      setCategory(cat);
+                      setPage(1);
+                    }}
                     className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border ${
-                      category === cat 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                      category === cat
+                        ? "bg-blue-600 text-white border-blue-600"
                         : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
                     }`}
                   >
@@ -164,9 +189,13 @@ const NewsArchive = () => {
               </div>
             </div>
 
-            { (filterDate || category !== "All") && (
+            {(filterDate || category !== "All") && (
               <button
-                onClick={() => { setFilterDate(""); setCategory("All"); setPage(1); }}
+                onClick={() => {
+                  setFilterDate("");
+                  setCategory("All");
+                  setPage(1);
+                }}
                 className="ml-auto text-rose-500 text-[10px] font-black uppercase hover:underline"
               >
                 Clear Filters
@@ -189,7 +218,7 @@ const NewsArchive = () => {
                 className="group bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer flex flex-col"
               >
                 <div className="h-52 bg-slate-100 relative overflow-hidden">
-                  {(blog.images?.[0] || blog.imageUrl) ? (
+                  {blog.images?.[0] || blog.imageUrl ? (
                     <img
                       src={blog.images?.[0] || blog.imageUrl}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -208,12 +237,16 @@ const NewsArchive = () => {
                   <button
                     onClick={(e) => handleBookmark(e, blog._id)}
                     className={`absolute top-4 right-4 w-10 h-10 rounded-2xl flex items-center justify-center backdrop-blur transition-all ${
-                      bookmarks.some(b => b._id === blog._id)
+                      bookmarks.some((b) => b._id === blog._id)
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
                         : "bg-white/90 text-slate-400 hover:text-blue-600 shadow-sm"
                     }`}
                   >
-                    {bookmarks.some(b => b._id === blog._id) ? <FaBookmark /> : <FaRegBookmark />}
+                    {bookmarks.some((b) => b._id === blog._id) ? (
+                      <FaBookmark />
+                    ) : (
+                      <FaRegBookmark />
+                    )}
                   </button>
                 </div>
 
@@ -221,7 +254,11 @@ const NewsArchive = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
                       <FaRegCalendarAlt size={12} className="text-slate-300" />
-                      {new Date(blog.date).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(blog.date).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                     <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-400">
                       <FaEye size={12} className="text-slate-300" />
@@ -232,7 +269,7 @@ const NewsArchive = () => {
                   <h3 className="text-xl font-bold text-slate-800 line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors">
                     {blog.title}
                   </h3>
-                  
+
                   <p className="text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed mb-6">
                     {blog.heading}
                   </p>
@@ -240,8 +277,15 @@ const NewsArchive = () => {
                   <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
                     <div className="flex -space-x-2">
                       {blog.images?.slice(0, 3).map((img, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-slate-200">
-                          <img src={img} className="w-full h-full object-cover" alt="" />
+                        <div
+                          key={i}
+                          className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-slate-200"
+                        >
+                          <img
+                            src={img}
+                            className="w-full h-full object-cover"
+                            alt=""
+                          />
                         </div>
                       ))}
                       {blog.images?.length > 3 && (
@@ -263,8 +307,12 @@ const NewsArchive = () => {
                 <FaSearch size={32} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-800">No news items found</h3>
-                <p className="text-slate-500 text-sm font-medium">Try adjusting your filters or search for another date</p>
+                <h3 className="text-xl font-bold text-slate-800">
+                  No news items found
+                </h3>
+                <p className="text-slate-500 text-sm font-medium">
+                  Try adjusting your filters or search for another date
+                </p>
               </div>
             </div>
           )}
@@ -275,9 +323,11 @@ const NewsArchive = () => {
           <div className="flex justify-center items-center gap-4 pt-10">
             <button
               disabled={page === 1}
-              onClick={() => setPage(prev => prev - 1)}
+              onClick={() => setPage((prev) => prev - 1)}
               className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
-                page === 1 ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                page === 1
+                  ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
               }`}
             >
               <FaChevronLeft />
@@ -288,8 +338,8 @@ const NewsArchive = () => {
                   key={i}
                   onClick={() => setPage(i + 1)}
                   className={`w-12 h-12 rounded-2xl text-xs font-black transition-all ${
-                    page === i + 1 
-                      ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-200" 
+                    page === i + 1
+                      ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-200"
                       : "bg-white text-slate-400 border border-slate-200 hover:border-slate-300"
                   }`}
                 >
@@ -299,9 +349,11 @@ const NewsArchive = () => {
             </div>
             <button
               disabled={page === totalPages}
-              onClick={() => setPage(prev => prev + 1)}
+              onClick={() => setPage((prev) => prev + 1)}
               className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
-                page === totalPages ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                page === totalPages
+                  ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
               }`}
             >
               <FaChevronRight />

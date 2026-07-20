@@ -16,7 +16,7 @@ const DataDropdown = lazy(
 const EditCommodity = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  
+
   const [commodityName, setCommodityName] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [extraFields, setExtraFields] = useState([{ parameter: "" }]);

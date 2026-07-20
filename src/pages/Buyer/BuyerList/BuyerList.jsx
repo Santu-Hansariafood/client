@@ -8,8 +8,8 @@ import { FaUsers } from "react-icons/fa";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
@@ -47,7 +47,7 @@ const BuyerList = () => {
         });
         const data = response.data?.data || [];
         const total = response.data?.total || 0;
-        
+
         setBuyersData(data);
         setFilteredData(data);
         setTotalItems(total);
@@ -67,13 +67,18 @@ const BuyerList = () => {
 
   const handleDelete = async (index) => {
     const buyerToDelete = filteredData[index];
-    if (!window.confirm(`Are you sure you want to delete ${buyerToDelete.name}?`)) return;
+    if (
+      !window.confirm(`Are you sure you want to delete ${buyerToDelete.name}?`)
+    )
+      return;
 
     try {
       await api.delete(`/buyers/${buyerToDelete._id}`);
       toast.success("Buyer deleted successfully");
       // Re-fetch current page
-      const response = await api.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
+      const response = await api.get(
+        `/buyers?page=${currentPage}&limit=${itemsPerPage}`,
+      );
       setBuyersData(response.data?.data || []);
       setFilteredData(response.data?.data || []);
       setTotalItems(response.data?.total || 0);
@@ -85,7 +90,7 @@ const BuyerList = () => {
   const handleUpdate = (updatedBuyer) => {
     const updateData = (list) =>
       list.map((buyer) =>
-        buyer._id === updatedBuyer._id ? updatedBuyer : buyer
+        buyer._id === updatedBuyer._id ? updatedBuyer : buyer,
       );
 
     setBuyersData(updateData(buyersData));
@@ -97,18 +102,24 @@ const BuyerList = () => {
   const rows = useMemo(() => {
     return filteredData.map((buyer, index) => {
       const slNo = (currentPage - 1) * itemsPerPage + index + 1;
-      
-      // Get commodities with brokerage
-      const commodityDisplay = (buyer.commodityIds || []).map(c => {
-        const cid = c?._id?.toString();
-        const name = c?.name || "N/A";
-        const brokerage = buyer.brokerageByName?.[name] ?? 
-          (buyer.brokerage?.[cid] !== undefined ? buyer.brokerage[cid] : 0);
-        return `${toTitleCase(name)} (${brokerage})`;
-      }).filter(Boolean).join(", ");
+
+      const commodityDisplay = (buyer.commodityIds || [])
+        .map((c) => {
+          const cid = c?._id?.toString();
+          const name = c?.name || "N/A";
+          const brokerage =
+            buyer.brokerageByName?.[name] ??
+            (buyer.brokerage?.[cid] !== undefined ? buyer.brokerage[cid] : 0);
+          return `${toTitleCase(name)} (${brokerage})`;
+        })
+        .filter(Boolean)
+        .join(", ");
 
       return [
-        <span key={`sl-${buyer._id || index}`} className="font-black text-slate-400">
+        <span
+          key={`sl-${buyer._id || index}`}
+          className="font-black text-slate-400"
+        >
           {slNo}
         </span>,
         toTitleCase(buyer.name || "N/A"),
@@ -206,11 +217,11 @@ const BuyerList = () => {
             )}
           </div>
         </div>
-          <PopupBox
-            isOpen={isPopupOpen}
-            onClose={() => setIsPopupOpen(false)}
-            title="Buyer Details"
-          >
+        <PopupBox
+          isOpen={isPopupOpen}
+          onClose={() => setIsPopupOpen(false)}
+          title="Buyer Details"
+        >
           {selectedBuyer && (
             <div>
               <p>
@@ -248,14 +259,14 @@ const BuyerList = () => {
               </p>
             </div>
           )}
-          </PopupBox>
+        </PopupBox>
 
-          <EditBuyerPopup
-            buyer={selectedBuyer}
-            isOpen={isEditPopupOpen}
-            onClose={() => setIsEditPopupOpen(false)}
-            onUpdate={handleUpdate}
-          />
+        <EditBuyerPopup
+          buyer={selectedBuyer}
+          isOpen={isEditPopupOpen}
+          onClose={() => setIsEditPopupOpen(false)}
+          onUpdate={handleUpdate}
+        />
       </AdminPageShell>
     </Suspense>
   );

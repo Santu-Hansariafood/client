@@ -139,7 +139,12 @@ const ListCompany = () => {
         (commodity?.parameters || [])
           .map((param) =>
             (param.values || [])
-              .filter((val) => (val.baseValue || val.maxValue) && val.baseValue !== "0" && val.maxValue !== "0")
+              .filter(
+                (val) =>
+                  (val.baseValue || val.maxValue) &&
+                  val.baseValue !== "0" &&
+                  val.maxValue !== "0",
+              )
               .map((val) => {
                 let label = param.parameter;
                 if (val.baseValue) label += ` Base:${val.baseValue}`;
@@ -266,10 +271,11 @@ const ListCompany = () => {
                             <ul className="ml-4">
                               {(param.values || []).map((val, vIndex) => (
                                 <li key={vIndex}>
-                                  {val.baseValue && `Base: ${val.baseValue}`} 
-                                  {val.baseValue && val.maxValue && ", "} 
-                                  {val.maxValue && `Max: ${val.maxValue}`} 
-                                  (Claim: {val.claimRatioLeft}:{val.claimRatioRight})
+                                  {val.baseValue && `Base: ${val.baseValue}`}
+                                  {val.baseValue && val.maxValue && ", "}
+                                  {val.maxValue && `Max: ${val.maxValue}`}
+                                  (Claim: {val.claimRatioLeft}:
+                                  {val.claimRatioRight})
                                 </li>
                               ))}
                             </ul>

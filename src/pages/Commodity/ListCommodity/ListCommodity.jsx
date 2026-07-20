@@ -97,7 +97,8 @@ const ListCommodity = () => {
           key="params"
           className="max-w-xs whitespace-normal break-words text-xs leading-relaxed"
         >
-          {Array.isArray(commodity.parameters) && commodity.parameters.length > 0
+          {Array.isArray(commodity.parameters) &&
+          commodity.parameters.length > 0
             ? commodity.parameters.map((param, i) => (
                 <span key={i}>
                   {param.parameter}
@@ -113,7 +114,7 @@ const ListCommodity = () => {
           onDelete={() => handleDelete(commodity._id)}
         />,
       ]),
-    [filteredData, currentPage]
+    [filteredData, currentPage],
   );
 
   const tableHeaders = [

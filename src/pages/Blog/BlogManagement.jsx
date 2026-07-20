@@ -16,7 +16,13 @@ import api from "../../utils/apiClient/apiClient";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
 
-const CATEGORIES = ["General", "Commodity", "Logistics", "Market Analysis", "Company Update"];
+const CATEGORIES = [
+  "General",
+  "Commodity",
+  "Logistics",
+  "Market Analysis",
+  "Company Update",
+];
 
 const BlogManagement = () => {
   const [blogs, setBlogs] = useState([]);
@@ -147,7 +153,8 @@ const BlogManagement = () => {
     setFormData((prev) => ({
       ...prev,
       images: newImages,
-      imageUrl: prev.imageUrl === removedUrl ? (newImages[0] || "") : prev.imageUrl,
+      imageUrl:
+        prev.imageUrl === removedUrl ? newImages[0] || "" : prev.imageUrl,
     }));
   };
 
@@ -231,7 +238,7 @@ const BlogManagement = () => {
                 className="text-[10px] font-black uppercase bg-transparent outline-none text-slate-600"
               />
               {filterDate && (
-                <button 
+                <button
                   onClick={() => setFilterDate("")}
                   className="text-rose-500 hover:text-rose-700"
                 >
@@ -265,7 +272,12 @@ const BlogManagement = () => {
                   <input
                     type="checkbox"
                     checked={formData.isPublished}
-                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        isPublished: e.target.checked,
+                      })
+                    }
                     className="w-4 h-4"
                   />
                   Published
@@ -274,11 +286,15 @@ const BlogManagement = () => {
                   <FaTags className="text-slate-400" size={12} />
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     className="text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/10"
                   >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -374,14 +390,16 @@ const BlogManagement = () => {
                     <div className="flex items-center gap-4 mb-4">
                       <span
                         className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded ${
-                          block.type === "subheading" 
-                            ? "bg-emerald-100 text-emerald-700" 
+                          block.type === "subheading"
+                            ? "bg-emerald-100 text-emerald-700"
                             : block.type === "list"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-blue-100 text-blue-700"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-blue-100 text-blue-700"
                         }`}
                       >
-                        {block.type === "list" ? `${block.listType} list` : block.type}
+                        {block.type === "list"
+                          ? `${block.listType} list`
+                          : block.type}
                       </span>
                       <div className="flex items-center gap-2">
                         <button
@@ -407,7 +425,9 @@ const BlogManagement = () => {
                         <input
                           type="color"
                           value={block.color || "#334155"}
-                          onChange={(e) => handleBlockChange(index, "color", e.target.value)}
+                          onChange={(e) =>
+                            handleBlockChange(index, "color", e.target.value)
+                          }
                           className="w-8 h-8 rounded cursor-pointer border border-slate-200"
                           title="Text Color"
                         />
@@ -419,28 +439,43 @@ const BlogManagement = () => {
                         <input
                           type="text"
                           value={block.text}
-                          onChange={(e) => handleBlockChange(index, "text", e.target.value)}
+                          onChange={(e) =>
+                            handleBlockChange(index, "text", e.target.value)
+                          }
                           placeholder="List title (optional)..."
                           className="w-full h-10 px-4 rounded-xl border border-slate-200 text-xs font-bold"
                           style={{ color: block.color || "#334155" }}
                         />
                         <div className="space-y-2 ml-4">
                           {block.listItems.map((item, itemIdx) => (
-                            <div key={itemIdx} className="flex items-center gap-2">
+                            <div
+                              key={itemIdx}
+                              className="flex items-center gap-2"
+                            >
                               <span className="text-xs font-bold text-slate-400 w-4">
-                                {block.listType === "bullet" ? "•" : `${itemIdx + 1}.`}
+                                {block.listType === "bullet"
+                                  ? "•"
+                                  : `${itemIdx + 1}.`}
                               </span>
                               <input
                                 type="text"
                                 value={item}
-                                onChange={(e) => handleListItemChange(index, itemIdx, e.target.value)}
+                                onChange={(e) =>
+                                  handleListItemChange(
+                                    index,
+                                    itemIdx,
+                                    e.target.value,
+                                  )
+                                }
                                 className="flex-1 h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium"
                                 placeholder={`Item ${itemIdx + 1}...`}
                                 style={{ color: block.color || "#334155" }}
                               />
                               <button
                                 type="button"
-                                onClick={() => handleRemoveListItem(index, itemIdx)}
+                                onClick={() =>
+                                  handleRemoveListItem(index, itemIdx)
+                                }
                                 className="text-rose-400 hover:text-rose-600"
                               >
                                 <FaTrash size={10} />
@@ -491,8 +526,15 @@ const BlogManagement = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
                     {formData.images.map((url, idx) => (
-                      <div key={idx} className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
-                        <img src={url} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
+                      <div
+                        key={idx}
+                        className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group"
+                      >
+                        <img
+                          src={url}
+                          className="w-full h-full object-cover"
+                          alt={`Gallery ${idx}`}
+                        />
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
@@ -508,7 +550,9 @@ const BlogManagement = () => {
                         {formData.imageUrl !== url && (
                           <button
                             type="button"
-                            onClick={() => setFormData({ ...formData, imageUrl: url })}
+                            onClick={() =>
+                              setFormData({ ...formData, imageUrl: url })
+                            }
                             className="absolute inset-0 bg-black/40 text-white text-[8px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             Set Primary
@@ -525,7 +569,9 @@ const BlogManagement = () => {
                         onChange={handleImageUpload}
                       />
                       <FaPlus className="text-slate-300 mb-2" size={20} />
-                      <span className="text-[9px] font-black text-slate-400 uppercase">Add Images</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase">
+                        Add Images
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -584,7 +630,9 @@ const BlogManagement = () => {
                     </div>
                     {!blog.isPublished && (
                       <div className="bg-amber-500 text-white px-2 py-1 rounded-lg shadow-sm">
-                        <span className="text-[9px] font-black uppercase">Draft</span>
+                        <span className="text-[9px] font-black uppercase">
+                          Draft
+                        </span>
                       </div>
                     )}
                   </div>

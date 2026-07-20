@@ -40,9 +40,7 @@ const normalizeConsigneeRow = (c) => {
 
 const buildConsigneeListFromBuyer = (buyer) => {
   if (Array.isArray(buyer.consignee) && buyer.consignee.length > 0) {
-    return buyer.consignee
-      .map(normalizeConsigneeRow)
-      .filter(Boolean);
+    return buyer.consignee.map(normalizeConsigneeRow).filter(Boolean);
   }
   const ids = buyer.consigneeIds;
   if (Array.isArray(ids) && ids.length > 0) {
@@ -56,45 +54,43 @@ const buildConsigneeListFromBuyer = (buyer) => {
 };
 
 const buildFormStateFromBuyer = (buyer, companiesData = []) => {
-  // Find the selected companies' data
-  const selectedCompanyIds = (buyer.companyIds || []).map(id => String(id));
-  const selectedCompaniesData = companiesData.filter(c => 
-    selectedCompanyIds.includes(String(c._id))
+  const selectedCompanyIds = (buyer.companyIds || []).map((id) => String(id));
+  const selectedCompaniesData = companiesData.filter((c) =>
+    selectedCompanyIds.includes(String(c._id)),
   );
-  
-  // Create commodity options
+
   const allCommoditiesMap = new Map();
-  selectedCompaniesData.forEach(c => {
-    (c.commodities || []).forEach(commodity => {
+  selectedCompaniesData.forEach((c) => {
+    (c.commodities || []).forEach((commodity) => {
       const cid = String(commodity._id || commodity.commodityId);
       if (!allCommoditiesMap.has(cid)) {
         allCommoditiesMap.set(cid, {
           value: cid,
           label: commodity.name,
-          brokerage: commodity.brokerage ?? 0
+          brokerage: commodity.brokerage ?? 0,
         });
       }
     });
   });
   const commodityOptions = Array.from(allCommoditiesMap.values());
-  
-  // Build selected commodities - handle both cases: commodityIds is array of objects or array of strings
-  const existingCommodityIds = (buyer.commodityIds || []).map(id => {
-    if (typeof id === 'object' && id?._id) {
+
+  const existingCommodityIds = (buyer.commodityIds || []).map((id) => {
+    if (typeof id === "object" && id?._id) {
       return String(id._id);
     }
     return String(id);
   });
-  const selectedCommodities = commodityOptions.filter(c => 
-    existingCommodityIds.includes(c.value));
-  
-  // Build brokerage map
+  const selectedCommodities = commodityOptions.filter((c) =>
+    existingCommodityIds.includes(c.value),
+  );
+
   const brokerage = {};
-  commodityOptions.forEach(c => {
+  commodityOptions.forEach((c) => {
     brokerage[c.value] = buyer.brokerage?.[c.value] ?? c.brokerage ?? 0;
   });
-  (buyer.commodityIds || []).forEach(cid => {
-    const cidStr = typeof cid === 'object' && cid?._id ? String(cid._id) : String(cid);
+  (buyer.commodityIds || []).forEach((cid) => {
+    const cidStr =
+      typeof cid === "object" && cid?._id ? String(cid._id) : String(cid);
     if (buyer.brokerage?.[cidStr] !== undefined) {
       brokerage[cidStr] = buyer.brokerage[cidStr];
     }
@@ -225,22 +221,22 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
             label: group.groupName,
           })),
         );
-        
-        // Initialize commodity options based on current buyer's selected companies
+
         if (buyerRef.current) {
-          const selectedCompanyIds = (buyerRef.current.companyIds?.map(id => String(id)) || []);
-          const selectedCompaniesData = companiesRows.filter(c => 
-            selectedCompanyIds.includes(String(c._id))
+          const selectedCompanyIds =
+            buyerRef.current.companyIds?.map((id) => String(id)) || [];
+          const selectedCompaniesData = companiesRows.filter((c) =>
+            selectedCompanyIds.includes(String(c._id)),
           );
           const allCommoditiesMap = new Map();
-          selectedCompaniesData.forEach(c => {
-            (c.commodities || []).forEach(commodity => {
+          selectedCompaniesData.forEach((c) => {
+            (c.commodities || []).forEach((commodity) => {
               const cid = String(commodity._id || commodity.commodityId);
               if (!allCommoditiesMap.has(cid)) {
                 allCommoditiesMap.set(cid, {
                   value: cid,
                   label: commodity.name,
-                  brokerage: commodity.brokerage ?? 0
+                  brokerage: commodity.brokerage ?? 0,
                 });
               }
             });
@@ -353,58 +349,64 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   const handleCompanyChange = (selectedCompanies) => {
     const next = selectedCompanies || [];
-    
-    // Compute new commodity options
-    const selectedCompanyIds = next.map(c => String(c.value));
-    const selectedCompaniesData = companiesData.filter(c => 
-      selectedCompanyIds.includes(String(c._id))
+
+    const selectedCompanyIds = next.map((c) => String(c.value));
+    const selectedCompaniesData = companiesData.filter((c) =>
+      selectedCompanyIds.includes(String(c._id)),
     );
-    
+
     const allCommoditiesMap = new Map();
     const allConsigneesMap = new Map();
-    const labelById = new Map(allConsignees.map(o => [String(o.value), o.label]));
-    
-    selectedCompaniesData.forEach(company => {
-      (company.commodities || []).forEach(c => {
+    const labelById = new Map(
+      allConsignees.map((o) => [String(o.value), o.label]),
+    );
+
+    selectedCompaniesData.forEach((company) => {
+      (company.commodities || []).forEach((c) => {
         const cid = String(c._id || c.commodityId);
         if (!allCommoditiesMap.has(cid)) {
           allCommoditiesMap.set(cid, {
             value: cid,
             label: c.name,
-            brokerage: c.brokerage ?? 0
+            brokerage: c.brokerage ?? 0,
           });
         }
       });
-      
+
       if (Array.isArray(company.consigneeIds)) {
         company.consigneeIds.forEach((id, idx) => {
           const consigneeId = String(id);
           if (!allConsigneesMap.has(consigneeId)) {
             const fromCompany = company.consignee?.[idx];
-            const label = (typeof fromCompany === "string" && fromCompany) ||
-              labelById.get(consigneeId) || "Consignee";
+            const label =
+              (typeof fromCompany === "string" && fromCompany) ||
+              labelById.get(consigneeId) ||
+              "Consignee";
             allConsigneesMap.set(consigneeId, { value: consigneeId, label });
           }
         });
       }
     });
-    
+
     const newCommodityOptions = Array.from(allCommoditiesMap.values());
     setCommodityOptions(newCommodityOptions);
-    setConsigneeOptions(Array.from(allConsigneesMap.values()).sort((a,b)=>a.label.localeCompare(b.label)));
-    
-    // Update brokerage map
+    setConsigneeOptions(
+      Array.from(allConsigneesMap.values()).sort((a, b) =>
+        a.label.localeCompare(b.label),
+      ),
+    );
+
     const newBrokerage = {};
-    newCommodityOptions.forEach(c => {
+    newCommodityOptions.forEach((c) => {
       newBrokerage[c.value] = c.brokerage ?? 0;
     });
-    
-    // Auto-set group if one company selected
+
     let autoGroup = null;
     if (selectedCompaniesData.length === 1) {
       const c = selectedCompaniesData[0];
       if (c.groupId) {
-        autoGroup = groups.find(g => String(g.value) === String(c.groupId)) || null;
+        autoGroup =
+          groups.find((g) => String(g.value) === String(c.groupId)) || null;
       }
     }
 
@@ -412,13 +414,15 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       if (!prevData) return prevData;
       const prevKey = sortIdsKey(prevData.selectedCompanies);
       const nextKey = sortIdsKey(next);
-      
-      // Keep selected commodities that are still in the new options
-      const currentCommodityIds = new Set(newCommodityOptions.map(c => c.value));
-      const newSelectedCommodities = prevData.commodity?.filter(c => 
-        currentCommodityIds.has(typeof c === "object" ? c.value : c)
-      ) || [];
-      
+
+      const currentCommodityIds = new Set(
+        newCommodityOptions.map((c) => c.value),
+      );
+      const newSelectedCommodities =
+        prevData.commodity?.filter((c) =>
+          currentCommodityIds.has(typeof c === "object" ? c.value : c),
+        ) || [];
+
       return {
         ...prevData,
         selectedCompanies: next,
@@ -433,12 +437,12 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   const handleBrokerageChange = (e, commodityId) => {
     const { value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       brokerage: {
         ...prev.brokerage,
-        [commodityId]: Number(value) || 0
-      }
+        [commodityId]: Number(value) || 0,
+      },
     }));
   };
 
@@ -539,8 +543,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         return "";
       });
 
-      const consigneeIds = (formData.consignee || []).map(
-        (c) => String(c.value || c._id || ""),
+      const consigneeIds = (formData.consignee || []).map((c) =>
+        String(c.value || c._id || ""),
       );
 
       const payload = {
@@ -585,15 +589,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           aria-labelledby="edit-buyer-title"
           onClick={(e) => e.stopPropagation()}
         >
-          {referenceDataLoading && (
-            <div
-              className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[2px]"
-              aria-busy="true"
-              aria-live="polite"
-            >
-              <Loading />
-            </div>
-          )}
+          {referenceDataLoading && <Loading />}
           <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent rounded-t-3xl shrink-0">
             <div>
               <h2
@@ -771,20 +767,20 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     options={commodityOptions}
                     selectedOptions={formData.commodity}
                     onChange={(selectedCommodities) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
-                        commodity: selectedCommodities || []
+                        commodity: selectedCommodities || [],
                       }));
                     }}
                     placeholder="Select commodities"
                     isMulti
                     isDisabled={referenceDataLoading || isSubmitting}
                   />
-                  
-                  {(formData.commodity || []).map(comm => {
+
+                  {(formData.commodity || []).map((comm) => {
                     const cid = typeof comm === "object" ? comm.value : comm;
                     const label = typeof comm === "object" ? comm.label : comm;
-                    
+
                     return (
                       <div key={cid} className="mt-3">
                         <label className="block text-xs font-semibold tracking-wide text-slate-600 mb-1">
@@ -815,7 +811,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         <span className="text-sm text-slate-700">
                           {consignee.label ||
                             allConsignees.find(
-                              (a) => String(a.value) === String(consignee.value),
+                              (a) =>
+                                String(a.value) === String(consignee.value),
                             )?.label ||
                             "Consignee"}
                         </span>

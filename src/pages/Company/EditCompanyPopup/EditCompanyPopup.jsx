@@ -132,39 +132,41 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           }
 
           setCommodityEntries(
-        Array.isArray(company.commodities)
-          ? company.commodities.map((entry) => {
-              const commodityDef = mappedCommodityOptions.find(
-                (c) => String(c.value) === String(entry.commodityId),
-              );
+            Array.isArray(company.commodities)
+              ? company.commodities.map((entry) => {
+                  const commodityDef = mappedCommodityOptions.find(
+                    (c) => String(c.value) === String(entry.commodityId),
+                  );
 
-              return {
-                _id: entry._id || null,
-                commodityId: String(entry.commodityId || ""),
-                brokerage: entry.brokerage ?? 0,
-                parameters: Array.isArray(entry.parameters)
-                  ? entry.parameters.map((p) => {
-                      const paramDef = commodityDef?.parameters?.find(
-                        (pd) => String(pd.value) === String(p.parameterId),
-                      );
-                      return {
-                        parameterId: String(p.parameterId),
-                        label: paramDef?.label || p.label || "Parameter",
-                        values: Array.isArray(p.values) ? p.values : [
-                          {
-                            baseValue: "",
-                            maxValue: "",
-                            claimRatioLeft: "1",
-                            claimRatioRight: "",
-                          },
-                        ],
-                      };
-                    })
-                  : [],
-              };
-            })
-          : [],
-      );
+                  return {
+                    _id: entry._id || null,
+                    commodityId: String(entry.commodityId || ""),
+                    brokerage: entry.brokerage ?? 0,
+                    parameters: Array.isArray(entry.parameters)
+                      ? entry.parameters.map((p) => {
+                          const paramDef = commodityDef?.parameters?.find(
+                            (pd) => String(pd.value) === String(p.parameterId),
+                          );
+                          return {
+                            parameterId: String(p.parameterId),
+                            label: paramDef?.label || p.label || "Parameter",
+                            values: Array.isArray(p.values)
+                              ? p.values
+                              : [
+                                  {
+                                    baseValue: "",
+                                    maxValue: "",
+                                    claimRatioLeft: "1",
+                                    claimRatioRight: "",
+                                  },
+                                ],
+                          };
+                        })
+                      : [],
+                  };
+                })
+              : [],
+          );
         }
       } catch (error) {
         toast.error(
@@ -482,9 +484,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                     {(entry.parameters || []).map((param, paramIndex) => (
                       <div key={paramIndex} className="mt-2">
                         <p className="font-medium text-sm">{param.label}</p>
-                        
+
                         {param.values.map((val, vIndex) => (
-                          <div key={vIndex} className="border p-3 mt-2 rounded-md bg-gray-50 space-y-2">
+                          <div
+                            key={vIndex}
+                            className="border p-3 mt-2 rounded-md bg-gray-50 space-y-2"
+                          >
                             <div className="flex gap-2 items-center">
                               <div className="flex-1">
                                 <DataInput
@@ -493,7 +498,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                   onChange={(e) => {
                                     setCommodityEntries((prev) => {
                                       const updated = [...prev];
-                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].baseValue = e.target.value;
+                                      updated[commodityIndex].parameters[
+                                        paramIndex
+                                      ].values[vIndex].baseValue =
+                                        e.target.value;
                                       return updated;
                                     });
                                   }}
@@ -506,20 +514,29 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                   onChange={(e) => {
                                     setCommodityEntries((prev) => {
                                       const updated = [...prev];
-                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].maxValue = e.target.value;
+                                      updated[commodityIndex].parameters[
+                                        paramIndex
+                                      ].values[vIndex].maxValue =
+                                        e.target.value;
                                       return updated;
                                     });
                                   }}
                                 />
                               </div>
-                              
+
                               {param.values.length > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setCommodityEntries((prev) => {
                                       const updated = [...prev];
-                                      updated[commodityIndex].parameters[paramIndex].values = updated[commodityIndex].parameters[paramIndex].values.filter((_, i) => i !== vIndex);
+                                      updated[commodityIndex].parameters[
+                                        paramIndex
+                                      ].values = updated[
+                                        commodityIndex
+                                      ].parameters[paramIndex].values.filter(
+                                        (_, i) => i !== vIndex,
+                                      );
                                       return updated;
                                     });
                                   }}
@@ -538,7 +555,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                 onChange={(e) => {
                                   setCommodityEntries((prev) => {
                                     const updated = [...prev];
-                                    updated[commodityIndex].parameters[paramIndex].values[vIndex].claimRatioLeft = e.target.value;
+                                    updated[commodityIndex].parameters[
+                                      paramIndex
+                                    ].values[vIndex].claimRatioLeft =
+                                      e.target.value;
                                     return updated;
                                   });
                                 }}
@@ -550,7 +570,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                 onChange={(e) => {
                                   setCommodityEntries((prev) => {
                                     const updated = [...prev];
-                                    updated[commodityIndex].parameters[paramIndex].values[vIndex].claimRatioRight = e.target.value;
+                                    updated[commodityIndex].parameters[
+                                      paramIndex
+                                    ].values[vIndex].claimRatioRight =
+                                      e.target.value;
                                     return updated;
                                   });
                                 }}
@@ -564,8 +587,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                           onClick={() => {
                             setCommodityEntries((prev) => {
                               const updated = [...prev];
-                              updated[commodityIndex].parameters[paramIndex].values = [
-                                ...updated[commodityIndex].parameters[paramIndex].values,
+                              updated[commodityIndex].parameters[
+                                paramIndex
+                              ].values = [
+                                ...updated[commodityIndex].parameters[
+                                  paramIndex
+                                ].values,
                                 {
                                   baseValue: "",
                                   maxValue: "",

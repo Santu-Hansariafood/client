@@ -439,10 +439,15 @@ const AddCompany = () => {
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   {entry.parameters.map((param, pIndex) => (
                     <div key={param.parameter} className="space-y-2">
-                      <label className="text-xs font-semibold">{param.parameter}</label>
-                      
+                      <label className="text-xs font-semibold">
+                        {param.parameter}
+                      </label>
+
                       {param.values.map((val, vIndex) => (
-                        <div key={vIndex} className="border p-3 rounded-md bg-gray-50 space-y-2">
+                        <div
+                          key={vIndex}
+                          className="border p-3 rounded-md bg-gray-50 space-y-2"
+                        >
                           <div className="flex gap-2 items-center">
                             <div className="flex-1">
                               <DataInput
@@ -451,7 +456,9 @@ const AddCompany = () => {
                                 onChange={(e) => {
                                   setSelectedCommodities((prev) => {
                                     const updated = [...prev];
-                                    updated[index].parameters[pIndex].values[vIndex].baseValue = e.target.value;
+                                    updated[index].parameters[pIndex].values[
+                                      vIndex
+                                    ].baseValue = e.target.value;
                                     return updated;
                                   });
                                 }}
@@ -464,20 +471,25 @@ const AddCompany = () => {
                                 onChange={(e) => {
                                   setSelectedCommodities((prev) => {
                                     const updated = [...prev];
-                                    updated[index].parameters[pIndex].values[vIndex].maxValue = e.target.value;
+                                    updated[index].parameters[pIndex].values[
+                                      vIndex
+                                    ].maxValue = e.target.value;
                                     return updated;
                                   });
                                 }}
                               />
                             </div>
-                            
+
                             {param.values.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => {
                                   setSelectedCommodities((prev) => {
                                     const updated = [...prev];
-                                    updated[index].parameters[pIndex].values = updated[index].parameters[pIndex].values.filter((_, i) => i !== vIndex);
+                                    updated[index].parameters[pIndex].values =
+                                      updated[index].parameters[
+                                        pIndex
+                                      ].values.filter((_, i) => i !== vIndex);
                                     return updated;
                                   });
                                 }}
@@ -496,7 +508,9 @@ const AddCompany = () => {
                               onChange={(e) => {
                                 setSelectedCommodities((prev) => {
                                   const updated = [...prev];
-                                  updated[index].parameters[pIndex].values[vIndex].claimRatioLeft = e.target.value;
+                                  updated[index].parameters[pIndex].values[
+                                    vIndex
+                                  ].claimRatioLeft = e.target.value;
                                   return updated;
                                 });
                               }}
@@ -508,7 +522,9 @@ const AddCompany = () => {
                               onChange={(e) => {
                                 setSelectedCommodities((prev) => {
                                   const updated = [...prev];
-                                  updated[index].parameters[pIndex].values[vIndex].claimRatioRight = e.target.value;
+                                  updated[index].parameters[pIndex].values[
+                                    vIndex
+                                  ].claimRatioRight = e.target.value;
                                   return updated;
                                 });
                               }}
