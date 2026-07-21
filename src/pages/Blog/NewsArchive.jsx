@@ -13,7 +13,7 @@ import {
   FaTags,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
@@ -85,6 +85,7 @@ const NewsArchive = () => {
     }
     try {
       const res = await api.post(`/blogs/${id}/bookmark`);
+      clearApiCache();
       if (res.data.bookmarked) {
         toast.success("Added to bookmarks");
       } else {

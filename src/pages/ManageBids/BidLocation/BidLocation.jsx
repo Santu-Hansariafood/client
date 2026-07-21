@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
@@ -62,6 +62,7 @@ const BidLocation = () => {
 
         if (response.status === 200) {
           toast.success("Bid location updated successfully");
+          clearApiCache();
         } else {
           throw new Error("Failed to update bid location");
         }
@@ -70,6 +71,7 @@ const BidLocation = () => {
 
         if (response.status === 201) {
           toast.success("Bid location added successfully");
+          clearApiCache();
         } else {
           throw new Error("Failed to create bid location");
         }
@@ -92,6 +94,7 @@ const BidLocation = () => {
 
         if (response.status === 200) {
           toast.success("Bid location deleted successfully");
+          clearApiCache();
           fetchBidLocations();
         } else {
           throw new Error("Failed to delete bid location");

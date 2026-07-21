@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
@@ -33,6 +33,7 @@ const AddQualityParameter = () => {
 
     try {
       await api.post("/quality-parameters", payload);
+      clearApiCache();
       toast.success("Quality parameter added successfully!");
       setFormData({
         name: "",

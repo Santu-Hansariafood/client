@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaPlus, FaEdit, FaAddressCard, FaTrash, FaRegEye } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -50,6 +50,7 @@ const ListVendorCode = () => {
     if (window.confirm("Are you sure you want to delete this vendor code?")) {
       try {
         await api.delete(`/vendor-codes/${id}`);
+        clearApiCache();
         toast.success("Vendor code deleted successfully");
         fetchVendorCodes();
       } catch (error) {
@@ -75,6 +76,7 @@ const ListVendorCode = () => {
       await api.put(`/vendor-codes/${selectedItem._id}`, {
         vendorCode: editValue.toUpperCase(),
       });
+      clearApiCache();
       toast.success("Vendor code updated successfully");
       setIsEditing(false);
       setSelectedItem(null);

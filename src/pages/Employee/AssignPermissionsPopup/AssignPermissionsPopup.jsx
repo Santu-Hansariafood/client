@@ -4,7 +4,7 @@ import { FaShieldAlt, FaCheckSquare, FaSquare, FaSave, FaTimes } from "react-ico
 import dashboardData from "../../../data/dashboardData.json";
 import PopupBox from "../../../common/PopupBox/PopupBox";
 import { toast } from "react-toastify";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 
 const AssignPermissionsPopup = ({ employee, isOpen, onClose, onUpdate }) => {
   const [selectedPermissions, setSelectedPermissions] = useState([]);
@@ -46,6 +46,7 @@ const AssignPermissionsPopup = ({ employee, isOpen, onClose, onUpdate }) => {
       const response = await api.put(`/employees/${employee._id}`, {
         allowedPermissions: selectedPermissions
       });
+      clearApiCache();
       toast.success("Permissions updated successfully");
       onUpdate(response.data);
       onClose();

@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaBuilding } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -88,6 +88,7 @@ const ListGroupOfCompany = () => {
   const handleDelete = useCallback(async (groupToDelete) => {
     try {
       await api.delete(`/groups/${groupToDelete._id}`);
+      clearApiCache();
       setGroupsData((prevData) =>
         prevData.filter((group) => group._id !== groupToDelete._id),
       );

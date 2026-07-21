@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
@@ -114,6 +114,7 @@ const ListSellerCompany = () => {
     ) {
       try {
         await api.delete(`/seller-company/${id}`);
+        clearApiCache();
         setCompanies((prev) => prev.filter((company) => company._id !== id));
         setTotalItems((prev) => prev - 1);
         toast.success("Seller company deleted successfully!");

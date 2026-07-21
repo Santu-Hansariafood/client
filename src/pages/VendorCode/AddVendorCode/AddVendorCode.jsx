@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import DataInput from "../../../common/DataInput/DataInput";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaArrowLeft, FaSave, FaList, FaBarcode } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -119,6 +119,7 @@ const AddVendorCode = () => {
         seller: form.seller.value,
         vendorCode: form.vendorCode,
       });
+      clearApiCache();
       toast.success("Vendor code created successfully");
       navigate("/vendor-code/list");
     } catch (error) {

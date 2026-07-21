@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -85,6 +85,7 @@ const ListQualityParameter = () => {
         `/quality-parameters/${updatedData._id}`,
         updatedData,
       );
+      clearApiCache();
       fetchQualityParameters();
       toast.success("Quality parameter updated successfully!");
       setIsEditPopupVisible(false);
@@ -97,6 +98,7 @@ const ListQualityParameter = () => {
   const handleDelete = async (item) => {
     try {
       await api.delete(`/quality-parameters/${item._id}`);
+      clearApiCache();
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id),
       );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
@@ -75,6 +75,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
         `/transporters/${transporter._id}`,
         payload,
       );
+      clearApiCache();
       toast.success("Transporter updated successfully!");
       onUpdate(response.data);
       onClose();

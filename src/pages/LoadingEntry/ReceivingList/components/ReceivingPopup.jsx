@@ -3,7 +3,7 @@ import { FaPrint } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { pdf } from "@react-pdf/renderer";
 import QRCode from "qrcode";
-import api from "../../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../../utils/apiClient/apiClient";
 import MasterReceivingReportPDF from "../MasterReceivingReportPDF";
 import { downloadFile } from "../../../../utils/fileDownloader";
 import { buildSaudaPdfData } from "../../../../utils/saudaPdf/buildSaudaPdfData";
@@ -143,20 +143,21 @@ const ReceivingPopup = ({
         let sentByMobile = mobile || "";
 
         await api.post("/email/send-receiving-report", {
-          pdf: base64,
-          sellerEmail: selectedSellerEmail,
-          saudaNo: selectedEntry.saudaNo,
-          billNo: selectedEntry.billNumber,
-          claimParameters: selectedEntry.qualityClaims || [],
-          sentByMobile,
-          sentByName,
-        });
+        pdf: base64,
+        sellerEmail: selectedSellerEmail,
+        saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
+        claimParameters: selectedEntry.qualityClaims || [],
+        sentByMobile,
+        sentByName,
+      });
 
-        // Update sent status
-        await api.put(`/loading-entries/${selectedEntry._id}`, {
-          sentStatus: "Sent",
-        });
-        fetchData();
+      // Update sent status
+      await api.put(`/loading-entries/${selectedEntry._id}`, {
+        sentStatus: "Sent",
+      });
+      clearApiCache();
+      fetchData();
 
         toast.update(toastId, {
           render: "Report downloaded, emailed, and status updated successfully!",
@@ -305,6 +306,7 @@ const ReceivingPopup = ({
         await api.put(`/loading-entries/${selectedEntry._id}`, {
           sentStatus: "Sent",
         });
+        clearApiCache();
         fetchData();
       } catch (err) {
         toast.error("Error updating sent status");

@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import Loading from "../../../common/Loading/Loading";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaPlus } from "react-icons/fa";
 import addgroupcompanyLable from "../../../language/en/addGroupCompany";
@@ -24,6 +24,7 @@ const AddGroupOfCompany = () => {
 
     try {
       await api.post("/groups", { groupName });
+      clearApiCache();
       toast.success("Group added successfully");
       setGroupName("");
     } catch (error) {

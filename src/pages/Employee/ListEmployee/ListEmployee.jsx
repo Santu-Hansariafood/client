@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUsers, FaTrash, FaEdit, FaShieldAlt } from "react-icons/fa";
@@ -77,6 +77,7 @@ const ListEmployee = () => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         await api.delete(`/employees/${id}`);
+        clearApiCache();
         toast.success("Employee deleted");
         fetchEmployees();
         fetchAllNames();

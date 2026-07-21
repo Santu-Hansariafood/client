@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaTruck } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -111,7 +111,7 @@ const ListConsignee = () => {
   const submitEdit = async (updatedData) => {
     try {
       await api.put(`/consignees/${selectedConsignee._id}`, updatedData);
-
+      clearApiCache();
       toast.success("Consignee updated successfully");
 
       setIsEditPopupOpen(false);
@@ -125,6 +125,7 @@ const ListConsignee = () => {
   const submitDelete = async () => {
     try {
       await api.delete(`/consignees/${selectedConsignee._id}`);
+      clearApiCache();
       toast.success("Consignee deleted successfully");
       setIsPopupOpen(false);
       cacheRef.current.clear();

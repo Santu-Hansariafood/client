@@ -7,7 +7,7 @@ import {
   useCallback,
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import {
   FaRegHandPointer,
   FaGavel,
@@ -219,6 +219,7 @@ const SupplierBidList = () => {
       };
       await api.post("/participatebids", participationData);
       toast.success("Participation successful!");
+      clearApiCache();
       setIsPopupOpen(false);
       fetchBids();
     } catch (error) {

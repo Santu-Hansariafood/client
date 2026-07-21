@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaTruckMoving, FaTrash, FaEdit, FaEye } from "react-icons/fa";
@@ -44,6 +44,7 @@ const ListTransporter = () => {
     if (window.confirm("Are you sure you want to delete this transporter?")) {
       try {
         await api.delete(`/transporters/${id}`);
+        clearApiCache();
         toast.success("Transporter deleted");
         fetchTransporters();
       } catch (error) {

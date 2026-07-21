@@ -10,7 +10,7 @@ import { FaBuilding, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const EditSellerCompany = () => {
@@ -281,6 +281,7 @@ const EditSellerCompany = () => {
 
     try {
       await api.put(`/seller-company/${id}`, payload);
+      clearApiCache();
       toast.success("Seller company updated successfully!");
       navigate("/seller-company/list");
     } catch (error) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaTruckMoving } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -76,6 +76,7 @@ const AddTransporter = () => {
     e.preventDefault();
     try {
       await api.post("/transporters", formData);
+      clearApiCache();
       toast.success("Transporter registered successfully!");
       setFormData({
         name: "",

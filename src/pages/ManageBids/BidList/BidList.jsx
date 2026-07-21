@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -234,6 +234,7 @@ const BidList = () => {
     try {
       const { id, rate, quantity } = editableRateQuantity;
       await api.put(`/bids/${id}`, { rate, quantity });
+      clearApiCache();
       toast.success("Bid updated successfully!");
       setBids((prev) =>
         prev.map((bid) => (bid._id === id ? { ...bid, rate, quantity } : bid)),
@@ -404,6 +405,7 @@ const BidList = () => {
   const handleStatusUpdate = async (id, status) => {
     try {
       await api.patch(`/bids/${id}/status`, { status });
+      clearApiCache();
       toast.success(
         `Bid ${status === "closed" ? "closed" : "activated"} successfully!`,
       );
@@ -508,7 +510,7 @@ const BidList = () => {
       const { _id, endTime, quantity, rate } = reactivateBid;
       await api.put(`/bids/${_id}`, { endTime, quantity, rate });
       await api.patch(`/bids/${_id}/status`, { status: "active" });
-
+      clearApiCache();
       toast.success("Bid reactivated successfully!");
       setBids((prev) =>
         prev.map((bid) =>

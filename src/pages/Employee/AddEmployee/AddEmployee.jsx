@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUserPlus } from "react-icons/fa";
@@ -90,6 +90,7 @@ const AddEmployee = () => {
 
     try {
       await api.post("/employees", processedData);
+      clearApiCache();
       toast.success("Employee registered successfully!");
       setFormData({
         name: "",

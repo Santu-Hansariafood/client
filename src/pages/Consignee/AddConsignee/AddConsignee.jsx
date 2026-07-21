@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -133,6 +133,7 @@ const AddConsignee = () => {
     try {
       const response = await api.post("/consignees", formData);
       if (response.status === 201) {
+        clearApiCache();
         toast.success("Consignee added successfully!");
         setFormData({
           name: "",

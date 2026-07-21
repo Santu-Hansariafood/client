@@ -13,7 +13,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
@@ -58,6 +58,7 @@ const BlogDetail = () => {
     }
     try {
       const res = await api.post(`/blogs/${id}/bookmark`);
+      clearApiCache();
       setIsBookmarked(res.data.bookmarked);
       toast.success(
         res.data.bookmarked ? "Bookmarked" : "Removed from bookmarks",
@@ -69,9 +70,7 @@ const BlogDetail = () => {
 
   if (loading)
     return (
-      <div className="h-screen flex items-center justify-center">
         <Loading size="lg" />
-      </div>
     );
   if (!blog) return <div className="p-10 text-center">News not found</div>;
 

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -58,6 +58,7 @@ const LoadingEntry = () => {
     e.preventDefault();
     try {
       await api.post("/loading-entries", formData);
+      clearApiCache();
       toast.success("Loading entry added successfully");
       setFormData({
         loadingDate: "",

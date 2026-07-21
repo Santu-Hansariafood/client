@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState, useEffect, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
@@ -113,6 +113,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
           .filter((p) => p.parameterId),
       };
       await api.put(`/commodities/${commodityId}`, formData);
+      clearApiCache();
       toast.success("Commodity updated successfully!");
       onUpdate();
       onClose();
@@ -129,9 +130,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     <PopupBox isOpen={isOpen} onClose={onClose} title="Edit Commodity">
       <Suspense fallback={<Loading />}>
         {isLoading ? (
-          <div className="py-20 flex justify-center">
             <Loading />
-          </div>
         ) : (
           <div className="max-w-4xl mx-auto">
             <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">

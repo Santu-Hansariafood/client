@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
@@ -152,6 +152,7 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
               : i,
           ),
         );
+        clearApiCache();
         toast.success(`Bid interaction ${status} successfully.`);
       } catch (error) {
         console.error("Status update error:", error);
@@ -171,6 +172,7 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
         return;
       try {
         await api.delete(`/participatebids/${id}`);
+        clearApiCache();
         setInteractions((prev) => prev.filter((i) => i._id !== id));
         toast.success("Interaction deleted.");
       } catch (error) {
