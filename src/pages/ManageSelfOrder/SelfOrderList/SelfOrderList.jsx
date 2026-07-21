@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaDownload, FaWhatsapp, FaTimes } from "react-icons/fa";
@@ -465,6 +465,7 @@ _${fileUrl || "PDF Link Not Available"}_
 
     try {
       await api.delete(`${API_URL}/${item._id}`);
+      clearApiCache();
       toast.success("Order deleted successfully");
       setReloadFlag((prev) => prev + 1);
     } catch (error) {

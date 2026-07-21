@@ -2,7 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";

@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -116,6 +116,7 @@ const EditCommodity = () => {
           .filter((p) => p.parameterId),
       };
       await api.put(`/commodities/${id}`, formData);
+      clearApiCache();
       toast.success("Commodity updated successfully!");
       navigate("/commodity/list");
     } catch (error) {

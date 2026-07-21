@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
 import {
@@ -268,6 +268,7 @@ const EditSellerDetails = ({
     try {
       setSaving(true);
       const response = await api.put(`/sellers/${sellerId}`, payload);
+      clearApiCache();
       toast.success("Seller details updated successfully!");
       if (onSave) {
         onSave(response.data);

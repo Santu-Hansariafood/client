@@ -12,7 +12,7 @@ import {
   FaTags,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
 
@@ -172,6 +172,7 @@ const BlogManagement = () => {
     try {
       setSubmitting(true);
       const res = await api.post("/blogs", formData);
+      clearApiCache();
       if (res.status === 201 || res.status === 200) {
         toast.success("News publication created successfully");
         setShowAddForm(false);
@@ -210,6 +211,7 @@ const BlogManagement = () => {
     if (!window.confirm("Are you sure you want to delete this news?")) return;
     try {
       await api.delete(`/blogs/${id}`);
+      clearApiCache();
       toast.success("News deleted");
       fetchBlogs();
     } catch (error) {

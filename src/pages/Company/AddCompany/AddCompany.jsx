@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaPlus } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -267,7 +267,7 @@ const AddCompany = () => {
     };
     try {
       const res = await api.post("/companies", payload);
-
+      clearApiCache();
       if (res.status === 201) {
         toast.success("Company added successfully");
 

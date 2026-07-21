@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -80,6 +80,7 @@ const ListCommodity = () => {
       );
       if (!confirmDelete) return;
       await api.delete(`/commodities/${id}`);
+      clearApiCache();
       toast.success("Commodity deleted successfully!");
       fetchCommodities();
     } catch (error) {

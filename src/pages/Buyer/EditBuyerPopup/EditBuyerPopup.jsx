@@ -9,7 +9,7 @@ import {
   Suspense,
 } from "react";
 import { toast } from "react-toastify";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -562,6 +562,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       };
 
       const response = await api.put(`/buyers/${formData._id}`, payload);
+      clearApiCache();
       onUpdate(response.data);
     } catch (error) {
       const message =

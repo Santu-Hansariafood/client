@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -285,6 +285,7 @@ const SelfOrder = () => {
       };
 
       const response = await api.post(API_BASE_URL, payload);
+      clearApiCache();
       const createdOrder = response?.data || payload;
 
       Promise.resolve().then(async () => {

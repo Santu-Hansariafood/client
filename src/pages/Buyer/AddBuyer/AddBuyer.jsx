@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -245,6 +245,7 @@ const AddBuyer = () => {
         };
 
         await api.post("/buyers", payload);
+        clearApiCache();
         setSuccessMessage("Buyer added successfully!");
         setFormData({
           name: "",

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -92,7 +92,7 @@ const ListCompany = () => {
 
     try {
       await api.delete(`/companies/${companyId}`);
-
+      clearApiCache();
       toast.success("Company deleted successfully");
 
       fetchCompanyData();

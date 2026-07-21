@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
 import {
@@ -187,6 +187,7 @@ const AddSellerDetails = () => {
     try {
       setLoading(true);
       await api.post("/sellers", payload);
+      clearApiCache();
       toast.success("Seller added successfully");
       resetForm();
     } catch (error) {

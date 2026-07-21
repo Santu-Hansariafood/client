@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -74,6 +74,7 @@ const BuyerList = () => {
 
     try {
       await api.delete(`/buyers/${buyerToDelete._id}`);
+      clearApiCache();
       toast.success("Buyer deleted successfully");
       // Re-fetch current page
       const response = await api.get(

@@ -6,7 +6,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
@@ -173,6 +173,7 @@ const ListSellerDetails = () => {
     if (!window.confirm("Are you sure you want to delete this seller?")) return;
     try {
       await api.delete(`/sellers/${sellerId}`);
+      clearApiCache();
       toast.success("Seller deleted successfully");
       // Re-fetch current page
       const response = await api.get("/sellers", {

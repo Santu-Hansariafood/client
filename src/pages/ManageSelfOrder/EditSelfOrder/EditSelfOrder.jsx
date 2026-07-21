@@ -9,7 +9,7 @@ import {
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
@@ -402,7 +402,8 @@ const EditSelfOrder = () => {
       };
 
       await api.put(`${API_BASE_URL}/${id}`, payload);
-
+      clearApiCache();
+      
       const updatedOrder = { ...formData, ...payload };
       Promise.resolve().then(async () => {
         try {
