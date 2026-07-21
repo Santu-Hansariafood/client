@@ -14,7 +14,8 @@ import {
   FaHistory,
   FaBoxOpen,
 } from "react-icons/fa";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { jsPDF } from "jspdf";

@@ -10,7 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import {
   BarGradientDefs,
   BAR_SERIES_THEMES,
@@ -78,11 +79,12 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
     const fetchAnalytics = async () => {
       setLoading(true);
       try {
+        clearApiCache();
         const response = await api.get("/payments/analytics", {
           params: { days },
         });
         const processedData = response.data.map((item) => ({
-          date: new Date(item._id).toLocaleDateString("en-IN", {
+          date: new Date(item._id).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "short",
           }),

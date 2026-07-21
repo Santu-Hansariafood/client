@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { downloadFile } from "../../../utils/fileDownloader";
 import { toast } from "react-toastify";

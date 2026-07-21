@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { toast } from "react-toastify";
 
 export const usePaymentReceived = () => {

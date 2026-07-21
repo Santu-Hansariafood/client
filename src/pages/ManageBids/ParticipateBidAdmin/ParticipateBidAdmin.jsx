@@ -6,7 +6,8 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { toast } from "react-toastify";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";

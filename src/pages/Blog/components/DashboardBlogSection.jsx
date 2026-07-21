@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FaNewspaper } from "react-icons/fa";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import BlogCard from "./BlogCard";
 import Loading from "../../../common/Loading/Loading";
 
@@ -11,10 +12,11 @@ const DashboardBlogSection = () => {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
+        clearApiCache();
         const res = await api.get("/blogs/latest");
         setLatestBlog(res.data);
       } catch (error) {
-        console.error("Error fetching latest news:", error);
+        console.error("Error fetching latest news", error);
       } finally {
         setLoading(false);
       }

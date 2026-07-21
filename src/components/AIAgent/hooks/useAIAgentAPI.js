@@ -1,4 +1,5 @@
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { useRef } from "react";
 
 export const useAIAgentAPI = (
@@ -40,6 +41,7 @@ export const useAIAgentAPI = (
     setIsLoadingData(true);
     setThinkingPath("Listing all system commodities...");
     try {
+      clearApiCache();
       const response = await api.get("/commodities", {
         signal: getApiSignal(),
       });
@@ -75,6 +77,7 @@ export const useAIAgentAPI = (
     setIsLoadingData(true);
     setThinkingPath("Analyzing your account status...");
     try {
+      clearApiCache();
       const signal = getApiSignal();
       const [saudaRes, loadingRes, paymentRes] = await Promise.all([
         api.get("/self-order?limit=1", { signal }),
@@ -981,6 +984,7 @@ export const useAIAgentAPI = (
     setIsLoadingData(true);
     setThinkingPath("Calculating today's sauda statistics...");
     try {
+      clearApiCache();
       const response = await api.get(
         `/self-order?startDate=${today}&endDate=${today}`,
         { signal: getApiSignal() },

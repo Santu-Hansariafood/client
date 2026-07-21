@@ -7,7 +7,8 @@ import { pdf } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import PaymentVoucherPDF from "./components/PaymentVoucherPDF";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import {
   FaMoneyBillWave,
   FaChartLine,

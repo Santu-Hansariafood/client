@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import PopupBox from "../../../common/PopupBox/PopupBox";
 import Loading from "../../../common/Loading/Loading";
 import {

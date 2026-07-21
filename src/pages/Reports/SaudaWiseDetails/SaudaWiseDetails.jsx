@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaFileInvoice, FaSearch } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";

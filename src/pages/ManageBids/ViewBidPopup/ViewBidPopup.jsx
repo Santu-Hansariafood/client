@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import Loading from "../../../common/Loading/Loading";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";

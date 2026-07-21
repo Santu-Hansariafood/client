@@ -5,7 +5,8 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Buttons from "../../../common/Buttons/Buttons";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import {
   FaSave,

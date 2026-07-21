@@ -10,7 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import {
   BarGradientDefs,
   BAR_SERIES_THEMES,
@@ -76,6 +77,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       const fetchData = async () => {
         setLoading(true);
         try {
+          clearApiCache();
           const response = await api.get(apiUrl);
           const data = response.data?.data || response.data || [];
           setRawData(data);

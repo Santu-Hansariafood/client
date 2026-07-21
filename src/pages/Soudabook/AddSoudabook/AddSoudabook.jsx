@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense, lazy } from "react";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";

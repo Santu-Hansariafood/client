@@ -7,7 +7,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import api from "../../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+
 import {
   CHART_AREA_CLASS,
   CHART_LOADING_CLASS,
@@ -67,6 +68,7 @@ const CommodityPieChart = ({ apiUrl }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        clearApiCache();
         const response = await api.get(apiUrl);
         const rawData = response.data?.data || response.data || [];
 
