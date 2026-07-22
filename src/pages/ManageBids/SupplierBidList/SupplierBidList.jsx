@@ -28,6 +28,7 @@ import {
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { formatDateTime } from "../../../utils/textUtils/textUtils";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import SudokuGame from "../../../components/SudokuGame/SudokuGame";
 
@@ -626,7 +627,7 @@ const SupplierBidList = () => {
                   </div>
                 )}
                 {participationStatus === "accepted" && (
-                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
                       <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Rate
@@ -645,6 +646,14 @@ const SupplierBidList = () => {
                         <span className="text-[10px] sm:text-xs font-normal">
                           Tons
                         </span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                        Accepted On
+                      </p>
+                      <p className="text-sm sm:text-base font-bold text-green-700">
+                        {formatDateTime(participation.acceptedAt)}
                       </p>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../utils/apiClient/apiClient";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import Loading from "../../common/Loading/Loading";
+import { formatDateTime } from "../../utils/textUtils/textUtils";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
@@ -96,6 +97,10 @@ const ParticipateBid = () => {
           participationQuantity: participation.quantity || "N/A",
           acceptedRate: participation.acceptedRate,
           acceptedQuantity: participation.acceptedQuantity,
+          acceptedAt: participation.acceptedAt
+            ? formatDateTime(participation.acceptedAt)
+            : "N/A",
+          participationStatus: participation.status || "pending",
           deliveryDate: participation.deliveryDate
             ? new Date(participation.deliveryDate).toLocaleDateString()
             : "N/A",
@@ -124,6 +129,7 @@ const ParticipateBid = () => {
       item.participationQuantity,
       item.acceptedRate || "N/A",
       item.acceptedQuantity || "N/A",
+      item.acceptedAt,
       item.deliveryDate,
       item.paymentTerms,
       item.participationDate,
@@ -147,6 +153,7 @@ const ParticipateBid = () => {
     "Participation Quantity",
     "Accepted Rate",
     "Accepted Quantity",
+    "Accepted On",
     "Delivery Date",
     "Payment Terms",
     "Participation Date",
@@ -313,6 +320,35 @@ const ParticipateBid = () => {
                         <p className="text-sm font-bold text-blue-700">{item.participationQuantity}</p>
                       </div>
                     </div>
+                    {(item.participationStatus === "accepted" ||
+                      item.acceptedAt !== "N/A") && (
+                      <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-2.5 grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-[10px] text-emerald-600 font-semibold">
+                            Accepted Rate
+                          </p>
+                          <p className="text-sm font-bold text-emerald-700">
+                            ₹{item.acceptedRate || item.participationRate}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-emerald-600 font-semibold">
+                            Accepted Qty
+                          </p>
+                          <p className="text-sm font-bold text-emerald-700">
+                            {item.acceptedQuantity || item.participationQuantity}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-[10px] text-emerald-600 font-semibold">
+                            Accepted On
+                          </p>
+                          <p className="text-sm font-bold text-emerald-700">
+                            {item.acceptedAt}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-3 space-y-1 text-xs text-slate-600">
                       <p>
                         <span className="font-semibold text-slate-700">Delivery:</span>{" "}

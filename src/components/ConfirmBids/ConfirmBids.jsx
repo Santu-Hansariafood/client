@@ -4,6 +4,7 @@ import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import { formatDateTime } from "../../utils/textUtils/textUtils";
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaUserTag } from "react-icons/fa";
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
@@ -82,7 +83,9 @@ const ConfirmBids = () => {
             : null;
         const acceptedAt = confirmedBid?.acceptedAt
           ? new Date(confirmedBid.acceptedAt)
-          : null;
+          : p.acceptedAt
+            ? new Date(p.acceptedAt)
+            : null;
         const amountBaseRate =
           typeof acceptedRate === "number" ? acceptedRate : Number(p.rate);
         const amountBaseQty =
@@ -215,7 +218,7 @@ const ConfirmBids = () => {
       typeof p.acceptedRate === "number" ? p.acceptedRate : "-",
       typeof p.acceptedQty === "number" ? p.acceptedQty : "-",
       typeof p.amount === "number" ? `₹${p.amount}` : "-",
-      p.acceptedAt ? p.acceptedAt.toLocaleString() : "-",
+      p.acceptedAt ? formatDateTime(p.acceptedAt) : "-",
       <span
         className={`px-3 py-1 rounded-full text-white text-sm ${
           p.status === "Confirmed"
