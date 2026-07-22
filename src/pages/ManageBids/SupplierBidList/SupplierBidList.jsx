@@ -28,7 +28,7 @@ import {
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { formatDateTime } from "../../../utils/textUtils/textUtils";
+import { formatDate, formatTime } from "../../../utils/textUtils/textUtils";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import SudokuGame from "../../../components/SudokuGame/SudokuGame";
 
@@ -434,6 +434,10 @@ const SupplierBidList = () => {
     const participationStatus = (
       participation?.status || "pending"
     ).toLowerCase();
+    const acceptedTimestamp =
+      participationStatus === "accepted"
+        ? participation?.acceptedAt || participation?.updatedAt || null
+        : null;
     const isRevised =
       participation?.createdAt &&
       participation?.updatedAt &&
@@ -496,7 +500,7 @@ const SupplierBidList = () => {
             </div>
             {isParticipated && (
               <div
-                className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm ${
+                className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex flex-col items-end gap-0.5 whitespace-nowrap shadow-sm ${
                   participationStatus === "accepted"
                     ? "bg-green-100 text-green-700 ring-1 ring-green-200"
                     : participationStatus === "rejected"
@@ -504,15 +508,22 @@ const SupplierBidList = () => {
                       : "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
                 }`}
               >
-                {participationStatus === "accepted" ? (
-                  <FaCheckCircle className="text-xs" />
-                ) : participationStatus === "rejected" ? (
-                  <FaTimesCircle className="text-xs" />
-                ) : (
-                  <FaHourglassHalf className="text-[10px]" />
+                <span className="inline-flex items-center gap-1 sm:gap-1.5">
+                  {participationStatus === "accepted" ? (
+                    <FaCheckCircle className="text-xs" />
+                  ) : participationStatus === "rejected" ? (
+                    <FaTimesCircle className="text-xs" />
+                  ) : (
+                    <FaHourglassHalf className="text-[10px]" />
+                  )}
+                  {participationStatus.charAt(0).toUpperCase() +
+                    participationStatus.slice(1)}
+                </span>
+                {participationStatus === "accepted" && acceptedTimestamp && (
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-green-600 leading-tight text-right">
+                    {formatDate(acceptedTimestamp)} • {formatTime(acceptedTimestamp)}
+                  </span>
                 )}
-                {participationStatus.charAt(0).toUpperCase() +
-                  participationStatus.slice(1)}
               </div>
             )}
           </div>
@@ -627,7 +638,7 @@ const SupplierBidList = () => {
                   </div>
                 )}
                 {participationStatus === "accepted" && (
-                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                       <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Rate
@@ -650,10 +661,18 @@ const SupplierBidList = () => {
                     </div>
                     <div>
                       <p className="text-[10px] sm:text-xs text-green-600 font-medium">
-                        Accepted On
+                        Accepted Date
                       </p>
                       <p className="text-sm sm:text-base font-bold text-green-700">
-                        {formatDateTime(participation.acceptedAt)}
+                        {formatDate(acceptedTimestamp)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                        Accepted Time
+                      </p>
+                      <p className="text-sm sm:text-base font-bold text-green-700">
+                        {formatTime(acceptedTimestamp)}
                       </p>
                     </div>
                   </div>
