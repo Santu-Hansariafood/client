@@ -1,46 +1,16 @@
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 import imagekit from "../lib/imagekit.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const router = Router();
 
-// Create sauda directory if it doesn't exist
-const saudaDir = path.join(__dirname, "../../sauda");
-if (!fs.existsSync(saudaDir)) {
-  fs.mkdirSync(saudaDir, { recursive: true });
-}
-
-// Configure multer for disk storage (for WhatsApp sauda PDFs)
-const saudaStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, saudaDir);
-  },
-  filename: (req, file, cb) => {
-    const saudaNo = req.body.saudaNo || "N/A";
-    const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
-    cb(null, fileName);
-  },
-});
-
-const uploadSauda = multer({
-  storage: saudaStorage,
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// Configure multer for memory storage (for ImageKit uploads)
-const memoryStorage = multer.memoryStorage();
-const uploadImageKit = multer({
-  storage: memoryStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
-
-router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
+router.post("/whatsapp", upload.single("file"), async (req, res) => {
   try {
     console.log("req.body:", req.body);
     console.log("req.file:", req.file);
@@ -48,14 +18,18 @@ router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    const fileName = req.file.filename;
-    const protocol = req.protocol;
-    const host = req.get("host");
-    const fileUrl = `${protocol}://${host}/sauda/${fileName}`;
+    const saudaNo = req.body.saudaNo || "N/A";
+    const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
 
-    console.log("Generated fileUrl:", fileUrl);
+    const cloudUrl = await imagekit.uploadFile(
+      req.file,
+      fileName,
+      "/sauda_confirmations",
+    );
+
+    console.log("Generated ImageKit URL:", cloudUrl);
     res.json({
-      url: fileUrl,
+      url: cloudUrl,
       fileName,
     });
   } catch (error) {
@@ -64,7 +38,7 @@ router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
   }
 });
 
-router.post("/", uploadImageKit.single("file"), async (req, res) => {
+router.post("/", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file provided" });

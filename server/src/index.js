@@ -64,11 +64,8 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:", "https://ik.imagekit.io"],
       fontSrc: ["'self'", "data:"],
-      objectSrc: ["'self'"], // Allow PDFs (object/embed tags)
-      frameSrc: ["'self'"],  // Allow PDFs in iframes
     },
   },
-  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin access to PDFs
 }));
 
 app.use(compression({ 
@@ -152,16 +149,6 @@ app.use("/icons", express.static(path.join(__dirname, "../../public/icons"), sta
 app.use("/images", express.static(path.join(__dirname, "../../public/images"), staticOptions));
 app.use("/teams", express.static(path.join(__dirname, "../../public/teams"), staticOptions));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads"), { 
-  maxAge: "1d",
-  lastModified: true,
-}));
-// Serve sauda PDFs with correct Content-Type
-app.use("/sauda", (req, res, next) => {
-  if (req.path.endsWith(".pdf")) {
-    res.setHeader("Content-Type", "application/pdf");
-  }
-  next();
-}, express.static(path.join(__dirname, "../../sauda"), { 
   maxAge: "1d",
   lastModified: true,
 }));
