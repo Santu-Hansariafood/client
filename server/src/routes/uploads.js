@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import imagekit from "../lib/imagekit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,8 +16,8 @@ if (!fs.existsSync(saudaDir)) {
   fs.mkdirSync(saudaDir, { recursive: true });
 }
 
-// Configure multer for disk storage
-const storage = multer.diskStorage({
+// Configure multer for disk storage (for WhatsApp sauda PDFs)
+const saudaStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, saudaDir);
   },
@@ -27,12 +28,19 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
-  storage,
+const uploadSauda = multer({
+  storage: saudaStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-router.post("/whatsapp", upload.single("file"), async (req, res) => {
+// Configure multer for memory storage (for ImageKit uploads)
+const memoryStorage = multer.memoryStorage();
+const uploadImageKit = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file provided" });
@@ -53,7 +61,7 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
   }
 });
 
-router.post("/", upload.single("file"), async (req, res) => {
+router.post("/", uploadImageKit.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file provided" });
