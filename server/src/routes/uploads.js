@@ -22,7 +22,7 @@ const saudaStorage = multer.diskStorage({
     cb(null, saudaDir);
   },
   filename: (req, file, cb) => {
-    const saudaNo = req.body.saudaNo || "unknown";
+    const saudaNo = req.body.saudaNo || "N/A";
     const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
     cb(null, fileName);
   },
@@ -42,6 +42,8 @@ const uploadImageKit = multer({
 
 router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
   try {
+    console.log("req.body:", req.body);
+    console.log("req.file:", req.file);
     if (!req.file) {
       return res.status(400).json({ message: "No file provided" });
     }
@@ -51,6 +53,7 @@ router.post("/whatsapp", uploadSauda.single("file"), async (req, res) => {
     const host = req.get("host");
     const fileUrl = `${protocol}://${host}/sauda/${fileName}`;
 
+    console.log("Generated fileUrl:", fileUrl);
     res.json({
       url: fileUrl,
       fileName,
