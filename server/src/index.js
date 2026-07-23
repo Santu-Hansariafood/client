@@ -152,6 +152,10 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
   maxAge: "1d",
   lastModified: true,
 }));
+app.use("/sauda", express.static(path.join(__dirname, "../../sauda"), { 
+  maxAge: "1d",
+  lastModified: true,
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

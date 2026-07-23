@@ -1,10 +1,32 @@
 import { Router } from "express";
 import multer from "multer";
-import imagekit from "../lib/imagekit.js";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
 
-const storage = multer.memoryStorage();
+// Create sauda directory if it doesn't exist
+const saudaDir = path.join(__dirname, "../../sauda");
+if (!fs.existsSync(saudaDir)) {
+  fs.mkdirSync(saudaDir, { recursive: true });
+}
+
+// Configure multer for disk storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, saudaDir);
+  },
+  filename: (req, file, cb) => {
+    const saudaNo = req.body.saudaNo || "unknown";
+    const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
+    cb(null, fileName);
+  },
+});
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -16,17 +38,13 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    const saudaNo = req.body.saudaNo || "unknown";
-    const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
-
-    const cloudUrl = await imagekit.uploadFile(
-      req.file,
-      fileName,
-      "/sauda_confirmations",
-    );
+    const fileName = req.file.filename;
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const fileUrl = `${protocol}://${host}/sauda/${fileName}`;
 
     res.json({
-      url: cloudUrl,
+      url: fileUrl,
       fileName,
     });
   } catch (error) {
