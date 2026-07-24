@@ -241,13 +241,19 @@ const SelfOrderList = () => {
           formData.append("file", blob, fileName);
           formData.append("saudaNo", item.saudaNo || "N/A");
 
-          const uploadRes = await api.post("/uploads/whatsapp", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
+          console.log("Uploading PDF with formData:", {
+            saudaNo: item.saudaNo,
+            fileName,
+            blobSize: blob.size,
           });
-
+          const uploadRes = await api.post("/uploads/whatsapp", formData);
+          
+          console.log("Upload response:", uploadRes);
           fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+          console.log("fileUrl set to:", fileUrl);
         } catch (err) {
-          console.warn("PDF Upload failed, falling back to text only", err);
+          console.error("PDF Upload failed completely:", err);
+          console.error("Error details:", err?.response?.data || err);
         }
 
         const consigneeObj = consigneeData.find(
