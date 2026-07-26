@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,6 +9,9 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
+import { pdf } from "@react-pdf/renderer";
+import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -88,6 +91,7 @@ const SelfOrder = () => {
   const [sellerCompanies, setSellerCompanies] = useState([]);
   const [allCommodities, setAllCommodities] = useState([]);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
+  const [qualityParameterData, setQualityParameterData] = useState([]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -99,6 +103,7 @@ const SelfOrder = () => {
           sellerCompaniesData,
           consigneesData,
           commoditiesData,
+          qualityParamsData,
         ] = await Promise.all([
           fetchAllPages("/sellers"),
           fetchAllPages("/companies"),
@@ -106,6 +111,7 @@ const SelfOrder = () => {
           fetchAllPages("/seller-company"),
           fetchAllPages("/consignees"),
           fetchAllPages("/commodities", { limit: 500 }),
+          fetchAllPages("/quality-parameters", { limit: 200 }).catch(() => []),
         ]);
 
         setSellerOptions(
@@ -139,6 +145,7 @@ const SelfOrder = () => {
         setSellerCompanies(sellerCompaniesData);
         setConsigneeOptions(consigneesData);
         setAllCommodities(commoditiesData);
+        setQualityParameterData(qualityParamsData);
       } catch (error) {
         toast.error("Failed to fetch initial data.");
       }
@@ -295,7 +302,42 @@ const SelfOrder = () => {
           console.error("Auto email error:", emailError);
         }
 
-        // Function to send WhatsApp
+        let fileUrl = null;
+        try {
+          const getConsigneeDisplay = (item) => {
+            const c = item.consignee;
+            if (typeof c === "object" && c?.name) return c.name;
+            if (typeof c === "object" && c?.label) return c.label;
+            if (c && typeof c === "string") return c;
+            return c || "N/A";
+          };
+
+          const pdfData = buildSaudaPdfData({
+            item: createdOrder,
+            consigneeData: consigneeOptions,
+            supplierData: sellerCompanies,
+            buyerData: buyerOptions,
+            companyData: companyOptions,
+            commodityData: allCommodities,
+            qualityParameterData,
+            sellerProfileData: sellerOptions,
+            getConsigneeDisplay,
+          });
+
+          const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+          if (blob && blob.size > 0) {
+            const fileName = `Sauda-${createdOrder.saudaNo || "N/A"}.pdf`;
+            const formData = new FormData();
+            formData.append("file", blob, fileName);
+            formData.append("saudaNo", createdOrder.saudaNo || "N/A");
+
+            const uploadRes = await api.post("/uploads/whatsapp", formData);
+            fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+          }
+        } catch (pdfErr) {
+          console.error("PDF generation/upload for WhatsApp failed:", pdfErr);
+        }
+
         const sendWhatsApp = async (mobileValue) => {
           if (!mobileValue) return;
           const cleanMobile = String(mobileValue).replace(/\D/g, "");
@@ -342,6 +384,11 @@ ${
 }
 *Payment Terms:* -  _${createdOrder.paymentTerms || "N/A"} Days_
 
+For complete details, please check your email.
+
+*View / Download Sauda PDF:*
+_${fileUrl || "PDF Link Not Available"}_
+
 *Thank You,*
 *Hansaria Food Private Limited*
 
@@ -355,7 +402,6 @@ ${
           }
         };
 
-        // Send to both buyer and seller if mobile numbers are present
         await sendWhatsApp(createdOrder.buyerMobile);
         await sendWhatsApp(createdOrder.sellerMobile);
       });
