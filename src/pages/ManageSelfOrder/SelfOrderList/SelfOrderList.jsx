@@ -15,8 +15,12 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import { pdf } from "@react-pdf/renderer";
+import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 import { downloadFile } from "../../../utils/fileDownloader";
+import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -178,7 +182,6 @@ const SelfOrderList = () => {
     [consigneeMap],
   );
 
-  // Updated WhatsApp handler – no PDF link
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
       if (userRole !== "Admin") {
@@ -216,6 +219,77 @@ const SelfOrderList = () => {
 
         finalMobile = finalMobile.replace(/^0+/, "");
 
+        const pdfData = buildSaudaPdfData({
+          item,
+          consigneeData,
+          supplierData,
+          buyerData,
+          companyData,
+          commodityData,
+          qualityParameterData,
+          sellerProfileData,
+          getConsigneeDisplay,
+        });
+
+        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        if (!blob || blob.size === 0) throw new Error("PDF generation failed");
+
+        const fileName = `Sauda-${item.saudaNo || "N/A"}.pdf`;
+        let fileUrl = null;
+
+        // Upload PDF to get a permanent URL
+        try {
+          const formData = new FormData();
+          formData.append("file", blob, fileName);
+          formData.append("saudaNo", item.saudaNo || "N/A");
+
+          console.log("[WhatsApp] Uploading PDF to ImageKit:", {
+            saudaNo: item.saudaNo,
+            fileName,
+            blobSize: blob.size,
+            blobType: blob.type,
+          });
+
+          const uploadRes = await api.post("/uploads/whatsapp", formData);
+
+          console.log("[WhatsApp] Upload raw response:", uploadRes);
+          console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
+
+          const raw = uploadRes?.data ?? {};
+          fileUrl = extractUploadUrl(raw) ||
+            raw?.url ||
+            raw?.fileUrl ||
+            raw?.cloudUrl ||
+            raw?.link ||
+            raw?.downloadUrl ||
+            raw?.href ||
+            raw?.publicUrl ||
+            raw?.secure_url ||
+            null;
+
+          if (fileUrl && !/^https?:\/\//i.test(fileUrl) && fileUrl.startsWith("/")) {
+            fileUrl = `${window.location.origin}${fileUrl}`;
+          }
+
+          console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
+
+          if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
+            console.warn(
+              "[WhatsApp] Could not find a public PDF URL in upload response:",
+              JSON.stringify(raw, null, 2),
+            );
+            throw new Error("PDF upload did not return a public URL");
+          }
+        } catch (uploadError) {
+          console.error("[WhatsApp] PDF Upload failed:", uploadError);
+          console.error(
+            "[WhatsApp] Error details:",
+            uploadError?.response?.data || uploadError?.message || uploadError
+          );
+          toast.error("The PDF could not be uploaded for WhatsApp.");
+          return;
+        }
+
         const formattedSaudaDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB", {
               day: "2-digit",
@@ -252,6 +326,11 @@ ${
 }
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
+For complete details, please check your email.
+
+*View / Download Sauda PDF:*
+${fileUrl}
+
 *Thank You,*
 *Hansaria Food Private Limited*
 
@@ -277,7 +356,18 @@ ${
         toast.error("Failed to prepare WhatsApp message");
       }
     },
-    [userRole, setData],
+    [
+      userRole,
+      getConsigneeDisplay,
+      buyerData,
+      supplierData,
+      consigneeData,
+      companyData,
+      commodityData,
+      qualityParameterData,
+      sellerProfileData,
+      setData,
+    ],
   );
 
   const handleView = useCallback(
