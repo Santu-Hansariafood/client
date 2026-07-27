@@ -131,7 +131,6 @@ router.post("/", upload.single("file"), async (req, res) => {
     const fileName = `${Date.now()}-${req.file.originalname}`;
     const folder = req.body.folder || "/";
 
-    // Directly upload to ImageKit without local storage
     const cloudUrl = await imagekit.uploadFile(req.file, fileName, folder);
 
     res.json({
@@ -152,7 +151,6 @@ router.delete("/", async (req, res) => {
       return res.status(400).json({ message: "File URL is required" });
     }
 
-    // Only delete from ImageKit as local files are no longer stored
     await imagekit.deleteFile(url);
     res.json({ message: "File deleted successfully" });
   } catch (error) {
