@@ -387,7 +387,7 @@ ${
 For complete details, please check your email.
 
 *View / Download Sauda PDF:*
-_${fileUrl || "PDF Link Not Available"}_
+${fileUrl ? fileUrl : "PDF Link Not Available"}
 
 *Thank You,*
 *Hansaria Food Private Limited*
