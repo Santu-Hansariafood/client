@@ -250,11 +250,7 @@ const SelfOrderList = () => {
             blobType: blob.type,
           });
 
-          const uploadRes = await api.post("/uploads/whatsapp", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
+          const uploadRes = await api.post("/uploads/whatsapp", formData);
 
           console.log("[WhatsApp] Upload raw response:", uploadRes);
           console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);

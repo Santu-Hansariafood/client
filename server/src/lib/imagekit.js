@@ -1,4 +1,11 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import ImageKit from "imagekit";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const localUploadBaseDir = path.resolve(__dirname, "../../uploads");
 
 class ImageKitStorage {
   constructor() {
@@ -40,25 +47,50 @@ class ImageKitStorage {
         this.refreshConfig();
       }
 
-      if (!this.imagekit) {
-        console.error("ImageKit not configured for upload");
-        throw new Error("ImageKit configuration missing");
+      if (this.imagekit) {
+        const response = await this.imagekit.upload({
+          file: file.buffer,
+          fileName: fileName,
+          useUniqueFileName: true,
+          folder: folder,
+        });
+
+        console.log("ImageKit upload success:", response.url);
+        return response.url;
       }
 
-      const response = await this.imagekit.upload({
-        file: file.buffer,
-        fileName: fileName,
-        useUniqueFileName: true,
-        folder: folder,
-      });
-
-      console.log("ImageKit upload success:", response.url);
-      return response.url;
+      return this.uploadLocally(file, fileName, folder);
     } catch (error) {
       console.error("ImageKit upload error details:", error);
+      if (error?.message?.includes("ImageKit") || error?.message?.includes("configuration missing")) {
+        return this.uploadLocally(file, fileName, folder);
+      }
       throw new Error(
         `Failed to upload file to ImageKit: ${error.message || "Unknown error"}`,
       );
+    }
+  }
+
+  async uploadLocally(file, fileName, folder = "/") {
+    try {
+      const normalizedFolder = (folder || "/").replace(/^\/+|\/+$/g, "");
+      const targetDir = normalizedFolder
+        ? path.join(localUploadBaseDir, normalizedFolder)
+        : localUploadBaseDir;
+
+      await fs.mkdir(targetDir, { recursive: true });
+      const filePath = path.join(targetDir, fileName);
+      await fs.writeFile(filePath, file.buffer || file);
+
+      const publicPath = normalizedFolder
+        ? `/uploads/${normalizedFolder}/${fileName}`
+        : `/uploads/${fileName}`;
+
+      console.log("Local upload fallback success:", publicPath);
+      return publicPath;
+    } catch (error) {
+      console.error("Local upload fallback error:", error);
+      throw new Error(`Failed to store file locally: ${error.message || "Unknown error"}`);
     }
   }
 

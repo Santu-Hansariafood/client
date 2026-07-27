@@ -21,17 +21,35 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
     const saudaNo = req.body.saudaNo || "N/A";
     const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
 
-    const cloudUrl = await imagekit.uploadFile(
+    const uploadResult = await imagekit.uploadFile(
       req.file,
       fileName,
       "/sauda_confirmations",
     );
 
-    console.log("Generated ImageKit URL:", cloudUrl);
-    res.json({
-      url: cloudUrl,
-      fileName,
-    });
+    const responsePayload =
+      typeof uploadResult === "string"
+        ? { url: uploadResult, fileName, fileUrl: uploadResult, cloudUrl: uploadResult }
+        : {
+            ...uploadResult,
+            fileName,
+            url: uploadResult?.url || uploadResult?.fileUrl || uploadResult?.cloudUrl || uploadResult?.link || null,
+            fileUrl: uploadResult?.fileUrl || uploadResult?.url || uploadResult?.cloudUrl || uploadResult?.link || null,
+            cloudUrl: uploadResult?.cloudUrl || uploadResult?.url || uploadResult?.fileUrl || uploadResult?.link || null,
+          };
+
+    const uploadUrl = responsePayload.url || responsePayload.fileUrl || responsePayload.cloudUrl || null;
+    const resolvedUrl =
+      !uploadUrl || /^https?:\/\//i.test(uploadUrl)
+        ? uploadUrl
+        : `${req.protocol}://${req.get("host")}${uploadUrl.startsWith("/") ? uploadUrl : `/${uploadUrl}`}`;
+
+    responsePayload.url = resolvedUrl;
+    responsePayload.fileUrl = resolvedUrl;
+    responsePayload.cloudUrl = resolvedUrl;
+
+    console.log("Generated ImageKit response payload:", responsePayload);
+    res.json(responsePayload);
   } catch (error) {
     console.error("WhatsApp upload error:", error);
     res.status(500).json({ message: error.message || "Failed to upload file" });
