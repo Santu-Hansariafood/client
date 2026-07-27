@@ -236,6 +236,7 @@ const SelfOrderList = () => {
         const fileName = `Sauda-${item.saudaNo || "N/A"}.pdf`;
         let fileUrl = null;
 
+        // Upload PDF to get a permanent URL
         try {
           const formData = new FormData();
           formData.append("file", blob, fileName);
@@ -247,34 +248,54 @@ const SelfOrderList = () => {
             blobSize: blob.size,
             blobType: blob.type,
           });
-          const uploadRes = await api.post("/uploads/whatsapp", formData);
+
+          const uploadRes = await api.post("/uploads/whatsapp", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
 
           console.log("[WhatsApp] Upload raw response:", uploadRes);
           console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
 
           const raw = uploadRes?.data ?? {};
+          
+          // Try multiple possible response structures
           fileUrl =
             raw.url ||
             raw.fileUrl ||
             raw.cloudUrl ||
-            (raw.data &&
-              (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
+            raw.link ||
+            raw.file ||
+            raw.path ||
+            (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl || raw.data.link)) ||
+            (raw.result && (raw.result.url || raw.result.fileUrl)) ||
             null;
+
+          // If fileUrl is still null, check if the response is a string (maybe direct URL)
+          if (!fileUrl && typeof raw === "string") {
+            fileUrl = raw;
+          }
 
           console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
 
           if (!fileUrl) {
             console.warn(
-              "[WhatsApp] Could not find URL in upload response. Keys:",
-              Object.keys(raw),
+              "[WhatsApp] Could not find URL in upload response. Full response:",
+              JSON.stringify(raw, null, 2)
             );
+            toast.warning("PDF uploaded but URL not found in response");
+          } else {
+            toast.success("PDF uploaded successfully");
           }
-        } catch (err) {
-          console.error("[WhatsApp] PDF Upload failed completely:", err);
+        } catch (uploadError) {
+          console.error("[WhatsApp] PDF Upload failed:", uploadError);
           console.error(
             "[WhatsApp] Error details:",
-            err?.response?.data || err?.message || err,
+            uploadError?.response?.data || uploadError?.message || uploadError
           );
+          toast.error("Failed to upload PDF. Link will not be available.");
+          // fileUrl remains null
         }
 
         const formattedSaudaDate = item.poDate
