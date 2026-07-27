@@ -12,6 +12,7 @@ import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmai
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -365,12 +366,7 @@ const SelfOrder = () => {
             console.log("[SelfOrder WhatsApp] uploadRes.data:", uploadRes?.data);
 
             const raw = uploadRes?.data ?? {};
-            fileUrl =
-              raw.url ||
-              raw.fileUrl ||
-              raw.cloudUrl ||
-              (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
-              null;
+            fileUrl = extractUploadUrl(raw);
 
             console.log("[SelfOrder WhatsApp] Resolved fileUrl:", fileUrl);
 

@@ -20,6 +20,7 @@ import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 import { downloadFile } from "../../../utils/fileDownloader";
+import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -259,23 +260,7 @@ const SelfOrderList = () => {
           console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
 
           const raw = uploadRes?.data ?? {};
-          
-          // Try multiple possible response structures
-          fileUrl =
-            raw.url ||
-            raw.fileUrl ||
-            raw.cloudUrl ||
-            raw.link ||
-            raw.file ||
-            raw.path ||
-            (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl || raw.data.link)) ||
-            (raw.result && (raw.result.url || raw.result.fileUrl)) ||
-            null;
-
-          // If fileUrl is still null, check if the response is a string (maybe direct URL)
-          if (!fileUrl && typeof raw === "string") {
-            fileUrl = raw;
-          }
+          fileUrl = extractUploadUrl(raw);
 
           console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
 
