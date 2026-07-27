@@ -248,7 +248,7 @@ const SelfOrderList = () => {
             blobType: blob.type,
           });
           const uploadRes = await api.post("/uploads/whatsapp", formData);
-          
+
           console.log("[WhatsApp] Upload raw response:", uploadRes);
           console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
 
@@ -257,38 +257,26 @@ const SelfOrderList = () => {
             raw.url ||
             raw.fileUrl ||
             raw.cloudUrl ||
-            (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
+            (raw.data &&
+              (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
             null;
 
           console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
 
           if (!fileUrl) {
-            console.warn("[WhatsApp] Could not find URL in upload response. Keys:", Object.keys(raw));
+            console.warn(
+              "[WhatsApp] Could not find URL in upload response. Keys:",
+              Object.keys(raw),
+            );
           }
         } catch (err) {
           console.error("[WhatsApp] PDF Upload failed completely:", err);
-          console.error("[WhatsApp] Error details:", err?.response?.data || err?.message || err);
+          console.error(
+            "[WhatsApp] Error details:",
+            err?.response?.data || err?.message || err,
+          );
         }
 
-        const consigneeObj = consigneeData.find(
-          (c) =>
-            String(c._id) === String(item.consignee?._id || item.consignee) ||
-            c.name === item.consignee ||
-            c.label === item.consignee,
-        );
-
-        const consigneeAddress = consigneeObj
-          ? [
-              consigneeObj.location,
-              consigneeObj.district,
-              consigneeObj.state,
-              consigneeObj.pin,
-            ]
-              .filter(Boolean)
-              .join(", ")
-          : "";
-
-        const consigneeName = getConsigneeDisplay(item);
         const formattedSaudaDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB", {
               day: "2-digit",
@@ -334,14 +322,6 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
 *Hansaria Food Private Limited*
 
 *https://bid.hansariafood.in*`;
-
-        // Call the automatic WhatsApp API
-        try {
-          const apiUrl = `http://wapp.nkinfo.in/wapp/v2/api/send?apikey=a44983c9243e434f9466158a2eca54d8&mobile=${finalMobile}&msg=${encodeURIComponent(finalMessage)}`;
-          await fetch(apiUrl);
-        } catch (apiErr) {
-          console.warn("Automatic WhatsApp API call failed", apiErr);
-        }
 
         const isMobileDevice =
           /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
@@ -660,7 +640,10 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
           </span>,
 
           userRole === "Admin" ? (
-            <div className="flex items-center gap-2" key={`seller-mob-${item._id}`}>
+            <div
+              className="flex items-center gap-2"
+              key={`seller-mob-${item._id}`}
+            >
               <span className="font-medium text-slate-600">
                 {item.sellerMobile || "N/A"}
               </span>
@@ -741,8 +724,7 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
           endDate instanceof Date ? endDate.toISOString() : endDate || "",
         userRole,
         mobile,
-        // Add missing filters
-        saudaNo: searchInput?.trim() || "", // The search input often maps to saudaNo too
+        saudaNo: searchInput?.trim() || "",
       };
 
       const response = await api.get(`${API_URL}/export/excel`, {
