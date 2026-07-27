@@ -383,11 +383,12 @@ const SelfOrder = () => {
 
             console.log("[SelfOrder WhatsApp] Resolved fileUrl:", fileUrl);
 
-            if (!fileUrl) {
+            if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
               console.warn(
-                "[SelfOrder WhatsApp] Could not find URL in upload response. Keys:",
+                "[SelfOrder WhatsApp] Could not find a public PDF URL in upload response. Keys:",
                 Object.keys(raw),
               );
+              fileUrl = null;
             }
           } else {
             console.error("[SelfOrder WhatsApp] PDF blob was empty, skipping upload");
@@ -397,6 +398,14 @@ const SelfOrder = () => {
             "[SelfOrder WhatsApp] PDF generation/upload failed:",
             pdfErr?.message || pdfErr,
           );
+        }
+
+        // Do not send a WhatsApp message until the recipient can open the PDF.
+        if (!fileUrl) {
+          toast.error(
+            "PDF link could not be created. WhatsApp messages were not sent.",
+          );
+          return;
         }
 
         const sendWhatsApp = async (mobileValue) => {
@@ -448,7 +457,7 @@ ${
 For complete details, please check your email.
 
 *View / Download Sauda PDF:*
-${fileUrl ? fileUrl : "PDF Link Not Available"}
+${fileUrl}
 
 *Thank You,*
 *Hansaria Food Private Limited*
