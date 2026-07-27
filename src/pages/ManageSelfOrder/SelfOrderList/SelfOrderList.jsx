@@ -273,14 +273,12 @@ const SelfOrderList = () => {
 
           console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
 
-          if (!fileUrl) {
+          if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
             console.warn(
-              "[WhatsApp] Could not find URL in upload response. Full response:",
-              JSON.stringify(raw, null, 2)
+              "[WhatsApp] Could not find a public PDF URL in upload response:",
+              JSON.stringify(raw, null, 2),
             );
-            toast.warning("PDF uploaded but URL not found in response");
-          } else {
-            toast.success("PDF uploaded successfully");
+            throw new Error("PDF upload did not return a public URL");
           }
         } catch (uploadError) {
           console.error("[WhatsApp] PDF Upload failed:", uploadError);
@@ -288,8 +286,8 @@ const SelfOrderList = () => {
             "[WhatsApp] Error details:",
             uploadError?.response?.data || uploadError?.message || uploadError
           );
-          toast.error("Failed to upload PDF. Link will not be available.");
-          // fileUrl remains null
+          toast.error("The PDF could not be uploaded for WhatsApp.");
+          return;
         }
 
         const formattedSaudaDate = item.poDate
@@ -331,48 +329,12 @@ ${
 For complete details, please check your email.
 
 *View / Download Sauda PDF:*
-${fileUrl ? fileUrl : "PDF Link Not Available"}
+${fileUrl}
 
 *Thank You,*
 *Hansaria Food Private Limited*
 
 *https://bid.hansariafood.in*`;
-
-        const isMobileDevice =
-          /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-            navigator.userAgent,
-          );
-
-        if (isMobileDevice && navigator.canShare && fileUrl) {
-          try {
-            const file = new File([blob], fileName, {
-              type: "application/pdf",
-            });
-            const shareData = {
-              files: [file],
-              title: `Sauda No: ${item.saudaNo || "Order"}`,
-              text: finalMessage,
-            };
-
-            if (navigator.canShare(shareData)) {
-              await navigator.share(shareData);
-              toast.dismiss(toastId);
-              toast.success("Shared successfully");
-
-              api
-                .patch(`/self-order/${item._id}/whatsapp-sent`)
-                .catch(() => {});
-              setData((prev) =>
-                prev.map((o) =>
-                  o._id === item._id ? { ...o, whatsappSent: true } : o,
-                ),
-              );
-              return;
-            }
-          } catch (shareErr) {
-            console.warn("Web Share failed, falling back to wa.me", shareErr);
-          }
-        }
 
         window.open(
           `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`,

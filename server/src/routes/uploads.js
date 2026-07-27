@@ -67,29 +67,29 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
       return null;
     };
 
-    const resolvedUrl = resolveUrl(uploadResult);
+    const uploadedFileUrl = resolveUrl(uploadResult);
     const responsePayload =
       typeof uploadResult === "string"
         ? {
-            url: resolvedUrl || uploadResult,
+            url: uploadedFileUrl || uploadResult,
             fileName,
-            fileUrl: resolvedUrl || uploadResult,
-            cloudUrl: resolvedUrl || uploadResult,
-            publicUrl: resolvedUrl || uploadResult,
-            downloadUrl: resolvedUrl || uploadResult,
-            href: resolvedUrl || uploadResult,
-            secure_url: resolvedUrl || uploadResult,
+            fileUrl: uploadedFileUrl || uploadResult,
+            cloudUrl: uploadedFileUrl || uploadResult,
+            publicUrl: uploadedFileUrl || uploadResult,
+            downloadUrl: uploadedFileUrl || uploadResult,
+            href: uploadedFileUrl || uploadResult,
+            secure_url: uploadedFileUrl || uploadResult,
           }
         : {
             ...uploadResult,
             fileName,
-            url: resolvedUrl,
-            fileUrl: resolvedUrl,
-            cloudUrl: resolvedUrl,
-            publicUrl: resolvedUrl,
-            downloadUrl: resolvedUrl,
-            href: resolvedUrl,
-            secure_url: resolvedUrl,
+            url: uploadedFileUrl,
+            fileUrl: uploadedFileUrl,
+            cloudUrl: uploadedFileUrl,
+            publicUrl: uploadedFileUrl,
+            downloadUrl: uploadedFileUrl,
+            href: uploadedFileUrl,
+            secure_url: uploadedFileUrl,
           };
 
     const uploadUrl =
