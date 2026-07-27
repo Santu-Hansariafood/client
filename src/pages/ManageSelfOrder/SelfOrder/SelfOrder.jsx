@@ -366,7 +366,20 @@ const SelfOrder = () => {
             console.log("[SelfOrder WhatsApp] uploadRes.data:", uploadRes?.data);
 
             const raw = uploadRes?.data ?? {};
-            fileUrl = extractUploadUrl(raw);
+            fileUrl = extractUploadUrl(raw) ||
+              raw?.url ||
+              raw?.fileUrl ||
+              raw?.cloudUrl ||
+              raw?.link ||
+              raw?.downloadUrl ||
+              raw?.href ||
+              raw?.publicUrl ||
+              raw?.secure_url ||
+              null;
+
+            if (fileUrl && !/^https?:\/\//i.test(fileUrl) && fileUrl.startsWith("/")) {
+              fileUrl = `${window.location.origin}${fileUrl}`;
+            }
 
             console.log("[SelfOrder WhatsApp] Resolved fileUrl:", fileUrl);
 

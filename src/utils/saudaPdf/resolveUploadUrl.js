@@ -26,10 +26,12 @@ export const extractUploadUrl = (payload) => {
         "fileUrl",
         "cloudUrl",
         "link",
-        "file",
-        "path",
-        "publicUrl",
         "downloadUrl",
+        "publicUrl",
+        "secure_url",
+        "href",
+        "src",
+        "path",
       ].forEach((key) => collect(value[key]));
 
       [value.data, value.result, value.response, value.payload].forEach(

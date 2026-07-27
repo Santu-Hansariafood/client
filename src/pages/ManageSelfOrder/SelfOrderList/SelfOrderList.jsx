@@ -256,7 +256,20 @@ const SelfOrderList = () => {
           console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
 
           const raw = uploadRes?.data ?? {};
-          fileUrl = extractUploadUrl(raw);
+          fileUrl = extractUploadUrl(raw) ||
+            raw?.url ||
+            raw?.fileUrl ||
+            raw?.cloudUrl ||
+            raw?.link ||
+            raw?.downloadUrl ||
+            raw?.href ||
+            raw?.publicUrl ||
+            raw?.secure_url ||
+            null;
+
+          if (fileUrl && !/^https?:\/\//i.test(fileUrl) && fileUrl.startsWith("/")) {
+            fileUrl = `${window.location.origin}${fileUrl}`;
+          }
 
           console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
 
@@ -392,7 +405,6 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
       qualityParameterData,
       sellerProfileData,
       setData,
-      api,
     ],
   );
 
@@ -705,6 +717,9 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
       supplierData,
       buyerData,
       sellerProfileData,
+      companyData,
+      commodityData,
+      qualityParameterData,
     ],
   );
 
