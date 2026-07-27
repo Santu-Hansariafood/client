@@ -43,5 +43,20 @@ export const extractUploadUrl = (payload) => {
   collect(payload);
 
   const directUrl = candidates.find((candidate) => /^https?:\/\//i.test(candidate));
-  return directUrl || candidates[0] || null;
+  if (directUrl) return directUrl;
+
+  const extractedUrl = candidates
+    .map((candidate) => {
+      const match = candidate.match(/https?:\/\/[^")\]\s']+/i);
+      return match ? match[0] : null;
+    })
+    .find(Boolean);
+
+  if (extractedUrl) return extractedUrl;
+
+  const stringified = JSON.stringify(payload || "");
+  const jsonMatch = stringified.match(/https?:\/\/[^")\]\s']+/i);
+  if (jsonMatch) return jsonMatch[0];
+
+  return candidates[0] || null;
 };

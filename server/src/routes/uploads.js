@@ -27,91 +27,69 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
       "/sauda_confirmations",
     );
 
+    const resolveUrl = (value) => {
+      if (!value) return null;
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        const match = trimmed.match(/https?:\/\/[^")\]\s']+/i);
+        return match ? match[0] : trimmed || null;
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          const result = resolveUrl(item);
+          if (result) return result;
+        }
+        return null;
+      }
+      if (typeof value === "object") {
+        const keys = [
+          "url",
+          "fileUrl",
+          "cloudUrl",
+          "link",
+          "downloadUrl",
+          "publicUrl",
+          "secure_url",
+          "href",
+          "src",
+          "path",
+        ];
+        for (const key of keys) {
+          const result = resolveUrl(value[key]);
+          if (result) return result;
+        }
+        for (const key of ["data", "result", "response", "payload"]) {
+          const result = resolveUrl(value[key]);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+
+    const resolvedUrl = resolveUrl(uploadResult);
     const responsePayload =
       typeof uploadResult === "string"
         ? {
-            url: uploadResult,
+            url: resolvedUrl || uploadResult,
             fileName,
-            fileUrl: uploadResult,
-            cloudUrl: uploadResult,
-            publicUrl: uploadResult,
-            downloadUrl: uploadResult,
-            href: uploadResult,
-            secure_url: uploadResult,
+            fileUrl: resolvedUrl || uploadResult,
+            cloudUrl: resolvedUrl || uploadResult,
+            publicUrl: resolvedUrl || uploadResult,
+            downloadUrl: resolvedUrl || uploadResult,
+            href: resolvedUrl || uploadResult,
+            secure_url: resolvedUrl || uploadResult,
           }
         : {
             ...uploadResult,
             fileName,
-            url:
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.publicUrl ||
-              uploadResult?.href ||
-              uploadResult?.secure_url ||
-              null,
-            fileUrl:
-              uploadResult?.fileUrl ||
-              uploadResult?.url ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.publicUrl ||
-              uploadResult?.href ||
-              uploadResult?.secure_url ||
-              null,
-            cloudUrl:
-              uploadResult?.cloudUrl ||
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.publicUrl ||
-              uploadResult?.href ||
-              uploadResult?.secure_url ||
-              null,
-            publicUrl:
-              uploadResult?.publicUrl ||
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.href ||
-              uploadResult?.secure_url ||
-              null,
-            downloadUrl:
-              uploadResult?.downloadUrl ||
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.publicUrl ||
-              uploadResult?.href ||
-              uploadResult?.secure_url ||
-              null,
-            href:
-              uploadResult?.href ||
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.publicUrl ||
-              uploadResult?.secure_url ||
-              null,
-            secure_url:
-              uploadResult?.secure_url ||
-              uploadResult?.url ||
-              uploadResult?.fileUrl ||
-              uploadResult?.cloudUrl ||
-              uploadResult?.link ||
-              uploadResult?.downloadUrl ||
-              uploadResult?.publicUrl ||
-              uploadResult?.href ||
-              null,
+            url: resolvedUrl,
+            fileUrl: resolvedUrl,
+            cloudUrl: resolvedUrl,
+            publicUrl: resolvedUrl,
+            downloadUrl: resolvedUrl,
+            href: resolvedUrl,
+            secure_url: resolvedUrl,
           };
 
     const uploadUrl =
