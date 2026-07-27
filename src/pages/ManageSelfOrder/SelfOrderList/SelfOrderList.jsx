@@ -233,7 +233,7 @@ const SelfOrderList = () => {
         const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
         if (!blob || blob.size === 0) throw new Error("PDF generation failed");
 
-        const fileName = `Sauda-${item.saudaNo}.pdf`;
+        const fileName = `Sauda-${item.saudaNo || "N/A"}.pdf`;
         let fileUrl = null;
 
         try {
@@ -241,19 +241,33 @@ const SelfOrderList = () => {
           formData.append("file", blob, fileName);
           formData.append("saudaNo", item.saudaNo || "N/A");
 
-          console.log("Uploading PDF with formData:", {
+          console.log("[WhatsApp] Uploading PDF to ImageKit:", {
             saudaNo: item.saudaNo,
             fileName,
             blobSize: blob.size,
+            blobType: blob.type,
           });
           const uploadRes = await api.post("/uploads/whatsapp", formData);
           
-          console.log("Upload response:", uploadRes);
-          fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
-          console.log("fileUrl set to:", fileUrl);
+          console.log("[WhatsApp] Upload raw response:", uploadRes);
+          console.log("[WhatsApp] uploadRes.data:", uploadRes?.data);
+
+          const raw = uploadRes?.data ?? {};
+          fileUrl =
+            raw.url ||
+            raw.fileUrl ||
+            raw.cloudUrl ||
+            (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
+            null;
+
+          console.log("[WhatsApp] Resolved fileUrl:", fileUrl);
+
+          if (!fileUrl) {
+            console.warn("[WhatsApp] Could not find URL in upload response. Keys:", Object.keys(raw));
+          }
         } catch (err) {
-          console.error("PDF Upload failed completely:", err);
-          console.error("Error details:", err?.response?.data || err);
+          console.error("[WhatsApp] PDF Upload failed completely:", err);
+          console.error("[WhatsApp] Error details:", err?.response?.data || err?.message || err);
         }
 
         const consigneeObj = consigneeData.find(
@@ -392,6 +406,11 @@ ${fileUrl ? fileUrl : "PDF Link Not Available"}
       supplierData,
       consigneeData,
       companyData,
+      commodityData,
+      qualityParameterData,
+      sellerProfileData,
+      setData,
+      api,
     ],
   );
 

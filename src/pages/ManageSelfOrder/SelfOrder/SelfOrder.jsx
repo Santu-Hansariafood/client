@@ -312,30 +312,82 @@ const SelfOrder = () => {
             return c || "N/A";
           };
 
+          const [
+            freshConsigneeData,
+            freshSupplierData,
+            freshBuyerData,
+            freshCompanyData,
+            freshSellerProfileData,
+            freshCommodityData,
+            freshQualityParameterData,
+          ] = await Promise.all([
+            fetchAllPages("/consignees", { limit: 200 }),
+            fetchAllPages("/seller-company", { limit: 200 }),
+            fetchAllPages("/buyers", { limit: 200 }),
+            fetchAllPages("/companies", { limit: 200 }),
+            fetchAllPages("/sellers", { limit: 200 }),
+            fetchAllPages("/commodities", { limit: 200 }),
+            fetchAllPages("/quality-parameters", { limit: 200 }),
+          ]);
+
           const pdfData = buildSaudaPdfData({
             item: createdOrder,
-            consigneeData: consigneeOptions,
-            supplierData: sellerCompanies,
-            buyerData: buyerOptions,
-            companyData: companyOptions,
-            commodityData: allCommodities,
-            qualityParameterData,
-            sellerProfileData: sellerOptions,
+            consigneeData: freshConsigneeData,
+            supplierData: freshSupplierData,
+            buyerData: freshBuyerData,
+            companyData: freshCompanyData,
+            commodityData: freshCommodityData,
+            qualityParameterData: freshQualityParameterData,
+            sellerProfileData: freshSellerProfileData,
             getConsigneeDisplay,
           });
 
           const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+          console.log("[SelfOrder WhatsApp] PDF blob:", {
+            size: blob?.size,
+            type: blob?.type,
+            valid: blob && blob.size > 0,
+          });
           if (blob && blob.size > 0) {
             const fileName = `Sauda-${createdOrder.saudaNo || "N/A"}.pdf`;
             const formData = new FormData();
             formData.append("file", blob, fileName);
             formData.append("saudaNo", createdOrder.saudaNo || "N/A");
 
+            console.log("[SelfOrder WhatsApp] Uploading PDF to ImageKit:", {
+              saudaNo: createdOrder.saudaNo,
+              fileName,
+              blobSize: blob.size,
+            });
+
             const uploadRes = await api.post("/uploads/whatsapp", formData);
-            fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+            console.log("[SelfOrder WhatsApp] Upload response:", uploadRes);
+            console.log("[SelfOrder WhatsApp] uploadRes.data:", uploadRes?.data);
+
+            const raw = uploadRes?.data ?? {};
+            fileUrl =
+              raw.url ||
+              raw.fileUrl ||
+              raw.cloudUrl ||
+              (raw.data && (raw.data.url || raw.data.fileUrl || raw.data.cloudUrl)) ||
+              null;
+
+            console.log("[SelfOrder WhatsApp] Resolved fileUrl:", fileUrl);
+
+            if (!fileUrl) {
+              console.warn(
+                "[SelfOrder WhatsApp] Could not find URL in upload response. Keys:",
+                Object.keys(raw),
+              );
+            }
+          } else {
+            console.error("[SelfOrder WhatsApp] PDF blob was empty, skipping upload");
           }
         } catch (pdfErr) {
-          console.error("PDF generation/upload for WhatsApp failed:", pdfErr);
+          console.error(
+            "[SelfOrder WhatsApp] PDF generation/upload failed:",
+            pdfErr?.message || pdfErr,
+          );
         }
 
         const sendWhatsApp = async (mobileValue) => {
