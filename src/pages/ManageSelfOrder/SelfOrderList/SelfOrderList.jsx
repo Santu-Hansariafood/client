@@ -17,6 +17,10 @@ import { FaClipboardList } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { downloadFile } from "../../../utils/fileDownloader";
+import { pdf } from "@react-pdf/renderer";
+import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -178,7 +182,6 @@ const SelfOrderList = () => {
     [consigneeMap],
   );
 
-  // Updated WhatsApp handler – no PDF link
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
       if (userRole !== "Admin") {
@@ -197,7 +200,79 @@ const SelfOrderList = () => {
         ? mobileValue[0]
         : mobileValue;
 
-      const toastId = toast.loading("Preparing WhatsApp...");
+      const toastId = toast.loading("Generating PDF & uploading...");
+
+      let fileUrl = null;
+      try {
+        const pdfData = buildSaudaPdfData({
+          item,
+          consigneeData,
+          supplierData,
+          buyerData,
+          companyData,
+          commodityData,
+          qualityParameterData,
+          sellerProfileData,
+          getConsigneeDisplay,
+        });
+
+        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        console.log("[SelfOrderList WhatsApp] PDF blob:", {
+          size: blob?.size,
+          type: blob?.type,
+          valid: blob && blob.size > 0,
+        });
+
+        if (blob && blob.size > 0) {
+          const fileName = `Sauda-${item.saudaNo || "N/A"}.pdf`;
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", blob, fileName);
+          uploadFormData.append("saudaNo", item.saudaNo || "N/A");
+
+          console.log("[SelfOrderList WhatsApp] Uploading PDF to ImageKit:", {
+            saudaNo: item.saudaNo,
+            fileName,
+            blobSize: blob.size,
+          });
+
+          const uploadRes = await api.post("/uploads/whatsapp", uploadFormData);
+          console.log("[SelfOrderList WhatsApp] Upload response:", uploadRes);
+          console.log("[SelfOrderList WhatsApp] uploadRes.data:", uploadRes?.data);
+
+          const raw = uploadRes?.data ?? {};
+          fileUrl = extractUploadUrl(raw) ||
+            raw?.url ||
+            raw?.fileUrl ||
+            raw?.cloudUrl ||
+            raw?.link ||
+            raw?.downloadUrl ||
+            raw?.href ||
+            raw?.publicUrl ||
+            raw?.secure_url ||
+            null;
+
+          if (fileUrl && !/^https?:\/\//i.test(fileUrl) && fileUrl.startsWith("/")) {
+            fileUrl = `${window.location.origin}${fileUrl}`;
+          }
+
+          console.log("[SelfOrderList WhatsApp] Resolved fileUrl:", fileUrl);
+
+          if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
+            console.warn(
+              "[SelfOrderList WhatsApp] Could not find a public PDF URL in upload response. Keys:",
+              Object.keys(raw),
+            );
+            fileUrl = null;
+          }
+        } else {
+          console.error("[SelfOrderList WhatsApp] PDF blob was empty, skipping upload");
+        }
+      } catch (pdfErr) {
+        console.error(
+          "[SelfOrderList WhatsApp] PDF generation/upload failed:",
+          pdfErr?.message || pdfErr,
+        );
+      }
 
       try {
         const cleanMobile = String(mobileNumber).replace(/\D/g, "");
@@ -230,6 +305,13 @@ const SelfOrderList = () => {
               })
             : "N/A";
 
+        const pdfSection = fileUrl
+          ? `
+*View / Download Sauda PDF:*
+${fileUrl}
+`
+          : "";
+
         const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
 
 *SAUDA CONFIRMATION*
@@ -239,7 +321,7 @@ const SelfOrderList = () => {
 *PO Number:* -  _${item.poNumber || "N/A"}_
 *Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
 *Supplier Company:* -  _${item.supplierCompany || item.supplier || "N/A"}_
-*Delivery Address:* -  _${item.consignee || "N/A"}_
+*Delivery Address:* -  _${getConsigneeDisplay(item) || "N/A"}_
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
 *Rate:* -  _₹${item.rate || "0"}${
@@ -251,7 +333,7 @@ ${
     : ""
 }
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
-
+${pdfSection}
 *Thank You,*
 *Hansaria Food Private Limited*
 
@@ -270,14 +352,29 @@ ${
         );
 
         toast.dismiss(toastId);
-        toast.success("WhatsApp opened successfully");
+        if (fileUrl) {
+          toast.success("WhatsApp opened with PDF link");
+        } else {
+          toast.warn("WhatsApp opened but PDF upload failed – no document attached");
+        }
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
         toast.error("Failed to prepare WhatsApp message");
       }
     },
-    [userRole, setData],
+    [
+      userRole,
+      setData,
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      commodityData,
+      qualityParameterData,
+      sellerProfileData,
+      getConsigneeDisplay,
+    ],
   );
 
   const handleView = useCallback(

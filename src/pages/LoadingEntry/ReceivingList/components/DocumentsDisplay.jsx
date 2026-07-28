@@ -1,6 +1,9 @@
 import React from "react";
 import { FaFileAlt } from "react-icons/fa";
 
+const PDF_RE = /\.pdf(\?.*)?(#.*)?$/i;
+const isPdfUrl = (url) => PDF_RE.test(url || "");
+
 const DocumentsDisplay = ({ documents, documentUrl }) => {
   const docTypes = [
     { key: "kantaSlip", label: "Kanta Slip", color: "blue" },
@@ -11,7 +14,9 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
   const filteredDocs = docTypes
     .map((docType) => {
       const url = documents?.[docType.key];
-      return url ? { ...docType, url } : null;
+      return url && typeof url === "string" && url.trim()
+        ? { ...docType, url }
+        : null;
     })
     .filter(Boolean);
 
@@ -36,13 +41,18 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
               />
               {doc.label}
             </h4>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50">
-              Verified
-            </span>
+            <a
+              href={doc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 hover:text-emerald-600 hover:bg-emerald-50 transition"
+            >
+              Open
+            </a>
           </div>
 
           <div className="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[300px]">
-            {doc.url.endsWith(".pdf") ? (
+            {isPdfUrl(doc.url) ? (
               <a
                 href={doc.url}
                 target="_blank"
@@ -62,11 +72,19 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
                 </div>
               </a>
             ) : (
-              <img
-                src={doc.url}
-                alt={doc.label}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
+              <a
+                href={doc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full h-full"
+              >
+                <img
+                  src={doc.url}
+                  alt={doc.label}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  crossOrigin="anonymous"
+                />
+              </a>
             )}
           </div>
         </div>

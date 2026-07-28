@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import Cropper from "react-easy-crop";
 import {
@@ -13,6 +13,9 @@ import apiClient from "../../utils/apiClient/apiClient";
 
 const A4_PORTRAIT_RATIO = 210 / 297;
 const A4_LANDSCAPE_RATIO = 297 / 210;
+
+const IMAGE_EXT_RE = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?(#.*)?$/i;
+const isImageUrl = (url) => IMAGE_EXT_RE.test(url || "");
 
 const FileUpload = ({
   label,
@@ -33,6 +36,15 @@ const FileUpload = ({
   const [previewZoom, setPreviewZoom] = useState(1);
   const [isPdf, setIsPdf] = useState(false);
   const pdfRef = useRef(null);
+
+  useEffect(() => {
+    setShowUploader(!currentUrl);
+    setFile(null);
+    setImageSrc("");
+    setCroppedAreaPixels(null);
+    setIsPdf(false);
+    setFileName("");
+  }, [currentUrl]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -90,8 +102,15 @@ const FileUpload = ({
       } catch (error) {
         console.error("Delete error:", error);
         alert("Failed to delete file. Please try again.");
+        return;
       }
     }
+    setShowUploader(true);
+    setFile(null);
+    setImageSrc("");
+    setCroppedAreaPixels(null);
+    setIsPdf(false);
+    setFileName("");
   };
 
   const cancelCrop = () => {
@@ -164,12 +183,13 @@ const FileUpload = ({
           </div>
 
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-4 flex justify-center">
-            {currentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+            {isImageUrl(currentUrl) ? (
               <img
                 src={currentUrl}
                 alt="Document preview"
                 className="max-w-full max-h-96 object-contain transition-transform duration-200"
                 style={{ transform: `scale(${previewZoom})` }}
+                crossOrigin="anonymous"
               />
             ) : (
               <iframe
