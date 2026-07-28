@@ -1,10 +1,37 @@
 import React from "react";
-import { FaFileAlt } from "react-icons/fa";
+import { FaFileAlt, FaPrint } from "react-icons/fa";
 
 const PDF_RE = /\.pdf(\?.*)?(#.*)?$/i;
+const DATA_PDF_RE = /^data:application\/pdf/i;
 const IMAGE_EXT_RE = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?(#.*)?$/i;
-const isPdfUrl = (url) => PDF_RE.test(url || "");
-const isImageUrl = (url) => IMAGE_EXT_RE.test(url || "");
+const DATA_IMG_RE = /^data:image\//i;
+const isPdfUrl = (url) => PDF_RE.test(url || "") || DATA_PDF_RE.test(url || "");
+const isImageUrl = (url) => IMAGE_EXT_RE.test(url || "") || DATA_IMG_RE.test(url || "");
+const toAbsolute = (url) => {
+  if (!url || typeof url !== "string") return url || "";
+  if (/^https?:\/\//i.test(url) || /^data:/i.test(url) || /^blob:/i.test(url)) return url;
+  try {
+    const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
+    if (!origin) return url;
+    return `${origin}${url.startsWith("/") ? url : `/${url}`}`;
+  } catch {
+    return url;
+  }
+};
+const handlePrint = (url, e) => {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const u = toAbsolute(url);
+  const w = window.open(u, "_blank", "noopener,noreferrer");
+  if (!w) return;
+  setTimeout(() => {
+    try {
+      w.focus();
+      if (typeof w.print === "function") w.print();
+    } catch {
+      /* cross-origin or not loaded — user prints manually */
+    }
+  }, 1200);
+};
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -22,6 +49,7 @@ const formatDate = (date) => {
 };
 
 const DocumentCard = ({ label, url, color }) => {
+  const absUrl = toAbsolute(url);
   return (
     <div className="space-y-3 group">
       <div className="flex items-center justify-between">
@@ -33,20 +61,32 @@ const DocumentCard = ({ label, url, color }) => {
           />
           {label}
         </h4>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 hover:text-emerald-600 hover:bg-emerald-50 transition"
-        >
-          Open
-        </a>
+        <div className="flex items-center gap-2">
+          {isPdfUrl(absUrl) && (
+            <button
+              type="button"
+              onClick={(e) => handlePrint(absUrl, e)}
+              className="text-[9px] font-black text-sky-600 uppercase tracking-widest px-2 py-0.5 rounded bg-sky-50 hover:text-sky-700 hover:bg-sky-100 transition inline-flex items-center gap-1"
+              title="Print PDF"
+            >
+              <FaPrint size={10} /> Print
+            </button>
+          )}
+          <a
+            href={absUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 hover:text-emerald-600 hover:bg-emerald-50 transition"
+          >
+            Open
+          </a>
+        </div>
       </div>
 
       <div className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[260px]">
-        {isPdfUrl(url) ? (
+        {isPdfUrl(absUrl) ? (
           <a
-            href={url}
+            href={absUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group/btn flex flex-col items-center gap-4 p-8 text-center"
@@ -63,23 +103,24 @@ const DocumentCard = ({ label, url, color }) => {
               </p>
             </div>
           </a>
-        ) : isImageUrl(url) ? (
+        ) : isImageUrl(absUrl) ? (
           <a
-            href={url}
+            href={absUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full h-full"
           >
             <img
-              src={url}
+              src={absUrl}
               alt={label}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               crossOrigin="anonymous"
+              referrerPolicy="no-referrer-when-downgrade"
             />
           </a>
         ) : (
           <a
-            href={url}
+            href={absUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group/btn flex flex-col items-center gap-4 p-8 text-center"

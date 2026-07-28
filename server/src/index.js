@@ -77,12 +77,20 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https://ik.imagekit.io"],
+      imgSrc: ["'self'", "data:", "blob:", "https://ik.imagekit.io"],
       fontSrc: ["'self'", "data:"],
+      mediaSrc: ["'self'", "blob:", "data:", "https://ik.imagekit.io"],
+      frameSrc: ["'self'", "blob:", "data:", "https://ik.imagekit.io"],
+      objectSrc: ["'self'", "blob:", "data:", "https://ik.imagekit.io"],
+      workerSrc: ["'self'", "blob:"],
+      connectSrc: ["'self'", "https://ik.imagekit.io", "wss:", "ws:"],
     },
   },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
 }));
 
 app.use(compression({ 

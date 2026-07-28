@@ -118,6 +118,11 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
     res.json(responsePayload);
   } catch (error) {
     console.error("WhatsApp upload error (falling back to local):", error?.message || error);
+    const toAbsolute = (url) => {
+      if (!url) return url;
+      if (/^https?:\/\//i.test(url) || /^data:/i.test(url) || /^blob:/i.test(url)) return url;
+      return `${req.protocol}://${req.get("host")}${url.startsWith("/") ? url : `/${url}`}`;
+    };
     try {
       const fileName = (req.body && req.body.saudaNo)
         ? `Sauda-${req.body.saudaNo}-${Date.now()}.pdf`
@@ -125,10 +130,12 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
       let fallbackUrl = null;
       if (req.file) {
         try {
-          fallbackUrl = await imagekit.uploadLocally(
-            req.file,
-            fileName,
-            "/sauda_confirmations",
+          fallbackUrl = toAbsolute(
+            await imagekit.uploadLocally(
+              req.file,
+              fileName,
+              "/sauda_confirmations",
+            ),
           );
         } catch {
           fallbackUrl =
@@ -171,6 +178,12 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
 });
 
 router.post("/", upload.single("file"), async (req, res) => {
+  const toAbsolute = (url) => {
+    if (!url) return url;
+    if (/^https?:\/\//i.test(url) || /^data:/i.test(url) || /^blob:/i.test(url)) return url;
+    const abs = `${req.protocol}://${req.get("host")}${url.startsWith("/") ? url : `/${url}`}`;
+    return abs;
+  };
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file provided" });
@@ -179,7 +192,8 @@ router.post("/", upload.single("file"), async (req, res) => {
     const fileName = `${Date.now()}-${req.file.originalname}`;
     const folder = req.body.folder || "/";
 
-    const cloudUrl = await imagekit.uploadFile(req.file, fileName, folder);
+    const rawUrl = await imagekit.uploadFile(req.file, fileName, folder);
+    const cloudUrl = toAbsolute(rawUrl);
 
     res.json({
       url: cloudUrl,
@@ -190,6 +204,7 @@ router.post("/", upload.single("file"), async (req, res) => {
       href: cloudUrl,
       secure_url: cloudUrl,
       fileName,
+      isLocal: rawUrl && !/^https?:\/\//i.test(rawUrl) && !/^data:/i.test(rawUrl) && !/^blob:/i.test(rawUrl),
     });
   } catch (error) {
     console.error("Upload route emergency catch:", error?.message || error);
