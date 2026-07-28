@@ -856,75 +856,145 @@ const EditLoadingEntryPopup = ({
         </>
       )}
 
-      {editEntry.unloadingWeight && editEntry.unloadingDate ? (
-        <div className="mt-6 pt-6 border-t border-slate-200">
+      <div className="mt-6 pt-6 border-t border-slate-200">
+        <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+          Upload Documents
+        </h4>
+        {!editEntry.unloadingWeight || !editEntry.unloadingDate ? (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              ⓘ Tip: Fill in both <b>Unloading Weight</b> and{" "}
+              <b>Unloading Date</b> to ensure the entry is complete. Document
+              upload is enabled regardless — Kanta Slip / Unloading Challan can
+              be attached first.
+            </p>
+          </div>
+        ) : null}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FileUpload
+            label="1. Kanta Slip"
+            accept="image/*,.pdf"
+            minWidth={800}
+            minHeight={600}
+            currentUrl={editEntry.documents?.kantaSlip || ""}
+            onFileChange={(url) => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  kantaSlip: url,
+                },
+              }));
+            }}
+            onFileRemove={() => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  kantaSlip: "",
+                },
+              }));
+            }}
+          />
+          <FileUpload
+            label="2. Unloading Challan"
+            accept="image/*,.pdf"
+            minWidth={800}
+            minHeight={600}
+            currentUrl={editEntry.documents?.unloadingChallan || ""}
+            onFileChange={(url) => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  unloadingChallan: url,
+                },
+              }));
+            }}
+            onFileRemove={() => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  unloadingChallan: "",
+                },
+              }));
+            }}
+          />
+          <FileUpload
+            label="3. Party Bill Copy"
+            accept="image/*,.pdf"
+            minWidth={800}
+            minHeight={600}
+            currentUrl={editEntry.documents?.partyBillCopy || ""}
+            onFileChange={(url) => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  partyBillCopy: url,
+                },
+              }));
+            }}
+            onFileRemove={() => {
+              setEditEntry((prev) => ({
+                ...prev,
+                documents: {
+                  kantaSlip: "",
+                  unloadingChallan: "",
+                  partyBillCopy: "",
+                  qualityReport: "",
+                  ...prev.documents,
+                  partyBillCopy: "",
+                },
+              }));
+            }}
+          />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-slate-200">
           <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-            Upload Documents
+            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+            Document Attachments &amp; Quality Reports
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FileUpload
-              label="1. Kanta Slip"
+              label="4. Quality Report (Lab Certificate / Test Report)"
               accept="image/*,.pdf"
               minWidth={800}
               minHeight={600}
-              currentUrl={editEntry.documents?.kantaSlip}
+              currentUrl={editEntry.documents?.qualityReport || ""}
               onFileChange={(url) => {
                 setEditEntry((prev) => ({
                   ...prev,
                   documents: {
-                    ...prev.documents,
-                    kantaSlip: url,
-                  },
-                }));
-              }}
-              onFileRemove={() => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
-                    ...prev.documents,
                     kantaSlip: "",
-                  },
-                }));
-              }}
-            />
-            <FileUpload
-              label="2. Unloading Challan"
-              accept="image/*,.pdf"
-              minWidth={800}
-              minHeight={600}
-              currentUrl={editEntry.documents?.unloadingChallan}
-              onFileChange={(url) => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
-                    ...prev.documents,
-                    unloadingChallan: url,
-                  },
-                }));
-              }}
-              onFileRemove={() => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
-                    ...prev.documents,
                     unloadingChallan: "",
-                  },
-                }));
-              }}
-            />
-            <FileUpload
-              label="3. Party Bill Copy"
-              accept="image/*,.pdf"
-              minWidth={800}
-              minHeight={600}
-              currentUrl={editEntry.documents?.partyBillCopy}
-              onFileChange={(url) => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
+                    partyBillCopy: "",
+                    qualityReport: "",
                     ...prev.documents,
-                    partyBillCopy: url,
+                    qualityReport: url,
                   },
                 }));
               }}
@@ -932,22 +1002,38 @@ const EditLoadingEntryPopup = ({
                 setEditEntry((prev) => ({
                   ...prev,
                   documents: {
-                    ...prev.documents,
+                    kantaSlip: "",
+                    unloadingChallan: "",
                     partyBillCopy: "",
+                    qualityReport: "",
+                    ...prev.documents,
+                    qualityReport: "",
                   },
+                }));
+              }}
+            />
+            <FileUpload
+              label="5. Other Document Attachment"
+              accept="image/*,.pdf"
+              minWidth={800}
+              minHeight={600}
+              currentUrl={editEntry.documentUrl || ""}
+              onFileChange={(url) => {
+                setEditEntry((prev) => ({
+                  ...prev,
+                  documentUrl: url,
+                }));
+              }}
+              onFileRemove={() => {
+                setEditEntry((prev) => ({
+                  ...prev,
+                  documentUrl: "",
                 }));
               }}
             />
           </div>
         </div>
-      ) : (
-        <div className="border-t border-slate-200 pt-6">
-          <p className="text-sm text-slate-500 text-center py-4">
-            Please fill in both Unloading Weight and Unloading Date to enable
-            document upload.
-          </p>
-        </div>
-      )}
+      </div>
 
       {editEntry.isRejected && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">

@@ -10,6 +10,7 @@ import {
   MdZoomOut,
 } from "react-icons/md";
 import apiClient from "../../utils/apiClient/apiClient";
+import { extractUploadUrl } from "../../utils/saudaPdf/resolveUploadUrl";
 
 const A4_PORTRAIT_RATIO = 210 / 297;
 const A4_LANDSCAPE_RATIO = 297 / 210;
@@ -81,14 +82,22 @@ const FileUpload = ({
           "Content-Type": "multipart/form-data",
         },
       });
-      onFileChange(response.data.url);
+      const resolvedUrl = extractUploadUrl(response?.data) || response?.data?.url;
+      if (!resolvedUrl) {
+        throw new Error("Upload succeeded but no URL was returned.");
+      }
+      onFileChange(resolvedUrl);
       setImageSrc("");
       setFileName("");
       setShowUploader(false);
       setIsPdf(false);
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload file. Please try again.");
+      alert(
+        error?.message && error.message.toLowerCase().includes("url")
+          ? error.message
+          : "Failed to upload file. Please try again.",
+      );
     } finally {
       setUploading(false);
     }

@@ -47,6 +47,7 @@ const loadingEntrySchema = new mongoose.Schema(
       kantaSlip: { type: String, default: "" },
       unloadingChallan: { type: String, default: "" },
       partyBillCopy: { type: String, default: "" },
+      qualityReport: { type: String, default: "" },
     },
     qualityClaims: [
       {

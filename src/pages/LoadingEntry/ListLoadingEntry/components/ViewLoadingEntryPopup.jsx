@@ -107,6 +107,7 @@ const DocumentsSection = ({ entry }) => {
     { key: "kantaSlip", label: "Kanta Slip", color: "blue" },
     { key: "unloadingChallan", label: "Unloading Challan", color: "indigo" },
     { key: "partyBillCopy", label: "Party Bill Copy", color: "emerald" },
+    { key: "qualityReport", label: "Quality Report", color: "violet" },
   ];
 
   const attachments = docs
@@ -121,7 +122,7 @@ const DocumentsSection = ({ entry }) => {
   if (entry?.documentUrl && typeof entry.documentUrl === "string" && entry.documentUrl.trim()) {
     attachments.push({
       key: "__legacy_attachment",
-      label: "Attachment",
+      label: "Document Attachment",
       url: entry.documentUrl,
       color: "purple",
     });

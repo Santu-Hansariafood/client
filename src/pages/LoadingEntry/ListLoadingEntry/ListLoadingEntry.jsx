@@ -517,10 +517,12 @@ const ListLoadingEntry = () => {
         deliveryDate: latestEntry.deliveryDate
           ? new Date(latestEntry.deliveryDate).toISOString().slice(0, 10)
           : "",
+        documentUrl: latestEntry.documentUrl || "",
         documents: {
           kantaSlip: latestEntry.documents?.kantaSlip || "",
           unloadingChallan: latestEntry.documents?.unloadingChallan || "",
           partyBillCopy: latestEntry.documents?.partyBillCopy || "",
+          qualityReport: latestEntry.documents?.qualityReport || "",
         },
         qualityClaims: latestEntry.qualityClaims || [],
         manualClaim: latestEntry.manualClaim || false,
