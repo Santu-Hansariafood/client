@@ -63,6 +63,24 @@ class ImageKitStorage {
   }
 
   async uploadFile(file, fileName, folder = "/") {
+    const extractMsg = (e) => {
+      if (!e) return "unknown error";
+      const candidates = [
+        e.message,
+        e.msg,
+        e.error?.message,
+        e.error,
+        e.response?.data?.message,
+        e.response?.message,
+        e.body?.message,
+        e.body,
+        e.help,
+      ]
+        .filter((v) => typeof v === "string" && v.trim().length > 0)
+        .map((v) => v.trim());
+      return candidates.length ? candidates.join(" | ") : String(e);
+    };
+
     try {
       if (!this.imagekit) {
         this.refreshConfig();
@@ -80,32 +98,17 @@ class ImageKitStorage {
         return response.url;
       }
 
+      console.warn("ImageKit instance not available, falling back to local upload.");
       return this.uploadLocally(file, fileName, folder);
     } catch (error) {
-      console.error("ImageKit upload error details:", {
-        message: error?.message,
-        stack: error?.stack?.slice(0, 300),
-        ...(error?.help ? { help: error.help } : {}),
-        ...(error?.statusCode ? { statusCode: error.statusCode } : {}),
+      const msg = extractMsg(error);
+      console.error("ImageKit upload error (falling back to local):", {
+        message: msg,
+        statusCode: error?.statusCode || error?.response?.statusCode || null,
+        name: error?.name || null,
+        stack: error?.stack?.slice(0, 240) || null,
       });
-      const msg = String(error?.message || "").toLowerCase();
-      if (
-        msg.includes("imagekit") ||
-        msg.includes("configuration missing") ||
-        msg.includes("authenticated") ||
-        msg.includes("auth") ||
-        msg.includes("unauthorized") ||
-        msg.includes("forbidden") ||
-        msg.includes("invalid key") ||
-        error?.statusCode === 401 ||
-        error?.statusCode === 403
-      ) {
-        console.warn("→ Falling back to local filesystem upload due to ImageKit auth error.");
-        return this.uploadLocally(file, fileName, folder);
-      }
-      throw new Error(
-        `Failed to upload file to ImageKit: ${error.message || "Unknown error"}`,
-      );
+      return this.uploadLocally(file, fileName, folder);
     }
   }
 
