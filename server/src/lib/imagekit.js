@@ -13,30 +13,51 @@ class ImageKitStorage {
   }
 
   refreshConfig() {
-    this.publicKey = process.env.IMAGEKIT_PUBLIC_KEY || "";
-    this.privateKey = process.env.IMAGEKIT_PRIVATE_KEY || "";
-    this.urlEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || "";
+    const clean = (val) =>
+      typeof val === "string"
+        ? val
+            .replace(/^[\s"'`]+|[\s"'`]+$/g, "")
+            .replace(/\r/g, "")
+            .trim()
+        : "";
+
+    this.publicKey = clean(process.env.IMAGEKIT_PUBLIC_KEY);
+    this.privateKey = clean(process.env.IMAGEKIT_PRIVATE_KEY);
+    this.urlEndpoint = clean(process.env.IMAGEKIT_URL_ENDPOINT);
 
     if (this.urlEndpoint.endsWith("/")) {
       this.urlEndpoint = this.urlEndpoint.slice(0, -1);
     }
 
     if (this.publicKey && this.privateKey && this.urlEndpoint) {
-      this.imagekit = new ImageKit({
-        publicKey: this.publicKey,
-        privateKey: this.privateKey,
-        urlEndpoint: this.urlEndpoint,
-      });
-      console.log(
-        "ImageKit configured successfully with endpoint:",
-        this.urlEndpoint,
-      );
+      try {
+        this.imagekit = new ImageKit({
+          publicKey: this.publicKey,
+          privateKey: this.privateKey,
+          urlEndpoint: this.urlEndpoint,
+        });
+        const maskedPriv = `${this.privateKey.slice(0, 10)}…${this.privateKey.slice(-4)}`;
+        console.log(
+          "ImageKit configured successfully — endpoint:",
+          this.urlEndpoint,
+          "| publicKey:",
+          this.publicKey.slice(0, 16) + "…",
+          "| privateKey:",
+          maskedPriv,
+        );
+      } catch (err) {
+        console.error("ImageKit SDK init failed:", err.message || err);
+        this.imagekit = null;
+      }
     } else {
       this.imagekit = null;
-      console.warn("ImageKit credentials missing:", {
+      console.warn("ImageKit credentials missing (after trim):", {
         hasPublic: !!this.publicKey,
+        publicLen: this.publicKey.length,
         hasPrivate: !!this.privateKey,
+        privateLen: this.privateKey.length,
         hasEndpoint: !!this.urlEndpoint,
+        endpointSample: JSON.stringify(this.urlEndpoint.slice(0, 40)),
       });
     }
   }
@@ -61,8 +82,25 @@ class ImageKitStorage {
 
       return this.uploadLocally(file, fileName, folder);
     } catch (error) {
-      console.error("ImageKit upload error details:", error);
-      if (error?.message?.includes("ImageKit") || error?.message?.includes("configuration missing")) {
+      console.error("ImageKit upload error details:", {
+        message: error?.message,
+        stack: error?.stack?.slice(0, 300),
+        ...(error?.help ? { help: error.help } : {}),
+        ...(error?.statusCode ? { statusCode: error.statusCode } : {}),
+      });
+      const msg = String(error?.message || "").toLowerCase();
+      if (
+        msg.includes("imagekit") ||
+        msg.includes("configuration missing") ||
+        msg.includes("authenticated") ||
+        msg.includes("auth") ||
+        msg.includes("unauthorized") ||
+        msg.includes("forbidden") ||
+        msg.includes("invalid key") ||
+        error?.statusCode === 401 ||
+        error?.statusCode === 403
+      ) {
+        console.warn("→ Falling back to local filesystem upload due to ImageKit auth error.");
         return this.uploadLocally(file, fileName, folder);
       }
       throw new Error(
