@@ -1,4 +1,7 @@
-import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
+import {
+  formatLedgerAmount,
+  getLedgerRowClaimAmount,
+} from "../utils/paymentLedgerUtils";
 import { useState } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { FaEnvelope, FaFilePdf, FaEdit, FaTrash } from "react-icons/fa";
@@ -201,6 +204,7 @@ const TallyLedgerBook = ({
           {rows.map((row, idx) => {
             const hasClaims = row.raw?.qualityClaims && row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
             const validClaims = hasClaims ? row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0) : [];
+            const displayedClaimAmount = getLedgerRowClaimAmount(row);
             
             // Find buyer and seller company details
             const buyerCompany = buyerCompanies.find(c => 
@@ -252,7 +256,7 @@ const TallyLedgerBook = ({
           {row.raw?.uiType === 'entry' && row.gstAmount > 0 ? formatLedgerAmount(row.gstAmount) : ""}
         </td>
         <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-          {row.raw?.uiType === 'entry' && row.totalClaims > 0 ? formatLedgerAmount(row.totalClaims) : ""}
+          {displayedClaimAmount > 0 ? formatLedgerAmount(displayedClaimAmount) : ""}
         </td>
         <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
           {row.raw?.uiType === 'entry' && row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}
@@ -426,7 +430,7 @@ const TallyLedgerBook = ({
           {row.raw?.uiType === 'entry' && row.gstAmount > 0 ? formatLedgerAmount(row.gstAmount) : ""}
         </td>
         <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-          {row.raw?.uiType === 'entry' && row.totalClaims > 0 ? formatLedgerAmount(row.totalClaims) : ""}
+          {displayedClaimAmount > 0 ? formatLedgerAmount(displayedClaimAmount) : ""}
         </td>
         <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
           {row.raw?.uiType === 'entry' && row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}

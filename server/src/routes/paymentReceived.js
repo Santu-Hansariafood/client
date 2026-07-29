@@ -72,6 +72,15 @@ const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => ({
   unadjustedAmount: { $gt: 0 },
 });
 
+const getCompositePaymentAmount = ({
+  amount = 0,
+  claim = 0,
+  tds = 0,
+} = {}) =>
+  (Number(amount) || 0) +
+  (Number(claim) || 0) +
+  (Number(tds) || 0);
+
 /** Total advance (Dr.) recorded from buyer for scope — before lorry Cr. */
 const sumAdvanceTotalDr = async (pairMatch) => {
   const rows = await PaymentReceived.aggregate([
@@ -266,10 +275,15 @@ router.post("/", authJwt, async (req, res) => {
       });
     }
 
+    const totalPaymentValue = getCompositePaymentAmount({
+      amount: paymentAmount,
+      claim,
+      tds,
+    });
     const unadjustedAmount =
       resolvedType === "Adjustment"
         ? 0
-        : Math.max(0, paymentAmount - totalMapped);
+        : Math.max(0, totalPaymentValue - totalMapped);
 
     if (!paymentType) {
       resolvedType =
@@ -861,10 +875,15 @@ router.put("/:id", async (req, res) => {
 
     // Recalculate unadjustedAmount
     const resolvedType = paymentType || existingPayment.paymentType;
+    const totalPaymentValue = getCompositePaymentAmount({
+      amount: paymentAmount,
+      claim: claim !== undefined ? claim : existingPayment.claim,
+      tds: tds !== undefined ? tds : existingPayment.tds,
+    });
     const unadjustedAmount =
       resolvedType === "Adjustment"
         ? 0
-        : Math.max(0, paymentAmount - totalMapped);
+        : Math.max(0, totalPaymentValue - totalMapped);
     updateData.unadjustedAmount = unadjustedAmount;
 
     const updatedPayment = await PaymentReceived.findByIdAndUpdate(

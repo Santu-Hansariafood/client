@@ -26,6 +26,7 @@ import {
   buildTallyVoucherRows,
   calculateVoucherTotals,
   formatLedgerAmount,
+  getLedgerRowClaimAmount,
 } from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
 
@@ -300,6 +301,7 @@ const ListPaymentReceived = () => {
           limit,
         },
       });
+      
       setPayments(response.data.data || []);
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
@@ -923,6 +925,7 @@ const ListPaymentReceived = () => {
 
         const credit = row.credit || 0;
         const isEntryRow = row.raw?.uiType === "entry";
+        const displayClaimAmount = getLedgerRowClaimAmount(row);
 
         let grossAmount = 0;
         let gst = 0;
@@ -935,7 +938,7 @@ const ListPaymentReceived = () => {
           grossAmount = row.grossAmount || 0;
           gst = row.gstAmount || 0;
           claims =
-            row.totalClaims ||
+            displayClaimAmount ||
             rowData.totalQualityClaims + rowData.paymentClaimAmount;
           cd = row.cdAmount || 0;
           bankCharges = row.bankCharges || 0;
@@ -956,7 +959,7 @@ const ListPaymentReceived = () => {
         const formattedGross = isEntryRow ? Number(grossAmount.toFixed(2)) : 0;
         const formattedCredit = Number(credit.toFixed(2));
         const formattedGst = isEntryRow ? Number(gst.toFixed(2)) : 0;
-        const formattedClaims = isEntryRow ? Number(claims.toFixed(2)) : 0;
+        const formattedClaims = Number(displayClaimAmount.toFixed(2));
         const formattedCd = isEntryRow ? Number(cd.toFixed(2)) : 0;
         const formattedBankCharges = isEntryRow
           ? Number(bankCharges.toFixed(2))
@@ -979,7 +982,7 @@ const ListPaymentReceived = () => {
           formattedCredit > 0
             ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          isEntryRow && formattedClaims > 0
+          formattedClaims > 0
             ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
           isEntryRow && formattedCd > 0

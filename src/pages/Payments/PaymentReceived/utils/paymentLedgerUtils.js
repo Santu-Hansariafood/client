@@ -94,6 +94,18 @@ export const buildPaymentParticulars = (payment) => {
     .join(" · ");
 };
 
+export const getPaymentCompositeAmount = (payment = {}) =>
+  (Number(payment.amount) || 0) +
+  (Number(payment.claim) || 0) +
+  (Number(payment.tds) || 0);
+
+export const getLedgerRowClaimAmount = (row = {}) =>
+  Number(
+    row.totalClaims ??
+      (row.raw?.uiType === "payment" ? row.raw?.claim : 0) ??
+      0,
+  ) || 0;
+
 /** Tally voucher rows: Date | Particulars | Vch Type | Debit | Credit | Balance */
 export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []) => {
   const allItems = [
@@ -218,13 +230,15 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         (sum, m) => sum + (Number(m.allocatedAmount) || 0),
         0,
       );
-      const totalPaymentAmount = (Number(payment.amount) || 0) + (Number(payment.claim) || 0) + (Number(payment.tds) || 0);
+      const totalPaymentAmount = getPaymentCompositeAmount(payment);
       const isBuyer = payment.ledgerType === "Buyer";
       const paymentType = payment.paymentType || "";
-      // Use payment.unadjustedAmount if available, else calculate
-      const unadjustedAmount = payment.unadjustedAmount !== undefined 
-        ? Number(payment.unadjustedAmount) 
-        : Math.max(0, totalPaymentAmount - mappedTotal);
+      const calculatedUnadjustedAmount = Math.max(0, totalPaymentAmount - mappedTotal);
+      // Older records may have unadjustedAmount saved from amount only, so keep the higher valid value.
+      const unadjustedAmount = payment.unadjustedAmount !== undefined &&
+        payment.unadjustedAmount !== null
+        ? Math.max(Number(payment.unadjustedAmount) || 0, calculatedUnadjustedAmount)
+        : calculatedUnadjustedAmount;
 
       const sellerFromMapping = payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
       const buyerFromMapping = payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
@@ -232,6 +246,8 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const supplierCompany = payment.supplierCompany || sellerFromMapping || "";
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
+      const mappedClaimAmount = mappedTotal > 0 ? paymentClaimAmount : 0;
+      const onAccountClaimAmount = mappedTotal > 0 ? 0 : paymentClaimAmount;
 
       // First add row for mapped amount
       if (mappedTotal > 0) {
@@ -260,7 +276,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           raw: item,
           grossAmount: 0,
           gstAmount: 0,
-          totalClaims: paymentClaimAmount,
+          totalClaims: mappedClaimAmount,
           cdAmount: 0,
           bankCharges: 0,
         });
@@ -293,7 +309,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           raw: item,
           grossAmount: 0,
           gstAmount: 0,
-          totalClaims: 0,
+          totalClaims: onAccountClaimAmount,
           cdAmount: 0,
           bankCharges: 0,
         });
@@ -308,12 +324,15 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
 export const calculateVoucherTotals = (rows) => {
   return rows.reduce(
     (totals, row) => {
-      if (!row.isOpening && row.raw?.uiType === 'entry') {
-        totals.totalBillValue += row.grossAmount || 0;
-        totals.totalGst += row.gstAmount || 0;
-        totals.totalClaims += row.totalClaims || 0;
-        totals.totalCd += row.cdAmount || 0;
-        totals.totalBankCharges += row.bankCharges || 0;
+      if (!row.isOpening) {
+        totals.totalClaims += getLedgerRowClaimAmount(row);
+
+        if (row.raw?.uiType === "entry") {
+          totals.totalBillValue += row.grossAmount || 0;
+          totals.totalGst += row.gstAmount || 0;
+          totals.totalCd += row.cdAmount || 0;
+          totals.totalBankCharges += row.bankCharges || 0;
+        }
       }
       return totals;
     },
