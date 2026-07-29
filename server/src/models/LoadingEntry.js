@@ -42,6 +42,18 @@ const loadingEntrySchema = new mongoose.Schema(
     unloadingDate: { type: Date },
     buyerBrokerage: { type: Number, default: 0 },
     sellerBrokerage: { type: Number, default: 0 },
+    buyerBrokerageStatus: {
+      type: String,
+      enum: ["pending", "done"],
+      default: "pending",
+    },
+    buyerBrokeragePaidDate: { type: Date, default: null },
+    sellerBrokerageStatus: {
+      type: String,
+      enum: ["pending", "done"],
+      default: "pending",
+    },
+    sellerBrokeragePaidDate: { type: Date, default: null },
     loadingFrom: { type: String, default: "" },
     documents: {
       kantaSlip: { type: String, default: "" },

@@ -149,6 +149,82 @@ const getSellerBrokerage = async (supplierId, commodityName) => {
   }
 };
 
+const getBrokerageStatusFields = (type) =>
+  type === "seller"
+    ? {
+        statusField: "sellerBrokerageStatus",
+        paidDateField: "sellerBrokeragePaidDate",
+      }
+    : {
+        statusField: "buyerBrokerageStatus",
+        paidDateField: "buyerBrokeragePaidDate",
+      };
+
+const buildBrokerageMatch = (query = {}) => {
+  const {
+    type = "buyer",
+    search,
+    buyerCompany,
+    supplierCompany,
+    startDate,
+    endDate,
+    ids,
+    brokerageStatus,
+  } = query;
+
+  const { statusField } = getBrokerageStatusFields(type);
+  const match = {};
+
+  if (ids && Array.isArray(ids) && ids.length > 0) {
+    match._id = {
+      $in: ids
+        .map((id) => toObjectId(id))
+        .filter(Boolean),
+    };
+  }
+
+  if (search) {
+    const searchRegex = new RegExp(escapeRegex(search), "i");
+    match.$or = [
+      { lorryNumber: searchRegex },
+      { saudaNo: searchRegex },
+      { billNumber: searchRegex },
+      { buyerCompany: searchRegex },
+      { supplierCompany: searchRegex },
+      { commodity: searchRegex },
+    ];
+  }
+
+  if (buyerCompany) {
+    match.buyerCompany = {
+      $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+    };
+  }
+  if (supplierCompany) {
+    match.supplierCompany = {
+      $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+    };
+  }
+
+  if (brokerageStatus === "done") {
+    match[statusField] = "done";
+  } else if (brokerageStatus === "pending") {
+    match[statusField] = { $ne: "done" };
+  }
+
+  if (startDate || endDate) {
+    match.loadingDate = {};
+    if (startDate) match.loadingDate.$gte = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      match.loadingDate.$lte = end;
+    }
+  }
+
+  return match;
+};
+
 const computePendingForSelfOrder = (order) => {
   const quantity = Number(order.quantity || 0);
   let pendingQuantity = order.pendingQuantity;
@@ -350,52 +426,9 @@ router.get("/company-report", async (req, res) => {
 });
 
 const getBrokerageReportData = async (query, skip = null, limit = null) => {
-  const {
-    type,
-    search,
-    buyerCompany,
-    supplierCompany,
-    startDate,
-    endDate,
-    ids,
-  } = query;
-
-  const match = {};
-
-  if (ids && Array.isArray(ids) && ids.length > 0) {
-    match._id = { $in: ids.map((id) => new mongoose.Types.ObjectId(id)) };
-  }
-
-  if (search) {
-    const searchRegex = new RegExp(escapeRegex(search), "i");
-    match.$or = [
-      { lorryNumber: searchRegex },
-      { saudaNo: searchRegex },
-      { billNumber: searchRegex },
-      { buyerCompany: searchRegex },
-      { supplierCompany: searchRegex },
-      { commodity: searchRegex },
-    ];
-  }
-
-  if (buyerCompany) {
-    match.buyerCompany = { $regex: new RegExp(escapeRegex(buyerCompany), "i") };
-  }
-  if (supplierCompany) {
-    match.supplierCompany = {
-      $regex: new RegExp(escapeRegex(supplierCompany), "i"),
-    };
-  }
-
-  if (startDate || endDate) {
-    match.loadingDate = {};
-    if (startDate) match.loadingDate.$gte = new Date(startDate);
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      match.loadingDate.$lte = end;
-    }
-  }
+  const { type = "buyer" } = query;
+  const { statusField, paidDateField } = getBrokerageStatusFields(type);
+  const match = buildBrokerageMatch(query);
 
   const pipeline = [
     { $match: match },
@@ -444,6 +477,8 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
         consignee: { $ifNull: ["$consignee", "$loadingFrom"] },
         place: { $ifNull: ["$loadingFrom", "$consignee"] },
         orderDate: { $ifNull: ["$sauda.poDate", "$loadingDate"] },
+        brokerageStatus: { $ifNull: [`$${statusField}`, "pending"] },
+        brokeragePaidDate: { $ifNull: [`$${paidDateField}`, null] },
         brokerageRate: {
           $cond: {
             if: { $eq: [type, "buyer"] },
@@ -531,47 +566,10 @@ router.get("/brokerage-report", async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      search,
-      buyerCompany,
-      supplierCompany,
-      startDate,
-      endDate,
     } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const pageSize = parseInt(limit);
-
-    // Optimized: Count only the documents that match the filters first
-    const match = {};
-    if (search) {
-      const searchRegex = new RegExp(escapeRegex(search), "i");
-      match.$or = [
-        { lorryNumber: searchRegex },
-        { saudaNo: searchRegex },
-        { billNumber: searchRegex },
-        { buyerCompany: searchRegex },
-        { supplierCompany: searchRegex },
-        { commodity: searchRegex },
-      ];
-    }
-    if (buyerCompany) {
-      match.buyerCompany = {
-        $regex: new RegExp(escapeRegex(buyerCompany), "i"),
-      };
-    }
-    if (supplierCompany) {
-      match.supplierCompany = {
-        $regex: new RegExp(escapeRegex(supplierCompany), "i"),
-      };
-    }
-    if (startDate || endDate) {
-      match.loadingDate = {};
-      if (startDate) match.loadingDate.$gte = new Date(startDate);
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        match.loadingDate.$lte = end;
-      }
-    }
+    const match = buildBrokerageMatch(req.query);
 
     const [total, data] = await Promise.all([
       LoadingEntry.countDocuments(match),
@@ -586,6 +584,116 @@ router.get("/brokerage-report", async (req, res) => {
     });
   } catch (error) {
     console.error("Brokerage report error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/brokerage-report/filters", async (_req, res) => {
+  try {
+    const [buyerCompanies, supplierCompanies] = await Promise.all([
+      LoadingEntry.aggregate([
+        {
+          $match: {
+            buyerCompany: { $exists: true, $ne: "" },
+          },
+        },
+        {
+          $group: {
+            _id: { $toLower: "$buyerCompany" },
+            name: { $first: "$buyerCompany" },
+          },
+        },
+        { $sort: { name: 1 } },
+      ]),
+      LoadingEntry.aggregate([
+        {
+          $match: {
+            supplierCompany: { $exists: true, $ne: "" },
+          },
+        },
+        {
+          $group: {
+            _id: { $toLower: "$supplierCompany" },
+            name: { $first: "$supplierCompany" },
+          },
+        },
+        { $sort: { name: 1 } },
+      ]),
+    ]);
+
+    res.json({
+      buyerCompanies: buyerCompanies.map((item) => ({
+        value: item.name,
+        label: item.name,
+      })),
+      supplierCompanies: supplierCompanies.map((item) => ({
+        value: item.name,
+        label: item.name,
+      })),
+    });
+  } catch (error) {
+    console.error("Brokerage report filters error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/brokerage-report/mark-paid", async (req, res) => {
+  try {
+    const {
+      type = "buyer",
+      ids = [],
+      search,
+      buyerCompany,
+      supplierCompany,
+      startDate,
+      endDate,
+      paidDate,
+      brokerageStatus = "done",
+    } = req.body || {};
+
+    if (!["buyer", "seller"].includes(type)) {
+      return res.status(400).json({ message: "Invalid brokerage type" });
+    }
+
+    if (brokerageStatus !== "done") {
+      return res
+        .status(400)
+        .json({ message: "Only marking brokerage as paid is supported" });
+    }
+
+    const resolvedPaidDate = paidDate ? new Date(paidDate) : new Date();
+    if (Number.isNaN(resolvedPaidDate.getTime())) {
+      return res.status(400).json({ message: "Invalid paid date" });
+    }
+    resolvedPaidDate.setHours(0, 0, 0, 0);
+
+    const query = {
+      type,
+      search,
+      buyerCompany,
+      supplierCompany,
+      startDate,
+      endDate,
+      brokerageStatus: "pending",
+      ids: Array.isArray(ids) ? ids : [],
+    };
+    const match = buildBrokerageMatch(query);
+    const { statusField, paidDateField } = getBrokerageStatusFields(type);
+
+    const updateResult = await LoadingEntry.updateMany(match, {
+      $set: {
+        [statusField]: "done",
+        [paidDateField]: resolvedPaidDate,
+      },
+    });
+
+    res.json({
+      message: "Brokerage payment status updated",
+      matchedCount: updateResult.matchedCount || 0,
+      modifiedCount: updateResult.modifiedCount || 0,
+    });
+  } catch (error) {
+    console.error("Brokerage mark paid error:", error);
     res.status(500).json({ message: error.message });
   }
 });

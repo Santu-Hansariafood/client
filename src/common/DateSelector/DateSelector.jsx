@@ -22,6 +22,8 @@ const DateSelector = ({ selectedDate, onChange }) => {
   useEffect(() => {
     if (selectedDate) {
       setCurrentDate(new Date(selectedDate));
+    } else {
+      setCurrentDate(null);
     }
   }, [selectedDate]);
 

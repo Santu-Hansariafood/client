@@ -9,7 +9,13 @@ import {
 import api from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaTimes, FaHandshake, FaFilePdf } from "react-icons/fa";
+import {
+  FaDownload,
+  FaTimes,
+  FaHandshake,
+  FaFilePdf,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
@@ -22,6 +28,11 @@ const DateSelector = lazy(
 );
 
 const API_URL = "/loading-entries/brokerage-report";
+const BROKERAGE_STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "pending", label: "Pending" },
+  { value: "done", label: "Paid" },
+];
 
 const SellerBrokerage = () => {
   const navigate = useNavigate();
@@ -36,7 +47,12 @@ const SellerBrokerage = () => {
   const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [paidDate, setPaidDate] = useState(new Date());
+  const [brokerageStatus, setBrokerageStatus] = useState(
+    BROKERAGE_STATUS_OPTIONS[0],
+  );
   const [exporting, setExporting] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
 
   const [sellerOptions, setSellerOptions] = useState([]);
   const [selectedSeller, setSelectedSeller] = useState(null);
@@ -55,23 +71,22 @@ const SellerBrokerage = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const response = await api.get("/loading-entries/filters");
-        // The backend returns 'sellers', and each seller has 'sellerName'
-        // We also want to include all unique supplierCompany names from the sellers' companies if needed,
-        // but for now let's fix the property name and mapping.
-        const sellers = (response.data?.sellers || [])
-          .map((s) => ({
-            value: s.sellerName,
-            label: s.sellerName,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-        setSellerOptions(sellers);
+        const response = await api.get(`${API_URL}/filters`);
+        setSellerOptions(response.data?.supplierCompanies || []);
       } catch (error) {
         console.error("Error fetching filters:", error);
       }
     };
     fetchFilters();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchInput, startDate, endDate, selectedSeller, brokerageStatus]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [data]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -84,6 +99,10 @@ const SellerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         supplierCompany: selectedSeller?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
       };
 
       const response = await api.get(API_URL, { params });
@@ -104,6 +123,7 @@ const SellerBrokerage = () => {
     startDate,
     endDate,
     selectedSeller,
+    brokerageStatus,
   ]);
 
   useEffect(() => {
@@ -115,6 +135,7 @@ const SellerBrokerage = () => {
     setStartDate("");
     setEndDate("");
     setSelectedSeller(null);
+    setBrokerageStatus(BROKERAGE_STATUS_OPTIONS[0]);
     setCurrentPage(1);
   };
 
@@ -136,6 +157,61 @@ const SellerBrokerage = () => {
     }
   };
 
+  const handleMarkPaid = useCallback(
+    async (id = null) => {
+      if (updatingPayment) return;
+
+      const usingSelectedRows = !id && selectedIds.length > 0;
+      const targetLabel = id
+        ? "this entry"
+        : usingSelectedRows
+          ? `${selectedIds.length} selected entr${selectedIds.length === 1 ? "y" : "ies"}`
+          : "all filtered entries";
+
+      const confirmed = window.confirm(
+        `Mark seller brokerage as paid for ${targetLabel}?`,
+      );
+      if (!confirmed) return;
+
+      try {
+        setUpdatingPayment(true);
+        const response = await api.post(`${API_URL}/mark-paid`, {
+          type: "seller",
+          ids: id ? [id] : usingSelectedRows ? selectedIds : [],
+          search: debouncedSearchInput?.trim() || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          supplierCompany: selectedSeller?.value || undefined,
+          paidDate: paidDate ? new Date(paidDate).toISOString() : undefined,
+        });
+
+        const updatedCount = response.data?.modifiedCount || 0;
+        toast.success(
+          updatedCount > 0
+            ? `${updatedCount} seller brokerage entr${updatedCount === 1 ? "y" : "ies"} marked paid`
+            : "No pending seller brokerage entries found",
+        );
+        setSelectedIds([]);
+        fetchData();
+      } catch (error) {
+        console.error("Seller brokerage payment update error:", error);
+        toast.error("Failed to update seller brokerage payment status");
+      } finally {
+        setUpdatingPayment(false);
+      }
+    },
+    [
+      updatingPayment,
+      selectedIds,
+      debouncedSearchInput,
+      startDate,
+      endDate,
+      selectedSeller,
+      paidDate,
+      fetchData,
+    ],
+  );
+
   const handleDownloadExcel = useCallback(async () => {
     if (exporting) return;
     let toastId;
@@ -149,6 +225,10 @@ const SellerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         supplierCompany: selectedSeller?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
         ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
@@ -172,13 +252,21 @@ const SellerBrokerage = () => {
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
-    } catch (error) {
+    } catch {
       if (toastId) toast.dismiss(toastId);
       toast.error("Failed to download Excel file");
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedSeller, selectedIds, exporting]);
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedSeller,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
 
   const handleDownloadPDF = useCallback(async () => {
     if (exporting) return;
@@ -192,6 +280,10 @@ const SellerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         supplierCompany: selectedSeller?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
         ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
@@ -230,7 +322,15 @@ const SellerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedSeller, selectedIds, exporting]);
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedSeller,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
 
   const headers = [
     <input
@@ -253,6 +353,9 @@ const SellerBrokerage = () => {
     "Calculated Wt",
     "Brokerage / Ton",
     "Total Brokerage",
+    "Status",
+    "Paid Date",
+    "Action",
   ];
 
   const rows = useMemo(
@@ -262,6 +365,10 @@ const SellerBrokerage = () => {
         const formattedDate = item.loadingDate
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
           : "N/A";
+        const formattedPaidDate = item.brokeragePaidDate
+          ? new Date(item.brokeragePaidDate).toLocaleDateString("en-GB")
+          : "---";
+        const isPaid = item.brokerageStatus === "done";
         const calculatedWeight =
           item.calculatedWeight ||
           (item.unloadingWeight || item.unloadingWeight === 0
@@ -351,9 +458,44 @@ const SellerBrokerage = () => {
           >
             ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
           </span>,
+          <span
+            key={`status-${item._id}`}
+            className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+              isPaid
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : "bg-amber-50 text-amber-700 border border-amber-100"
+            }`}
+          >
+            {isPaid ? "Paid" : "Pending"}
+          </span>,
+          <span
+            key={`paid-date-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
+            {formattedPaidDate}
+          </span>,
+          isPaid ? (
+            <span
+              key={`action-${item._id}`}
+              className="text-[11px] font-bold text-emerald-600"
+            >
+              Paid
+            </span>
+          ) : (
+            <button
+              key={`action-${item._id}`}
+              type="button"
+              onClick={() => handleMarkPaid(item._id)}
+              disabled={updatingPayment}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FaCheckCircle size={12} />
+              Mark Paid
+            </button>
+          ),
         ];
       }),
-    [data, currentPage, itemsPerPage, selectedIds],
+    [data, currentPage, itemsPerPage, selectedIds, handleMarkPaid, updatingPayment],
   );
 
   return (
@@ -400,13 +542,29 @@ const SellerBrokerage = () => {
                   <div className="flex items-center gap-3">
                     <div className="flex flex-col min-w-[200px]">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
-                        Select Seller
+                        Select Seller Company
                       </span>
                       <DataDropdown
                         options={sellerOptions}
                         selectedOptions={selectedSeller}
                         onChange={setSelectedSeller}
-                        placeholder="All Sellers"
+                        placeholder="All Seller Companies"
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-[180px]">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        Brokerage Status
+                      </span>
+                      <DataDropdown
+                        options={BROKERAGE_STATUS_OPTIONS}
+                        selectedOptions={brokerageStatus}
+                        onChange={(option) =>
+                          setBrokerageStatus(
+                            option || BROKERAGE_STATUS_OPTIONS[0],
+                          )
+                        }
+                        placeholder="All Status"
+                        isClearable
                       />
                     </div>
                     <div className="flex flex-col">
@@ -430,7 +588,8 @@ const SellerBrokerage = () => {
                     {(startDate ||
                       endDate ||
                       searchInput ||
-                      selectedSeller) && (
+                      selectedSeller ||
+                      brokerageStatus?.value !== "all") && (
                       <button
                         onClick={handleClearFilters}
                         className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
@@ -458,6 +617,46 @@ const SellerBrokerage = () => {
                       onChange={(e) => setSearchInput(e.target.value)}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-800 tracking-tight">
+                    Seller Brokerage Payment
+                  </h3>
+                  <p className="text-sm text-slate-500 font-medium">
+                    Mark one entry, selected entries, or the full filtered list as paid.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                      Paid Date
+                    </span>
+                    <DateSelector
+                      selectedDate={paidDate}
+                      onChange={(date) => setPaidDate(date || new Date())}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleMarkPaid()}
+                    disabled={updatingPayment || loading || data.length === 0}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <FaCheckCircle size={14} />
+                    <span>
+                      {updatingPayment
+                        ? "Updating..."
+                        : selectedIds.length > 0
+                          ? `Mark ${selectedIds.length} Selected Paid`
+                          : "Mark Filtered Paid"}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>

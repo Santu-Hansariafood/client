@@ -9,14 +9,16 @@ import {
 import api from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaTimes, FaHandshake, FaFilePdf } from "react-icons/fa";
+import {
+  FaDownload,
+  FaTimes,
+  FaHandshake,
+  FaFilePdf,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
-import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
-import { pdf } from "@react-pdf/renderer";
-import BuyerProformaInvoicePDF from "../../components/BuyerDashboard/BuyerProformaInvoicePDF";
-import { downloadFile } from "../../utils/fileDownloader";
 import DataDropdown from "../../common/DataDropdown/DataDropdown";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
@@ -26,6 +28,11 @@ const DateSelector = lazy(
 );
 
 const API_URL = "/loading-entries/brokerage-report";
+const BROKERAGE_STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "pending", label: "Pending" },
+  { value: "done", label: "Paid" },
+];
 
 const BuyerBrokerage = () => {
   const navigate = useNavigate();
@@ -40,7 +47,12 @@ const BuyerBrokerage = () => {
   const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [paidDate, setPaidDate] = useState(new Date());
+  const [brokerageStatus, setBrokerageStatus] = useState(
+    BROKERAGE_STATUS_OPTIONS[0],
+  );
   const [exporting, setExporting] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
 
   const [buyerOptions, setBuyerOptions] = useState([]);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
@@ -59,26 +71,22 @@ const BuyerBrokerage = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const response = await api.get("/buyers");
-        const buyers = (response.data || [])
-          .map((b) => ({
-            value: b.companyName || b.name,
-            label: b.companyName || b.name,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-
-        // Remove duplicates if any
-        const uniqueBuyers = Array.from(
-          new Set(buyers.map((b) => b.value)),
-        ).map((value) => buyers.find((b) => b.value === value));
-
-        setBuyerOptions(uniqueBuyers);
+        const response = await api.get(`${API_URL}/filters`);
+        setBuyerOptions(response.data?.buyerCompanies || []);
       } catch (error) {
         console.error("Error fetching filters:", error);
       }
     };
     fetchFilters();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchInput, startDate, endDate, selectedBuyer, brokerageStatus]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [data]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -91,6 +99,10 @@ const BuyerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
       };
 
       const response = await api.get(API_URL, { params });
@@ -111,6 +123,7 @@ const BuyerBrokerage = () => {
     startDate,
     endDate,
     selectedBuyer,
+    brokerageStatus,
   ]);
 
   useEffect(() => {
@@ -122,6 +135,7 @@ const BuyerBrokerage = () => {
     setStartDate("");
     setEndDate("");
     setSelectedBuyer(null);
+    setBrokerageStatus(BROKERAGE_STATUS_OPTIONS[0]);
     setCurrentPage(1);
   };
 
@@ -143,6 +157,61 @@ const BuyerBrokerage = () => {
     }
   };
 
+  const handleMarkPaid = useCallback(
+    async (id = null) => {
+      if (updatingPayment) return;
+
+      const usingSelectedRows = !id && selectedIds.length > 0;
+      const targetLabel = id
+        ? "this entry"
+        : usingSelectedRows
+          ? `${selectedIds.length} selected entr${selectedIds.length === 1 ? "y" : "ies"}`
+          : "all filtered entries";
+
+      const confirmed = window.confirm(
+        `Mark buyer brokerage as paid for ${targetLabel}?`,
+      );
+      if (!confirmed) return;
+
+      try {
+        setUpdatingPayment(true);
+        const response = await api.post(`${API_URL}/mark-paid`, {
+          type: "buyer",
+          ids: id ? [id] : usingSelectedRows ? selectedIds : [],
+          search: debouncedSearchInput?.trim() || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          buyerCompany: selectedBuyer?.value || undefined,
+          paidDate: paidDate ? new Date(paidDate).toISOString() : undefined,
+        });
+
+        const updatedCount = response.data?.modifiedCount || 0;
+        toast.success(
+          updatedCount > 0
+            ? `${updatedCount} buyer brokerage entr${updatedCount === 1 ? "y" : "ies"} marked paid`
+            : "No pending buyer brokerage entries found",
+        );
+        setSelectedIds([]);
+        fetchData();
+      } catch (error) {
+        console.error("Buyer brokerage payment update error:", error);
+        toast.error("Failed to update buyer brokerage payment status");
+      } finally {
+        setUpdatingPayment(false);
+      }
+    },
+    [
+      updatingPayment,
+      selectedIds,
+      debouncedSearchInput,
+      startDate,
+      endDate,
+      selectedBuyer,
+      paidDate,
+      fetchData,
+    ],
+  );
+
   const handleDownloadExcel = useCallback(async () => {
     if (exporting) return;
     let toastId;
@@ -156,6 +225,10 @@ const BuyerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
         ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
@@ -179,13 +252,21 @@ const BuyerBrokerage = () => {
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
-    } catch (error) {
+    } catch {
       if (toastId) toast.dismiss(toastId);
       toast.error("Failed to download Excel file");
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedBuyer, selectedIds, exporting]);
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedBuyer,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
 
   const handleDownloadPDF = useCallback(async () => {
     if (exporting) return;
@@ -199,6 +280,10 @@ const BuyerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
         ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
@@ -237,7 +322,15 @@ const BuyerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedBuyer, selectedIds, exporting]);
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedBuyer,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
 
   const headers = [
     <input
@@ -260,6 +353,9 @@ const BuyerBrokerage = () => {
     "Calculated Wt",
     "Brokerage / Ton",
     "Total Brokerage",
+    "Status",
+    "Paid Date",
+    "Action",
   ];
 
   const rows = useMemo(
@@ -269,6 +365,10 @@ const BuyerBrokerage = () => {
         const formattedDate = item.loadingDate
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
           : "N/A";
+        const formattedPaidDate = item.brokeragePaidDate
+          ? new Date(item.brokeragePaidDate).toLocaleDateString("en-GB")
+          : "---";
+        const isPaid = item.brokerageStatus === "done";
         const calculatedWeight =
           item.calculatedWeight ||
           (item.unloadingWeight || item.unloadingWeight === 0
@@ -358,9 +458,44 @@ const BuyerBrokerage = () => {
           >
             ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
           </span>,
+          <span
+            key={`status-${item._id}`}
+            className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+              isPaid
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : "bg-amber-50 text-amber-700 border border-amber-100"
+            }`}
+          >
+            {isPaid ? "Paid" : "Pending"}
+          </span>,
+          <span
+            key={`paid-date-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
+            {formattedPaidDate}
+          </span>,
+          isPaid ? (
+            <span
+              key={`action-${item._id}`}
+              className="text-[11px] font-bold text-emerald-600"
+            >
+              Paid
+            </span>
+          ) : (
+            <button
+              key={`action-${item._id}`}
+              type="button"
+              onClick={() => handleMarkPaid(item._id)}
+              disabled={updatingPayment}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FaCheckCircle size={12} />
+              Mark Paid
+            </button>
+          ),
         ];
       }),
-    [data, currentPage, itemsPerPage, selectedIds],
+    [data, currentPage, itemsPerPage, selectedIds, handleMarkPaid, updatingPayment],
   );
 
   return (
@@ -416,6 +551,22 @@ const BuyerBrokerage = () => {
                         placeholder="All Buyers"
                       />
                     </div>
+                    <div className="flex flex-col min-w-[180px]">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        Brokerage Status
+                      </span>
+                      <DataDropdown
+                        options={BROKERAGE_STATUS_OPTIONS}
+                        selectedOptions={brokerageStatus}
+                        onChange={(option) =>
+                          setBrokerageStatus(
+                            option || BROKERAGE_STATUS_OPTIONS[0],
+                          )
+                        }
+                        placeholder="All Status"
+                        isClearable
+                      />
+                    </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
                         Start Date
@@ -434,7 +585,11 @@ const BuyerBrokerage = () => {
                         onChange={setEndDate}
                       />
                     </div>
-                    {(startDate || endDate || searchInput || selectedBuyer) && (
+                    {(startDate ||
+                      endDate ||
+                      searchInput ||
+                      selectedBuyer ||
+                      brokerageStatus?.value !== "all") && (
                       <button
                         onClick={handleClearFilters}
                         className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
@@ -462,6 +617,46 @@ const BuyerBrokerage = () => {
                       onChange={(e) => setSearchInput(e.target.value)}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-800 tracking-tight">
+                    Buyer Brokerage Payment
+                  </h3>
+                  <p className="text-sm text-slate-500 font-medium">
+                    Mark one entry, selected entries, or the full filtered list as paid.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                      Paid Date
+                    </span>
+                    <DateSelector
+                      selectedDate={paidDate}
+                      onChange={(date) => setPaidDate(date || new Date())}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleMarkPaid()}
+                    disabled={updatingPayment || loading || data.length === 0}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <FaCheckCircle size={14} />
+                    <span>
+                      {updatingPayment
+                        ? "Updating..."
+                        : selectedIds.length > 0
+                          ? `Mark ${selectedIds.length} Selected Paid`
+                          : "Mark Filtered Paid"}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
