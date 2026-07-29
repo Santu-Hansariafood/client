@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -71,6 +71,7 @@ const SellerBrokerage = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
+        clearApiCache();
         const response = await api.get(`${API_URL}/filters`);
         setSellerOptions(response.data?.supplierCompanies || []);
       } catch (error) {
@@ -191,6 +192,7 @@ const SellerBrokerage = () => {
             ? `${updatedCount} seller brokerage entr${updatedCount === 1 ? "y" : "ies"} marked paid`
             : "No pending seller brokerage entries found",
         );
+        clearApiCache();
         setSelectedIds([]);
         fetchData();
       } catch (error) {

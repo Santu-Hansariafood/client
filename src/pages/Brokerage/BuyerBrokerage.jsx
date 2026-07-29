@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -71,6 +71,7 @@ const BuyerBrokerage = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
+        clearApiCache();
         const response = await api.get(`${API_URL}/filters`);
         setBuyerOptions(response.data?.buyerCompanies || []);
       } catch (error) {
@@ -191,6 +192,7 @@ const BuyerBrokerage = () => {
             ? `${updatedCount} buyer brokerage entr${updatedCount === 1 ? "y" : "ies"} marked paid`
             : "No pending buyer brokerage entries found",
         );
+        clearApiCache();
         setSelectedIds([]);
         fetchData();
       } catch (error) {
