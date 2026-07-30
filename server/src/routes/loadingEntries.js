@@ -561,6 +561,54 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
   return await LoadingEntry.aggregate(pipeline);
 };
 
+const isSummaryRequest = (value) =>
+  typeof value === "string"
+    ? ["1", "true", "yes"].includes(value.toLowerCase())
+    : Boolean(value);
+
+const formatReportDate = (value) =>
+  value ? new Date(value).toLocaleDateString("en-GB") : "N/A";
+
+const getSummaryQuantity = (item = {}) => {
+  const unloadingWeight = Number(item.unloadingWeight ?? 0);
+  const loadingWeight = Number(item.loadingWeight ?? 0);
+  return unloadingWeight > 0 ? unloadingWeight : loadingWeight;
+};
+
+const getBrokerageSummaryRows = (data = []) =>
+  data.map((item) => {
+    const quantity = getSummaryQuantity(item);
+    const rate = Number(item.brokerageRate || 0);
+    const value = Number(item.totalBrokerage ?? quantity * rate);
+
+    return {
+      date: formatReportDate(item.loadingDate || item.orderDate),
+      saudaNo: item.saudaNo || "N/A",
+      sellerCompany: item.supplierCompany || item.sellerAccount || "N/A",
+      buyerCompany: item.buyerCompany || "N/A",
+      consignee: item.consignee || item.place || "N/A",
+      commodity: item.commodity || "N/A",
+      quantity,
+      rate,
+      loading: Number(item.loadingWeight || 0),
+      unloading: Number(item.unloadingWeight || 0),
+      value,
+    };
+  });
+
+const getBrokeragePartyLabel = (data = [], type = "buyer") => {
+  const field = type === "buyer" ? "buyerCompany" : "supplierCompany";
+  const uniqueParties = [
+    ...new Set(data.map((item) => item?.[field]).filter(Boolean)),
+  ];
+
+  if (uniqueParties.length === 1) {
+    return uniqueParties[0];
+  }
+
+  return uniqueParties.length > 1 ? "Multiple Parties" : "N/A";
+};
+
 router.get("/brokerage-report", async (req, res) => {
   try {
     const {
@@ -700,67 +748,106 @@ router.post("/brokerage-report/mark-paid", async (req, res) => {
 
 router.get("/brokerage-report/excel", async (req, res) => {
   try {
-    const { ids, type } = req.query;
+    const { ids, type, summary } = req.query;
     const queryParams = { ...req.query };
     if (ids && typeof ids === "string") {
       queryParams.ids = ids.split(",");
     }
 
     const data = await getBrokerageReportData(queryParams);
+    const isSummary = isSummaryRequest(summary);
+    const summaryRows = isSummary ? getBrokerageSummaryRows(data) : [];
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Brokerage Report");
+    const worksheet = workbook.addWorksheet(
+      isSummary ? "Brokerage Summary" : "Brokerage Report",
+    );
 
     const isBuyerReport = type === "buyer";
 
-    worksheet.columns = [
-      { header: "SL No", key: "slNo", width: 8 },
-      { header: "Order Date", key: "orderDate", width: 12 },
-      { header: "Sauda No", key: "saudaNo", width: 15 },
-      { header: "Bill No", key: "billNo", width: 15 },
-      { header: "Lorry No", key: "lorryNo", width: 15 },
-      {
-        header: "Buyer Company",
-        key: "buyerCompany",
-        width: 30,
-      },
-      {
-        header: "Seller Company",
-        key: "sellerCompany",
-        width: 30,
-      },
-      { header: "CONSIGNEE NAME", key: "consignee", width: 20 },
-      { header: "Item", key: "item", width: 15 },
-      { header: "Weight", key: "weight", width: 12 },
-      { header: "Rate", key: "rate", width: 10 },
-      { header: "Loading", key: "loading", width: 12 },
-      { header: "Unloading", key: "unloading", width: 12 },
-      { header: "Total Amount", key: "totalAmount", width: 15 },
-    ];
+    if (isSummary) {
+      worksheet.columns = [
+        { header: "Date", key: "date", width: 14 },
+        { header: "Sauda No", key: "saudaNo", width: 16 },
+        { header: "Seller Company", key: "sellerCompany", width: 28 },
+        { header: "Buyer Company", key: "buyerCompany", width: 28 },
+        { header: "Consignee", key: "consignee", width: 24 },
+        { header: "Commodity", key: "commodity", width: 18 },
+        { header: "Quantity", key: "quantity", width: 14 },
+        { header: "Rate", key: "rate", width: 12 },
+        { header: "Loading", key: "loading", width: 14 },
+        { header: "Unloading", key: "unloading", width: 14 },
+        { header: "Value", key: "value", width: 16 },
+      ];
 
-    data.forEach((item, index) => {
-      worksheet.addRow({
-        slNo: index + 1,
-        orderDate: item.orderDate
-          ? new Date(item.orderDate).toLocaleDateString("en-GB")
-          : "N/A",
-        saudaNo: item.saudaNo || "N/A",
-        billNo: item.billNumber || "N/A",
-        lorryNo: item.lorryNumber || "N/A",
-        buyerCompany: item.buyerCompany || "N/A",
-        sellerCompany: item.supplierCompany || "N/A",
-        consignee: item.consignee || item.place || "N/A",
-        item: item.commodity || "N/A",
-        weight: item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0,
-        rate: item.brokerageRate || 0,
-        loading: item.loadingWeight || 0,
-        unloading: item.unloadingWeight || 0,
-        totalAmount: item.totalBrokerage || 0,
+      summaryRows.forEach((item) => {
+        worksheet.addRow({
+          ...item,
+          quantity: item.quantity.toFixed(3),
+          rate: item.rate.toFixed(2),
+          loading: item.loading.toFixed(3),
+          unloading: item.unloading.toFixed(3),
+          value: item.value.toFixed(2),
+        });
       });
-    });
+    } else {
+      worksheet.columns = [
+        { header: "SL No", key: "slNo", width: 8 },
+        { header: "Order Date", key: "orderDate", width: 12 },
+        { header: "Sauda No", key: "saudaNo", width: 15 },
+        { header: "Bill No", key: "billNo", width: 15 },
+        { header: "Lorry No", key: "lorryNo", width: 15 },
+        {
+          header: "Buyer Company",
+          key: "buyerCompany",
+          width: 30,
+        },
+        {
+          header: "Seller Company",
+          key: "sellerCompany",
+          width: 30,
+        },
+        { header: "CONSIGNEE NAME", key: "consignee", width: 20 },
+        { header: "Item", key: "item", width: 15 },
+        { header: "Weight", key: "weight", width: 12 },
+        { header: "Rate", key: "rate", width: 10 },
+        { header: "Loading", key: "loading", width: 12 },
+        { header: "Unloading", key: "unloading", width: 12 },
+        { header: "Total Amount", key: "totalAmount", width: 15 },
+      ];
+
+      data.forEach((item, index) => {
+        worksheet.addRow({
+          slNo: index + 1,
+          orderDate: item.orderDate
+            ? new Date(item.orderDate).toLocaleDateString("en-GB")
+            : "N/A",
+          saudaNo: item.saudaNo || "N/A",
+          billNo: item.billNumber || "N/A",
+          lorryNo: item.lorryNumber || "N/A",
+          buyerCompany: item.buyerCompany || "N/A",
+          sellerCompany: item.supplierCompany || "N/A",
+          consignee: item.consignee || item.place || "N/A",
+          item: item.commodity || "N/A",
+          weight:
+            item.calculatedWeight ||
+            item.unloadingWeight ||
+            item.loadingWeight ||
+            0,
+          rate: item.brokerageRate || 0,
+          loading: item.loadingWeight || 0,
+          unloading: item.unloadingWeight || 0,
+          totalAmount: item.totalBrokerage || 0,
+        });
+      });
+    }
 
     worksheet.getRow(1).font = { bold: true };
     worksheet.getRow(1).alignment = { horizontal: "center" };
+    worksheet.autoFilter = {
+      from: "A1",
+      to: `${String.fromCharCode(64 + worksheet.columnCount)}1`,
+    };
 
     res.setHeader(
       "Content-Type",
@@ -769,7 +856,7 @@ router.get("/brokerage-report/excel", async (req, res) => {
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=" +
-        `${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_Report.xlsx`,
+        `${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_${isSummary ? "Summary" : "Report"}.xlsx`,
     );
 
     await workbook.xlsx.write(res);
@@ -782,13 +869,15 @@ router.get("/brokerage-report/excel", async (req, res) => {
 
 router.get("/brokerage-report/pdf", async (req, res) => {
   try {
-    const { ids, type } = req.query;
+    const { ids, type, summary } = req.query;
     const queryParams = { ...req.query };
     if (ids && typeof ids === "string") {
       queryParams.ids = ids.split(",");
     }
 
     const data = await getBrokerageReportData(queryParams);
+    const isSummary = isSummaryRequest(summary);
+    const summaryRows = isSummary ? getBrokerageSummaryRows(data) : [];
 
     if (data.length === 0) {
       return res.status(404).json({ message: "No data found for the report" });
@@ -810,6 +899,10 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
     const isBuyerReport = type === "buyer";
+    const partyName = getBrokeragePartyLabel(data, type);
+    const reportTitle = isSummary
+      ? `${type.toUpperCase()} BROKERAGE SUMMARY`
+      : `${type.toUpperCase()} BROKERAGE ADVICE`;
 
     const hansariaBankDetails = {
       accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
@@ -873,22 +966,13 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(
-        `${type.toUpperCase()} BROKERAGE ADVICE`,
-        pageWidth / 2,
-        margin + 40,
-        {
-          align: "center",
-        },
-      );
+      doc.text(reportTitle, pageWidth / 2, margin + 40, {
+        align: "center",
+      });
 
       doc.line(margin, margin + 46, pageWidth - margin, margin + 46);
 
       doc.setFontSize(10);
-      const partyName = isBuyerReport
-        ? data[0].buyerCompany || "N/A"
-        : data[0].supplierCompany || "N/A";
-
       doc.text(
         `Party Name: ${partyName.toUpperCase()}`,
         margin + 5,
@@ -906,37 +990,70 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     drawTallyHeader(doc);
 
-    const tableColumn = [
-      "SL No",
-      "Date",
-      "Sauda No",
-      "Bill No",
-      "Lorry No",
-      "Buyer Company",
-      "Seller Company",
-      "CONSIGNEE NAME",
-      "Item",
-      "Weight",
-      "Rate",
-      "Amount",
-    ];
+    const tableColumn = isSummary
+      ? [
+          "Date",
+          "Sauda No",
+          "Seller Company",
+          "Buyer Company",
+          "Consignee",
+          "Commodity",
+          "Quantity",
+          "Rate",
+          "Loading",
+          "Unloading",
+          "Value",
+        ]
+      : [
+          "SL No",
+          "Date",
+          "Sauda No",
+          "Bill No",
+          "Lorry No",
+          "Buyer Company",
+          "Seller Company",
+          "CONSIGNEE NAME",
+          "Item",
+          "Weight",
+          "Rate",
+          "Amount",
+        ];
 
-    const tableRows = data.map((item, index) => [
-      index + 1,
-      item.orderDate
-        ? new Date(item.orderDate).toLocaleDateString("en-GB")
-        : "N/A",
-      item.saudaNo || "N/A",
-      item.billNumber || "N/A",
-      item.lorryNumber || "N/A",
-      item.buyerCompany || "N/A",
-      item.supplierCompany || "N/A",
-      item.consignee || item.place || "N/A",
-      item.commodity || "N/A",
-      Number(item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0).toFixed(2),
-      Number(item.brokerageRate || 0).toFixed(2),
-      Number(item.totalBrokerage || 0).toFixed(2),
-    ]);
+    const tableRows = isSummary
+      ? summaryRows.map((item) => [
+          item.date,
+          item.saudaNo,
+          item.sellerCompany,
+          item.buyerCompany,
+          item.consignee,
+          item.commodity,
+          item.quantity.toFixed(3),
+          item.rate.toFixed(2),
+          item.loading.toFixed(3),
+          item.unloading.toFixed(3),
+          item.value.toFixed(2),
+        ])
+      : data.map((item, index) => [
+          index + 1,
+          item.orderDate
+            ? new Date(item.orderDate).toLocaleDateString("en-GB")
+            : "N/A",
+          item.saudaNo || "N/A",
+          item.billNumber || "N/A",
+          item.lorryNumber || "N/A",
+          item.buyerCompany || "N/A",
+          item.supplierCompany || "N/A",
+          item.consignee || item.place || "N/A",
+          item.commodity || "N/A",
+          Number(
+            item.calculatedWeight ||
+              item.unloadingWeight ||
+              item.loadingWeight ||
+              0,
+          ).toFixed(2),
+          Number(item.brokerageRate || 0).toFixed(2),
+          Number(item.totalBrokerage || 0).toFixed(2),
+        ]);
 
     autoTable(doc, {
       head: [tableColumn],
@@ -957,12 +1074,26 @@ router.get("/brokerage-report/pdf", async (req, res) => {
         textColor: [0, 0, 0],
         fontStyle: "bold",
       },
-      columnStyles: {
-        0: { cellWidth: 10 },
-        2: { halign: "left", cellWidth: 40 },
-        3: { cellWidth: 20 },
-        7: { halign: "right" },
-      },
+      columnStyles: isSummary
+        ? {
+            0: { cellWidth: 18 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 34, halign: "left" },
+            3: { cellWidth: 34, halign: "left" },
+            4: { cellWidth: 28, halign: "left" },
+            5: { cellWidth: 22, halign: "left" },
+            6: { cellWidth: 16 },
+            7: { cellWidth: 14 },
+            8: { cellWidth: 16 },
+            9: { cellWidth: 16 },
+            10: { cellWidth: 18 },
+          }
+        : {
+            0: { cellWidth: 10 },
+            2: { halign: "left", cellWidth: 40 },
+            3: { cellWidth: 20 },
+            7: { halign: "right" },
+          },
       didDrawPage: (d) => {
         if (d.pageNumber > 1) {
           doc.setLineWidth(0.4);
@@ -1107,7 +1238,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=Brokerage_Report.pdf",
+      `attachment; filename=${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_${isSummary ? "Summary" : "Report"}.pdf`,
     );
     res.send(Buffer.from(pdfBuffer));
   } catch (error) {

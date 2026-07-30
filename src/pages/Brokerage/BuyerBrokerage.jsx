@@ -334,6 +334,128 @@ const BuyerBrokerage = () => {
     brokerageStatus,
   ]);
 
+  const handleDownloadSummaryExcel = useCallback(async () => {
+    if (exporting) return;
+    let toastId;
+    try {
+      setExporting(true);
+      toastId = toast.loading("Preparing Buyer Brokerage Summary Excel...");
+
+      const params = {
+        type: "buyer",
+        summary: true,
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyer?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
+      };
+
+      const response = await api.get(`${API_URL}/excel`, {
+        params,
+        responseType: "blob",
+        timeout: 120000,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `BuyerBrokerage_Summary_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
+      toast.success("Summary Excel downloaded successfully");
+    } catch {
+      if (toastId) toast.dismiss(toastId);
+      toast.error("Failed to download summary Excel file");
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedBuyer,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
+
+  const handleDownloadSummaryPDF = useCallback(async () => {
+    if (exporting) return;
+    const toastId = toast.loading("Preparing Buyer Brokerage Summary PDF...");
+    try {
+      setExporting(true);
+
+      const params = {
+        type: "buyer",
+        summary: true,
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyer?.value || undefined,
+        brokerageStatus:
+          brokerageStatus?.value && brokerageStatus.value !== "all"
+            ? brokerageStatus.value
+            : undefined,
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
+      };
+
+      const response = await api.get(`${API_URL}/pdf`, {
+        params,
+        responseType: "blob",
+        timeout: 120000,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `BuyerBrokerage_Summary_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.update(toastId, {
+        render: "Summary PDF downloaded successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Summary PDF Export Error:", error);
+      toast.update(toastId, {
+        render: "Failed to download summary PDF",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    searchInput,
+    startDate,
+    endDate,
+    selectedBuyer,
+    selectedIds,
+    exporting,
+    brokerageStatus,
+  ]);
+
   const headers = [
     <input
       key="select-all"
@@ -539,6 +661,22 @@ const BuyerBrokerage = () => {
                   >
                     <FaFilePdf size={14} />
                     <span>{exporting ? "..." : "PDF Report"}</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadSummaryExcel}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-teal-600 text-white text-xs font-black uppercase tracking-widest hover:bg-teal-700 transition-all shadow-lg shadow-teal-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <FaDownload size={14} />
+                    <span>{exporting ? "..." : "Summary Excel"}</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadSummaryPDF}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-violet-600 text-white text-xs font-black uppercase tracking-widest hover:bg-violet-700 transition-all shadow-lg shadow-violet-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <FaFilePdf size={14} />
+                    <span>{exporting ? "..." : "Summary PDF"}</span>
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">
