@@ -25,10 +25,10 @@ const Pagination = ({
   );
 
   useEffect(() => {
-    if (onPageChange && safeCurrentPage !== normalizedCurrentPage) {
+    if (totalItems > 0 && onPageChange && safeCurrentPage !== normalizedCurrentPage) {
       onPageChange(safeCurrentPage);
     }
-  }, [normalizedCurrentPage, safeCurrentPage, onPageChange]);
+  }, [normalizedCurrentPage, safeCurrentPage, onPageChange, totalItems]);
 
   const getVisiblePages = () => {
     const pages = [];

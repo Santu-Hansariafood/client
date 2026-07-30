@@ -34,15 +34,6 @@ const BuyerList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-
-  useEffect(() => {
-    const safePage = Math.min(Math.max(1, currentPage), totalPages);
-    if (safePage !== currentPage) {
-      setCurrentPage(safePage);
-    }
-  }, [currentPage, totalPages]);
-
   useEffect(() => {
     const fetchBuyersData = async () => {
       setIsLoading(true);

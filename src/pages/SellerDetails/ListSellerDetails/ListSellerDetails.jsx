@@ -93,8 +93,6 @@ const ListSellerDetails = () => {
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [popupMode, setPopupMode] = useState("view");
@@ -133,13 +131,6 @@ const ListSellerDetails = () => {
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
-
-  useEffect(() => {
-    const safePage = Math.min(Math.max(1, currentPage), totalPages);
-    if (safePage !== currentPage) {
-      setCurrentPage(safePage);
-    }
-  }, [currentPage, totalPages]);
 
   useEffect(() => {
     const fetchSellers = async () => {

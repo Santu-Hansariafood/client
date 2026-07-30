@@ -5,12 +5,25 @@ const SOCKET_URL = BASE_URL.startsWith("http")
   ? new URL(BASE_URL).origin
   : window.location.origin;
 
-let socket;
+let socket = null;
+let activeSocketKey = null;
+let activeNotificationHandler = null;
 
 export const initiateSocket = (token) => {
   if (!token) {
-    console.error("No token provided for socket connection");
+    disconnectSocket();
     return null;
+  }
+
+  const socketKey = token;
+
+  if (socket && socket.connected && activeSocketKey === socketKey) {
+    return socket;
+  }
+
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
   }
 
   socket = io(SOCKET_URL, {
@@ -22,13 +35,16 @@ export const initiateSocket = (token) => {
       token: token,
     },
     reconnection: true,
-    reconnectionAttempts: 10,
+    reconnectionAttempts: 8,
     reconnectionDelay: 1000,
-    timeout: 20000,
+    timeout: 15000,
   });
 
+  activeSocketKey = socketKey;
+  activeNotificationHandler = null;
 
   socket.on("connect", () => {
+    // Socket connected successfully.
   });
 
   socket.on("connect_error", (err) => {
@@ -43,17 +59,35 @@ export const initiateSocket = (token) => {
 };
 
 export const disconnectSocket = () => {
-  if (socket) socket.disconnect();
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
+  }
+
+  socket = null;
+  activeSocketKey = null;
+  activeNotificationHandler = null;
 };
 
 export const subscribeToNotifications = (cb) => {
-  if (!socket) return;
+  if (!socket) return () => {};
 
-  socket.off("notification");
+  if (activeNotificationHandler) {
+    socket.off("notification", activeNotificationHandler);
+  }
 
-  socket.on("notification", (msg) => {
+  activeNotificationHandler = (msg) => {
     cb(null, msg);
-  });
+  };
+
+  socket.on("notification", activeNotificationHandler);
+
+  return () => {
+    if (socket && activeNotificationHandler) {
+      socket.off("notification", activeNotificationHandler);
+      activeNotificationHandler = null;
+    }
+  };
 };
 
 export const getSocket = () => socket;
