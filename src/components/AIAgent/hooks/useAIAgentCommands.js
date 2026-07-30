@@ -174,7 +174,7 @@ export const useAIAgentCommands = ({
     sidebarModules.forEach((s) => {
       content += `• *${s.section}*: ${s.actions.map((a) => `_${a.name}_`).join(", ")}\n`;
     });
-    content += "\n*Tip: Just type the name of any module to go there!*";
+    content += "\n*Tip: Type a module name to get its details here, or ask for specific records like Sauda, Lorry, Buyer, Seller, or Payment details.*";
     return {
       role: "assistant",
       content,
@@ -186,6 +186,22 @@ export const useAIAgentCommands = ({
       ],
     };
   };
+
+  const getModuleResult = (action) => ({
+    role: "assistant",
+    content:
+      `*${action.name}*\n\n` +
+      `• *Section:* ${action.section || "System Module"}\n` +
+      `• *Path:* ${action.link}\n` +
+      `• *Mode:* Inline result only. I will not redirect automatically.\n\n` +
+      `Ask me for the exact data you want from *${action.name}*, and I will provide the result here.`,
+    suggestions: [
+      "Total sauda today",
+      "Active bids",
+      "Sauda 1 details",
+      "Lorry details",
+    ],
+  });
 
   const processCommand = async (cmd) => {
     const { trackInteraction, checkSafety, learningData, trainCustomIntent } = learningMethods;
@@ -220,7 +236,13 @@ export const useAIAgentCommands = ({
         if (matchingCustomIntent.expectedAction.includes("Open")) {
           const sidebarLink = findSidebarLink(matchingCustomIntent.expectedAction);
           if (sidebarLink && sidebarLink.link) {
-            setTimeout(() => navigate(sidebarLink.link), 1500);
+            response = getModuleResult({
+              ...sidebarLink,
+              section:
+                sidebarModules.find((section) =>
+                  section.actions.some((action) => action.link === sidebarLink.link),
+                )?.section || "System Module",
+            });
           }
         }
         setMessages((prev) => [...prev, response]);
@@ -306,12 +328,22 @@ export const useAIAgentCommands = ({
       }
       
       if (targetPath) {
+        const targetAction = findSidebarLink(targetPath);
         response = {
-          role: "assistant",
-          content: `Going back to ${findSidebarLink(targetPath)?.name || targetPath}...`,
-          action: () => {
-            navigate(targetPath);
-          },
+          ...(targetAction
+            ? getModuleResult({
+                ...targetAction,
+                section:
+                  sidebarModules.find((section) =>
+                    section.actions.some((action) => action.link === targetAction.link),
+                  )?.section || "System Module",
+              })
+            : {
+                role: "assistant",
+                content:
+                  `I found the page *${targetPath}*, but I will provide results here instead of redirecting.\n\n` +
+                  `Ask for the exact data you want from that module.`,
+              }),
         };
       } else {
         response = {
@@ -373,13 +405,13 @@ export const useAIAgentCommands = ({
           cleanCmd.includes("navigate");
 
         if (isDirectNameMatch || hasNavigationKeyword) {
-          response = {
-            role: "assistant",
-            content: `Redirecting you to *${sidebarAction.name}*...`,
-            action: () => {
-              navigate(sidebarAction.link);
-            },
-          };
+          response = getModuleResult({
+            ...sidebarAction,
+            section:
+              sidebarModules.find((section) =>
+                section.actions.some((action) => action.link === sidebarAction.link),
+              )?.section || "System Module",
+          });
         }
       }
     }
@@ -387,7 +419,6 @@ export const useAIAgentCommands = ({
     if (response) {
       setMessages((prev) => [...prev, response]);
       trackInteraction(cmd, response.content); // Track interaction with response context
-      if (response.action) setTimeout(() => response.action(), 1500);
       return;
     }
 
@@ -489,24 +520,22 @@ export const useAIAgentCommands = ({
       };
     } else if (downloadLorryMatch) {
       const lNo = downloadLorryMatch[1].trim();
-      response = {
-        role: "assistant",
-        content: `Redirecting you to the **Loading List** to download the full Excel report for Lorry *${lNo}*...`,
-        action: () => {
-          navigate(`/Loading-Entry/list-loading-entry?lorryNumber=${lNo}`);
-        },
-      };
+      response = await apiMethods.fetchLorryDetails(lNo);
+      if (response?.content) {
+        response.content =
+          `*Lorry ${lNo} Result:*\n\n` +
+          response.content;
+      }
     } else if (bidComponentMatch) {
       response = await apiMethods.fetchBidComponentAnalysis(bidComponentMatch[1].trim());
     } else if (addLoadingMatch) {
       const sNo = addLoadingMatch[1];
-      response = {
-        role: "assistant",
-        content: `Opening *Add Loading Entry* for Sauda ${sNo}...`,
-        action: () => {
-          navigate(`/Loading-Entry/add-loading-entry?saudaNo=${sNo}`);
-        },
-      };
+      response = await apiMethods.fetchSaudaDetails(sNo);
+      if (response?.content) {
+        response.content =
+          `*Sauda ${sNo} Result:*\n\n` +
+          response.content;
+      }
     } else if (buyerMatch) {
       const details = await apiMethods.fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
       response = details || {
@@ -591,10 +620,6 @@ export const useAIAgentCommands = ({
         response.content = `_Showing results for "${cleanCmd}"_\n\n` + response.content;
       }
       trackInteraction(cmd, response.content);
-    }
-
-    if (response.action) {
-      setTimeout(() => response.action(), 1500);
     }
   };
 
