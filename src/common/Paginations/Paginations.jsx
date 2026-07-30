@@ -17,15 +17,21 @@ const Pagination = ({
   showPageSize = true,
   showGoTo = true,
 }) => {
+  const normalizedCurrentPage = Number.isFinite(Number(currentPage))
+    ? Number(currentPage)
+    : 1;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const [gotoValue, setGotoValue] = useState("");
-  const safeCurrentPage = Math.min(Math.max(1, currentPage || 1), totalPages);
+  const safeCurrentPage = Math.min(
+    Math.max(1, normalizedCurrentPage),
+    totalPages,
+  );
 
   useEffect(() => {
-    if (onPageChange && currentPage !== safeCurrentPage) {
+    if (onPageChange && safeCurrentPage !== normalizedCurrentPage) {
       onPageChange(safeCurrentPage);
     }
-  }, [currentPage, safeCurrentPage, onPageChange]);
+  }, [normalizedCurrentPage, safeCurrentPage, onPageChange]);
 
   const getVisiblePages = () => {
     const pages = [];

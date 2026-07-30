@@ -34,6 +34,15 @@ const BuyerList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  useEffect(() => {
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    if (safePage !== currentPage) {
+      setCurrentPage(safePage);
+    }
+  }, [currentPage, totalPages]);
+
   useEffect(() => {
     const fetchBuyersData = async () => {
       setIsLoading(true);
@@ -76,12 +85,16 @@ const BuyerList = () => {
       await api.delete(`/buyers/${buyerToDelete._id}`);
       clearApiCache();
       toast.success("Buyer deleted successfully");
-      // Re-fetch current page
-      const response = await api.get(
-        `/buyers?page=${currentPage}&limit=${itemsPerPage}`,
-      );
-      setBuyersData(response.data?.data || []);
-      setFilteredData(response.data?.data || []);
+      const response = await api.get("/buyers", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchQuery,
+        },
+      });
+      const data = response.data?.data || [];
+      setBuyersData(data);
+      setFilteredData(data);
       setTotalItems(response.data?.total || 0);
     } catch (error) {
       toast.error("Failed to delete buyer");
