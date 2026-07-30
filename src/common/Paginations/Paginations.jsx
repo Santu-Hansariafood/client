@@ -12,8 +12,6 @@ const Pagination = ({
   totalItems,
   itemsPerPage = 10,
   onPageChange,
-  onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
   showGoTo = true,
 }) => {
   const normalizedCurrentPage = Number.isFinite(Number(currentPage))
@@ -180,8 +178,6 @@ Pagination.propTypes = {
   totalItems: PropTypes.number.isRequired,
   itemsPerPage: PropTypes.number,
   onPageChange: PropTypes.func.isRequired,
-  onPageSizeChange: PropTypes.func,
-  pageSizeOptions: PropTypes.arrayOf(PropTypes.number),
   showGoTo: PropTypes.bool,
 };
 

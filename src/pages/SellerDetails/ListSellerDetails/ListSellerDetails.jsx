@@ -387,11 +387,6 @@ const ListSellerDetails = () => {
               totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
-              onPageSizeChange={(size) => {
-                setItemsPerPage(size);
-                setCurrentPage(1);
-              }}
-              pageSizeOptions={[10, 20, 50, 100]}
             />
           </div>
 

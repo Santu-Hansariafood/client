@@ -162,10 +162,6 @@ const ListGroupOfCompany = () => {
               totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
-              onPageSizeChange={(size) => {
-                setItemsPerPage(size);
-                setCurrentPage(1);
-              }}
             />
           </div>
         </div>

@@ -45,7 +45,6 @@ const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 
 const DEBOUNCE_DELAY = 500;
 const DEFAULT_ITEMS_PER_PAGE = 10;
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 const DATE_FORMAT_OPTIONS = {
   year: "numeric",
   month: "2-digit",
@@ -446,14 +445,6 @@ const ListLoadingEntry = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
-
-  const handlePageSizeChange = useCallback(
-    (size) => {
-      setItemsPerPage(size);
-      setCurrentPage(1);
-    },
-    [setItemsPerPage],
-  );
 
   const handleSearchChange = useCallback((q, field) => {
     setFilters((prev) => {
@@ -1504,8 +1495,6 @@ const ListLoadingEntry = () => {
                         totalItems={totalItems}
                         itemsPerPage={itemsPerPage}
                         onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
                       />
                     </div>
                   </>
