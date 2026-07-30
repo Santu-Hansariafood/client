@@ -13,7 +13,6 @@ import {
   Pie,
   Cell,
   Legend,
-  LabelList,
 } from "recharts";
 import {
   MultiBarGradientDefs,
@@ -24,10 +23,7 @@ import {
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
 } from "../modernBarChartShared";
-import {
-  CHART_AREA_CLASS,
-  ChartPanelHeader,
-} from "../chartLayoutShared";
+import { CHART_AREA_CLASS, ChartPanelHeader } from "../chartLayoutShared";
 
 const COLORS = {
   total: "#6366f1",
@@ -36,18 +32,30 @@ const COLORS = {
   inProgress: "#8b5cf6",
 };
 
-const PIE_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+const PIE_COLORS = [
+  "#6366f1",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/95 backdrop-blur-xl p-5 shadow-2xl border border-slate-100 rounded-2xl min-w-[190px]">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">
-          {label}
-        </p>
+        {label && (
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">
+            {label}
+          </p>
+        )}
         <div className="space-y-2">
           {payload.map((entry, index) => (
-            <p key={index} className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+            <p
+              key={index}
+              className="text-sm font-black text-slate-800 flex items-center justify-between gap-4"
+            >
               <span className="flex items-center gap-2">
                 <span
                   className="w-3 h-3 rounded-full shadow-sm"
@@ -55,9 +63,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 ></span>
                 <span className="text-slate-600">{entry.name}:</span>
               </span>
-              <span style={{ color: entry.color }}>
-                {entry.value}
-              </span>
+              <span style={{ color: entry.color }}>{entry.value}</span>
             </p>
           ))}
         </div>
@@ -67,27 +73,68 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType = "area" }) => {
+const EmployeeWorkChart = ({
+  dateWiseData = [],
+  employeeWiseData = [],
+  chartType = "area",
+  timeRange = "last_7_days", // 'today', 'last_7_days', 'last_30_days', 'this_month', 'custom'
+}) => {
   const [viewType, setViewType] = useState("date"); // 'date' or 'employee'
 
   const chartData = useMemo(() => {
+    let rawData = viewType === "date" ? dateWiseData : employeeWiseData;
+
+    // Filter based on timeRange if dates are present
+    if (viewType === "date" && rawData.length > 0) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      rawData = rawData.filter((item) => {
+        const itemDate = new Date(item.date);
+        itemDate.setHours(0, 0, 0, 0);
+
+        if (timeRange === "today") {
+          return itemDate.getTime() === now.getTime();
+        } else if (timeRange === "last_7_days") {
+          const pastDate = new Date(now);
+          pastDate.setDate(now.getDate() - 7);
+          return itemDate >= pastDate && itemDate <= now;
+        } else if (timeRange === "last_30_days") {
+          const pastDate = new Date(now);
+          pastDate.setDate(now.getDate() - 30);
+          return itemDate >= pastDate && itemDate <= now;
+        } else if (timeRange === "this_month") {
+          return (
+            itemDate.getMonth() === now.getMonth() &&
+            itemDate.getFullYear() === now.getFullYear()
+          );
+        }
+        return true; // 'custom' or default passes through
+      });
+    }
+
     if (viewType === "date") {
-      return dateWiseData.map(item => ({
-        date: new Date(item.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+      return rawData.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+        }),
         ...item,
       }));
     }
-    return employeeWiseData.map(item => ({
+
+    return rawData.map((item) => ({
       name: item.name,
       total: item.total,
       completed: item.completed,
       pending: item.pending,
+      inProgress: item.inProgress || 0,
     }));
-  }, [dateWiseData, employeeWiseData, viewType]);
+  }, [dateWiseData, employeeWiseData, viewType, timeRange]);
 
   const renderChart = () => {
     if (viewType === "employee" && chartType === "pie") {
-      const pieData = chartData.map(item => ({
+      const pieData = chartData.map((item) => ({
         name: item.name,
         value: item.total,
       }));
@@ -116,7 +163,7 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
             stroke="none"
             filter="url(#employeePieShadow)"
           >
-            {pieData.map((entry, index) => (
+            {pieData.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={PIE_COLORS[index % PIE_COLORS.length]}
@@ -148,11 +195,7 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
     if (chartType === "bar") {
       const colors = Object.values(COLORS);
       return (
-        <BarChart
-          {...commonProps}
-          barCategoryGap="22%"
-          maxBarSize={48}
-        >
+        <BarChart {...commonProps} barCategoryGap="22%" maxBarSize={48}>
           <MultiBarGradientDefs idPrefix="workBar" colors={colors} />
           <CartesianGrid {...MODERN_GRID_PROPS} />
           <XAxis
@@ -176,10 +219,7 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
             width={40}
             domain={[0, (dataMax) => Math.ceil(dataMax * 1.15)]}
           />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={MODERN_BAR_CURSOR}
-          />
+          <Tooltip content={<CustomTooltip />} cursor={MODERN_BAR_CURSOR} />
           <Bar
             dataKey="total"
             name="Total"
@@ -188,10 +228,7 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
             stackId="a"
           >
             {chartData.map((_, index) => (
-              <Cell
-                key={`work-bar-total-${index}`}
-                fill={`url(#workBar-0)`}
-              />
+              <Cell key={`work-bar-total-${index}`} fill={`url(#workBar-0)`} />
             ))}
           </Bar>
           <Bar
@@ -228,7 +265,11 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
             <stop offset="100%" stopColor={COLORS.pending} stopOpacity={0} />
           </linearGradient>
           <linearGradient id="colorInProgress" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={COLORS.inProgress} stopOpacity={0.45} />
+            <stop
+              offset="5%"
+              stopColor={COLORS.inProgress}
+              stopOpacity={0.45}
+            />
             <stop offset="100%" stopColor={COLORS.inProgress} stopOpacity={0} />
           </linearGradient>
           <filter id="workAreaShadow" height="200%">
@@ -328,7 +369,11 @@ const EmployeeWorkChart = ({ dateWiseData = [], employeeWiseData = [], chartType
         <ChartPanelHeader
           accentClass="bg-indigo-600"
           title="Employee Work Analytics"
-          subtitle={viewType === "date" ? "Date-wise work distribution" : "Employee-wise work distribution"}
+          subtitle={
+            viewType === "date"
+              ? "Date-wise work distribution"
+              : "Employee-wise work distribution"
+          }
         />
         <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl">
           <button
