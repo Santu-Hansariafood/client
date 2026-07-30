@@ -14,7 +14,6 @@ const Pagination = ({
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 20, 50, 100],
-  showPageSize = true,
   showGoTo = true,
 }) => {
   const normalizedCurrentPage = Number.isFinite(Number(currentPage))
@@ -75,22 +74,6 @@ const Pagination = ({
           - {Math.min(safeCurrentPage * itemsPerPage, totalItems)} of {totalItems}
         </span>
 
-        {showPageSize && onPageSizeChange && (
-          <div className="flex items-center gap-2">
-            <span>Rows</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700 focus:ring-2 focus:ring-emerald-400/40"
-            >
-              {pageSizeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
@@ -199,7 +182,6 @@ Pagination.propTypes = {
   onPageChange: PropTypes.func.isRequired,
   onPageSizeChange: PropTypes.func,
   pageSizeOptions: PropTypes.arrayOf(PropTypes.number),
-  showPageSize: PropTypes.bool,
   showGoTo: PropTypes.bool,
 };
 
