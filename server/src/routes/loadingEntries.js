@@ -575,26 +575,61 @@ const getSummaryQuantity = (item = {}) => {
   return unloadingWeight > 0 ? unloadingWeight : loadingWeight;
 };
 
-const getBrokerageSummaryRows = (data = []) =>
-  data.map((item) => {
-    const quantity = getSummaryQuantity(item);
+const getBrokerageSummaryRows = (data = []) => {
+  const summaryMap = new Map();
+
+  data.forEach((item) => {
+    const groupKey = item.saudaNo || item._id?.toString() || "N/A";
+    const loading = Number(item.loadingWeight || 0);
+    const unloading = Number(item.unloadingWeight || 0);
     const rate = Number(item.brokerageRate || 0);
-    const value = Number(item.totalBrokerage ?? quantity * rate);
+    const dateValue = item.orderDate || item.loadingDate || null;
+
+    if (!summaryMap.has(groupKey)) {
+      summaryMap.set(groupKey, {
+        dateValue,
+        saudaNo: item.saudaNo || "N/A",
+        sellerCompany: item.supplierCompany || item.sellerAccount || "N/A",
+        buyerCompany: item.buyerCompany || "N/A",
+        consignee: item.consignee || item.place || "N/A",
+        commodity: item.commodity || "N/A",
+        loading: 0,
+        unloading: 0,
+        rate,
+      });
+    }
+
+    const existing = summaryMap.get(groupKey);
+    existing.loading += loading;
+    existing.unloading += unloading;
+
+    if ((!existing.rate || existing.rate === 0) && rate > 0) {
+      existing.rate = rate;
+    }
+
+    if (!existing.dateValue && dateValue) {
+      existing.dateValue = dateValue;
+    }
+  });
+
+  return Array.from(summaryMap.values()).map((item) => {
+    const quantity = getSummaryQuantity(item);
 
     return {
-      date: formatReportDate(item.loadingDate || item.orderDate),
-      saudaNo: item.saudaNo || "N/A",
-      sellerCompany: item.supplierCompany || item.sellerAccount || "N/A",
-      buyerCompany: item.buyerCompany || "N/A",
-      consignee: item.consignee || item.place || "N/A",
-      commodity: item.commodity || "N/A",
+      date: formatReportDate(item.dateValue),
+      saudaNo: item.saudaNo,
+      sellerCompany: item.sellerCompany,
+      buyerCompany: item.buyerCompany,
+      consignee: item.consignee,
+      commodity: item.commodity,
       quantity,
-      rate,
-      loading: Number(item.loadingWeight || 0),
-      unloading: Number(item.unloadingWeight || 0),
-      value,
+      rate: Number(item.rate || 0),
+      loading: Number(item.loading || 0),
+      unloading: Number(item.unloading || 0),
+      value: quantity * Number(item.rate || 0),
     };
   });
+};
 
 const getBrokeragePartyLabel = (data = [], type = "buyer") => {
   const field = type === "buyer" ? "buyerCompany" : "supplierCompany";
