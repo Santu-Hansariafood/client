@@ -5,10 +5,27 @@ const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
+const inFlightRequests = new Map();
+
+const createPendingRequest = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+};
 
 const getCacheKey = (config) => {
   const { method, url, params } = config;
   return `${method?.toUpperCase()}:${url}:${JSON.stringify(params || {})}`;
+};
+
+const getRequestKey = (config) => {
+  const { method, url, params, data } = config;
+  return `${method?.toUpperCase()}:${url}:${JSON.stringify(params || {})}:${JSON.stringify(data || {})}`;
 };
 
 const instance = axios.create({
@@ -49,6 +66,19 @@ instance.interceptors.request.use((config) => {
         config,
       });
     }
+
+    const inFlightKey = getRequestKey(config);
+    const pending = inFlightRequests.get(inFlightKey);
+    if (pending) {
+      return Promise.reject({
+        isDuplicateRequest: true,
+        duplicatePromise: pending.promise,
+        config,
+      });
+    }
+
+    const pendingRequest = createPendingRequest();
+    inFlightRequests.set(inFlightKey, pendingRequest);
   }
 
   return config;
@@ -56,24 +86,43 @@ instance.interceptors.request.use((config) => {
 
 instance.interceptors.response.use(
   (response) => {
-    // Cache successful GET responses
-    if (
-      response.config?.method?.toUpperCase() === "GET" &&
-      !response.config?.skipCache
-    ) {
-      const key = getCacheKey(response.config);
-      cache.set(key, {
-        data: response,
-        timestamp: Date.now(),
-      });
+    if (response.config?.method?.toUpperCase() === "GET") {
+      const requestKey = getRequestKey(response.config);
+      const pendingRequest = inFlightRequests.get(requestKey);
+      if (pendingRequest) {
+        pendingRequest.resolve(response);
+        inFlightRequests.delete(requestKey);
+      }
+
+      if (!response.config?.skipCache) {
+        const key = getCacheKey(response.config);
+        cache.set(key, {
+          data: response,
+          timestamp: Date.now(),
+        });
+      }
     }
+
     return response;
   },
   (error) => {
-    // Return cached data if we intercepted a cache hit
     if (error.isCached) {
       return Promise.resolve(error.cachedData);
     }
+
+    if (error.isDuplicateRequest && error.duplicatePromise) {
+      return error.duplicatePromise;
+    }
+
+    if (error.config?.method?.toUpperCase() === "GET") {
+      const requestKey = getRequestKey(error.config);
+      const pendingRequest = inFlightRequests.get(requestKey);
+      if (pendingRequest) {
+        pendingRequest.reject(error);
+        inFlightRequests.delete(requestKey);
+      }
+    }
+
     return Promise.reject(error);
   }
 );

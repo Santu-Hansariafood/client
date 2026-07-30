@@ -6,7 +6,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import LazyPages from "../utils/LazyPages/LazyPages";
+import LazyPages, { prefetchRoute } from "../utils/LazyPages/LazyPages";
 import PrivateRoute from "./PrivateRoute/PrivateRoute";
 import PublicRoute from "./PublicRoute/PublicRoute";
 import { useAuth } from "../context/AuthContext/AuthContext";
@@ -411,9 +411,47 @@ const privateRoutes = [
 ];
 
 const AppRoutes = ({ hydrated }) => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated || loading) return;
+
+    const roleRoutes = {
+      Admin: [
+        "/dashboard",
+        "/employee/list",
+        "/buyer/list",
+        "/seller-details/list",
+        "/commodity/list",
+        "/Loading-Entry/list-loading-entry",
+      ],
+      Employee: [
+        "/employee/dashboard",
+        "/buyer/list",
+        "/seller-details/list",
+        "/commodity/list",
+        "/Loading-Entry/list-loading-entry",
+      ],
+      Buyer: [
+        "/buyer/dashboard",
+        "/participate-bid-list",
+        "/manage-bids/bid-list",
+        "/buyer/bid-history",
+      ],
+      Seller: [
+        "/seller/dashboard",
+        "/Supplier-Bid-List",
+        "/participate-bid-list",
+        "/Loading-Entry/list-loading-entry",
+      ],
+      Transporter: ["/transporter/dashboard"],
+    };
+
+    const routesToPrefetch = roleRoutes[userRole] || [];
+    routesToPrefetch.forEach((route) => prefetchRoute(route));
+  }, [isAuthenticated, loading, userRole]);
 
   useEffect(() => {
     // Force redirect to dashboard on initial app load if authenticated
