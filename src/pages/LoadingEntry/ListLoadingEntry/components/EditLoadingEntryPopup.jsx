@@ -1,5 +1,4 @@
-import React, { lazy } from "react";
-import { toast } from "react-toastify";
+import { lazy } from "react";
 import QualityClaimsTable, { calculateClaimAmount } from "./QualityClaimsTable";
 
 const DataDropdown = lazy(
@@ -26,11 +25,29 @@ const EditLoadingEntryPopup = ({
   onClose,
   isSaving,
 }) => {
+  const qualityClaims = Array.isArray(editEntry?.qualityClaims)
+    ? editEntry.qualityClaims
+    : [];
+
   const totalClaimAmount = editEntry.manualClaim
-    ? editEntry.manualClaimAmount || 0
-    : editEntry.qualityClaims
+    ? Number(editEntry.manualClaimAmount || 0).toFixed(2)
+    : qualityClaims
         .reduce((total, claim) => total + (Number(claim.claimAmount) || 0), 0)
         .toFixed(2);
+
+  const updateDocumentsState = (updates = {}) => {
+    setEditEntry((prev) => ({
+      ...prev,
+      documents: {
+        kantaSlip: "",
+        unloadingChallan: "",
+        partyBillCopy: "",
+        qualityReport: "",
+        ...(prev?.documents || {}),
+        ...updates,
+      },
+    }));
+  };
 
   const calculatePayableAmount = () => {
     if (editEntry.isRejected) {
@@ -48,7 +65,7 @@ const EditLoadingEntryPopup = ({
     
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
-      : editEntry.qualityClaims.reduce(
+      : qualityClaims.reduce(
           (total, claim) => total + (Number(claim.claimAmount) || 0),
           0,
         );
@@ -879,30 +896,10 @@ const EditLoadingEntryPopup = ({
             minHeight={600}
             currentUrl={editEntry.documents?.kantaSlip || ""}
             onFileChange={(url) => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  kantaSlip: url,
-                },
-              }));
+              updateDocumentsState({ kantaSlip: url });
             }}
             onFileRemove={() => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  kantaSlip: "",
-                },
-              }));
+              updateDocumentsState({ kantaSlip: "" });
             }}
           />
           <FileUpload
@@ -912,30 +909,10 @@ const EditLoadingEntryPopup = ({
             minHeight={600}
             currentUrl={editEntry.documents?.unloadingChallan || ""}
             onFileChange={(url) => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  unloadingChallan: url,
-                },
-              }));
+              updateDocumentsState({ unloadingChallan: url });
             }}
             onFileRemove={() => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  unloadingChallan: "",
-                },
-              }));
+              updateDocumentsState({ unloadingChallan: "" });
             }}
           />
           <FileUpload
@@ -945,30 +922,10 @@ const EditLoadingEntryPopup = ({
             minHeight={600}
             currentUrl={editEntry.documents?.partyBillCopy || ""}
             onFileChange={(url) => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  partyBillCopy: url,
-                },
-              }));
+              updateDocumentsState({ partyBillCopy: url });
             }}
             onFileRemove={() => {
-              setEditEntry((prev) => ({
-                ...prev,
-                documents: {
-                  kantaSlip: "",
-                  unloadingChallan: "",
-                  partyBillCopy: "",
-                  qualityReport: "",
-                  ...prev.documents,
-                  partyBillCopy: "",
-                },
-              }));
+              updateDocumentsState({ partyBillCopy: "" });
             }}
           />
         </div>
@@ -986,30 +943,10 @@ const EditLoadingEntryPopup = ({
               minHeight={600}
               currentUrl={editEntry.documents?.qualityReport || ""}
               onFileChange={(url) => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
-                    kantaSlip: "",
-                    unloadingChallan: "",
-                    partyBillCopy: "",
-                    qualityReport: "",
-                    ...prev.documents,
-                    qualityReport: url,
-                  },
-                }));
+                updateDocumentsState({ qualityReport: url });
               }}
               onFileRemove={() => {
-                setEditEntry((prev) => ({
-                  ...prev,
-                  documents: {
-                    kantaSlip: "",
-                    unloadingChallan: "",
-                    partyBillCopy: "",
-                    qualityReport: "",
-                    ...prev.documents,
-                    qualityReport: "",
-                  },
-                }));
+                updateDocumentsState({ qualityReport: "" });
               }}
             />
             <FileUpload

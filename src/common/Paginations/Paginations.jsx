@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -19,13 +19,20 @@ const Pagination = ({
 }) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const [gotoValue, setGotoValue] = useState("");
+  const safeCurrentPage = Math.min(Math.max(1, currentPage || 1), totalPages);
+
+  useEffect(() => {
+    if (onPageChange && currentPage !== safeCurrentPage) {
+      onPageChange(safeCurrentPage);
+    }
+  }, [currentPage, safeCurrentPage, onPageChange]);
 
   const getVisiblePages = () => {
     const pages = [];
     const delta = 1;
 
-    const rangeStart = Math.max(2, currentPage - delta);
-    const rangeEnd = Math.min(totalPages - 1, currentPage + delta);
+    const rangeStart = Math.max(2, safeCurrentPage - delta);
+    const rangeEnd = Math.min(totalPages - 1, safeCurrentPage + delta);
 
     pages.push(1);
 
@@ -58,8 +65,8 @@ const Pagination = ({
     <div className="w-full flex flex-col gap-3 mt-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
         <span>
-          Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}{" "}
-          - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+          Showing {totalItems === 0 ? 0 : (safeCurrentPage - 1) * itemsPerPage + 1}{" "}
+          - {Math.min(safeCurrentPage * itemsPerPage, totalItems)} of {totalItems}
         </span>
 
         {showPageSize && onPageSizeChange && (
@@ -83,19 +90,19 @@ const Pagination = ({
       <div className="flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
         <button
           onClick={() => onPageChange(1)}
-          disabled={currentPage === 1}
+          disabled={safeCurrentPage === 1}
           className={`${btnBase} ${
-            currentPage === 1 ? btnDisabled : btnDefault
+            safeCurrentPage === 1 ? btnDisabled : btnDefault
           }`}
         >
           <FaAngleDoubleLeft />
         </button>
 
         <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
+          onClick={() => onPageChange(safeCurrentPage - 1)}
+          disabled={safeCurrentPage === 1}
           className={`${btnBase} ${
-            currentPage === 1 ? btnDisabled : btnDefault
+            safeCurrentPage === 1 ? btnDisabled : btnDefault
           }`}
         >
           <FaChevronLeft />
@@ -107,7 +114,7 @@ const Pagination = ({
             onClick={() => typeof page === "number" && onPageChange(page)}
             disabled={page === "..."}
             className={`${btnBase} ${
-              currentPage === page
+              safeCurrentPage === page
                 ? btnActive
                 : page === "..."
                   ? "cursor-default text-slate-400"
@@ -119,10 +126,10 @@ const Pagination = ({
         ))}
 
         <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(safeCurrentPage + 1)}
+          disabled={safeCurrentPage === totalPages}
           className={`${btnBase} ${
-            currentPage === totalPages ? btnDisabled : btnDefault
+            safeCurrentPage === totalPages ? btnDisabled : btnDefault
           }`}
         >
           <FaChevronRight />
@@ -130,9 +137,9 @@ const Pagination = ({
 
         <button
           onClick={() => onPageChange(totalPages)}
-          disabled={currentPage === totalPages}
+          disabled={safeCurrentPage === totalPages}
           className={`${btnBase} ${
-            currentPage === totalPages ? btnDisabled : btnDefault
+            safeCurrentPage === totalPages ? btnDisabled : btnDefault
           }`}
         >
           <FaAngleDoubleRight />

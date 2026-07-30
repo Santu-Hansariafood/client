@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /login
+Allow: /news-archive
 Allow: /privacy-policy
 Allow: /terms-conditions
 Allow: /broker-commission-policy
@@ -34,6 +35,7 @@ Disallow: /admin/
 # Block search parameters to avoid duplicate content
 Disallow: /*?*
 
+Host: bid.hansariafood.in
 Sitemap: https://bid.hansariafood.in/sitemap.xml
 
 User-agent: Googlebot
