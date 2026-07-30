@@ -9,26 +9,27 @@ export const useAIAgentAPI = (
   getDynamicSuggestions,
 ) => {
   const responseCacheRef = useRef({});
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+  const CACHE_TTL = 5 * 60 * 1000;
 
-  // Helper function to get cached response
+  const formatTons = (value, digits = 2) => {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue.toFixed(digits) : "0".padEnd(digits > 0 ? digits + 2 : 1, "0");
+  };
+
   const getCachedResponse = (key) => {
     const cached = responseCacheRef.current[key];
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return cached.data;
     }
-    // Remove stale entry
     delete responseCacheRef.current[key];
     return null;
   };
 
-  // Helper function to set cached response
   const setCachedResponse = (key, data) => {
     responseCacheRef.current[key] = {
       data,
       timestamp: Date.now()
     };
-    // Limit cache size to 50 entries
     const keys = Object.keys(responseCacheRef.current);
     if (keys.length > 50) {
       const oldestKey = keys.sort((a, b) => 
@@ -198,7 +199,6 @@ export const useAIAgentAPI = (
             const companyName = company.companyName || company.name || "N/A";
             content += `• *${companyName}:*\n`;
             
-            // Add company's commodity-wise brokerage
             if (company.commodities && company.commodities.length > 0) {
               company.commodities.forEach((cc) => {
                 const commodityName = cc.commodityId?.name || cc.commodityName || "N/A";
@@ -209,7 +209,6 @@ export const useAIAgentAPI = (
             }
             content += "\n";
           });
-          // Also show buyer's own brokerage as fallback
           const validBrokerage = Object.entries(p.brokerageByName || {}).filter(
             ([comm, rate]) => comm && rate,
           );
@@ -592,7 +591,7 @@ export const useAIAgentAPI = (
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
           `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
           `• *Commodity:* ${sauda.commodity}\n` +
-          `• *Quantity:* ${sauda.quantity} Tons | *Pending:* ${sauda.pendingQuantity || 0} Tons\n` +
+          `• *Quantity:* ${formatTons(sauda.quantity)} T | *Pending:* ${formatTons(sauda.pendingQuantity, 3)} T\n` +
           `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
           `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString("en-GB") : "N/A"}\n` +
           `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString("en-GB") : "N/A"}\n` +
@@ -601,7 +600,9 @@ export const useAIAgentAPI = (
         if (loadings && loadings.length > 0) {
           content += `*Linked Deliveries (${loadings.length}):*\n`;
           loadings.forEach((l, idx) => {
-            content += `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | *Wt:* ${l.loadingWeight} Tons\n`;
+            content +=
+              `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | ` +
+              `*Loading Wt:* ${formatTons(l.loadingWeight)} T | *Unloading Wt:* ${formatTons(l.unloadingWeight)} T\n`;
           });
         }
 
@@ -737,7 +738,7 @@ export const useAIAgentAPI = (
       if (loadings.length > 0) {
         content += `*Loadings Recorded (${loadings.length}):*\n`;
         loadings.forEach((l) => {
-          content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} Tons\n`;
+          content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} T\n`;
         });
       }
 
