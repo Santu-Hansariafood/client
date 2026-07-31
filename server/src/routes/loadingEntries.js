@@ -583,6 +583,7 @@ const getBrokerageSummaryRows = (data = []) => {
     const loading = Number(item.loadingWeight || 0);
     const unloading = Number(item.unloadingWeight || 0);
     const rate = Number(item.brokerageRate || 0);
+    const saudaQuantity = Number(item.sauda?.quantity || item.quantity || 0);
     const dateValue = item.orderDate || item.loadingDate || null;
 
     if (!summaryMap.has(groupKey)) {
@@ -595,6 +596,7 @@ const getBrokerageSummaryRows = (data = []) => {
         commodity: item.commodity || "N/A",
         loading: 0,
         unloading: 0,
+        saudaQuantity,
         rate,
       });
     }
@@ -605,6 +607,10 @@ const getBrokerageSummaryRows = (data = []) => {
 
     if ((!existing.rate || existing.rate === 0) && rate > 0) {
       existing.rate = rate;
+    }
+
+    if ((!existing.saudaQuantity || existing.saudaQuantity === 0) && saudaQuantity > 0) {
+      existing.saudaQuantity = saudaQuantity;
     }
 
     if (!existing.dateValue && dateValue) {
@@ -623,6 +629,7 @@ const getBrokerageSummaryRows = (data = []) => {
       consignee: item.consignee,
       commodity: item.commodity,
       quantity,
+      saudaQuantity: Number(item.saudaQuantity || 0),
       rate: Number(item.rate || 0),
       loading: Number(item.loading || 0),
       unloading: Number(item.unloading || 0),
@@ -1062,7 +1069,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
           item.buyerCompany,
           item.consignee,
           item.commodity,
-          item.quantity.toFixed(3),
+          Number(item.saudaQuantity || item.quantity || 0).toFixed(3),
           item.rate.toFixed(2),
           item.loading.toFixed(3),
           item.unloading.toFixed(3),
@@ -1096,6 +1103,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       startY: margin + 65,
       theme: "grid",
       margin: { left: margin + 2, right: margin + 2 },
+      tableWidth: pageWidth - 2 * (margin + 2),
       styles: {
         fontSize: 8,
         cellPadding: 2,
@@ -1111,17 +1119,17 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       },
       columnStyles: isSummary
         ? {
-            0: { cellWidth: 18 },
-            1: { cellWidth: 18 },
-            2: { cellWidth: 34, halign: "left" },
-            3: { cellWidth: 34, halign: "left" },
-            4: { cellWidth: 28, halign: "left" },
-            5: { cellWidth: 22, halign: "left" },
-            6: { cellWidth: 16 },
-            7: { cellWidth: 14 },
-            8: { cellWidth: 16 },
-            9: { cellWidth: 16 },
-            10: { cellWidth: 18 },
+            0: { cellWidth: 20 },
+            1: { cellWidth: 20 },
+            2: { cellWidth: 39, halign: "left" },
+            3: { cellWidth: 39, halign: "left" },
+            4: { cellWidth: 31, halign: "left" },
+            5: { cellWidth: 25, halign: "left" },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 16 },
+            8: { cellWidth: 20 },
+            9: { cellWidth: 20 },
+            10: { cellWidth: 23 },
           }
         : {
             0: { cellWidth: 10 },
