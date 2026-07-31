@@ -477,6 +477,7 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
         consignee: { $ifNull: ["$consignee", "$loadingFrom"] },
         place: { $ifNull: ["$loadingFrom", "$consignee"] },
         orderDate: { $ifNull: ["$sauda.poDate", "$loadingDate"] },
+        saudaQuantity: { $ifNull: ["$sauda.quantity", 0] },
         brokerageStatus: { $ifNull: [`$${statusField}`, "pending"] },
         brokeragePaidDate: { $ifNull: [`$${paidDateField}`, null] },
         brokerageRate: {
@@ -569,12 +570,6 @@ const isSummaryRequest = (value) =>
 const formatReportDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "N/A";
 
-const getSummaryQuantity = (item = {}) => {
-  const unloadingWeight = Number(item.unloadingWeight ?? 0);
-  const loadingWeight = Number(item.loadingWeight ?? 0);
-  return unloadingWeight > 0 ? unloadingWeight : loadingWeight;
-};
-
 const getBrokerageSummaryRows = (data = []) => {
   const summaryMap = new Map();
 
@@ -583,7 +578,7 @@ const getBrokerageSummaryRows = (data = []) => {
     const loading = Number(item.loadingWeight || 0);
     const unloading = Number(item.unloadingWeight || 0);
     const rate = Number(item.brokerageRate || 0);
-    const saudaQuantity = Number(item.sauda?.quantity || item.quantity || 0);
+    const saudaQuantity = Number(item.saudaQuantity || item.sauda?.quantity || item.quantity || 0);
     const dateValue = item.orderDate || item.loadingDate || null;
 
     if (!summaryMap.has(groupKey)) {
@@ -619,7 +614,10 @@ const getBrokerageSummaryRows = (data = []) => {
   });
 
   return Array.from(summaryMap.values()).map((item) => {
-    const quantity = getSummaryQuantity(item);
+    const quantity = Number(item.saudaQuantity || 0);
+    const unloading = Number(item.unloading || 0);
+    const rate = Number(item.rate || 0);
+    const valueBaseQuantity = unloading > 0 ? unloading : quantity;
 
     return {
       date: formatReportDate(item.dateValue),
@@ -629,11 +627,11 @@ const getBrokerageSummaryRows = (data = []) => {
       consignee: item.consignee,
       commodity: item.commodity,
       quantity,
-      saudaQuantity: Number(item.saudaQuantity || 0),
-      rate: Number(item.rate || 0),
+      saudaQuantity: quantity,
+      rate,
       loading: Number(item.loading || 0),
-      unloading: Number(item.unloading || 0),
-      value: quantity * Number(item.rate || 0),
+      unloading,
+      value: valueBaseQuantity * rate,
     };
   });
 };
@@ -825,7 +823,7 @@ router.get("/brokerage-report/excel", async (req, res) => {
       summaryRows.forEach((item) => {
         worksheet.addRow({
           ...item,
-          quantity: item.quantity.toFixed(3),
+          quantity: Number(item.saudaQuantity || item.quantity || 0).toFixed(3),
           rate: item.rate.toFixed(2),
           loading: item.loading.toFixed(3),
           unloading: item.unloading.toFixed(3),
