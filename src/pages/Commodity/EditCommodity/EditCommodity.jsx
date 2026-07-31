@@ -6,6 +6,7 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaCubes, FaArrowLeft } from "react-icons/fa";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import Buttons from "../../../common/Buttons/Buttons";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -130,6 +131,7 @@ const EditCommodity = () => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <AdminPageShell
         title="Edit Commodity"
         subtitle="Update commodity with HSN code and quality parameters"
@@ -137,9 +139,7 @@ const EditCommodity = () => {
         noContentCard
       >
         {isFetching ? (
-          <div className="py-20 flex justify-center">
             <Loading />
-          </div>
         ) : (
           <div className="container mx-auto max-w-4xl">
             <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">

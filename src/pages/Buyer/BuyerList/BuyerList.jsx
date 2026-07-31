@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUsers } from "react-icons/fa";
 
@@ -168,6 +169,7 @@ const BuyerList = () => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <AdminPageShell
         title="Buyer List"
         subtitle="Search and manage all buyers"

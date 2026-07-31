@@ -3,6 +3,7 @@ import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUserPlus } from "react-icons/fa";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -272,6 +273,7 @@ const AddBuyer = () => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <AdminPageShell
         title={buyerLabels.title}
         subtitle="Create a new buyer with company, group, and commodity access"

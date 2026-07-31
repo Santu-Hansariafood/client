@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
 import PopupBox from "../../../common/PopupBox/PopupBox";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -128,6 +129,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
   return (
     <PopupBox isOpen={isOpen} onClose={onClose} title="Edit Commodity">
+      <ScrollToTop/>
       <Suspense fallback={<Loading />}>
         {isLoading ? (
             <Loading />

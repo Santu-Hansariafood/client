@@ -5,7 +5,7 @@ import Loading from "../../../common/Loading/Loading";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaCubes } from "react-icons/fa";
-
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -128,6 +128,7 @@ const ListCommodity = () => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <AdminPageShell
         title="Commodity List"
         subtitle="Manage commodities with HSN codes and parameters"

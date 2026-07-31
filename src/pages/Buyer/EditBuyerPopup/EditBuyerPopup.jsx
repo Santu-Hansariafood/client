@@ -10,6 +10,7 @@ import {
 } from "react";
 import { toast } from "react-toastify";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -577,6 +578,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
         role="presentation"

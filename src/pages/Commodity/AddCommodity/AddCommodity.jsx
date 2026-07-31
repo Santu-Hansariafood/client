@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaCubes } from "react-icons/fa";
+import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -97,6 +98,7 @@ const AddCommodity = () => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <ScrollToTop />
       <AdminPageShell
         title="Add Commodity"
         subtitle="Create commodity with HSN code and quality parameters"
