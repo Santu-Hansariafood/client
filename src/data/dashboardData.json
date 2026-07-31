@@ -295,7 +295,12 @@
           "icon": "FaUserPlus",
           "roles": ["Admin"]
         },
-        { "name": "Employee List", "link": "/employee/list", "icon": "FaList", "roles": ["Admin"] }
+        {
+          "name": "Employee List",
+          "link": "/employee/list",
+          "icon": "FaList",
+          "roles": ["Admin"]
+        }
       ]
     },
     {
@@ -331,6 +336,24 @@
           "link": "/vendor-code/list",
           "icon": "FaList",
           "roles": ["Admin", "Employee"]
+        }
+      ]
+    },
+    {
+      "section": "Reports",
+      "icon": "",
+      "actions": [
+        {
+          "name": "Buyer Report",
+          "link": "/reports/buyer",
+          "icon": "FaPlus",
+          "roles": ["Admin"]
+        },
+        {
+          "name": "Seller Report",
+          "link": "/reports/seller",
+          "icon": "FaList",
+          "roles": ["Admin"]
         }
       ]
     },
