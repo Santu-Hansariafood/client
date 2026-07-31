@@ -118,6 +118,8 @@ const loaders = {
   ListPaymentRelease: () =>
     import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
   NotFound: () => import("../../pages/NotFound/NotFound"),
+  BuyerReports: () => import("../../pages/SaudaReports/BuyerReports/BuyerReports"),
+  SellerReports: () => import("../../pages/SaudaReports/SellerReports/SellerReports"),
 };
 
 const pathToKey = {
@@ -193,6 +195,8 @@ const pathToKey = {
   "/payment-release": "UnderDevelopment",
   "/payments/payment-release/add": "AddPaymentRelease",
   "/payments/payment-release/list": "ListPaymentRelease",
+  "/reports/buyer": "BuyerReports",
+  "/reports/seller": "SellerReports",
 };
 
 const prefetched = new Set();
@@ -299,6 +303,8 @@ const LazyPages = {
   UnderDevelopment: lazy(loaders.UnderDevelopment),
   AddPaymentRelease: lazy(loaders.AddPaymentRelease),
   ListPaymentRelease: lazy(loaders.ListPaymentRelease),
+  SellerReports: lazy(loaders.SellerReports),
+  BuyerReports: lazy(loaders.BuyerReports),
   NotFound: lazy(loaders.NotFound),
 };
 
