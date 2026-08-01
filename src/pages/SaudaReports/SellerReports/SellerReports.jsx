@@ -1,9 +1,5 @@
-import React from 'react'
+import PartyReportPage from "../components/PartyReportPage";
 
-const SellerReports = () => {
-  return (
-    <div>SellerReports</div>
-  )
-}
+const SellerReports = () => <PartyReportPage partyType="seller" />;
 
-export default SellerReports
+export default SellerReports;
