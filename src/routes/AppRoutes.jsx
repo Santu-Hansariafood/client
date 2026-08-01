@@ -364,6 +364,16 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "reports/buyer",
+    component: LazyPages.BuyerReports,
+    roles: ["Admin"],
+  },
+  {
+    path: "reports/seller",
+    component: LazyPages.SellerReports,
+    roles: ["Admin"],
+  },
+  {
     path: "data-safety",
     component: LazyPages.DataSafety,
     roles: ["Admin", "Employee", "Buyer", "Seller"],

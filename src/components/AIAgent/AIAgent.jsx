@@ -59,7 +59,9 @@ const AIAgent = () => {
     learningMethods: { trackInteraction, checkSafety, getDynamicSuggestions },
     userName,
     currentPath,
-    pageHistory
+    pageHistory,
+    userRole,
+    user,
   });
 
   const { startListening } = useAIAgentVoice(

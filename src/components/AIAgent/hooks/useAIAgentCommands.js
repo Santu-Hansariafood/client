@@ -11,11 +11,50 @@ export const useAIAgentCommands = ({
   learningMethods,
   userName,
   currentPath,
-  pageHistory
+  pageHistory,
+  userRole,
+  user,
 }) => {
   const debounceTimerRef = useRef(null);
   const typoCacheRef = useRef({});
-  const sidebarModules = dashboardData.sections;
+  const sidebarModules = useMemo(
+    () =>
+      dashboardData.sections
+        .map((section) => {
+          const filteredActions = section.actions.filter((action) => {
+            if (
+              action.link === "/dashboard" ||
+              action.link === "/employee/dashboard"
+            ) {
+              return true;
+            }
+
+            if (
+              userRole === "Employee" &&
+              user?.allowedPermissions &&
+              user.allowedPermissions.length > 0
+            ) {
+              return user.allowedPermissions.some((permission) => {
+                const normalizedPermission = permission.startsWith("/")
+                  ? permission
+                  : `/${permission}`;
+                const normalizedLink = action.link.startsWith("/")
+                  ? action.link
+                  : `/${action.link}`;
+
+                return normalizedLink === normalizedPermission;
+              });
+            }
+
+            if (!action.roles) return true;
+            return action.roles.includes(userRole);
+          });
+
+          return { ...section, actions: filteredActions };
+        })
+        .filter((section) => section.actions.length > 0),
+    [userRole, user],
+  );
 
   const SYSTEM_DICTIONARY = [
     "sauda", "order", "lorry", "vehicle", "truck", "bill", "invoice", "challan",
