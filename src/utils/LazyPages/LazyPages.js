@@ -6,7 +6,8 @@ const loaders = {
   AddBuyer: () => import("../../pages/Buyer/AddBuyer/AddBuyer"),
   ListBuyer: () => import("../../pages/Buyer/BuyerList/BuyerList"),
   AddCommodity: () => import("../../pages/Commodity/AddCommodity/AddCommodity"),
-  EditCommodity: () => import("../../pages/Commodity/EditCommodity/EditCommodity"),
+  EditCommodity: () =>
+    import("../../pages/Commodity/EditCommodity/EditCommodity"),
   ListCommodity: () =>
     import("../../pages/Commodity/ListCommodity/ListCommodity"),
   AddCompany: () => import("../../pages/Company/AddCompany/AddCompany"),
@@ -117,9 +118,11 @@ const loaders = {
     import("../../pages/Payments/PaymentRelease/AddPaymentRelease"),
   ListPaymentRelease: () =>
     import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
+  BuyerReports: () =>
+    import("../../pages/SaudaReports/BuyerReports/BuyerReports"),
+  SellerReports: () =>
+    import("../../pages/SaudaReports/SellerReports/SellerReports"),
   NotFound: () => import("../../pages/NotFound/NotFound"),
-  BuyerReports: () => import("../../pages/SaudaReports/BuyerReports/BuyerReports"),
-  SellerReports: () => import("../../pages/SaudaReports/SellerReports/SellerReports"),
 };
 
 const pathToKey = {

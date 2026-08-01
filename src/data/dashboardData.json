@@ -341,7 +341,7 @@
     },
     {
       "section": "Reports",
-      "icon": "",
+      "icon": "FaChartBar",
       "actions": [
         {
           "name": "Buyer Report",
