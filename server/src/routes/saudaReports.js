@@ -49,6 +49,29 @@ const pdfColumnStyles = {
   12: { cellWidth: 15 },
 };
 
+const getScaledPdfColumnStyles = (tableWidth) => {
+  const totalBaseWidth = Object.values(pdfColumnStyles).reduce(
+    (sum, column) => sum + Number(column.cellWidth || 0),
+    0,
+  );
+
+  if (!totalBaseWidth) {
+    return pdfColumnStyles;
+  }
+
+  const scaleFactor = tableWidth / totalBaseWidth;
+
+  return Object.fromEntries(
+    Object.entries(pdfColumnStyles).map(([index, column]) => [
+      index,
+      {
+        ...column,
+        cellWidth: Number((Number(column.cellWidth || 0) * scaleFactor).toFixed(2)),
+      },
+    ]),
+  );
+};
+
 const normalizePartyType = (value) =>
   PARTY_TYPES.includes(String(value || "").toLowerCase())
     ? String(value).toLowerCase()
@@ -701,7 +724,9 @@ router.get("/pdf", async (req, res) => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 8;
+    const margin = 6;
+    const footerHeight = 14;
+    const firstPageTableStartY = margin + 48;
     const logoPath = path.join(__dirname, "../assets/Hans.png");
     let logoBase64 = null;
 
@@ -709,14 +734,18 @@ router.get("/pdf", async (req, res) => {
       logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
     }
 
-    const drawHeader = () => {
-      doc.setLineWidth(0.4);
+    const drawPageFrame = () => {
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.35);
       doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
+    };
 
+    const drawFirstPageHeader = () => {
       if (logoBase64) {
         doc.addImage(logoBase64, "PNG", margin + 4, margin + 3, 20, 20);
       }
 
+      doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(17);
       doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 8, {
@@ -774,49 +803,75 @@ router.get("/pdf", async (req, res) => {
       doc.line(margin, margin + 44, pageWidth - margin, margin + 44);
     };
 
-    drawHeader();
+    const drawFooter = (pageNumber, totalPages) => {
+      const footerLineY = pageHeight - footerHeight;
+      const footerTextY = pageHeight - footerHeight + 4.5;
+
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.25);
+      doc.line(margin + 2, footerLineY, pageWidth - margin - 2, footerLineY);
+
+      doc.setTextColor(90, 90, 90);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7.5);
+      doc.text("Computer Generated Report", pageWidth / 2, footerTextY, {
+        align: "center",
+      });
+
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Page ${pageNumber} of ${totalPages}`,
+        pageWidth - margin - 3,
+        footerTextY,
+        { align: "right" },
+      );
+      doc.setTextColor(0, 0, 0);
+    };
+
+    const tableWidth = pageWidth - 2 * (margin + 1);
+    const scaledPdfColumnStyles = getScaledPdfColumnStyles(tableWidth);
 
     autoTable(doc, {
       head: [REPORT_COLUMNS.map((column) => column.header)],
       body: buildWorksheetRows(rows).map((row) =>
         REPORT_COLUMNS.map((column) => row[column.key]),
       ),
-      startY: margin + 48,
+      startY: firstPageTableStartY,
       theme: "grid",
-      margin: { left: margin + 1, right: margin + 1 },
-      tableWidth: pageWidth - 2 * (margin + 1),
+      margin: {
+        top: margin + 4,
+        right: margin + 1,
+        bottom: footerHeight + 2,
+        left: margin + 1,
+      },
+      tableWidth,
       styles: {
-        fontSize: 7.5,
-        cellPadding: 1.4,
+        fontSize: 7,
+        cellPadding: 1.2,
         lineColor: [203, 213, 225],
         lineWidth: 0.1,
         halign: "center",
         valign: "middle",
+        overflow: "linebreak",
       },
       headStyles: {
         fillColor: [15, 118, 110],
         textColor: [255, 255, 255],
         fontStyle: "bold",
       },
-      columnStyles: pdfColumnStyles,
-      didDrawPage: ({ pageNumber }) => {
-        if (pageNumber > 1) {
-          drawHeader();
-        }
-
-        doc.setFontSize(7);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${pageNumber}`,
-          pageWidth - margin - 4,
-          pageHeight - margin + 1,
-          { align: "right" },
-        );
-      },
+      columnStyles: scaledPdfColumnStyles,
     });
 
-    const finalY = doc.lastAutoTable?.finalY || margin + 70;
-    const summaryY = Math.min(finalY + 8, pageHeight - margin - 8);
+    let finalY = doc.lastAutoTable?.finalY || firstPageTableStartY + 20;
+    const requiredEndSpace = 24;
+    const contentBottomLimit = pageHeight - footerHeight - 4;
+
+    if (finalY + requiredEndSpace > contentBottomLimit) {
+      doc.addPage();
+      finalY = margin + 8;
+    }
+
+    const summaryY = finalY + 6;
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
@@ -830,6 +885,26 @@ router.get("/pdf", async (req, res) => {
       margin + 72,
       summaryY,
     );
+
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8.5);
+    doc.text("Computer Generated Report", margin + 4, summaryY + 6);
+
+    doc.setFont("helvetica", "normal");
+    doc.text("Thanks and Regards,", margin + 4, summaryY + 11);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Hansaria Food Pvt Ltd", margin + 4, summaryY + 16);
+
+    const totalPages = doc.getNumberOfPages();
+    for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+      doc.setPage(pageNumber);
+      drawPageFrame();
+      if (pageNumber === 1) {
+        drawFirstPageHeader();
+      }
+      drawFooter(pageNumber, totalPages);
+    }
 
     const pdfBuffer = doc.output("arraybuffer");
     res.setHeader("Content-Type", "application/pdf");
