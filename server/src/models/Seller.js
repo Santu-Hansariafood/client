@@ -74,6 +74,7 @@ const sellerSchema = new mongoose.Schema(
     },
 
     password: { type: String, required: true },
+    passwordChangedAt: { type: Date },
 
     phoneNumbers: [phoneSchema],
 

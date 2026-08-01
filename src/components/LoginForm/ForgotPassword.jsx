@@ -15,6 +15,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmLogoutAllDevices, setConfirmLogoutAllDevices] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState(initialRole);
 
@@ -65,6 +66,10 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
       toast.error("Passwords do not match.");
       return;
     }
+    if (!confirmLogoutAllDevices) {
+      toast.error("Please confirm logout from all logged-in devices.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -75,7 +80,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
         newPassword,
       });
       toast.success(
-        "Password reset successfully. Please login with your new password.",
+        "Password reset successfully. All logged-in devices have been logged out.",
       );
       onBack();
     } catch (error) {
@@ -99,7 +104,8 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
         <p className="text-sm text-gray-500 mt-1">
           {step === 1 && "Enter your mobile to receive an OTP on your email"}
           {step === 2 && "Enter the 6-digit OTP sent to your email"}
-          {step === 3 && "Create a new secure password"}
+          {step === 3 &&
+            "Create a new secure password and confirm logout from all devices"}
         </p>
       </div>
 
@@ -198,6 +204,18 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
+          <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <input
+              type="checkbox"
+              checked={confirmLogoutAllDevices}
+              onChange={(e) => setConfirmLogoutAllDevices(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-amber-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span>
+              I understand that changing this password will log out this account
+              from all logged-in devices.
+            </span>
+          </label>
           <button
             onClick={handleResetPassword}
             disabled={loading}

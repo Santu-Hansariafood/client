@@ -9,6 +9,7 @@ const employeeSchema = new mongoose.Schema(
     mobile: { type: String, required: true },
     sex: { type: String, enum: ["Male", "Female", "Other"] },
     password: { type: String, required: true },
+    passwordChangedAt: { type: Date },
     role: { type: String, default: "Employee" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
     allowedPermissions: { type: [String], default: [] },

@@ -12,6 +12,7 @@ import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
 import Employee from "../models/Employee.js";
 import Transporter from "../models/Transporter.js";
+import { getModelByRole } from "../utils/authSession.js";
 
 const router = Router();
 
@@ -22,23 +23,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
-const getModelByRole = (role) => {
-  switch (role) {
-    case "Admin":
-      return User;
-    case "Buyer":
-      return Buyer;
-    case "Seller":
-      return Seller;
-    case "Employee":
-      return Employee;
-    case "Transporter":
-      return Transporter;
-    default:
-      return null;
-  }
-};
 
 const getEmailByRole = (user, role) => {
   switch (role) {
@@ -249,11 +233,15 @@ router.post("/reset-password", async (req, res) => {
     }
 
     user.password = newPassword;
+    user.passwordChangedAt = new Date();
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
 
-    res.json({ message: "Password reset successfully" });
+    res.json({
+      message:
+        "Password reset successfully. All logged-in devices have been signed out.",
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

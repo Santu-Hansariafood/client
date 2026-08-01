@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     mobile: { type: String },
     phone: { type: String },
     password: { type: String, required: true },
+    passwordChangedAt: { type: Date },
     otp: { type: String },
     otpExpires: { type: Date },
     bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],

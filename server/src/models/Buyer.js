@@ -17,6 +17,7 @@ const buyerSchema = new mongoose.Schema(
     mobile: { type: [String], default: [] },
     email: { type: [String], default: [] },
     password: { type: String, default: "" },
+    passwordChangedAt: { type: Date },
     commodityIds: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "Commodity",

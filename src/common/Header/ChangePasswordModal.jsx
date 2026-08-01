@@ -8,14 +8,17 @@ import {
 } from "react-icons/ai";
 import DataInput from "../DataInput/DataInput";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
-  const { userRole, mobile } = useAuth();
+  const { userRole, mobile, logout } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmLogoutAllDevices, setConfirmLogoutAllDevices] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSendOTP = async () => {
@@ -58,6 +61,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       toast.error("Passwords do not match.");
       return;
     }
+    if (!confirmLogoutAllDevices) {
+      toast.error("Please confirm logout from all logged-in devices.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -67,9 +74,13 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         otp,
         newPassword,
       });
-      toast.success("Password updated successfully.");
+      toast.success(
+        "Password updated successfully. All logged-in devices have been logged out.",
+      );
       onClose();
       resetForm();
+      logout();
+      navigate("/login", { replace: true });
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to update password.",
@@ -85,6 +96,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     setNewPassword("");
     setConfirmPassword("");
     setShowPassword(false);
+    setConfirmLogoutAllDevices(false);
   };
 
   if (!isOpen) return null;
@@ -110,7 +122,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             {step === 1 &&
               "An OTP will be sent to your registered email address to verify your identity."}
             {step === 2 && "Enter the 6-digit OTP sent to your email."}
-            {step === 3 && "Create a new secure password for your account."}
+            {step === 3 &&
+              "Create a new secure password and confirm logout from all devices."}
           </p>
 
           {step === 1 && (
@@ -180,6 +193,18 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
+              <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <input
+                  type="checkbox"
+                  checked={confirmLogoutAllDevices}
+                  onChange={(e) => setConfirmLogoutAllDevices(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-amber-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>
+                  I understand that changing this password will log out this
+                  account from all logged-in devices.
+                </span>
+              </label>
               <button
                 onClick={handleResetPassword}
                 disabled={loading}

@@ -6,6 +6,39 @@ const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
 const inFlightRequests = new Map();
+const AUTH_EXEMPT_PATHS = [
+  "/admin/login",
+  "/employees/login",
+  "/transporters/login",
+  "/buyers/login",
+  "/sellers/login",
+  "/forgot-password",
+  "/verify-otp",
+  "/change-password-otp",
+  "/reset-password",
+];
+
+const clearStoredAuth = () => {
+  localStorage.removeItem("isAuthenticated");
+  localStorage.removeItem("mobile");
+  localStorage.removeItem("userRole");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("loginDate");
+};
+
+const shouldHandleUnauthorized = (error) => {
+  if (error.response?.status !== 401) {
+    return false;
+  }
+
+  if (!localStorage.getItem("token")) {
+    return false;
+  }
+
+  const requestUrl = String(error.config?.url || "");
+  return !AUTH_EXEMPT_PATHS.some((path) => requestUrl.includes(path));
+};
 
 const createPendingRequest = () => {
   let resolve;
@@ -120,6 +153,13 @@ instance.interceptors.response.use(
       if (pendingRequest) {
         pendingRequest.reject(error);
         inFlightRequests.delete(requestKey);
+      }
+    }
+
+    if (shouldHandleUnauthorized(error)) {
+      clearStoredAuth();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
     }
 

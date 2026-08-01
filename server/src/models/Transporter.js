@@ -7,6 +7,7 @@ const transporterSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     mobile: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    passwordChangedAt: { type: Date },
     vehicleDetails: {
       number: { type: String },
       type: { type: String },

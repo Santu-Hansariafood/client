@@ -1,5 +1,9 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
+import {
+  getAuthUserFromTokenPayload,
+  isTokenIssuedBeforePasswordChange,
+} from "../utils/authSession.js";
 
 let io;
 
@@ -25,23 +29,32 @@ export const initSocket = (server) => {
     pingInterval: 25000,
   });
   
-  io.use((socket, next) => {
-    const token =
-      socket.handshake.auth.token || socket.handshake.headers.authorization;
+  io.use(async (socket, next) => {
+    try {
+      const token =
+        socket.handshake.auth.token || socket.handshake.headers.authorization;
 
-    if (!token) {
-      return next(new Error("Authentication error: No token provided"));
-    }
-
-    const bearerToken = token.startsWith("Bearer ") ? token.slice(7) : token;
-
-    jwt.verify(bearerToken, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return next(new Error("Authentication error: Invalid token"));
+      if (!token) {
+        return next(new Error("Authentication error: No token provided"));
       }
+
+      const bearerToken = token.startsWith("Bearer ") ? token.slice(7) : token;
+      const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+      const authUser = await getAuthUserFromTokenPayload(decoded);
+
+      if (!authUser) {
+        return next(new Error("Authentication error: User not found"));
+      }
+
+      if (isTokenIssuedBeforePasswordChange(decoded, authUser)) {
+        return next(new Error("Authentication error: Session expired"));
+      }
+
       socket.user = decoded;
       next();
-    });
+    } catch (error) {
+      return next(new Error("Authentication error: Invalid token"));
+    }
   });
 
   io.on("connection", (socket) => {
