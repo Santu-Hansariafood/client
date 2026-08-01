@@ -66,7 +66,9 @@ const getScaledPdfColumnStyles = (tableWidth) => {
       index,
       {
         ...column,
-        cellWidth: Number((Number(column.cellWidth || 0) * scaleFactor).toFixed(2)),
+        cellWidth: Number(
+          (Number(column.cellWidth || 0) * scaleFactor).toFixed(2),
+        ),
       },
     ]),
   );
@@ -87,14 +89,18 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
 
-const formatNumber = (value, digits = 3) =>
-  Number(value || 0).toFixed(digits);
+const formatNumber = (value, digits = 3) => Number(value || 0).toFixed(digits);
 
 const parseDateValue = (value, endOfDay = false) => {
   if (!value) return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
-  parsed.setHours(endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
+  parsed.setHours(
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0,
+  );
   return parsed;
 };
 
@@ -154,7 +160,8 @@ const buildLoadingEntryMatch = ({
   startDate,
   endDate,
 }) => {
-  const dateField = reportType === "unloading" ? "unloadingDate" : "loadingDate";
+  const dateField =
+    reportType === "unloading" ? "unloadingDate" : "loadingDate";
   const match = {
     ...buildDateMatch(dateField, startDate, endDate),
   };
@@ -305,7 +312,8 @@ const buildLoadingDataPipeline = ({
   skip,
   limit,
 }) => {
-  const dateField = reportType === "unloading" ? "unloadingDate" : "loadingDate";
+  const dateField =
+    reportType === "unloading" ? "unloadingDate" : "loadingDate";
   const pipeline = [
     {
       $match: buildLoadingEntryMatch({
@@ -362,7 +370,10 @@ const buildLoadingDataPipeline = ({
         $ifNull: ["$buyerCompany", { $ifNull: ["$sauda.buyerCompany", "N/A"] }],
       },
       sellerCompany: {
-        $ifNull: ["$supplierCompany", { $ifNull: ["$sauda.supplierCompany", "N/A"] }],
+        $ifNull: [
+          "$supplierCompany",
+          { $ifNull: ["$sauda.supplierCompany", "N/A"] },
+        ],
       },
       commodity: {
         $ifNull: ["$commodity", { $ifNull: ["$sauda.commodity", "N/A"] }],
@@ -470,9 +481,13 @@ const getReportRows = async ({
   const dataPipelineBuilder =
     reportType === "sauda" ? buildSaudaDataPipeline : buildLoadingDataPipeline;
   const countPipelineBuilder =
-    reportType === "sauda" ? buildSaudaCountPipeline : buildLoadingCountPipeline;
+    reportType === "sauda"
+      ? buildSaudaCountPipeline
+      : buildLoadingCountPipeline;
   const totalsPipelineBuilder =
-    reportType === "sauda" ? buildSaudaTotalsPipeline : buildLoadingTotalsPipeline;
+    reportType === "sauda"
+      ? buildSaudaTotalsPipeline
+      : buildLoadingTotalsPipeline;
 
   const filters = {
     partyType,
@@ -656,7 +671,10 @@ router.get("/excel", async (req, res) => {
       pattern: "solid",
       fgColor: { argb: "0F766E" },
     };
-    worksheet.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
+    worksheet.getRow(1).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
 
     buildWorksheetRows(rows).forEach((row) => {
       worksheet.addRow(row);
@@ -873,6 +891,7 @@ router.get("/pdf", async (req, res) => {
 
     const summaryY = finalY + 6;
 
+    // Totals on the left
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.text(
@@ -886,15 +905,24 @@ router.get("/pdf", async (req, res) => {
       summaryY,
     );
 
+    // Computer Generated Report, Thanks and Regards, and Hansaria Food Pvt Ltd aligned to the right
+    const rightAlignX = pageWidth - margin - 4;
+
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8.5);
-    doc.text("Computer Generated Report", margin + 4, summaryY + 6);
+    doc.text("Computer Generated Report", rightAlignX, summaryY + 6, {
+      align: "right",
+    });
 
     doc.setFont("helvetica", "normal");
-    doc.text("Thanks and Regards,", margin + 4, summaryY + 11);
+    doc.text("Thanks and Regards,", rightAlignX, summaryY + 11, {
+      align: "right",
+    });
 
     doc.setFont("helvetica", "bold");
-    doc.text("Hansaria Food Pvt Ltd", margin + 4, summaryY + 16);
+    doc.text("Hansaria Food Pvt Ltd", rightAlignX, summaryY + 16, {
+      align: "right",
+    });
 
     const totalPages = doc.getNumberOfPages();
     for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
