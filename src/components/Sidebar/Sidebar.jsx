@@ -67,20 +67,21 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       <aside
         className={`
           fixed lg:sticky top-0 left-0 z-40 h-screen
-          text-slate-100
-          shadow-[4px_0_24px_rgba(0,0,0,0.3)]
-          bg-slate-950
+          text-gray-900
+          shadow-2xl
+          bg-white
           transform transition-[width,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${isCollapsed ? "w-[5rem]" : "w-72"}
           flex flex-col shrink-0
-          border-r border-white/5
+          border-r border-gray-200
         `}
       >
-        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-white/5">
+        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-gray-200">
           <div className="flex items-center gap-3 min-w-0 w-full">
-            <div className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-900/20 transition-all duration-500 hover:rotate-6">
+            {/* Logo background – now amber */}
+            <div className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 shadow-lg shadow-amber-900/20 transition-all duration-500 hover:rotate-6">
               <Icons.FaLeaf className="text-lg text-white" />
             </div>
 
@@ -89,10 +90,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
               }`}
             >
-              <h1 className="font-black text-white text-lg tracking-tight leading-none">
+              <h1 className="font-black text-gray-900 text-lg tracking-tight leading-none">
                 HANSARIA
               </h1>
-              <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-1">
+              <span className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mt-1">
                 BID PORTAL
               </span>
             </div>
@@ -102,7 +103,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/50 transition-all duration-300 shadow-lg z-50"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-300 text-gray-400 hover:text-amber-600 hover:border-amber-400 transition-all duration-300 shadow-md z-50"
             >
               <Icons.FaChevronLeft size={8} />
             </button>
@@ -113,7 +114,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           <button
             type="button"
             onClick={() => setIsCollapsed(false)}
-            className="mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-white/10 transition-all duration-300"
+            className="mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300"
           >
             <Icons.FaChevronRight size={10} />
           </button>
@@ -127,14 +128,23 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           {dashboardData.sections
             .map((section) => {
               const filteredActions = section.actions.filter((action) => {
-                if (action.link === "/dashboard" || action.link === "/employee/dashboard") {
+                if (
+                  action.link === "/dashboard" ||
+                  action.link === "/employee/dashboard"
+                ) {
                   return true;
                 }
 
-                if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
-                  return user.allowedPermissions.some(p => {
+                if (
+                  userRole === "Employee" &&
+                  user?.allowedPermissions &&
+                  user.allowedPermissions.length > 0
+                ) {
+                  return user.allowedPermissions.some((p) => {
                     const normalizedP = p.startsWith("/") ? p : `/${p}`;
-                    const normalizedLink = action.link.startsWith("/") ? action.link : `/${action.link}`;
+                    const normalizedLink = action.link.startsWith("/")
+                      ? action.link
+                      : `/${action.link}`;
                     return normalizedLink === normalizedP;
                   });
                 }
@@ -159,11 +169,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       rounded-xl transition-all duration-300
                       ${
                         isCollapsed
-                          ? "justify-center py-3 h-12 hover:bg-white/5"
+                          ? "justify-center py-3 h-12 hover:bg-amber-50"
                           : `py-3 px-4 h-12 ${
                               isSectionExpanded
-                                ? "bg-white/10 text-white"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-amber-50 text-gray-900"
+                                : "text-gray-600 hover:bg-amber-50 hover:text-gray-900"
                             }`
                       }
                     `}
@@ -171,8 +181,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     <span
                       className={`shrink-0 transition-all duration-300 ${
                         isSectionExpanded
-                          ? "text-emerald-400"
-                          : "text-slate-500 group-hover:text-slate-300"
+                          ? "text-amber-600"
+                          : "text-gray-400 group-hover:text-amber-500"
                       }`}
                     >
                       {renderIcon(sectionIcon)}
@@ -180,20 +190,24 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
                     {!isCollapsed && (
                       <>
-                        <span className={`text-xs font-bold truncate flex-1 tracking-tight transition-colors duration-300`}>
+                        <span
+                          className={`text-xs font-bold truncate flex-1 tracking-tight transition-colors duration-300`}
+                        >
                           {section.section}
                         </span>
-                        <Icons.FaChevronDown 
-                          size={8} 
+                        <Icons.FaChevronDown
+                          size={8}
                           className={`shrink-0 transition-transform duration-300 ${
-                            isSectionExpanded ? "rotate-180 text-emerald-400" : "text-slate-600 group-hover:text-slate-400"
+                            isSectionExpanded
+                              ? "rotate-180 text-amber-600"
+                              : "text-gray-400 group-hover:text-amber-500"
                           }`}
                         />
                       </>
                     )}
 
                     {isCollapsed && isSectionExpanded && (
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-l-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-l-full shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                     )}
                   </button>
 
@@ -209,11 +223,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       `}
                     >
                       <div className="pl-9 pr-1 py-1 space-y-1 relative">
-                        {/* Connecting Line */}
-                        <div className="absolute left-[22px] top-0 bottom-4 w-px bg-white/5" />
-                        
+                        {/* Connecting Line – still gray, but you could make it amber-200 if desired */}
+                        <div className="absolute left-[22px] top-0 bottom-4 w-px bg-gray-200" />
+
                         {section.actions.map((action, idx) => {
-                          const isActive = location.pathname.startsWith(action.link);
+                          const isActive = location.pathname.startsWith(
+                            action.link,
+                          );
 
                           return (
                             <Link
@@ -227,14 +243,12 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                 transition-all duration-200
                                 ${
                                   isActive
-                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
-                                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                                    ? "bg-amber-600 text-white shadow-md shadow-amber-900/30"
+                                    : "text-gray-500 hover:text-gray-900 hover:bg-amber-50"
                                 }
                               `}
                             >
-                              <span className="truncate">
-                                {action.name}
-                              </span>
+                              <span className="truncate">{action.name}</span>
                             </Link>
                           );
                         })}
@@ -250,7 +264,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         <div
           aria-hidden="true"
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-[2px] lg:hidden"
         />
       )}
     </>
