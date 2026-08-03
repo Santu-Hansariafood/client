@@ -275,7 +275,7 @@ const QualityClaimsTable = ({
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}
+                    className={`font-bold ${difference >= 0 ? "text-red-600" : "text-amber-600"}`}
                   >
                     {difference.toFixed(2)}%
                   </span>

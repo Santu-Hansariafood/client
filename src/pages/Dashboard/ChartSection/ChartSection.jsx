@@ -71,7 +71,7 @@ const CHART_CARDS = [
   {
     id: "sauda",
     label: "Sauda",
-    accent: "from-emerald-500 to-green-600",
+    accent: "from-emerald-500 to-amber-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
     props: (chartType) => ({ apiUrl: "/self-order", chartType }),
@@ -79,7 +79,7 @@ const CHART_CARDS = [
   {
     id: "sauda-pie",
     label: "Sauda mix",
-    accent: "from-emerald-500 to-green-600",
+    accent: "from-emerald-500 to-amber-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
     props: () => ({ apiUrl: "/self-order", chartType: "pie" }),

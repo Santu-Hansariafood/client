@@ -385,7 +385,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-amber-500 text-white rounded-lg font-semibold shadow hover:bg-amber-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}
@@ -419,7 +419,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-amber-500 text-white rounded-lg font-semibold shadow hover:bg-amber-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}

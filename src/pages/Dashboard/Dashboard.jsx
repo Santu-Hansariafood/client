@@ -134,7 +134,7 @@ const Dashboard = () => {
       case "In Progress":
         return "bg-purple-100 text-purple-800";
       case "Completed":
-        return "bg-green-100 text-green-800";
+        return "bg-amber-100 text-amber-800";
       case "Cancelled":
         return "bg-red-100 text-red-800";
       default:
@@ -256,10 +256,10 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-2">
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-2">
                       Completed
                     </p>
-                    <p className="text-3xl font-black text-green-700">
+                    <p className="text-3xl font-black text-amber-700">
                       {counts.completedWorks || 0}
                     </p>
                   </div>
@@ -437,7 +437,7 @@ const Dashboard = () => {
                                 </span>
                               )}
                               {work.completedAt && (
-                                <span className="flex items-center gap-1 text-green-600 font-bold">
+                                <span className="flex items-center gap-1 text-amber-600 font-bold">
                                   <FaCalendarCheck size={12} />
                                   Completed:{" "}
                                   {new Date(

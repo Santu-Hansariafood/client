@@ -222,7 +222,7 @@ const ConfirmBids = () => {
       <span
         className={`px-3 py-1 rounded-full text-white text-sm ${
           p.status === "Confirmed"
-            ? "bg-green-500"
+            ? "bg-amber-500"
             : p.status === "Rejected"
               ? "bg-red-500"
               : "bg-yellow-500"

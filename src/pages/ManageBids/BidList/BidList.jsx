@@ -435,7 +435,7 @@ const BidList = () => {
       key={`status-${bid._id}`}
       className={`px-2 py-1 rounded-full text-xs font-semibold ${
         bid.status === "active"
-          ? "bg-green-100 text-green-700"
+          ? "bg-amber-100 text-amber-700"
           : "bg-red-100 text-red-700"
       }`}
     >
@@ -486,7 +486,7 @@ const BidList = () => {
       ) : (
         <button
           type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:bg-green-100 transition-colors"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-colors"
           onClick={() =>
             setReactivateBid({
               ...bid,

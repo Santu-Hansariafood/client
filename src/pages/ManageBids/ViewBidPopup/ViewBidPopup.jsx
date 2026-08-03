@@ -165,7 +165,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-green-800 uppercase tracking-tight">
+          <h2 className="text-xl font-bold text-amber-800 uppercase tracking-tight">
             {bidDetails?.type || "Bid"} Details
           </h2>
           <button
@@ -295,10 +295,10 @@ const ViewBidPopup = ({ bidId, onClose }) => {
             <button
               onClick={generatePDF}
               disabled={isGeneratingPDF}
-              className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-white transition-all duration-300 shadow-lg shadow-green-200/50 ${
+              className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-white transition-all duration-300 shadow-lg shadow-amber-200/50 ${
                 isGeneratingPDF
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 active:scale-[0.98]"
+                  : "bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-700 hover:to-amber-700 active:scale-[0.98]"
               }`}
             >
               {isGeneratingPDF ? (

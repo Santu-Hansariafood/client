@@ -43,26 +43,26 @@ const Teams = () => {
 
   return (
     <section className="bg-gray-50">
-      <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-green-50 via-white to-green-100">
+      <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-amber-50 via-white to-amber-100">
         <Link
           to="/"
-          className="absolute top-8 left-8 flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
+          className="absolute top-8 left-8 flex items-center gap-2 px-5 py-2 bg-amber-700 text-white rounded-lg shadow hover:bg-amber-800 transition"
         >
           <FaArrowLeft />
           Home
         </Link>
 
-        <div className="absolute top-0 left-0 w-72 h-72 bg-green-300 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-0 right-0 w-72 h-72 bg-green-400 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 bg-amber-300 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-amber-400 rounded-full blur-3xl opacity-30"></div>
 
         <div className="relative z-10 max-w-3xl">
-          <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-700 to-green-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent">
             Our Leadership
           </h1>
 
           <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed">
             Meet the experienced leadership team behind
-            <span className="font-semibold text-green-700">
+            <span className="font-semibold text-amber-700">
               {" "}
               Hansaria Food Private Limited
             </span>
@@ -71,7 +71,7 @@ const Teams = () => {
           </p>
 
           <div className="flex justify-center mt-8">
-            <div className="h-1 w-28 bg-green-600 rounded-full"></div>
+            <div className="h-1 w-28 bg-amber-600 rounded-full"></div>
           </div>
         </div>
       </header>
@@ -111,14 +111,14 @@ const Teams = () => {
                   {member.name}
                 </h2>
 
-                <p className="text-green-600 font-semibold mt-2 text-lg">
+                <p className="text-amber-600 font-semibold mt-2 text-lg">
                   {member.position}
                 </p>
 
                 {member.email && (
                   <a
                     href={`mailto:${member.email}`}
-                    className="flex items-center gap-2 mt-2 text-gray-600 hover:text-green-700"
+                    className="flex items-center gap-2 mt-2 text-gray-600 hover:text-amber-700"
                   >
                     <FaEnvelope />
                     {member.email}
@@ -129,7 +129,7 @@ const Teams = () => {
                   {member.description}
                 </p>
 
-                <div className="mt-6 border-l-4 border-green-600 pl-5">
+                <div className="mt-6 border-l-4 border-amber-600 pl-5">
                   <p className="italic text-gray-500 text-lg">
                     &ldquo;{member.quote}&rdquo;
                   </p>

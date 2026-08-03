@@ -171,7 +171,7 @@ const PaymentForm = ({
               <button
                 type="button"
                 onClick={handleAddEntry}
-                className="px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all flex items-center gap-2"
+                className="px-4 py-2 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all flex items-center gap-2"
               >
                 Add Entry
               </button>

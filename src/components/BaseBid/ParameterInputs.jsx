@@ -63,9 +63,9 @@ const ParameterInputs = ({
 
         <textarea
           className="w-full px-4 py-3 border border-gray-300 rounded-2xl
-          focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-500
+          focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500
           placeholder-gray-400 text-gray-800 transition-all duration-200
-          hover:border-green-400 resize-none shadow-sm"
+          hover:border-amber-400 resize-none shadow-sm"
           placeholder="Enter any additional notes..."
           value={notes || ""}
           onChange={(e) => handleChange("notes", e.target.value)}

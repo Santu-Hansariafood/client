@@ -618,7 +618,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-green-500 text-white px-6 py-2 rounded"
+                className="bg-amber-500 text-white px-6 py-2 rounded"
               >
                 Update
               </button>

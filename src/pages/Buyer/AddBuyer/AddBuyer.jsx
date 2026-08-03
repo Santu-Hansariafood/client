@@ -283,7 +283,7 @@ const AddBuyer = () => {
         <div className="max-w-4xl mx-auto">
           <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-amber-200/80 rounded-2xl shadow-lg bg-white">
             {successMessage && (
-              <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
+              <div className="mb-4 p-3 rounded-lg bg-amber-100 text-amber-800 text-center font-semibold animate-fade-in">
                 {successMessage}
               </div>
             )}

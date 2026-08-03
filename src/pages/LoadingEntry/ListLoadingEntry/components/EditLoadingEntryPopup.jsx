@@ -556,7 +556,7 @@ const EditLoadingEntryPopup = ({
 
             <div className="space-y-4">
               {/* Total Bill Value */}
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl shadow-sm border border-emerald-200">
+              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-amber-50 rounded-xl shadow-sm border border-emerald-200">
                 <span className="font-bold text-slate-800 text-sm">
                   Total Bill Value:
                 </span>
@@ -818,7 +818,7 @@ const EditLoadingEntryPopup = ({
               </div>
 
               {/* Payable Amount */}
-              <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
+              <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-amber-600 to-teal-600 rounded-xl shadow-lg text-white">
                 <span className="text-lg font-bold">Payable Amount:</span>
                 <span className="text-3xl font-black">
                   ₹ {calculatePayableAmount()}

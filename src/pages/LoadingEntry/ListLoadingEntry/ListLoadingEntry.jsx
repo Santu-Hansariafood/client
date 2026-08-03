@@ -1321,7 +1321,7 @@ const ListLoadingEntry = () => {
               <button
                 onClick={() => handleEdit(entry)}
                 title="Edit"
-                className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
+                className="p-1 text-amber-500 hover:bg-amber-100 rounded transition-colors"
                 aria-label="Edit entry"
               >
                 <MdEdit size={18} />

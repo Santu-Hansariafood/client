@@ -129,7 +129,7 @@ const AddCommodity = () => {
 
             <button
               onClick={handleAddField}
-              className="mt-4 text-green-700 flex items-center space-x-2"
+              className="mt-4 text-amber-700 flex items-center space-x-2"
             >
               <AiOutlinePlus size={20} />
               <span className="font-medium">Add Quality Parameter</span>
