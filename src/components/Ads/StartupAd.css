@@ -1,0 +1,82 @@
+StartupAd.startup-ad-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  animation: fadeIn 0.3s;
+}
+
+.startup-ad-box {
+  width: 90%;
+  max-width: 700px;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.ad-image {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.ad-content {
+  padding: 25px;
+  text-align: center;
+}
+
+.ad-content h2 {
+  margin-bottom: 10px;
+}
+
+.ad-content p {
+  color: #555;
+}
+
+.visit-btn {
+  margin-top: 15px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.visit-btn:hover {
+  background: #15803d;
+}
+
+.countdown {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.close-btn {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

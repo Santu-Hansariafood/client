@@ -10,12 +10,14 @@ import { Suspense, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import { prefetchRoute } from "./utils/LazyPages/LazyPages";
 import "./App.css";
+import StartupAd from "./components/Ads/StartupAd";
 
 const App = () => {
   const hydrated = CacheHandler();
 
   useEffect(() => {
-    const scheduleIdlePrefetch = window.requestIdleCallback || ((cb) => setTimeout(cb, 150));
+    const scheduleIdlePrefetch =
+      window.requestIdleCallback || ((cb) => setTimeout(cb, 150));
 
     scheduleIdlePrefetch(() => {
       [
@@ -46,6 +48,7 @@ const App = () => {
 
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
+            <StartupAd />
             <RouteSEO />
             <ToastContainer
               position={window.innerWidth < 640 ? "top-center" : "top-right"}
