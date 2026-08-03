@@ -65,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }) => {
               ></span>
               <span className="text-slate-600">Total:</span>
             </span>
-            <span className="text-amber-600">{payload[0].value} Bids</span>
+            <span className="text-green-600">{payload[0].value} Bids</span>
           </p>
           {isPie && (
             <div className="pt-2 mt-2 border-t border-slate-50">
@@ -207,7 +207,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   if (loading)
     return (
       <div className={CHART_LOADING_CLASS}>
-        <ChartSpinner colorClass="border-amber-500" />
+        <ChartSpinner colorClass="border-green-500" />
       </div>
     );
 
@@ -260,7 +260,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       );
     }
 
-    const theme = BAR_SERIES_THEMES.amber;
+    const theme = BAR_SERIES_THEMES.green;
     const commonProps = {
       data,
       margin: { ...MODERN_CHART_MARGIN, left: -12 },
@@ -368,7 +368,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   return (
     <div className="w-full min-w-0">
       <ChartPanelHeader
-        accentClass="bg-amber-500"
+        accentClass="bg-green-500"
         title="Bid Tracking"
         subtitle={`Bidding activity by ${viewType}`}
       >
@@ -377,7 +377,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             options={["weekly", "monthly", "quarterly", "yearly"]}
             value={viewType}
             onChange={setViewType}
-            activeClass="bg-white text-amber-600 shadow-md ring-1 ring-amber-100"
+            activeClass="bg-white text-green-600 shadow-md ring-1 ring-green-100"
           />
         )}
       </ChartPanelHeader>

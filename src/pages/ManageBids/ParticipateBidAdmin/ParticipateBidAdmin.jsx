@@ -377,8 +377,8 @@ const ParticipateBidAdmin = () => {
       <span key={`partyrate-${bid.bidId}`} className="font-bold text-blue-600">₹{bid.rate}</span>,
       <div key={`status-${bid.bidId}`} className="flex flex-col gap-1">
         {bid.pendingCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-green-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             {bid.pendingCount} Pending
           </span>
         ) : bid.completedCount > 0 ? (
@@ -473,12 +473,12 @@ const ParticipateBidAdmin = () => {
 
             <div className="bg-white p-6 rounded-[2rem] shadow border">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl bg-green-500 text-white flex items-center justify-center">
                   <FaCheckCircle />
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold uppercase text-amber-600">
+                  <p className="text-xs font-bold uppercase text-green-600">
                     Accepted Qty
                   </p>
 

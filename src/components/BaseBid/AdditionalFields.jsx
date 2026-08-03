@@ -46,7 +46,7 @@ const AdditionalFields = ({ state, handleChange }) => {
                   onClick={() => handleChange(field, "active")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     state[field] === "active"
-                      ? "bg-amber-500 text-white shadow-lg shadow-amber-200"
+                      ? "bg-green-500 text-white shadow-lg shadow-green-200"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >

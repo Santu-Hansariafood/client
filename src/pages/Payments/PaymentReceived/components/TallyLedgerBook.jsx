@@ -221,7 +221,7 @@ const TallyLedgerBook = ({
                     key={`main-${row.id || idx}`}
                     className={[
                       "border-b border-slate-200 text-[11px]",
-                      row.isOpening ? "bg-amber-50/80 font-bold" : "hover:bg-sky-50/50",
+                      row.isOpening ? "bg-green-50/80 font-bold" : "hover:bg-sky-50/50",
                       idx % 2 === 0 && !row.isOpening ? "bg-white" : "",
                       idx % 2 === 1 && !row.isOpening ? "bg-slate-50/40" : "",
                     ].join(" ")}
@@ -334,7 +334,7 @@ const TallyLedgerBook = ({
               {!row.isOpening && row.raw && onEdit && (
                 <button
                   onClick={() => onEdit(row.raw)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded text-xs font-bold transition shadow"
+                  className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded text-xs font-bold transition shadow"
                 >
                   <FaEdit size={14} />
                 </button>
@@ -395,7 +395,7 @@ const TallyLedgerBook = ({
                 key={row.id || idx}
                 className={[
                   "border-b border-slate-200 text-[11px]",
-                  row.isOpening ? "bg-amber-50/80 font-bold" : "hover:bg-sky-50/50",
+                  row.isOpening ? "bg-green-50/80 font-bold" : "hover:bg-sky-50/50",
                   idx % 2 === 0 && !row.isOpening ? "bg-white" : "",
                   idx % 2 === 1 && !row.isOpening ? "bg-slate-50/40" : "",
                 ].join(" ")}
@@ -508,7 +508,7 @@ const TallyLedgerBook = ({
               {!row.isOpening && row.raw && onEdit && (
                 <button
                   onClick={() => onEdit(row.raw)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded text-xs font-bold transition shadow"
+                  className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded text-xs font-bold transition shadow"
                 >
                   <FaEdit size={14} />
                 </button>

@@ -1269,7 +1269,7 @@ const ListLoadingEntry = () => {
           ₹ {totalBrokerage}
         </span>,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
-        <span key={`pending-${entry._id}`} className="font-bold text-amber-600">
+        <span key={`pending-${entry._id}`} className="font-bold text-green-600">
           {(pendingQuantityMap[entry.saudaNo] || 0).toFixed(2)}
         </span>,
         <span
@@ -1321,7 +1321,7 @@ const ListLoadingEntry = () => {
               <button
                 onClick={() => handleEdit(entry)}
                 title="Edit"
-                className="p-1 text-amber-500 hover:bg-amber-100 rounded transition-colors"
+                className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
                 aria-label="Edit entry"
               >
                 <MdEdit size={18} />
@@ -1388,7 +1388,7 @@ const ListLoadingEntry = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-800">Filters</h3>

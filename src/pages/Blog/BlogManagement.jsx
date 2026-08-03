@@ -371,7 +371,7 @@ const BlogManagement = () => {
                     <button
                       type="button"
                       onClick={() => handleAddBlock("list", "bullet")}
-                      className="text-amber-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1"
+                      className="text-green-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1"
                     >
                       <FaListUl size={10} /> + Bullet List
                     </button>
@@ -395,7 +395,7 @@ const BlogManagement = () => {
                           block.type === "subheading"
                             ? "bg-emerald-100 text-emerald-700"
                             : block.type === "list"
-                              ? "bg-amber-100 text-amber-700"
+                              ? "bg-green-100 text-green-700"
                               : "bg-blue-100 text-blue-700"
                         }`}
                       >
@@ -631,7 +631,7 @@ const BlogManagement = () => {
                       </span>
                     </div>
                     {!blog.isPublished && (
-                      <div className="bg-amber-500 text-white px-2 py-1 rounded-lg shadow-sm">
+                      <div className="bg-green-500 text-white px-2 py-1 rounded-lg shadow-sm">
                         <span className="text-[9px] font-black uppercase">
                           Draft
                         </span>

@@ -59,7 +59,7 @@ const PaymentList = ({
       </button>
       <button
         onClick={() => onEdit(payment)}
-        className="p-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all shadow-sm border border-amber-100"
+        className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm border border-green-100"
         title="Edit"
       >
         <FaEdit size={14} />

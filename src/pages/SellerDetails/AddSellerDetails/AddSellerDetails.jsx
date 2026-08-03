@@ -223,7 +223,7 @@ const AddSellerDetails = () => {
           <div className="p-6 sm:p-10 space-y-10">
             <section className="space-y-6">
               <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-sm">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 font-bold text-sm">
                   1
                 </div>
                 <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">

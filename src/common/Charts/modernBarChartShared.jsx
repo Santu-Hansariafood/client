@@ -99,7 +99,7 @@ export const BAR_SERIES_THEMES = {
     mid: "#10b981",
     bottom: "#047857",
   },
-  amber: {
+  green: {
     gradientId: "modernBarAmber",
     top: "#fcd34d",
     mid: "#f59e0b",

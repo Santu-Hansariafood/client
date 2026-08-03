@@ -200,7 +200,7 @@ const FileUpload = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             {isLocalStored ? (
               <span
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200"
                 title="Stored locally on this server. Re-upload once ImageKit auth is fixed to get a permanent CDN link."
               >
                 <MdCloudOff size={14} /> Local
@@ -258,7 +258,7 @@ const FileUpload = ({
               </button>
               <button
                 onClick={() => setShowUploader(true)}
-                className="flex items-center px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-amber-600 transition-all duration-150"
+                className="flex items-center px-3 py-2 bg-green-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-green-600 transition-all duration-150"
                 type="button"
               >
                 <MdEdit size={16} className="mr-1" /> Edit
@@ -385,7 +385,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-amber-500 text-white rounded-lg font-semibold shadow hover:bg-amber-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}
@@ -419,7 +419,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-amber-500 text-white rounded-lg font-semibold shadow hover:bg-amber-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}

@@ -524,7 +524,7 @@ const BuyerDashboard = () => {
       {
         label: "Order History",
         icon: <FaBoxOpen />,
-        color: "bg-amber-600",
+        color: "bg-green-600",
         link: "/manage-order/list-self-order",
         count: stats.totalSaudas,
       },
@@ -615,7 +615,7 @@ const BuyerDashboard = () => {
               title="Active Saudas"
               value={stats.pendingSaudas}
               icon={FaClock}
-              colorClass="bg-amber-600"
+              colorClass="bg-green-600"
               subtitle="Awaiting Delivery"
             />
             <StatCard

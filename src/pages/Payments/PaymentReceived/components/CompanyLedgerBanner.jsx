@@ -31,7 +31,7 @@ const CompanyLedgerBanner = ({
           </span>
         </div>
         <FaArrowRight className="text-slate-400 shrink-0" size={12} />
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500 text-white shadow-sm">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500 text-white shadow-sm">
           <span className="text-[9px] font-black uppercase opacity-80">Seller</span>
           <span className="text-xs sm:text-sm font-black uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">
             {supplierCompany ||

@@ -146,7 +146,7 @@ const BuyerList = () => {
           className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
             String(buyer.status).toLowerCase() === "active"
               ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-              : "bg-amber-100 text-amber-700 border border-amber-200"
+              : "bg-green-100 text-green-700 border border-green-200"
           }`}
         >
           {toTitleCase(buyer.status || "N/A")}
@@ -177,7 +177,7 @@ const BuyerList = () => {
         noContentCard
       >
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+          <div className="bg-white border border-green-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="mb-4">
               <SearchBox
                 placeholder="Search buyers by name..."

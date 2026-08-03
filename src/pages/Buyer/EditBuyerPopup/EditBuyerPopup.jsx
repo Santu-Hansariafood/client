@@ -619,7 +619,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
           {referenceDataError && (
             <div
-              className="mx-6 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+              className="mx-6 mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900"
               role="alert"
             >
               {referenceDataError}

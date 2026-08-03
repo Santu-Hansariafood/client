@@ -56,7 +56,7 @@ const QualityClaimsSection = ({ qualityClaims }) => {
                     {actual.toFixed(2)}%
                   </td>
                   <td
-                    className={`px-4 py-3 font-mono font-bold ${difference >= 0 ? "text-red-600" : "text-amber-600"}`}
+                    className={`px-4 py-3 font-mono font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}
                   >
                     {difference >= 0 ? "+" : ""}
                     {difference.toFixed(2)}%

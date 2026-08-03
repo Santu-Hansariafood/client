@@ -566,7 +566,7 @@ const BuyerBrokerage = () => {
           </span>,
           <span
             key={`cwt-${item._id}`}
-            className="font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 text-[11px]"
+            className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg border border-green-100 text-[11px]"
           >
             {calculatedWeight || 0} T
           </span>,
@@ -587,7 +587,7 @@ const BuyerBrokerage = () => {
             className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
               isPaid
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                : "bg-amber-50 text-amber-700 border border-amber-100"
+                : "bg-green-50 text-green-700 border border-green-100"
             }`}
           >
             {isPaid ? "Paid" : "Pending"}

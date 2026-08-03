@@ -144,7 +144,7 @@ const PendingSaudaSummary = () => {
           {getConsigneeName(item.consignee)}
         </span>
       </div>,
-      <span key={`qty-${index}`} className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-amber-600 bg-amber-50 border-amber-100"} px-3 py-1 rounded-lg border`}>
+      <span key={`qty-${index}`} className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-green-600 bg-green-50 border-green-100"} px-3 py-1 rounded-lg border`}>
         {item.totalPendingQuantity.toFixed(2)} T
       </span>,
       <span key={`loaded-qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
@@ -153,7 +153,7 @@ const PendingSaudaSummary = () => {
       <div key={`brokerage-${index}`} className="flex flex-col text-[11px]">
         <span className="font-black text-slate-900">Total: ₹{totalBrokerage.toFixed(2)}</span>
         <span className="text-emerald-600 font-bold">Loaded: ₹{loadedBrokerage.toFixed(2)}</span>
-        <span className="text-amber-600 font-bold">Pending: ₹{pendingBrokerage.toFixed(2)}</span>
+        <span className="text-green-600 font-bold">Pending: ₹{pendingBrokerage.toFixed(2)}</span>
       </div>,
       <span key={`count-${index}`} className="font-bold text-slate-600">
         {item.saudaCount}
@@ -232,7 +232,7 @@ const PendingSaudaSummary = () => {
               </h3>
               <div className="mt-2 flex gap-2 text-[10px] font-bold">
                 <span className="text-emerald-600">Loaded: ₹{summaryStats.totalLoadedBrokerage.toFixed(0)}</span>
-                <span className="text-amber-600">Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}</span>
+                <span className="text-green-600">Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}</span>
               </div>
             </div>
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">

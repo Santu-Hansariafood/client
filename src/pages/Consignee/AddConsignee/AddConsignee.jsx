@@ -166,7 +166,7 @@ const AddConsignee = () => {
         icon={FaTruck}
         noContentCard
       >
-        <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8 w-full max-w-5xl mx-auto">
+        <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8 w-full max-w-5xl mx-auto">
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

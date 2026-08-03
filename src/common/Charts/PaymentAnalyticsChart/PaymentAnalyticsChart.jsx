@@ -123,7 +123,7 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
   const legend = (
     <div className="flex flex-wrap gap-3 sm:gap-4">
       <div className="flex items-center gap-2">
-        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400 shadow-sm" />
+        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400 shadow-sm" />
         <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
           Pending
         </span>

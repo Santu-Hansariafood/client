@@ -341,7 +341,7 @@ const DownloadSauda = ({
               className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
                 sendingEmail
                   ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                  : "bg-gradient-to-r from-amber-500 to-amber-700 text-white hover:scale-105"
+                  : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:scale-105"
               }`}
               title={sendingEmail ? "Sending email..." : "Send via Email"}
               disabled={sendingEmail}
@@ -382,7 +382,7 @@ const DownloadSauda = ({
               </button>
               <button
                 onClick={handleSendEmail}
-                className="py-2 px-4 rounded bg-amber-500 text-white hover:bg-amber-600"
+                className="py-2 px-4 rounded bg-green-500 text-white hover:bg-green-600"
                 disabled={sendingEmail}
               >
                 {sendingEmail ? "Sending..." : "Send"}

@@ -204,12 +204,12 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
-          <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <label className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
             <input
               type="checkbox"
               checked={confirmLogoutAllDevices}
               onChange={(e) => setConfirmLogoutAllDevices(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-amber-300 text-emerald-600 focus:ring-emerald-500"
+              className="mt-1 h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
             />
             <span>
               I understand that changing this password will log out this account

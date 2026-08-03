@@ -140,7 +140,7 @@ const AccountSelection = ({
                 )}
               </div>
               {formData.companyId && !hasResolvedLedger && (
-                <p className="text-[10px] font-bold text-amber-600 ml-1">
+                <p className="text-[10px] font-bold text-green-600 ml-1">
                   No ledger linked — required only to record payment
                 </p>
               )}

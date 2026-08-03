@@ -205,7 +205,7 @@ const ListSellerCompany = () => {
       >
         <ToastContainer position="top-right" autoClose={3000} />
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
             <div className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400">
               <input
                 type="text"

@@ -13,10 +13,10 @@ const BrokerCommissionPolicy = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-white to-amber-100 min-h-screen py-14 px-6">
+    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-14 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-amber-700">
+          <h1 className="text-4xl md:text-5xl font-bold text-green-700">
             Broker Commission Policy
           </h1>
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
@@ -143,7 +143,7 @@ const BrokerCommissionPolicy = () => {
 
           {/* Highlight Clause */}
 
-          <div className="bg-amber-50 border-l-4 border-amber-600 p-6 rounded-xl mt-8">
+          <div className="bg-green-50 border-l-4 border-green-600 p-6 rounded-xl mt-8">
             <p className="font-semibold text-gray-800">
               Brokerage is earned once a transaction is confirmed between
               parties introduced by the Company, regardless of whether the
@@ -157,7 +157,7 @@ const BrokerCommissionPolicy = () => {
         <div className="text-center mt-10">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-amber-700 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-amber-800 transition"
+            className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-green-800 transition"
           >
             <FaArrowLeft />
             Back to Home
@@ -173,7 +173,7 @@ const Section = ({ title, children, icon }) => {
     <div className="mb-10 group">
       <div className="flex items-center gap-3 mb-3">
         {icon && (
-          <span className="text-amber-600 text-xl group-hover:scale-110 transition">
+          <span className="text-green-600 text-xl group-hover:scale-110 transition">
             {icon}
           </span>
         )}

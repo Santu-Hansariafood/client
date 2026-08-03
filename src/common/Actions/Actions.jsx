@@ -15,7 +15,7 @@ const Actions = ({ onView, onEdit, onDelete }) => {
       <button
         type="button"
         onClick={onEdit}
-        className="flex items-center justify-center w-9 h-9 rounded-lg bg-white text-amber-600 border border-amber-100 hover:bg-amber-50 hover:border-amber-200 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+        className="flex items-center justify-center w-9 h-9 rounded-lg bg-white text-green-600 border border-green-100 hover:bg-green-50 hover:border-green-200 transition-colors focus:outline-none focus:ring-2 focus:ring-green-400/40"
         title="Edit"
       >
         <MdEdit size={18} />

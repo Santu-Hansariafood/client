@@ -60,7 +60,7 @@ const UserProfileCard = ({ user }) => {
 
   return (
     <div className="rounded-3xl overflow-hidden shadow-xl bg-white/70 backdrop-blur-xl border border-white/40">
-      <div className="relative bg-gradient-to-r from-emerald-500 to-amber-700 p-6 sm:p-8 flex items-center gap-4">
+      <div className="relative bg-gradient-to-r from-emerald-500 to-green-700 p-6 sm:p-8 flex items-center gap-4">
         <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
 
         <div className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold">

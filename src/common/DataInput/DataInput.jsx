@@ -35,7 +35,7 @@ const DataInput = ({
 
       <div className="relative group">
         {Icon && (
-          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-600 transition-colors duration-200" />
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors duration-200" />
         )}
 
         <input

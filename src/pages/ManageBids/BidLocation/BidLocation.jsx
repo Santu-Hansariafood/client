@@ -153,7 +153,7 @@ const BidLocation = () => {
               </button>
             </div>
           )}
-          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
             <form
               onSubmit={handleSubmit}
               className="flex flex-col sm:flex-row gap-3 sm:items-end"

@@ -24,7 +24,7 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
           </div>
         </div>
       </div>
-      <div className="animate-page-underline mt-4 h-px bg-gradient-to-r from-emerald-600/40 via-amber-400/30 to-transparent rounded-full" />
+      <div className="animate-page-underline mt-4 h-px bg-gradient-to-r from-emerald-600/40 via-green-400/30 to-transparent rounded-full" />
     </div>
   );
 };

@@ -273,8 +273,8 @@ const EmployeeDashboard = () => {
               label="System Status"
               value={user?.status || "Active"}
               trend="Role: Employee"
-              gradient="from-amber-500 to-orange-600"
-              glowColor="shadow-amber-200/50"
+              gradient="from-green-500 to-orange-600"
+              glowColor="shadow-green-200/50"
             />
           </div>
         )}
@@ -332,7 +332,7 @@ const EmployeeDashboard = () => {
               value={user?.email}
             />
             <DetailItem
-              icon={<FaPhone className="text-amber-500" />}
+              icon={<FaPhone className="text-green-500" />}
               label="Mobile Number"
               value={user?.mobile}
             />

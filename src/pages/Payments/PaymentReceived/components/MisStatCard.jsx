@@ -10,8 +10,8 @@ const MisStatCard = ({
     emerald:
       "from-emerald-500/15 to-emerald-500/5 border-emerald-200/80 text-emerald-700",
     blue: "from-blue-500/15 to-blue-500/5 border-blue-200/80 text-blue-700",
-    amber:
-      "from-amber-500/15 to-amber-500/5 border-amber-200/80 text-amber-700",
+    green:
+      "from-green-500/15 to-green-500/5 border-green-200/80 text-green-700",
     navy: "from-[#1e3a5f]/15 to-[#1e3a5f]/5 border-[#1e3a5f]/20 text-[#1e3a5f]",
   };
 

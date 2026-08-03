@@ -583,7 +583,7 @@ const CompleteLoadingList = () => {
       quantity,
       <span
         key={`pending-${item._id}`}
-        className={`${pendingQuantity < 0 ? "text-rose-600" : "text-amber-600"} font-bold`}
+        className={`${pendingQuantity < 0 ? "text-rose-600" : "text-green-600"} font-bold`}
       >
         {pendingQuantity.toFixed(2)}
       </span>,
@@ -596,7 +596,7 @@ const CompleteLoadingList = () => {
         <span className="text-emerald-600">
           Loaded: ₹{loadedBrokerage} (On {unloadingWeight.toFixed(2)}T)
         </span>
-        <span className="text-amber-600">Pending: ₹{pendingBrokerage}</span>
+        <span className="text-green-600">Pending: ₹{pendingBrokerage}</span>
       </div>,
       item.paymentTerms || "N/A",
       <span
@@ -712,7 +712,7 @@ const CompleteLoadingList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
                     End Date
                   </label>
                   <DateSelector selectedDate={endDate} onChange={setEndDate} />

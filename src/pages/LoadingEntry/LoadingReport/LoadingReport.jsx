@@ -494,7 +494,7 @@ const LoadingReport = () => {
             </div>
 
             <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-green-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
@@ -504,7 +504,7 @@ const LoadingReport = () => {
                     {summaryData.distinctLorry}
                   </h3>
                 </div>
-                <div className="p-4 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/20 transform transition-transform group-hover:rotate-12">
+                <div className="p-4 bg-green-500 text-white rounded-2xl shadow-lg shadow-green-500/20 transform transition-transform group-hover:rotate-12">
                   <FaTruckLoading size={20} />
                 </div>
               </div>

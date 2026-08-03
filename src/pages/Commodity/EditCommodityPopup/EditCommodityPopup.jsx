@@ -135,7 +135,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
             <Loading />
         ) : (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">
+            <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-green-200/80">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DataInput
                   placeholder="Enter commodity name"
@@ -155,7 +155,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
               <button
                 onClick={handleAddField}
-                className="mt-4 text-amber-700 flex items-center space-x-2"
+                className="mt-4 text-green-700 flex items-center space-x-2"
               >
                 <AiOutlinePlus size={20} />
                 <span className="font-medium">Add Quality Parameter</span>

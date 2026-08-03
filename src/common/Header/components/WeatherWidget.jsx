@@ -135,7 +135,7 @@ const WeatherWidget = () => {
     if (code === 0)
       return (
         <WiDaySunny
-          className={`${sizeClass} ${isDay ? "text-amber-300" : "text-indigo-300"}`}
+          className={`${sizeClass} ${isDay ? "text-green-300" : "text-indigo-300"}`}
         />
       );
     if (code >= 1 && code <= 3)

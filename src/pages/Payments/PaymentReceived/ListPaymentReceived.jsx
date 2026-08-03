@@ -2124,7 +2124,7 @@ const ListPaymentReceived = () => {
                   label="Vouchers"
                   value={stats.count.toString()}
                   subValue="In view"
-                  accent="amber"
+                  accent="green"
                 />
               </div>
 

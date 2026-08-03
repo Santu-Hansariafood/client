@@ -502,7 +502,7 @@ const SupplierBidList = () => {
               <div
                 className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex flex-col items-end gap-0.5 whitespace-nowrap shadow-sm ${
                   participationStatus === "accepted"
-                    ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200"
+                    ? "bg-green-100 text-green-700 ring-1 ring-green-200"
                     : participationStatus === "rejected"
                       ? "bg-red-100 text-red-700 ring-1 ring-red-200"
                       : "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
@@ -520,7 +520,7 @@ const SupplierBidList = () => {
                     participationStatus.slice(1)}
                 </span>
                 {participationStatus === "accepted" && acceptedTimestamp && (
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-amber-600 leading-tight text-right">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-green-600 leading-tight text-right">
                     {formatDate(acceptedTimestamp)} • {formatTime(acceptedTimestamp)}
                   </span>
                 )}
@@ -553,7 +553,7 @@ const SupplierBidList = () => {
 
             <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                <FaStar className="text-amber-500" />
+                <FaStar className="text-green-500" />
                 Quality Parameters
               </p>
               <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5 leading-tight">
@@ -638,20 +638,20 @@ const SupplierBidList = () => {
                   </div>
                 )}
                 {participationStatus === "accepted" && (
-                  <div className="sm:col-span-2 bg-amber-50/30 p-2.5 rounded-xl border border-amber-100/50 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
-                      <p className="text-[10px] sm:text-xs text-amber-600 font-medium">
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Rate
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-amber-700">
+                      <p className="text-sm sm:text-base font-bold text-green-700">
                         ₹{participation.acceptedRate ?? participation.rate}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-amber-600 font-medium">
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Quantity
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-amber-700">
+                      <p className="text-sm sm:text-base font-bold text-green-700">
                         {participation.acceptedQuantity ??
                           participation.quantity}{" "}
                         <span className="text-[10px] sm:text-xs font-normal">
@@ -660,18 +660,18 @@ const SupplierBidList = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-amber-600 font-medium">
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Date
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-amber-700">
+                      <p className="text-sm sm:text-base font-bold text-green-700">
                         {formatDate(acceptedTimestamp)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-amber-600 font-medium">
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Time
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-amber-700">
+                      <p className="text-sm sm:text-base font-bold text-green-700">
                         {formatTime(acceptedTimestamp)}
                       </p>
                     </div>
@@ -690,8 +690,8 @@ const SupplierBidList = () => {
                   )}
                 {participationStatus === "pending" && isRevised && (
                   <div className="sm:col-span-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-700 ring-1 ring-amber-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-green-100 text-green-700 ring-1 ring-green-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                       Revised Participation
                     </span>
                   </div>
@@ -807,7 +807,7 @@ const SupplierBidList = () => {
               onClick={() => setActiveTab("accepted")}
               className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "accepted"
-                  ? "bg-amber-50 text-amber-700 border border-amber-200 shadow-sm"
+                  ? "bg-green-50 text-green-700 border border-green-200 shadow-sm"
                   : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
@@ -918,7 +918,7 @@ const SupplierBidList = () => {
                           {g.bidCount} bid(s)
                         </span>
                         {g.rates && g.rates.length > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/70 text-amber-700 px-2 py-0.5">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100/70 text-green-700 px-2 py-0.5">
                             <FaGavel className="text-[10px]" />
                             ₹{g.rates.length === 1 ? g.rates[0] : `${g.rates[0]} - ${g.rates[g.rates.length - 1]}`}
                           </span>
@@ -949,7 +949,7 @@ const SupplierBidList = () => {
                         {selectedGroupName} Companies
                       </p>
                       <p className="text-xs font-semibold text-slate-500 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 border border-slate-200">
-                        <FaStar className="text-[10px] text-amber-500" />
+                        <FaStar className="text-[10px] text-green-500" />
                         {groupIndex.find(
                           (g) => g.groupName === selectedGroupName,
                         )?.companyCount || 0}{" "}

@@ -369,7 +369,7 @@ const OrdersTableCard = ({
                     {(userRole === "Admin" || userRole === "Employee") && (
                       <button
                         onClick={() => toggleSaudaStatus(order)}
-                        className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
+                        className="px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-xs font-bold"
                         title="Close Sauda"
                       >
                         Close
@@ -1273,11 +1273,11 @@ const AddLoadingEntry = () => {
                     {calculateTotalLoadingWeight().toFixed(2)} Tons
                   </p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-amber-100">
-                  <p className="text-amber-600 font-medium">
+                <div className="bg-white p-3 rounded-xl border border-green-100">
+                  <p className="text-green-600 font-medium">
                     Remaining Pending
                   </p>
-                  <p className="font-bold text-amber-700 text-lg">
+                  <p className="font-bold text-green-700 text-lg">
                     {Math.max(
                       0,
                       (selectedOrder.pendingQuantity || 0) -
@@ -1292,7 +1292,7 @@ const AddLoadingEntry = () => {
                 {existingEntries.length > 0 && (
                   <div className="space-y-4 mb-8">
                     <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
-                      <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
+                      <span className="w-2 h-6 bg-green-500 rounded-full"></span>
                       Previous Loading History ({existingEntries.length})
                     </h3>
                     <div className="grid grid-cols-1 gap-3">
@@ -1622,8 +1622,8 @@ const AddLoadingEntry = () => {
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-5">
+                        <div className="rounded-2xl border border-green-100 bg-green-50/30 p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-green-600 mb-5">
                             Billing Details
                           </p>
                           <div className="grid grid-cols-2 gap-4">
@@ -1641,7 +1641,7 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Invoice no."
-                                className="bg-white border-amber-100 focus:border-amber-400"
+                                className="bg-white border-green-100 focus:border-green-400"
                               />
                             </div>
                             <div className="space-y-2">
@@ -1658,7 +1658,7 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Seller invoice no."
-                                className="bg-white border-amber-100 focus:border-amber-400"
+                                className="bg-white border-green-100 focus:border-green-400"
                               />
                             </div>
                             <div className="space-y-2">
@@ -1788,11 +1788,11 @@ const AddLoadingEntry = () => {
                             />
                           </div>
                         </div>
-                        <div className="rounded-2xl border border-amber-100 bg-amber-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                        <div className="rounded-2xl border border-green-100 bg-green-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
                             Balance Due
                           </p>
-                          <p className="font-bold text-amber-600 text-xl">
+                          <p className="font-bold text-green-600 text-xl">
                             ₹ {Number(entry.balance).toFixed(2)}
                           </p>
                         </div>

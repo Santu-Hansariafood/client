@@ -10,7 +10,7 @@ const BidIntroduction = () => {
       case "Pending":
         return "text-yellow-500";
       case "Accepted":
-        return "text-amber-500";
+        return "text-green-500";
       case "Rejected":
         return "text-red-500";
       default:

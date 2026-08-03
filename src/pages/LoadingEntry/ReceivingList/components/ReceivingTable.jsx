@@ -91,7 +91,7 @@ const ReceivingTable = ({
       className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
         entry.sentStatus === "Sent"
           ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-          : "bg-amber-50 text-amber-600 border-amber-100"
+          : "bg-green-50 text-green-600 border-green-100"
       } ${userRole !== "Admin" && userRole !== "Employee" ? "cursor-default opacity-80" : "hover:scale-105 active:scale-95"}`}
     >
       {entry.sentStatus || "Not Sent"}

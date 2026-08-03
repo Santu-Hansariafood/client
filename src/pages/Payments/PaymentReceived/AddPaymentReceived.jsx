@@ -1699,13 +1699,13 @@ const AddPaymentReceived = () => {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-amber-100 text-[8px] flex items-center justify-center text-amber-600 font-black">
+            <span className="w-3 h-3 rounded-full bg-green-100 text-[8px] flex items-center justify-center text-green-600 font-black">
               S
             </span>
             <span
               className={`text-[9px] font-black uppercase truncate ${
                 matchCompanyName(row.supplierCompany, companyPair.supplierCompany)
-                  ? "text-amber-700"
+                  ? "text-green-700"
                   : "text-slate-400"
               }`}
             >
@@ -2016,7 +2016,7 @@ const AddPaymentReceived = () => {
                 }
                 className={`flex-1 !text-[10px] !py-2.5 ${
                   isAdmin && row.isSaved
-                    ? "!border-amber-500 !text-amber-600 hover:!bg-amber-50"
+                    ? "!border-green-500 !text-green-600 hover:!bg-green-50"
                     : ""
                 }`}
               />

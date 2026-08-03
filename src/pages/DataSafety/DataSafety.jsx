@@ -8,10 +8,10 @@ const DataSafety = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-white to-amber-100 min-h-screen py-20 px-6">
+    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-20 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <h1 className="text-5xl font-bold text-amber-700 mb-4">
+          <h1 className="text-5xl font-bold text-green-700 mb-4">
             Data Safety & Privacy Disclosure
           </h1>
 
@@ -141,7 +141,7 @@ const DataSafety = () => {
             Email:{" "}
             <a
               href="mailto:info@hansariafood.com"
-              className="text-amber-700 font-semibold hover:underline"
+              className="text-green-700 font-semibold hover:underline"
             >
               info@hansariafood.com
             </a>
@@ -152,7 +152,7 @@ const DataSafety = () => {
         <div className="text-center mt-14">
           <Link
             to="/"
-            className="inline-flex items-center gap-3 bg-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-amber-700 hover:scale-105 transition"
+            className="inline-flex items-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-green-700 hover:scale-105 transition"
           >
             <FaArrowLeft />
             Back to Home

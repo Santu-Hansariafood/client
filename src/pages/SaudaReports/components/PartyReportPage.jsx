@@ -310,7 +310,7 @@ const PartyReportPage = ({ partyType }) => {
         subtitle="These reports are available only to admin users."
         icon={FaShieldAlt}
       >
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800">
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-800">
           Only admin can access buyer and seller sauda reports.
         </div>
       </AdminPageShell>

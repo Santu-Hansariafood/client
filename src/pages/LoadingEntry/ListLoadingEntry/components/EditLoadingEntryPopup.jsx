@@ -556,7 +556,7 @@ const EditLoadingEntryPopup = ({
 
             <div className="space-y-4">
               {/* Total Bill Value */}
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-amber-50 rounded-xl shadow-sm border border-emerald-200">
+              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl shadow-sm border border-emerald-200">
                 <span className="font-bold text-slate-800 text-sm">
                   Total Bill Value:
                 </span>
@@ -638,7 +638,7 @@ const EditLoadingEntryPopup = ({
               )}
 
               {/* Total Claim */}
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-sm border border-amber-200">
+              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-orange-50 rounded-xl shadow-sm border border-green-200">
                 <span className="font-bold text-slate-800 text-sm">
                   Less Total Claim:
                 </span>
@@ -818,7 +818,7 @@ const EditLoadingEntryPopup = ({
               </div>
 
               {/* Payable Amount */}
-              <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-amber-600 to-teal-600 rounded-xl shadow-lg text-white">
+              <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
                 <span className="text-lg font-bold">Payable Amount:</span>
                 <span className="text-3xl font-black">
                   ₹ {calculatePayableAmount()}
@@ -879,8 +879,8 @@ const EditLoadingEntryPopup = ({
           Upload Documents
         </h4>
         {!editEntry.unloadingWeight || !editEntry.unloadingDate ? (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800">
               ⓘ Tip: Fill in both <b>Unloading Weight</b> and{" "}
               <b>Unloading Date</b> to ensure the entry is complete. Document
               upload is enabled regardless — Kanta Slip / Unloading Challan can

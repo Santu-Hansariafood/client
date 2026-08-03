@@ -134,7 +134,7 @@ const Dashboard = () => {
       case "In Progress":
         return "bg-purple-100 text-purple-800";
       case "Completed":
-        return "bg-amber-100 text-amber-800";
+        return "bg-green-100 text-green-800";
       case "Cancelled":
         return "bg-red-100 text-red-800";
       default:
@@ -171,7 +171,7 @@ const Dashboard = () => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#f8fafc,_#f1f5f9)]" />
             <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-400/10 blur-[150px] rounded-full animate-pulse delay-700" />
-            <div className="absolute top-[30%] left-[20%] w-[40%] h-[40%] bg-amber-400/5 blur-[120px] rounded-full animate-pulse delay-1000" />
+            <div className="absolute top-[30%] left-[20%] w-[40%] h-[40%] bg-green-400/5 blur-[120px] rounded-full animate-pulse delay-1000" />
           </div>
 
           <div className="max-w-7xl mx-auto space-y-10 sm:space-y-14 lg:space-y-16 relative z-10 min-w-0">
@@ -256,10 +256,10 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-2">
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-2">
                       Completed
                     </p>
-                    <p className="text-3xl font-black text-amber-700">
+                    <p className="text-3xl font-black text-green-700">
                       {counts.completedWorks || 0}
                     </p>
                   </div>
@@ -437,7 +437,7 @@ const Dashboard = () => {
                                 </span>
                               )}
                               {work.completedAt && (
-                                <span className="flex items-center gap-1 text-amber-600 font-bold">
+                                <span className="flex items-center gap-1 text-green-600 font-bold">
                                   <FaCalendarCheck size={12} />
                                   Completed:{" "}
                                   {new Date(

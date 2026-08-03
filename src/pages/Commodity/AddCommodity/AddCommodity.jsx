@@ -106,7 +106,7 @@ const AddCommodity = () => {
         noContentCard
       >
         <div className="container mx-auto max-w-4xl">
-          <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">
+          <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-green-200/80">
             <h2 className="text-xl sm:text-2xl font-bold mb-8 text-center text-slate-800">
               Add Commodity
             </h2>
@@ -129,7 +129,7 @@ const AddCommodity = () => {
 
             <button
               onClick={handleAddField}
-              className="mt-4 text-amber-700 flex items-center space-x-2"
+              className="mt-4 text-green-700 flex items-center space-x-2"
             >
               <AiOutlinePlus size={20} />
               <span className="font-medium">Add Quality Parameter</span>

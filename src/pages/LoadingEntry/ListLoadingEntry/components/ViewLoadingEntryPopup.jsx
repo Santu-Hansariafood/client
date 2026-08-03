@@ -125,7 +125,7 @@ const DocumentCard = ({ label, url, color }) => {
             rel="noopener noreferrer"
             className="group/btn flex flex-col items-center gap-4 p-8 text-center"
           >
-            <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
               <FaFileAlt size={28} />
             </div>
             <div>
@@ -320,7 +320,7 @@ const ViewLoadingEntryPopup = ({
               ₹ {selectedEntry.advance}
             </span>
             <span className="text-slate-500">Balance Due:</span>
-            <span className="font-bold text-amber-600">
+            <span className="font-bold text-green-600">
               ₹ {selectedEntry.balance}
             </span>
             <span className="text-slate-500">Buyer Brokerage:</span>

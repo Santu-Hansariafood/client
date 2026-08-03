@@ -310,7 +310,7 @@ const AddCompany = () => {
         noContentCard
       >
         <div className="max-w-5xl mx-auto">
-          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg w-full border border-amber-200/80">
+          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg w-full border border-green-200/80">
             <h2 className="text-xl sm:text-2xl font-bold text-center mb-8 text-slate-800">
               {addCompanyLable.company_title}
             </h2>

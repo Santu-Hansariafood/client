@@ -32,7 +32,7 @@ const MisLorryLedger = ({
 
   return (
     <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-50/80 to-white">
+      <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-green-50/80 to-white">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
@@ -44,7 +44,7 @@ const MisLorryLedger = ({
           </button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <FaTruck className="text-amber-600 shrink-0" />
+              <FaTruck className="text-green-600 shrink-0" />
               <h4 className="font-black text-slate-900 truncate">
                 Lorry-wise · Sauda {saudaLabel}
               </h4>

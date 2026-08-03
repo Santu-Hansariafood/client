@@ -179,7 +179,7 @@ const CreditBalancePanel = ({
                     <td className="px-3 py-2 font-bold text-slate-800 uppercase truncate max-w-[120px]">
                       {row.buyerCompany}
                     </td>
-                    <td className="px-3 py-2 font-bold text-amber-800 uppercase truncate max-w-[120px]">
+                    <td className="px-3 py-2 font-bold text-green-800 uppercase truncate max-w-[120px]">
                       {row.supplierCompany}
                     </td>
                     <td className="px-3 py-2 font-black text-rose-700 text-right tabular-nums">

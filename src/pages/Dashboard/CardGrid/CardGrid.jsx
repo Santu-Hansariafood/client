@@ -130,8 +130,8 @@ const cardConfig = [
     countKey: "consignees",
     icon: FaTruck,
     link: "/consignee/list",
-    color: "from-amber-600 to-orange-400",
-    shadowColor: "shadow-amber-500/20",
+    color: "from-green-600 to-orange-400",
+    shadowColor: "shadow-green-500/20",
   },
   {
     title: "Today's Bids",

@@ -54,7 +54,7 @@ const SimplePaymentList = ({
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase text-amber-400 tracking-widest mb-1">
+          <p className="text-[10px] font-black uppercase text-green-400 tracking-widest mb-1">
             Total TDS
           </p>
           <p className="text-2xl font-black tabular-nums">
@@ -94,7 +94,7 @@ const SimplePaymentList = ({
                 <td className="px-4 py-4 text-[10px] font-bold text-blue-600 uppercase">
                   {payment.buyerCompany || "—"}
                 </td>
-                <td className="px-4 py-4 text-[10px] font-bold text-amber-600 uppercase">
+                <td className="px-4 py-4 text-[10px] font-bold text-green-600 uppercase">
                   {payment.supplierCompany || "—"}
                 </td>
                 <td className="px-4 py-4 text-[11px] font-black text-emerald-700 tabular-nums">
@@ -103,7 +103,7 @@ const SimplePaymentList = ({
                 <td className="px-4 py-4 text-[11px] font-black text-rose-600 tabular-nums">
                   {payment.claim > 0 ? formatLedgerAmount(payment.claim) : "—"}
                 </td>
-                <td className="px-4 py-4 text-[11px] font-black text-amber-600 tabular-nums">
+                <td className="px-4 py-4 text-[11px] font-black text-green-600 tabular-nums">
                   {payment.tds > 0 ? formatLedgerAmount(payment.tds) : "—"}
                 </td>
                 <td className="px-4 py-4">

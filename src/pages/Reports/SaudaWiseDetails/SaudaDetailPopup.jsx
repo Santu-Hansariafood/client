@@ -320,7 +320,7 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                           <FaCheckCircle /> Fully Paid
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-amber-600 text-[10px] font-black uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
+                        <div className="flex items-center gap-2 text-green-600 text-[10px] font-black uppercase tracking-widest bg-green-50 px-3 py-1 rounded-full">
                           <FaTimesCircle /> Pending: Rs.{" "}
                           {balance.toLocaleString()}
                         </div>
@@ -438,7 +438,7 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                               className={
                                 balance <= 0
                                   ? "text-emerald-600"
-                                  : "text-amber-600"
+                                  : "text-green-600"
                               }
                             >
                               {balance <= 0

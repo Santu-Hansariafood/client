@@ -231,11 +231,11 @@ const ParticipateBid = () => {
                 </p>
                 <p className="text-lg font-bold text-slate-800">{mobileCardsData.length}</p>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2.5">
-                <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold">
+              <div className="rounded-xl border border-green-200 bg-green-50/70 px-3 py-2.5">
+                <p className="text-[11px] uppercase tracking-wider text-green-700 font-semibold">
                   Pending
                 </p>
-                <p className="text-lg font-bold text-amber-800">{statusCounts.pending}</p>
+                <p className="text-lg font-bold text-green-800">{statusCounts.pending}</p>
               </div>
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5">
                 <p className="text-[11px] uppercase tracking-wider text-emerald-700 font-semibold">
@@ -296,7 +296,7 @@ const ParticipateBid = () => {
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                             : item.status === "rejected"
                               ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-green-50 text-green-700 border-green-200"
                         }`}
                       >
                         {item.status}

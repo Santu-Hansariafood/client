@@ -216,7 +216,7 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
           {!canInteract && (
-            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 flex items-center gap-3 text-amber-700">
+            <div className="rounded-3xl border border-green-200 bg-green-50 p-4 flex items-center gap-3 text-green-700">
               <FaHistory className="text-lg" />
               <p className="text-sm font-bold uppercase tracking-wider">
                 Viewing Historical Records — Interactions Disabled
@@ -411,7 +411,7 @@ const InteractionCard = ({
 
         <div className="flex items-center gap-2">
           {isRevised && interaction.status === "pending" && (
-            <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-amber-200 shadow-sm animate-pulse">
+            <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-200 shadow-sm animate-pulse">
               Revised
             </span>
           )}
@@ -475,7 +475,7 @@ const InteractionCard = ({
           </div>
           <div className="space-y-1">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaCreditCard className="text-amber-500" /> Payment Terms
+              <FaCreditCard className="text-green-500" /> Payment Terms
             </p>
             <p className="text-sm font-bold text-slate-700">
               {interaction.paymentTerms || "N/A"}

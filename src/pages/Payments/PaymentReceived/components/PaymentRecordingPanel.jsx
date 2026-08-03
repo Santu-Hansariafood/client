@@ -45,7 +45,7 @@ const PaymentRecordingPanel = ({
                   {companyPair.buyerCompany}
                 </span>
                 <FaArrowRight className="text-slate-300" size={10} />
-                <span className="text-[10px] font-black text-amber-600 uppercase">
+                <span className="text-[10px] font-black text-green-600 uppercase">
                   {companyPair.supplierCompany}
                 </span>
               </div>

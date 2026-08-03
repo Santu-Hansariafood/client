@@ -116,7 +116,7 @@ const PaymentDetails = ({ payment, onClose, onEdit, onDelete }) => {
               onEdit(payment);
               onClose();
             }}
-            className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2"
           >
             Edit Payment
           </button>

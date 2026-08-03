@@ -40,7 +40,7 @@ const AddGroupOfCompany = () => {
         icon={FaPlus}
         noContentCard
       >
-        <div className="max-w-lg mx-auto rounded-2xl border border-amber-200/60 bg-white shadow-lg p-6 sm:p-8">
+        <div className="max-w-lg mx-auto rounded-2xl border border-green-200/60 bg-white shadow-lg p-6 sm:p-8">
           <h2 className="text-xl font-bold text-slate-800 mb-6 text-center sm:text-left">
             {addgroupcompanyLable.group_title}
           </h2>

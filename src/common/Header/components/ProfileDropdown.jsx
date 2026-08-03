@@ -25,7 +25,7 @@ const ProfileDropdown = ({
         onClick={toggleDropdown}
         className="flex items-center gap-2 px-2 py-1.5 rounded-2xl hover:bg-white/10 transition-all duration-200"
       >
-        <div className="w-10 h-10 rounded-full bg-emerald-700 border-2 border-amber-300 flex items-center justify-center shadow-md overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-emerald-700 border-2 border-green-300 flex items-center justify-center shadow-md overflow-hidden">
           {user?.profileImage ? (
             <img
               src={user.profileImage}

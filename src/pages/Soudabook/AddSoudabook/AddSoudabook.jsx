@@ -243,7 +243,7 @@ const AddSoudabook = () => {
             <div className="col-span-1 flex justify-center space-x-2">
               <button
                 onClick={() => handleApproveRow(index)}
-                className="text-amber-500 hover:text-amber-700"
+                className="text-green-500 hover:text-green-700"
               >
                 <FaCheck size={18} />
               </button>

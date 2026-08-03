@@ -931,7 +931,7 @@ const PaymentList = () => {
 
             <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">Status:</span>
-              <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-amber-600' : 'text-blue-600'}`}>
+              <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-green-600' : 'text-blue-600'}`}>
                 {paymentStatus === 'all' ? 'All Records' : paymentStatus}
               </span>
             </div>

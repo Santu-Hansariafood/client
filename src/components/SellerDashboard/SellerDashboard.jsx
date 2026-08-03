@@ -645,7 +645,7 @@ const SellerDashboard = () => {
       {
         label: "Pending Sauda",
         icon: <FaBook />,
-        color: "bg-amber-600",
+        color: "bg-green-600",
         link: "/Loading-Entry/pending-loading-list",
         state: { mobile },
         count: pendingSaudaCount,
@@ -779,7 +779,7 @@ const SellerDashboard = () => {
                   0,
                 )}
                 icon={FaHistory}
-                colorClass="bg-amber-600"
+                colorClass="bg-green-600"
                 subtitle="Aggregate Trips"
               />
             </div>

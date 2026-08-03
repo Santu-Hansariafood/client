@@ -180,7 +180,7 @@ const ListCompany = () => {
         noContentCard
       >
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+          <div className="bg-white border border-green-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="mb-4">
               <SearchBox
                 placeholder="Search by company name..."

@@ -69,11 +69,11 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
             </span>
           </div>
           {qualityClaims > 0 && (
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-100">
+            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-green-100">
               <span className="font-semibold text-slate-700">
                 Less Total Quality Claim
               </span>
-              <span className="text-lg font-bold text-amber-600">
+              <span className="text-lg font-bold text-green-600">
                 - ₹ {qualityClaims.toFixed(2)}
               </span>
             </div>

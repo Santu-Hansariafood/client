@@ -234,7 +234,7 @@ const AllocationLedger = ({
                   <span className="text-slate-400 text-xs">→</span>
                 )}
                 {companyPair.supplierCompany && (
-                  <span className="px-2 py-1 rounded-lg bg-amber-500 text-white text-[10px] font-black uppercase">
+                  <span className="px-2 py-1 rounded-lg bg-green-500 text-white text-[10px] font-black uppercase">
                     {companyPair.supplierCompany}
                   </span>
                 )}

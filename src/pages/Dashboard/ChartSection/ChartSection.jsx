@@ -71,7 +71,7 @@ const CHART_CARDS = [
   {
     id: "sauda",
     label: "Sauda",
-    accent: "from-emerald-500 to-amber-600",
+    accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
     props: (chartType) => ({ apiUrl: "/self-order", chartType }),
@@ -79,7 +79,7 @@ const CHART_CARDS = [
   {
     id: "sauda-pie",
     label: "Sauda mix",
-    accent: "from-emerald-500 to-amber-600",
+    accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
     props: () => ({ apiUrl: "/self-order", chartType: "pie" }),
@@ -87,16 +87,16 @@ const CHART_CARDS = [
   {
     id: "bids",
     label: "Bids",
-    accent: "from-amber-500 to-orange-600",
-    ring: "ring-amber-100/80",
+    accent: "from-green-500 to-orange-600",
+    ring: "ring-green-100/80",
     Component: BidChart,
     props: (chartType) => ({ apiUrl: "/bids", chartType }),
   },
   {
     id: "bids-pie",
     label: "Bid mix",
-    accent: "from-amber-500 to-orange-600",
-    ring: "ring-amber-100/80",
+    accent: "from-green-500 to-orange-600",
+    ring: "ring-green-100/80",
     Component: BidChart,
     props: () => ({ apiUrl: "/bids", chartType: "pie" }),
   },
