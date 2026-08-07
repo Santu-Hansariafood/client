@@ -833,86 +833,224 @@ router.get("/summary", async (req, res) => {
   }
 });
 
+const calculateLoadingEntryNetAmount = async (entry) => {
+  const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
+  if (!selfOrder) return 0;
+  const weight = (entry.unloadingWeight && entry.unloadingWeight > 0)
+    ? entry.unloadingWeight
+    : entry.loadingWeight || 0;
+  const rate = selfOrder.rate || 0;
+  const cdPercent = selfOrder.cd || 0;
+  const gstPercent = selfOrder.gst || 0;
+  const grossAmount = weight * rate;
+  const cdAmount = grossAmount * (cdPercent / 100);
+  const taxableAmount = grossAmount - cdAmount;
+  const gstAmount = taxableAmount * (gstPercent / 100);
+  return taxableAmount + gstAmount;
+};
+
 // Update payment by ID
 router.put("/:id", async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
-    const { sellerBillNo, date, entries, mappings, amount, claim, tds, paymentType, ...otherFields } = req.body;
+    const { sellerBillNo, date, entries, mappings, amount, claim, tds, paymentType, ledgerId, ledgerType, companyId, buyerCompany, supplierCompany, paymentMode, remarks, ...otherFields } = req.body;
 
     // Find the existing payment first
-    const existingPayment = await PaymentReceived.findById(id);
+    const existingPayment = await PaymentReceived.findById(id).session(session);
     if (!existingPayment) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Payment not found" });
     }
 
+    // ---------- STEP 1: Rollback old mappings from LoadingEntries ----------
+    const oldMappings = existingPayment.mappings || [];
+    for (const oldMapping of oldMappings) {
+      if (oldMapping.loadingEntryId) {
+        const oldEntry = await LoadingEntry.findById(oldMapping.loadingEntryId).session(session);
+        if (oldEntry) {
+          const rollbackAmount = Number(oldMapping.allocatedAmount) || 0;
+          const newPaidAmount = Math.max(0, (oldEntry.paidAmount || 0) - rollbackAmount);
+          const netAmount = await calculateLoadingEntryNetAmount(oldEntry);
+
+          let updateObj = { paidAmount: newPaidAmount };
+          if (netAmount > 0) {
+            updateObj.paymentStatus = newPaidAmount >= netAmount - 1 ? "done" : "pending";
+          } else {
+            updateObj.paymentStatus = newPaidAmount > 0 ? "done" : "pending";
+          }
+
+          await LoadingEntry.findByIdAndUpdate(oldMapping.loadingEntryId, updateObj).session(session);
+        }
+      }
+    }
+
+    // ---------- STEP 2: Determine resolved values & ledger ----------
+    const resolvedLedgerId = ledgerId
+      ? (mongoose.Types.ObjectId.isValid(String(ledgerId)) ? new mongoose.Types.ObjectId(String(ledgerId)) : existingPayment.ledgerId)
+      : existingPayment.ledgerId;
+
     const updateData = {
       ...otherFields,
+      ledgerId: resolvedLedgerId,
     };
 
     if (sellerBillNo !== undefined) updateData.sellerBillNo = sellerBillNo;
-    if (date !== undefined) updateData.date = date;
+    if (date !== undefined) {
+      let paymentDate = new Date(date);
+      paymentDate.setUTCHours(0, 0, 0, 0);
+      updateData.date = paymentDate;
+    }
     if (entries !== undefined) updateData.entries = entries;
     if (mappings !== undefined) updateData.mappings = mappings;
     if (amount !== undefined) updateData.amount = amount;
     if (claim !== undefined) updateData.claim = claim;
     if (tds !== undefined) updateData.tds = tds;
     if (paymentType !== undefined) updateData.paymentType = paymentType;
+    if (ledgerType !== undefined) updateData.ledgerType = ledgerType;
+    if (companyId !== undefined) updateData.companyId = companyId;
+    if (buyerCompany !== undefined) updateData.buyerCompany = buyerCompany;
+    if (supplierCompany !== undefined) updateData.supplierCompany = supplierCompany;
+    if (paymentMode !== undefined) updateData.paymentMode = paymentMode;
+    if (remarks !== undefined) updateData.remarks = remarks;
 
-    // Calculate total amount from entries
+    // ---------- STEP 3: Calculate payment amount & unadjustedAmount ----------
     let paymentAmount = existingPayment.amount;
-    if (entries) {
+    if (entries && entries.length > 0) {
       paymentAmount = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       updateData.amount = paymentAmount;
     } else if (amount !== undefined) {
-      paymentAmount = Number(amount);
+      paymentAmount = Number(amount) || 0;
     }
 
-    // Calculate total mapped amount
-    const totalMapped = (mappings || existingPayment.mappings || []).reduce(
+    const finalMappings = mappings || existingPayment.mappings || [];
+    const totalMapped = finalMappings.reduce(
       (sum, m) => sum + (Number(m.allocatedAmount) || 0),
       0
     );
 
-    // Recalculate unadjustedAmount
     const resolvedType = paymentType || existingPayment.paymentType;
+    const finalClaim = claim !== undefined ? Number(claim) || 0 : Number(existingPayment.claim) || 0;
+    const finalTds = tds !== undefined ? Number(tds) || 0 : Number(existingPayment.tds) || 0;
     const totalPaymentValue = getCompositePaymentAmount({
       amount: paymentAmount,
-      claim: claim !== undefined ? claim : existingPayment.claim,
-      tds: tds !== undefined ? tds : existingPayment.tds,
+      claim: finalClaim,
+      tds: finalTds,
     });
-    const unadjustedAmount =
-      resolvedType === "Adjustment"
-        ? 0
-        : Math.max(0, totalPaymentValue - totalMapped);
+
+    let unadjustedAmount;
+    if (resolvedType === "Adjustment" && totalMapped > 0) {
+      const finalSupplier = (supplierCompany !== undefined ? supplierCompany : existingPayment.supplierCompany) || "";
+      const finalBuyer = (buyerCompany !== undefined ? buyerCompany : existingPayment.buyerCompany) || "";
+      if (!String(finalSupplier || "").trim()) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ message: "Seller company is required to adjust advance credit" });
+      }
+      await consumeAdvanceCredit(resolvedLedgerId, finalBuyer, finalSupplier, totalMapped);
+      unadjustedAmount = 0;
+    } else {
+      unadjustedAmount = resolvedType === "Adjustment" ? 0 : Math.max(0, totalPaymentValue - totalMapped);
+    }
     updateData.unadjustedAmount = unadjustedAmount;
 
+    // ---------- STEP 4: Apply new mappings to LoadingEntries ----------
+    if (finalMappings && finalMappings.length > 0) {
+      for (const mapping of finalMappings) {
+        if (mapping.loadingEntryId) {
+          const entry = await LoadingEntry.findById(mapping.loadingEntryId).session(session);
+          if (entry) {
+            const netAmount = await calculateLoadingEntryNetAmount(entry);
+            const allocAmount = Number(mapping.allocatedAmount) || 0;
+            const newPaidAmount = (entry.paidAmount || 0) + allocAmount;
+
+            if (netAmount > 0 && newPaidAmount > netAmount + 1) {
+              await session.abortTransaction();
+              session.endSession();
+              throw new Error(`Total paid amount for ${entry.lorryNumber} exceeds net amount`);
+            }
+
+            const updateObj = { paidAmount: newPaidAmount };
+            if (netAmount > 0) {
+              updateObj.paymentStatus = newPaidAmount >= netAmount - 1 ? "done" : "pending";
+            }
+            await LoadingEntry.findByIdAndUpdate(mapping.loadingEntryId, updateObj).session(session);
+          }
+        }
+      }
+    }
+
+    // ---------- STEP 5: Save updated PaymentReceived ----------
     const updatedPayment = await PaymentReceived.findByIdAndUpdate(
       id,
       updateData,
-      { new: true }
+      { new: true, session }
     );
 
+    await session.commitTransaction();
+    session.endSession();
     res.json(updatedPayment);
   } catch (error) {
+    try {
+      await session.abortTransaction();
+    } catch (_) {}
+    session.endSession();
     console.error("Error updating payment:", error);
-    res.status(500).json({ message: "Failed to update payment" });
+    res.status(500).json({ message: error.message || "Failed to update payment" });
   }
 });
 
 // Delete payment by ID
 router.delete("/:id", async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
-    const deletedPayment = await PaymentReceived.findByIdAndDelete(id);
+    const deletedPayment = await PaymentReceived.findById(id).session(session);
 
     if (!deletedPayment) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Payment not found" });
     }
 
+    // Rollback mappings from LoadingEntries
+    const oldMappings = deletedPayment.mappings || [];
+    for (const oldMapping of oldMappings) {
+      if (oldMapping.loadingEntryId) {
+        const oldEntry = await LoadingEntry.findById(oldMapping.loadingEntryId).session(session);
+        if (oldEntry) {
+          const rollbackAmount = Number(oldMapping.allocatedAmount) || 0;
+          const newPaidAmount = Math.max(0, (oldEntry.paidAmount || 0) - rollbackAmount);
+          const netAmount = await calculateLoadingEntryNetAmount(oldEntry);
+
+          let updateObj = { paidAmount: newPaidAmount };
+          if (netAmount > 0) {
+            updateObj.paymentStatus = newPaidAmount >= netAmount - 1 ? "done" : "pending";
+          } else {
+            updateObj.paymentStatus = newPaidAmount > 0 ? "done" : "pending";
+          }
+
+          await LoadingEntry.findByIdAndUpdate(oldMapping.loadingEntryId, updateObj).session(session);
+        }
+      }
+    }
+
+    // Delete the payment
+    await PaymentReceived.findByIdAndDelete(id).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
     res.json({ message: "Payment deleted successfully" });
   } catch (error) {
+    try {
+      await session.abortTransaction();
+    } catch (_) {}
+    session.endSession();
     console.error("Error deleting payment:", error);
-    res.status(500).json({ message: "Failed to delete payment" });
+    res.status(500).json({ message: error.message || "Failed to delete payment" });
   }
 });
 

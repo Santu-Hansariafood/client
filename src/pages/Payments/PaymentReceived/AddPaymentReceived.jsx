@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -45,6 +45,7 @@ const ENTRIES_PAGE_SIZE = 20;
 
 const AddPaymentReceived = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [ledgers, setLedgers] = useState([]);
@@ -79,6 +80,10 @@ const AddPaymentReceived = () => {
   const [activeTab, setActiveTab] = useState("payment_list");
   const [allocationSource, setAllocationSource] = useState("fresh");
 
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [fetchingEditingPayment, setFetchingEditingPayment] = useState(false);
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     allocationDate: new Date().toISOString().split("T")[0],
@@ -95,6 +100,63 @@ const AddPaymentReceived = () => {
     filterStartDate: "",
     filterEndDate: "",
   });
+
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) {
+      setEditingPaymentId(id);
+      const fetchPaymentForEdit = async () => {
+        try {
+          setFetchingEditingPayment(true);
+          const listRes = await api.get("/payment-received", { params: { limit: 0 } });
+          const match = (listRes.data.data || []).find((p) => p._id === id);
+          if (match) {
+            setEditingPayment(match);
+          } else {
+            toast.error("Payment not found for editing");
+          }
+        } catch (err) {
+          console.error("Error loading payment for edit:", err);
+          toast.error("Could not load payment for editing");
+        } finally {
+          setFetchingEditingPayment(false);
+        }
+      };
+      fetchPaymentForEdit();
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!editingPayment) return;
+
+    const p = editingPayment;
+    setFormData({
+      date: p.date ? new Date(p.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      allocationDate: p.date ? new Date(p.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      ledgerType: p.ledgerType || "Buyer",
+      ledgerId: p.ledgerId?._id || p.ledgerId || "",
+      companyId: p.companyId || "",
+      opposingCompanyId: p.supplierCompany || p.buyerCompany || "",
+      amount: Number(p.amount) || 0,
+      claim: Number(p.claim) || 0,
+      tds: Number(p.tds) || 0,
+      paymentType: p.paymentType || "Sauda-wise",
+      paymentMode: p.paymentMode || "Bank",
+      remarks: p.remarks || "",
+      filterStartDate: "",
+      filterEndDate: "",
+    });
+
+    if (p.paymentType === "Advance") {
+      setAllocationSource("fresh");
+    } else if (p.paymentType === "Adjustment") {
+      setAllocationSource("advance");
+    } else {
+      setAllocationSource("fresh");
+    }
+
+    setActiveTab("allocation");
+  }, [editingPayment]);
 
   const getCompanyIdFromRef = (companyRef) => {
     if (!companyRef) return "";
@@ -420,6 +482,20 @@ const AddPaymentReceived = () => {
       entryStats.totalDue,
     ],
   );
+
+  const liveUnadjustedAmount = useMemo(() => {
+    const amt = Number(formData.amount) || 0;
+    const cl = Number(formData.claim) || 0;
+    const td = Number(formData.tds) || 0;
+    const totalPaymentValue = amt + cl + td;
+    const totalMapped = entries.reduce(
+      (s, e) => s + (parseFloat(e.allocatedAmount) || 0),
+      0,
+    );
+    const pType = formData.paymentType || (editingPayment?.paymentType);
+    if (pType === "Adjustment") return 0;
+    return Math.max(0, totalPaymentValue - totalMapped);
+  }, [formData.amount, formData.claim, formData.tds, formData.paymentType, entries, editingPayment]);
 
   const opposingCompanyOptions = useMemo(() => {
     const sellerNames = collectUniqueCompanyNames(opposingLedgers);
@@ -916,10 +992,9 @@ const AddPaymentReceived = () => {
   const handleSaveAllAllocations = async () => {
     const allocations = entries.filter(
       (e) => {
-        if (e.isSaved) return false;
+        if (e.isSaved && !editingPaymentId) return false;
         if (parseFloat(e.allocatedAmount) <= 0.01) return false;
         
-        // Check condition for each entry
         const details = calculateTallyDetails(e);
         const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(e.allocatedAmount) || 0));
         const creditAmount = details.netAmount;
@@ -930,23 +1005,24 @@ const AddPaymentReceived = () => {
       },
     );
 
-    if (allocations.length === 0) {
+    if (allocations.length === 0 && !editingPaymentId) {
       toast.error("No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)");
       return;
     }
 
-    const firstEntry = allocations[0];
-    const pairPayload = buildCompanyPayload(firstEntry);
+    const firstEntry = allocations[0] || entries[0];
+    const pairPayload = firstEntry ? buildCompanyPayload(firstEntry) : buildCompanyPayload();
     const ledgerId = resolveLedgerIdForSave();
-    const saveCompanyId = resolveCompanyIdForSave(firstEntry);
+    const saveCompanyId = firstEntry ? resolveCompanyIdForSave(firstEntry) : formData.companyId;
 
-    if (!saveCompanyId && !pairPayload.buyerCompany) {
+    if (!saveCompanyId && !pairPayload.buyerCompany && !editingPaymentId) {
       toast.error("Select buyer company, then save");
       return;
     }
     if (
       allocationSource === "advance" &&
-      !String(pairPayload.supplierCompany || "").trim()
+      !String(pairPayload.supplierCompany || "").trim() &&
+      !editingPaymentId
     ) {
       toast.error("Select seller company or pick a lorry with supplier set");
       return;
@@ -954,34 +1030,37 @@ const AddPaymentReceived = () => {
 
     try {
       setLoading(true);
-      const recordLedgerType = "Buyer";
+      const recordLedgerType = formData.ledgerType || "Buyer";
 
       const totalAllocated = allocations.reduce(
-        (sum, e) => sum + parseFloat(e.allocatedAmount),
+        (sum, e) => sum + parseFloat(e.allocatedAmount || 0),
         0,
       );
 
       const recordAmount =
         allocationSource === "fresh"
-          ? Math.max(totalAllocated, formData.amount)
+          ? Math.max(totalAllocated, formData.amount || 0)
           : totalAllocated;
 
       const payload = {
         date: formData.allocationDate || formData.date,
         ledgerType: recordLedgerType,
-        ledgerId: ledgerId || undefined,
-        companyId: saveCompanyId,
-        ...pairPayload,
+        ledgerId: ledgerId || formData.ledgerId || undefined,
+        companyId: saveCompanyId || formData.companyId || undefined,
+        buyerCompany: pairPayload.buyerCompany || editingPayment?.buyerCompany || "",
+        supplierCompany: pairPayload.supplierCompany || editingPayment?.supplierCompany || "",
         amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
-        claim: formData.paymentMode === "Claim" ? recordAmount : 0,
-        tds: formData.paymentMode === "TDS" ? recordAmount : 0,
-        paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
+        claim: formData.paymentMode === "Claim" ? recordAmount : (Number(formData.claim) || 0),
+        tds: formData.paymentMode === "TDS" ? recordAmount : (Number(formData.tds) || 0),
+        paymentType: editingPaymentId
+          ? (allocationSource === "advance" ? "Adjustment" : (totalAllocated > 0 ? "Sauda-wise" : "Advance"))
+          : (allocationSource === "fresh" ? (totalAllocated > 0 ? "Sauda-wise" : "Advance") : "Adjustment"),
         paymentMode:
-          allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
+          allocationSource === "fresh" || editingPaymentId ? formData.paymentMode : "Adjustment",
         mappings: allocations.map((e) => ({
           saudaNo: e.saudaNo,
           loadingEntryId: e._id,
-          allocatedAmount: parseFloat(e.allocatedAmount),
+          allocatedAmount: parseFloat(e.allocatedAmount || 0),
           remarks: e.rowRemarks,
           debitNote: e.debitNote,
           creditNote: e.creditNote,
@@ -990,12 +1069,21 @@ const AddPaymentReceived = () => {
           allocationSource === "fresh" && recordAmount > totalAllocated
             ? `${formData.remarks || "Bulk Allocation"} | Unallocated: Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")}`
             : formData.remarks || "Bulk Allocation",
+        sellerBillNo: editingPayment?.sellerBillNo || formData.sellerBillNo || "",
       };
 
-      await api.post("/payment-received", payload);
-      toast.success(
-        `Recorded payment of Rs. ${recordAmount.toLocaleString("en-IN")} with ${allocations.length} allocations${recordAmount > totalAllocated ? ` (plus Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")} unallocated)` : ""}`,
-      );
+      if (editingPaymentId) {
+        await api.put(`/payment-received/${editingPaymentId}`, payload);
+        toast.success(
+          `Updated payment with ${allocations.length} allocations`,
+        );
+        setTimeout(() => navigate(-1), 1200);
+      } else {
+        await api.post("/payment-received", payload);
+        toast.success(
+          `Recorded payment of Rs. ${recordAmount.toLocaleString("en-IN")} with ${allocations.length} allocations${recordAmount > totalAllocated ? ` (plus Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")} unallocated)` : ""}`,
+        );
+      }
 
       setEntries((prev) =>
         prev.map((e) => {
@@ -1004,7 +1092,7 @@ const AddPaymentReceived = () => {
         }),
       );
 
-      if (allocationSource === "fresh") {
+      if (allocationSource === "fresh" && !editingPaymentId) {
         setFormData((prev) => ({
           ...prev,
           amount: 0,
@@ -1249,19 +1337,18 @@ const AddPaymentReceived = () => {
     const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(entry.allocatedAmount) || 0));
     const creditAmount = details.netAmount;
     
-    // Check if Lorry Balance equals Credit Amount
-    if (Math.abs(lorryBalance - creditAmount) < 0.01) {
+    if (Math.abs(lorryBalance - creditAmount) < 0.01 && !editingPaymentId) {
       toast.error("Cannot save: Lorry Balance equals Credit Amount");
       return;
     }
 
-    if (entry.allocatedAmount === "" && !entry.isSaved) {
+    if (entry.allocatedAmount === "" && !entry.isSaved && !editingPaymentId) {
       toast.error("Please enter an allocation amount");
       return;
     }
 
     const isAdmin = user?.role === "Admin";
-    const isEditing = entry.isSaved && isAdmin;
+    const isEditingEntry = entry.isSaved && isAdmin && !editingPaymentId;
     const numAllocated = parseFloat(entry.allocatedAmount) || 0;
     const { dueAmount } = calculateTallyDetails(entry);
 
@@ -1269,7 +1356,7 @@ const AddPaymentReceived = () => {
     const creditPool = Number(availableAllocationPool) || 0;
     const pairPayload = buildCompanyPayload(entry);
 
-    if (allocationSource === "advance" && numAllocated > remainingPool + 1) {
+    if (allocationSource === "advance" && numAllocated > remainingPool + 1 && !editingPaymentId) {
       toast.error(
         `Cr. allocation cannot exceed Cr. advance (Rs. ${creditPool.toLocaleString("en-IN")} Cr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
       );
@@ -1300,7 +1387,8 @@ const AddPaymentReceived = () => {
     if (
       allocationSource === "fresh" &&
       effectiveCreditPool <= 0.01 &&
-      saveAllocated > 0.01
+      saveAllocated > 0.01 &&
+      !editingPaymentId
     ) {
       toast.error(
         "Enter payment received amount above before adjusting lorries",
@@ -1308,7 +1396,7 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (allocationSource === "fresh" && saveAllocated > rowCreditLeft + 1) {
+    if (allocationSource === "fresh" && saveAllocated > rowCreditLeft + 1 && !editingPaymentId) {
       if (
         effectiveCreditPool <= 0.01 &&
         (ledgerBalance.totalAdvanceBalance || 0) > 0
@@ -1328,14 +1416,15 @@ const AddPaymentReceived = () => {
     const ledgerId = resolveLedgerIdForSave();
 
     const saveCompanyId = resolveCompanyIdForSave(entry);
-    if (!isEditing && !saveCompanyId && !pairPayload.buyerCompany) {
+    if (!isEditingEntry && !saveCompanyId && !pairPayload.buyerCompany && !editingPaymentId) {
       toast.error("Select buyer company filter, then save");
       return;
     }
 
     if (
       allocationSource === "advance" &&
-      !String(pairPayload.supplierCompany || "").trim()
+      !String(pairPayload.supplierCompany || "").trim() &&
+      !editingPaymentId
     ) {
       toast.error("Select seller company or use a lorry row with supplier");
       return;
@@ -1344,7 +1433,7 @@ const AddPaymentReceived = () => {
     try {
       setLoading(true);
 
-      if (isEditing) {
+      if (isEditingEntry) {
         await api.patch(`/payment-received/adjust-lorry/${entry._id}`, {
           paidAmount: numAllocated,
           paymentStatus:
@@ -1353,6 +1442,57 @@ const AddPaymentReceived = () => {
               : "pending",
         });
         toast.success(`Payment adjusted for ${entry.lorryNumber}`);
+      } else if (editingPaymentId) {
+        const recordLedgerType = formData.ledgerType || "Buyer";
+        const finalBuyer = pairPayload.buyerCompany || editingPayment?.buyerCompany || "";
+        const finalSupplier = pairPayload.supplierCompany || editingPayment?.supplierCompany || "";
+        const finalType = allocationSource === "advance" ? "Adjustment" : (numAllocated > 0 ? "Sauda-wise" : "Advance");
+
+        const recordAmount =
+          allocationSource === "fresh"
+            ? Math.max(saveAllocated, formData.amount || 0)
+            : saveAllocated;
+
+        const existingMappings = editingPayment?.mappings || [];
+        const newMapping = {
+          saudaNo: entry.saudaNo,
+          loadingEntryId: entry._id,
+          allocatedAmount: saveAllocated,
+          remarks: entry.rowRemarks,
+          debitNote: entry.debitNote,
+          creditNote: entry.creditNote,
+        };
+        const updatedMappings = [
+          ...existingMappings.filter((m) => m.loadingEntryId?._id !== entry._id && m.loadingEntryId !== entry._id),
+          newMapping,
+        ];
+
+        const payload = {
+          date: formData.allocationDate || formData.date,
+          ledgerType: recordLedgerType,
+          ledgerId: ledgerId || formData.ledgerId || undefined,
+          companyId: saveCompanyId || formData.companyId || undefined,
+          buyerCompany: finalBuyer,
+          supplierCompany: finalSupplier,
+          amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
+          claim: formData.paymentMode === "Claim" ? recordAmount : (Number(formData.claim) || 0),
+          tds: formData.paymentMode === "TDS" ? recordAmount : (Number(formData.tds) || 0),
+          paymentType: finalType,
+          paymentMode: formData.paymentMode,
+          mappings: updatedMappings,
+          remarks: formData.remarks || editingPayment?.remarks || "",
+          sellerBillNo: editingPayment?.sellerBillNo || "",
+        };
+
+        await api.put(`/payment-received/${editingPaymentId}`, payload);
+        toast.success(`Updated payment for ${entry.lorryNumber}`);
+
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.uiKey === entry.uiKey ? { ...e, isSaved: true } : e,
+          ),
+        );
+        setTimeout(() => navigate(-1), 1200);
       } else {
         const recordLedgerType = "Buyer";
 
@@ -1443,18 +1583,18 @@ const AddPaymentReceived = () => {
       toast.error("Select a company linked to a ledger account");
       return;
     }
-    if (!companyPair.supplierCompany) {
+    if (!companyPair.supplierCompany && !editingPaymentId) {
       toast.error(
         "Select seller company — advance is tracked buyer → seller only",
       );
       return;
     }
 
-    const recordLedgerType = "Buyer";
+    const recordLedgerType = formData.ledgerType || "Buyer";
 
     try {
       setLoading(true);
-      const pairLabel = `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`;
+      const pairLabel = `${companyPair.buyerCompany || editingPayment?.buyerCompany || ""} → ${companyPair.supplierCompany || editingPayment?.supplierCompany || ""}`;
       const payload = {
         ...formData,
         date: formData.allocationDate || formData.date,
@@ -1462,17 +1602,27 @@ const AddPaymentReceived = () => {
         claim: formData.paymentMode === "Claim" ? formData.amount : 0,
         tds: formData.paymentMode === "TDS" ? formData.amount : 0,
         ledgerType: recordLedgerType,
+        ledgerId: formData.ledgerId || undefined,
         companyId: formData.companyId,
-        ...buildCompanyPayload(),
+        buyerCompany: companyPair.buyerCompany || editingPayment?.buyerCompany || "",
+        supplierCompany: companyPair.supplierCompany || editingPayment?.supplierCompany || "",
         paymentType: "Advance",
-        mappings: [],
+        mappings: editingPayment?.mappings || [],
         remarks:
           formData.remarks?.trim() ||
           `Advance (Cr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
+        sellerBillNo: editingPayment?.sellerBillNo || "",
       };
 
-      await api.post("/payment-received", payload);
-      toast.success("Advance payment recorded");
+      if (editingPaymentId) {
+        await api.put(`/payment-received/${editingPaymentId}`, payload);
+        toast.success("Advance payment updated");
+        setTimeout(() => navigate(-1), 1200);
+      } else {
+        await api.post("/payment-received", payload);
+        toast.success("Advance payment recorded");
+      }
+
       setFormData((prev) => ({
         ...prev,
         amount: 0,
@@ -1484,7 +1634,7 @@ const AddPaymentReceived = () => {
       fetchDateTotal();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error("Error recording advance");
+      toast.error(error.response?.data?.message || "Error recording advance");
     } finally {
       setLoading(false);
     }
@@ -2038,8 +2188,8 @@ const AddPaymentReceived = () => {
 
   return (
     <AdminPageShell
-      title="Payment Received"
-      subtitle="Record and allocate payments in Tally-style ledger format"
+      title={editingPaymentId ? "Edit Payment Received" : "Payment Received"}
+      subtitle={editingPaymentId ? "Update payment allocation and adjust amounts" : "Record and allocate payments in Tally-style ledger format"}
       icon={FaHistory}
     >
       <div className="max-w-7xl mx-auto space-y-6">
@@ -2053,6 +2203,14 @@ const AddPaymentReceived = () => {
               onClick={() => navigate(-1)}
             />
             <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+            {editingPaymentId && (
+              <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl border border-amber-200 shadow-sm">
+                <FaExchangeAlt className="text-amber-500" />
+                <span className="text-xs font-black uppercase tracking-wider">
+                  Edit Mode · Voucher #{editingPayment?.voucherNumber || "—"}
+                </span>
+              </div>
+            )}
             <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
               <TabButton
                 active={activeTab === "payment_list"}
@@ -2093,6 +2251,63 @@ const AddPaymentReceived = () => {
             </span>
           </div>
         </div>
+
+        {(editingPaymentId || liveUnadjustedAmount > 0.01 || (editingPayment?.unadjustedAmount || 0) > 0.01) && (
+          <div className={`rounded-2xl border shadow-sm overflow-hidden ${
+            editingPaymentId
+              ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50"
+              : liveUnadjustedAmount > 0
+                ? "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
+                : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-green-50"
+          }`}>
+            <div className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-inner ${
+                  editingPaymentId ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-blue-600"
+                }`}>
+                  <FaMoneyBillWave size={20} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {editingPaymentId ? "Unadjusted Amount (On Account / Advance)" : "Unadjusted Amount — Available for Allocation"}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl sm:text-3xl font-black tabular-nums tracking-tight text-slate-800">
+                      ₹{liveUnadjustedAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    {editingPaymentId && editingPayment && (editingPayment.unadjustedAmount || 0) !== liveUnadjustedAmount && (
+                      <span className="text-xs font-bold text-slate-400">
+                        (original: ₹{(Number(editingPayment.unadjustedAmount) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                      </span>
+                    )}
+                  </div>
+                  {editingPayment?.paymentType && (
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Type: {editingPayment.paymentType}
+                      {editingPayment.paymentMode ? ` · ${editingPayment.paymentMode}` : ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-start sm:items-end gap-1">
+                {editingPayment?.buyerCompany && (
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                    {editingPayment.buyerCompany}
+                    <span className="text-slate-400 mx-1">→</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                    {editingPayment.supplierCompany || "—"}
+                  </div>
+                )}
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {liveUnadjustedAmount > 0.01
+                    ? "This amount remains unadjusted and is treated as advance / on-account"
+                    : "All payment value has been allocated against lorries"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <StatDashboard
           selectedLedger={selectedLedger}

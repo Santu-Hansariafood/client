@@ -15,6 +15,7 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaFilePdf,
+  FaSync,
 } from "react-icons/fa";
 import SaudaMISSection from "./components/SaudaMISSection";
 import MisStatCard from "./components/MisStatCard";
@@ -51,16 +52,7 @@ const ListPaymentReceived = () => {
   const [selectedLedger, setSelectedLedger] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    date: "",
-    sellerBillNo: "",
-    remarks: "",
-    amount: "",
-    claim: "",
-    tds: "",
-  });
 
   const [opposingLedgers, setOpposingLedgers] = useState([]);
   const [saudas, setSaudas] = useState([]);
@@ -381,6 +373,28 @@ const ListPaymentReceived = () => {
     () => tallyListRows.reduce((s, r) => s + (r.credit || 0), 0),
     [tallyListRows],
   );
+
+  const totalUnadjusted = useMemo(() => {
+    return payments.reduce(
+      (s, p) => s + (Number(p.unadjustedAmount) || 0),
+      0,
+    );
+  }, [payments]);
+
+  const handleRefresh = useCallback(() => {
+    clearApiCache();
+    fetchPayments();
+  }, [fetchPayments]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        fetchPayments();
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [fetchPayments]);
 
   const handleResetFilters = () => {
     setPage(1);
@@ -2015,18 +2029,7 @@ const ListPaymentReceived = () => {
   };
 
   const handleEdit = (payment) => {
-    setSelectedPayment(payment);
-    setEditFormData({
-      date: payment.date
-        ? new Date(payment.date).toISOString().split("T")[0]
-        : "",
-      sellerBillNo: payment.sellerBillNo || "",
-      remarks: payment.remarks || "",
-      amount: payment.amount || "",
-      claim: payment.claim || "",
-      tds: payment.tds || "",
-    });
-    setIsEditModalOpen(true);
+    navigate(`/payments/received/add?id=${payment._id}`);
   };
 
   const handleDelete = async (id) => {
@@ -2041,20 +2044,6 @@ const ListPaymentReceived = () => {
       } finally {
         setLoading(false);
       }
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      setLoading(true);
-      await api.put(`/payment-received/${selectedPayment._id}`, editFormData);
-      toast.success("Payment updated successfully!");
-      setIsEditModalOpen(false);
-      fetchPayments();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Error updating payment");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -2086,11 +2075,31 @@ const ListPaymentReceived = () => {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_#f0f9ff_0%,_#f8fafc_45%,_#f1f5f9_100%)]" />
 
         <div className="max-w-[1600px] mx-auto space-y-5 sm:space-y-6">
-          <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <FaSync size={12} className={loading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/payments/received/add")}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8f] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#1e3a5f]/10 hover:from-[#172d4d] hover:to-[#254970] active:scale-[0.98] transition-all"
+              >
+                + New Payment
+              </button>
+            </div>
+          </div>
 
           {activeTab === "vouchers" ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 sm:gap-4">
                 <MisStatCard
                   icon={<FaChartLine size={18} />}
                   label="Opening balance"
@@ -2118,6 +2127,13 @@ const ListPaymentReceived = () => {
                   value={`₹ ${stats.closingBalance.toLocaleString("en-IN")}`}
                   subValue="After period"
                   accent="blue"
+                />
+                <MisStatCard
+                  icon={<FaExclamationCircle size={18} />}
+                  label="Unadjusted / Advance"
+                  value={`₹ ${Number(totalUnadjusted).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  subValue="On Account"
+                  accent="amber"
                 />
                 <MisStatCard
                   icon={<FaExclamationCircle size={18} />}
@@ -2220,123 +2236,6 @@ const ListPaymentReceived = () => {
             </div>
           )}
         </div>
-
-        {/* Edit Payment Modal */}
-        {isEditModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <h3 className="text-xl font-bold text-slate-800 mb-4">
-                Edit Payment
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={editFormData.date}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, date: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Seller Bill No
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.sellerBillNo}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        sellerBillNo: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    value={editFormData.amount}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        amount: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Claim
-                  </label>
-                  <input
-                    type="number"
-                    value={editFormData.claim}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        claim: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    TDS
-                  </label>
-                  <input
-                    type="number"
-                    value={editFormData.tds}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, tds: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Remarks
-                  </label>
-                  <textarea
-                    value={editFormData.remarks}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        remarks: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 font-semibold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </AdminPageShell>
   );
