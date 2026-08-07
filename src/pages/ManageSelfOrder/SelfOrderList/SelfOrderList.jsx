@@ -237,10 +237,14 @@ const SelfOrderList = () => {
 
           const uploadRes = await api.post("/uploads/whatsapp", uploadFormData);
           console.log("[SelfOrderList WhatsApp] Upload response:", uploadRes);
-          console.log("[SelfOrderList WhatsApp] uploadRes.data:", uploadRes?.data);
+          console.log(
+            "[SelfOrderList WhatsApp] uploadRes.data:",
+            uploadRes?.data,
+          );
 
           const raw = uploadRes?.data ?? {};
-          fileUrl = extractUploadUrl(raw) ||
+          fileUrl =
+            extractUploadUrl(raw) ||
             raw?.url ||
             raw?.fileUrl ||
             raw?.cloudUrl ||
@@ -251,7 +255,11 @@ const SelfOrderList = () => {
             raw?.secure_url ||
             null;
 
-          if (fileUrl && !/^https?:\/\//i.test(fileUrl) && fileUrl.startsWith("/")) {
+          if (
+            fileUrl &&
+            !/^https?:\/\//i.test(fileUrl) &&
+            fileUrl.startsWith("/")
+          ) {
             fileUrl = `${window.location.origin}${fileUrl}`;
           }
 
@@ -265,7 +273,9 @@ const SelfOrderList = () => {
             fileUrl = null;
           }
         } else {
-          console.error("[SelfOrderList WhatsApp] PDF blob was empty, skipping upload");
+          console.error(
+            "[SelfOrderList WhatsApp] PDF blob was empty, skipping upload",
+          );
         }
       } catch (pdfErr) {
         console.error(
@@ -355,7 +365,9 @@ ${pdfSection}
         if (fileUrl) {
           toast.success("WhatsApp opened with PDF link");
         } else {
-          toast.warn("WhatsApp opened but PDF upload failed – no document attached");
+          toast.warn(
+            "WhatsApp opened but PDF upload failed – no document attached",
+          );
         }
       } catch (error) {
         toast.dismiss(toastId);
@@ -413,6 +425,7 @@ ${pdfSection}
       "Quantity",
       "Rate",
       "Seller",
+      "Seller Company",
       userRole === "Admin" || userRole === "Employee" ? "Seller Mobile" : null,
       "Agent Name",
       userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
@@ -620,6 +633,12 @@ ${pdfSection}
 
           <span key={`seller-${item._id}`} className="font-bold text-slate-800">
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
+          </span>,
+          <span
+            key={`seller-company-${item._id}`}
+            className="font-bold text-slate-800"
+          >
+            {item.supplierCompany || "N/A"}
           </span>,
 
           userRole === "Admin" ? (
