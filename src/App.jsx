@@ -48,7 +48,7 @@ const App = () => {
 
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
-            <StartupAd />
+            {/* <StartupAd /> */}
             <RouteSEO />
             <ToastContainer
               position={window.innerWidth < 640 ? "top-center" : "top-right"}
