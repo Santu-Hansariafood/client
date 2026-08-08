@@ -3,7 +3,7 @@ import axios from "axios";
 const rawBaseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 const cache = new Map();
 const inFlightRequests = new Map();
 const AUTH_EXEMPT_PATHS = [
@@ -88,7 +88,6 @@ instance.interceptors.request.use((config) => {
     }
   }
 
-  // Check cache for GET requests
   if (config.method?.toUpperCase() === "GET") {
     const key = getCacheKey(config);
     const cached = cache.get(key);
@@ -167,7 +166,6 @@ instance.interceptors.response.use(
   }
 );
 
-// Helper to clear cache (useful after mutations)
 export const clearApiCache = () => {
   cache.clear();
 };

@@ -38,16 +38,27 @@ const normalizeBankDetails = (entity) => {
 
 export const toUnifiedDetails = (entity) => {
   if (!entity) return null;
-  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
+  const gstNo =
+    entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
 
-  // Extract PAN from GST if missing
   if (!panNo && gstNo && gstNo.length >= 12 && gstNo !== "0") {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
-  const pinValue = entity.pinNo || entity.pin || entity.pinCode || entity.pincode || entity.postalCode || "";
-  const addressValue = entity.address || entity.addressLine1 || entity.fullAddress || entity.location || "";
+  const pinValue =
+    entity.pinNo ||
+    entity.pin ||
+    entity.pinCode ||
+    entity.pincode ||
+    entity.postalCode ||
+    "";
+  const addressValue =
+    entity.address ||
+    entity.addressLine1 ||
+    entity.fullAddress ||
+    entity.location ||
+    "";
   const districtValue = entity.district || entity.city || "";
   const stateValue = entity.state || entity.stateName || "";
 
@@ -81,16 +92,27 @@ export const toUnifiedDetails = (entity) => {
 
 export const toConsigneeDetails = (entity) => {
   if (!entity) return null;
-  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
+  const gstNo =
+    entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
 
-  // Extract PAN from GST if missing
   if (!panNo && gstNo && gstNo.length >= 12 && gstNo !== "0") {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
-  const pinValue = entity.pin || entity.pinNo || entity.pinCode || entity.pincode || entity.postalCode || "";
-  const addressValue = entity.address || entity.addressLine1 || entity.fullAddress || entity.location || "";
+  const pinValue =
+    entity.pin ||
+    entity.pinNo ||
+    entity.pinCode ||
+    entity.pincode ||
+    entity.postalCode ||
+    "";
+  const addressValue =
+    entity.address ||
+    entity.addressLine1 ||
+    entity.fullAddress ||
+    entity.location ||
+    "";
   const districtValue = entity.district || entity.city || "";
   const stateValue = entity.state || entity.stateName || "";
 
@@ -140,23 +162,22 @@ export const buildSaudaPdfData = ({
     return String(c);
   })();
 
-const findBestMatch = (dataList, key, nameField) => {
+  const findBestMatch = (dataList, key, nameField) => {
     if (!key) return null;
-    
-    // Handle if key is an object (like a populated Mongo ref)
-    const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
+
+    const searchKey =
+      typeof key === "object" && key?._id ? String(key._id) : String(key);
     const normalizedKey = normalizeText(searchKey);
-    
-    // 1. Match by ID
-    const byId = dataList.find(d => d._id && String(d._id) === searchKey);
+
+    const byId = dataList.find((d) => d._id && String(d._id) === searchKey);
     if (byId) return byId;
 
-    // 2. Match by exact name
-    const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
+    const exactName = dataList.find(
+      (d) => normalizeText(d[nameField]) === normalizedKey,
+    );
     if (exactName) return exactName;
 
-    // 3. Fuzzy match: starts with or is contained within
-    const fuzzyMatch = dataList.find(d => {
+    const fuzzyMatch = dataList.find((d) => {
       const dName = normalizeText(d[nameField]);
       if (!dName) return false;
       return normalizedKey.includes(dName) || dName.includes(normalizedKey);
@@ -175,13 +196,15 @@ const findBestMatch = (dataList, key, nameField) => {
   const findCompanyById = (id) => {
     const resolved = resolveId(id);
     if (!resolved) return null;
-    return companyData.find((c) => c?._id && String(c._id) === resolved) || null;
+    return (
+      companyData.find((c) => c?._id && String(c._id) === resolved) || null
+    );
   };
 
-  const matchingConsignee = 
-    findBestMatch(consigneeData, item?.consignee, 'name') || 
-    findBestMatch(consigneeData, item?.consignee, 'label');
-  
+  const matchingConsignee =
+    findBestMatch(consigneeData, item?.consignee, "name") ||
+    findBestMatch(consigneeData, item?.consignee, "label");
+
   const supplierId = item?.supplier?._id || item?.supplier;
   const matchingSellerProfile = sellerProfileData.find(
     (seller) => String(seller._id) === String(supplierId),
@@ -209,27 +232,36 @@ const findBestMatch = (dataList, key, nameField) => {
   const matchingSupplier = supplierCandidates.reduce((best, candidate) => {
     const found = findSupplierByCandidate(candidate);
     if (!found) return best;
-    const foundHasAccount = normalizeBankDetails(found).some(
-      (b) => String(b.accountNumber || "").trim(),
+    const foundHasAccount = normalizeBankDetails(found).some((b) =>
+      String(b.accountNumber || "").trim(),
     );
     if (!best) return found;
-    const bestHasAccount = normalizeBankDetails(best).some(
-      (b) => String(b.accountNumber || "").trim(),
+    const bestHasAccount = normalizeBankDetails(best).some((b) =>
+      String(b.accountNumber || "").trim(),
     );
     if (!bestHasAccount && foundHasAccount) return found;
     return best;
   }, null);
 
-  const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
+  const matchingCommodity = findBestMatch(
+    commodityData,
+    item?.commodity,
+    "name",
+  );
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-  
-  const companyIdFromItem = item?.companyId || item?.company?._id || item?.company;
+
+  const companyIdFromItem =
+    item?.companyId || item?.company?._id || item?.company;
   const companyFromCompanyId = findCompanyById(companyIdFromItem);
   const companyFromBuyerKeyId = isMongoId(rawBuyerKey)
     ? findCompanyById(rawBuyerKey)
     : null;
-  const companyFromBuyerName = findBestMatch(companyData, rawBuyerKey, "companyName");
+  const companyFromBuyerName = findBestMatch(
+    companyData,
+    rawBuyerKey,
+    "companyName",
+  );
 
   const matchingBuyerProfile =
     findBestMatch(buyerData, rawBuyerKey, "name") || null;
@@ -253,17 +285,19 @@ const findBestMatch = (dataList, key, nameField) => {
       ? getConsigneeDisplay(item)
       : normalizedConsigneeKey || item?.consignee || "N/A";
 
-  const isSpecialConsignee = 
-    normalizeText(resolvedConsigneeName).includes("self order") || 
+  const isSpecialConsignee =
+    normalizeText(resolvedConsigneeName).includes("self order") ||
     normalizeText(resolvedConsigneeName).includes("purchase order");
 
-  const itemBuyerName = typeof item?.buyerCompany === "string" && !isMongoId(item.buyerCompany) 
-    ? item.buyerCompany 
-    : typeof item?.buyer === "string" && !isMongoId(item.buyer)
-      ? item.buyer
-      : "";
+  const itemBuyerName =
+    typeof item?.buyerCompany === "string" && !isMongoId(item.buyerCompany)
+      ? item.buyerCompany
+      : typeof item?.buyer === "string" && !isMongoId(item.buyer)
+        ? item.buyer
+        : "";
 
-  const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || matchingBuyer?.name || "N/A";
+  const finalBuyerName =
+    itemBuyerName || matchingBuyer?.companyName || matchingBuyer?.name || "N/A";
   const finalBuyerDetails = toUnifiedDetails(
     companyFromCompanyId ||
       companyFromBuyerKeyId ||
@@ -271,54 +305,57 @@ const findBestMatch = (dataList, key, nameField) => {
       companyFromBuyerProfile ||
       matchingBuyer,
   );
-  
-  const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
-  const finalConsigneeDetails = 
-    toConsigneeDetails(matchingConsignee) || 
+
+  const itemConsigneeDetails = item?.consigneeDetails
+    ? toConsigneeDetails(item.consigneeDetails)
+    : null;
+  const finalConsigneeDetails =
+    toConsigneeDetails(matchingConsignee) ||
     (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : null) ||
     itemConsigneeDetails;
 
+  const billToConsignee =
+    String(item?.billTo || "").toLowerCase() === "consignee";
 
-  const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
-
-  const commodityMatch = findBestMatch(commodityData, item?.commodity, 'name');
+  const commodityMatch = findBestMatch(commodityData, item?.commodity, "name");
   const commodityId = commodityMatch?._id;
 
   let parameters = [];
   if (matchingBuyer && commodityId) {
-    const companyCommodity = matchingBuyer.commodities?.find(cc => 
-      String(cc.commodityId) === String(commodityId)
+    const companyCommodity = matchingBuyer.commodities?.find(
+      (cc) => String(cc.commodityId) === String(commodityId),
     );
-    
+
     if (companyCommodity?.parameters) {
-      parameters = companyCommodity.parameters.map(cp => {
-        const qualityParam = qualityParameterData.find(qp => 
-          String(qp._id) === String(cp.parameterId)
+      parameters = companyCommodity.parameters.map((cp) => {
+        const qualityParam = qualityParameterData.find(
+          (qp) => String(qp._id) === String(cp.parameterId),
         );
         const value = cp.values?.[0] || {};
-        
+
         return {
           _id: cp.parameterId,
-          parameter: qualityParam?.name || 'Unknown Parameter',
+          parameter: qualityParam?.name || "Unknown Parameter",
           baseValue: value.baseValue,
           maxValue: value.maxValue,
-          value: value.baseValue
+          value: value.baseValue,
         };
       });
     }
   }
-  
+
   if (parameters.length === 0 && item.parameters) {
-    parameters = item.parameters.map(param => {
-      const qualityParam = qualityParameterData.find(qp => 
-        String(qp._id) === String(param.id || param._id || param.parameterId)
+    parameters = item.parameters.map((param) => {
+      const qualityParam = qualityParameterData.find(
+        (qp) =>
+          String(qp._id) === String(param.id || param._id || param.parameterId),
       );
       return {
         ...param,
         _id: param.id || param._id || param.parameterId,
-        parameter: qualityParam?.name || param.parameter || 'Unknown Parameter',
+        parameter: qualityParam?.name || param.parameter || "Unknown Parameter",
         baseValue: param.baseValue ?? param.value,
-        maxValue: param.maxValue ?? '',
+        maxValue: param.maxValue ?? "",
       };
     });
   }
@@ -334,7 +371,7 @@ const findBestMatch = (dataList, key, nameField) => {
     billTo: item?.billTo || "",
     hsnCode: matchingCommodity?.hsnCode || "",
     sellerProfile: matchingSellerProfile,
-    parameters: parameters.length > 0 ? parameters : item.parameters, // Fallback to item parameters if no company parameters
+    parameters: parameters.length > 0 ? parameters : item.parameters,
   };
 
   if (matchingSellerProfile) {
@@ -352,7 +389,8 @@ const findBestMatch = (dataList, key, nameField) => {
       };
     } else {
       if (!transformed.supplierDetails.gstNo) {
-        transformed.supplierDetails.gstNo = matchingSellerProfile.gstNumber || "";
+        transformed.supplierDetails.gstNo =
+          matchingSellerProfile.gstNumber || "";
       }
 
       if (!transformed.supplierDetails.bankDetails?.length) {
@@ -383,11 +421,19 @@ const findBestMatch = (dataList, key, nameField) => {
     transformed.buyerDetails = finalBuyerDetails;
   }
 
-  if (!transformed.buyerDetails && !billToConsignee && transformed.originalBuyerDetails) {
+  if (
+    !transformed.buyerDetails &&
+    !billToConsignee &&
+    transformed.originalBuyerDetails
+  ) {
     transformed.buyerDetails = transformed.originalBuyerDetails;
   }
 
-  if (billToConsignee && !transformed.buyerDetails && transformed.originalBuyerDetails) {
+  if (
+    billToConsignee &&
+    !transformed.buyerDetails &&
+    transformed.originalBuyerDetails
+  ) {
     const bName = normalizeText(transformed.originalBuyerCompany);
     const cName = normalizeText(transformed.consignee);
     if (cName.startsWith(bName) || bName.startsWith(cName)) {

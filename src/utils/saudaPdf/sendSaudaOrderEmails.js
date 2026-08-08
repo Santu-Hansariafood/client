@@ -41,16 +41,23 @@ export const sendSaudaOrderEmails = async (order) => {
 
   if (recipients.length === 0) return;
 
-  const [consigneeData, supplierData, buyerData, companyData, sellerProfileData, commodityData, qualityParameterData] =
-    await Promise.all([
-      fetchAllPages("/consignees", { limit: 200 }),
-      fetchAllPages("/seller-company", { limit: 200 }),
-      fetchAllPages("/buyers", { limit: 200 }),
-      fetchAllPages("/companies", { limit: 200 }),
-      fetchAllPages("/sellers", { limit: 200 }),
-      fetchAllPages("/commodities", { limit: 200 }),
-      fetchAllPages("/quality-parameters", { limit: 200 }),
-    ]);
+  const [
+    consigneeData,
+    supplierData,
+    buyerData,
+    companyData,
+    sellerProfileData,
+    commodityData,
+    qualityParameterData,
+  ] = await Promise.all([
+    fetchAllPages("/consignees", { limit: 200 }),
+    fetchAllPages("/seller-company", { limit: 200 }),
+    fetchAllPages("/buyers", { limit: 200 }),
+    fetchAllPages("/companies", { limit: 200 }),
+    fetchAllPages("/sellers", { limit: 200 }),
+    fetchAllPages("/commodities", { limit: 200 }),
+    fetchAllPages("/quality-parameters", { limit: 200 }),
+  ]);
 
   const transformedData = buildSaudaPdfData({
     item: order,

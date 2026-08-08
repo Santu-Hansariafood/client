@@ -1,37 +1,40 @@
 import { toast } from "react-toastify";
 
-/**
- * Robustly downloads a file (jsPDF instance, Blob, or Data URI), handling mobile WebView/APK edge cases.
- * @param {import('jspdf').jsPDF | Blob | string} source - The source to download.
- * @param {string} filename - The desired filename.
- * @param {string} mimeType - The MIME type (optional, for Data URIs).
- */
-export const downloadFile = async (source, filename, mimeType = "application/pdf") => {
+export const downloadFile = async (
+  source,
+  filename,
+  mimeType = "application/pdf",
+) => {
   try {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isAndroid = /Android/i.test(navigator.userAgent);
-    
-    if (source && typeof source.output === 'function') {
+
+    if (source && typeof source.output === "function") {
       if (isMobile) {
         try {
           source.save(filename);
           return;
         } catch (e1) {
-          
           try {
-            const blob = source.output('blob');
+            const blob = source.output("blob");
             const url = URL.createObjectURL(blob);
-            await triggerDownloadWithFallback(url, filename, isMobile, isAndroid);
+            await triggerDownloadWithFallback(
+              url,
+              filename,
+              isMobile,
+              isAndroid,
+            );
             setTimeout(() => URL.revokeObjectURL(url), 10000);
             return;
           } catch (e2) {
-            
             try {
-              const dataUri = source.output('datauristring');
+              const dataUri = source.output("datauristring");
               window.location.href = dataUri;
               return;
             } catch (e3) {
-              toast.error("Could not download PDF. Please try a different device/browser.");
+              toast.error(
+                "Could not download PDF. Please try a different device/browser.",
+              );
             }
           }
         }
@@ -50,8 +53,8 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
       return;
     }
 
-    if (typeof source === 'string') {
-      if (isMobile && source.startsWith('data:')) {
+    if (typeof source === "string") {
+      if (isMobile && source.startsWith("data:")) {
         try {
           const response = await fetch(source);
           const blob = await response.blob();
@@ -63,7 +66,7 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
           console.warn("Fetch fallback for data URI failed, trying direct:", e);
         }
       }
-      
+
       await triggerDownloadWithFallback(source, filename, isMobile, isAndroid);
       return;
     }
@@ -85,9 +88,9 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
       link.target = "_blank";
     }
     document.body.appendChild(link);
-    
+
     link.click();
-    
+
     setTimeout(() => {
       if (link.parentNode) {
         document.body.removeChild(link);
@@ -97,14 +100,14 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
   } catch (e) {
     console.warn("Anchor click failed:", e);
   }
-  
+
   if (isMobile) {
     try {
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
       iframe.src = url;
       document.body.appendChild(iframe);
-      
+
       setTimeout(() => {
         if (iframe.parentNode) {
           document.body.removeChild(iframe);
@@ -115,7 +118,7 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
       console.warn("Hidden iframe failed:", e);
     }
   }
-  
+
   if (isAndroid) {
     try {
       window.location.href = url;
@@ -124,7 +127,7 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
       console.warn("Android navigation failed:", e);
     }
   }
-  
+
   if (isMobile) {
     try {
       window.open(url, "_blank");
@@ -133,6 +136,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
       console.warn("Window open failed:", e);
     }
   }
-  
+
   throw new Error("All download strategies exhausted");
 }

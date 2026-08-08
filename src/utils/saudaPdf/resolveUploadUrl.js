@@ -42,7 +42,9 @@ export const extractUploadUrl = (payload) => {
 
   collect(payload);
 
-  const directUrl = candidates.find((candidate) => /^https?:\/\//i.test(candidate));
+  const directUrl = candidates.find((candidate) =>
+    /^https?:\/\//i.test(candidate),
+  );
   if (directUrl) return directUrl;
 
   const extractedUrl = candidates
