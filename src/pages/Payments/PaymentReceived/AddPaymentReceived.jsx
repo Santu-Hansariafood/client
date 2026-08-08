@@ -18,7 +18,7 @@ import {
   FaCheckCircle,
   FaPlus,
   FaTrash,
-  FaMoneyBillWave
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 import TabButton from "./components/TabButton";
@@ -108,7 +108,9 @@ const AddPaymentReceived = () => {
       const fetchPaymentForEdit = async () => {
         try {
           setFetchingEditingPayment(true);
-          const listRes = await api.get("/payment-received", { params: { limit: 0 } });
+          const listRes = await api.get("/payment-received", {
+            params: { limit: 0 },
+          });
           const match = (listRes.data.data || []).find((p) => p._id === id);
           if (match) {
             setEditingPayment(match);
@@ -123,16 +125,82 @@ const AddPaymentReceived = () => {
         }
       };
       fetchPaymentForEdit();
+    } else {
+      const paramAmount = searchParams.get("amount");
+      const paramBuyer = searchParams.get("buyerCompany");
+      const paramSupplier = searchParams.get("supplierCompany");
+      const paramLorry = searchParams.get("lorryNumber");
+      const paramSauda = searchParams.get("saudaNo");
+      const hasAnyPrefill = paramAmount || paramBuyer || paramSupplier;
+      if (hasAnyPrefill) {
+        setFormData((prev) => ({
+          ...prev,
+          amount: paramAmount ? parseFloat(paramAmount) || 0 : prev.amount,
+          remarks:
+            paramSauda || paramLorry
+              ? `Payment for Sauda ${paramSauda || ""} Lorry ${paramLorry || ""}`.trim()
+              : prev.remarks,
+        }));
+        if (paramBuyer) {
+          const findAndApplyBuyer = () => {
+            setTimeout(() => {
+              setFormData((prev) => ({
+                ...prev,
+                opposingCompanyId: paramSupplier || prev.opposingCompanyId,
+              }));
+            }, 100);
+          };
+          if (allCompanies.length > 0) {
+            const matched = allCompanies.find(
+              (c) =>
+                String(c.companyName || "")
+                  .trim()
+                  .toLowerCase() === String(paramBuyer).trim().toLowerCase(),
+            );
+            if (matched) {
+              setFormData((prev) => ({
+                ...prev,
+                companyId: matched._id,
+                opposingCompanyId: paramSupplier || prev.opposingCompanyId,
+              }));
+              findAndApplyBuyer();
+            } else {
+              setFormData((prev) => ({
+                ...prev,
+                companyId: paramBuyer,
+                opposingCompanyId: paramSupplier || prev.opposingCompanyId,
+              }));
+              findAndApplyBuyer();
+            }
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              companyId: paramBuyer,
+              opposingCompanyId: paramSupplier || prev.opposingCompanyId,
+            }));
+          }
+        } else if (paramSupplier) {
+          setFormData((prev) => ({
+            ...prev,
+            opposingCompanyId: paramSupplier,
+          }));
+        }
+        setActiveTab("allocation");
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, allCompanies]);
 
   useEffect(() => {
     if (!editingPayment) return;
 
     const p = editingPayment;
     setFormData({
-      date: p.date ? new Date(p.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-      allocationDate: p.date ? new Date(p.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      date: p.date
+        ? new Date(p.date).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      allocationDate: p.date
+        ? new Date(p.date).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       ledgerType: p.ledgerType || "Buyer",
       ledgerId: p.ledgerId?._id || p.ledgerId || "",
       companyId: p.companyId || "",
@@ -193,13 +261,13 @@ const AddPaymentReceived = () => {
     const rate = entry.actualRate || 0;
     const cdPercent = entry.cd || 0;
     const gstPercent = entry.gst || 0;
-    const bankCharges = Number(entry.bankCharges) || 0; // New field for bank charges
+    const bankCharges = Number(entry.bankCharges) || 0;
 
     const grossAmount = weight * rate;
     const cdAmount = grossAmount * (cdPercent / 100);
     const amountAfterCd = grossAmount - cdAmount;
     const amountAfterBankCharges = amountAfterCd - bankCharges;
-    const taxableAmount = amountAfterBankCharges; // Taxable after CD and bank charges
+    const taxableAmount = amountAfterBankCharges;
     const gstAmount = taxableAmount * (gstPercent / 100);
     const netAmount = taxableAmount + gstAmount;
 
@@ -379,8 +447,7 @@ const AddPaymentReceived = () => {
   );
 
   const hasBuyerCompany = Boolean(companyPair.buyerCompany);
-  const buyerOnlyMapping =
-    hasBuyerCompany && !companyPair.supplierCompany;
+  const buyerOnlyMapping = hasBuyerCompany && !companyPair.supplierCompany;
 
   const pairCreditFromList = useMemo(() => {
     if (!fullCompanyMapping || !ledgerBalance.creditByPair?.length) return 0;
@@ -400,11 +467,7 @@ const AddPaymentReceived = () => {
   const availableAllocationPool = useMemo(() => {
     if (allocationSource === "advance") {
       if (fullCompanyMapping) {
-        return (
-          Number(ledgerBalance.advanceBalance) ||
-          pairCreditFromList ||
-          0
-        );
+        return Number(ledgerBalance.advanceBalance) || pairCreditFromList || 0;
       }
       return Number(ledgerBalance.totalAdvanceBalance) || 0;
     }
@@ -450,8 +513,6 @@ const AddPaymentReceived = () => {
     entries.forEach((entry) => {
       const details = calculateTallyDetails(entry);
       if (details.dueAmount <= 0.01) return;
-      // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
-      // So we sum the netAmount (total bill) instead of the remaining dueAmount
       totalDue += details.netAmount;
       if (entry.paymentStatus !== "done") {
         pendingCount++;
@@ -492,10 +553,17 @@ const AddPaymentReceived = () => {
       (s, e) => s + (parseFloat(e.allocatedAmount) || 0),
       0,
     );
-    const pType = formData.paymentType || (editingPayment?.paymentType);
+    const pType = formData.paymentType || editingPayment?.paymentType;
     if (pType === "Adjustment") return 0;
     return Math.max(0, totalPaymentValue - totalMapped);
-  }, [formData.amount, formData.claim, formData.tds, formData.paymentType, entries, editingPayment]);
+  }, [
+    formData.amount,
+    formData.claim,
+    formData.tds,
+    formData.paymentType,
+    entries,
+    editingPayment,
+  ]);
 
   const opposingCompanyOptions = useMemo(() => {
     const sellerNames = collectUniqueCompanyNames(opposingLedgers);
@@ -645,11 +713,13 @@ const AddPaymentReceived = () => {
             creditNote: "Allocation posted",
             rowRemarks: "",
             isSaved: item.paymentStatus === "done",
-            bankCharges: Number(item.bankCharges) || 0, // Initialize bank charges
+            bankCharges: Number(item.bankCharges) || 0,
           })),
         );
         setEntriesTotal(
-          useWideFetch ? sortedItems.length : (response.data.total ?? sortedItems.length),
+          useWideFetch
+            ? sortedItems.length
+            : (response.data.total ?? sortedItems.length),
         );
         setEntriesPage(useWideFetch ? 1 : page);
       } catch (error) {
@@ -678,6 +748,47 @@ const AddPaymentReceived = () => {
     fetchEntries(1);
   }, [fetchEntries]);
 
+  useEffect(() => {
+    if (!editingPaymentId) return;
+    if (!editingPayment || !editingPayment.mappings) return;
+    if (!entries.length) return;
+
+    const mappingsById = new Map();
+    for (const mp of editingPayment.mappings) {
+      if (mp?.loadingEntryId) {
+        mappingsById.set(
+          String(mp.loadingEntryId._id || mp.loadingEntryId),
+          mp,
+        );
+      }
+    }
+    if (!mappingsById.size) return;
+
+    let hasAnyChange = false;
+    const mergedEntries = entries.map((e) => {
+      const mapping = mappingsById.get(String(e._id));
+      if (!mapping) return e;
+      hasAnyChange = true;
+      return {
+        ...e,
+        allocatedAmount: Number(mapping.amount || 0),
+        claimAmount: Number(mapping.claim || 0),
+        tdsAmount: Number(mapping.tds || 0),
+        bankCharges: Number(mapping.bankCharges || e.bankCharges || 0),
+        rowRemarks: mapping.remarks || e.rowRemarks || "",
+        debitNote: mapping.debitNote || e.debitNote || "Due against lorry",
+        creditNote: mapping.creditNote || e.creditNote || "Allocation posted",
+        isCurrentVoucherAllocation: true,
+        isSaved: false,
+        uiKey: `${e._id}-edit-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      };
+    });
+
+    if (hasAnyChange) {
+      setEntries(mergedEntries);
+    }
+  }, [editingPaymentId, editingPayment, entries.length]);
+
   const buildCompanyPayload = useCallback(
     (entry = null) => ({
       buyerCompany:
@@ -702,8 +813,9 @@ const AddPaymentReceived = () => {
       if (!name) return "";
       const co = allCompanies.find(
         (c) =>
-          String(c.companyName || "").trim().toLowerCase() ===
-          String(name).trim().toLowerCase(),
+          String(c.companyName || "")
+            .trim()
+            .toLowerCase() === String(name).trim().toLowerCase(),
       );
       return co?._id || "";
     },
@@ -760,12 +872,7 @@ const AddPaymentReceived = () => {
         prev.ledgerId ? prev : { ...prev, ledgerId: resolvedId },
       );
     }
-  }, [
-    formData.companyId,
-    formData.ledgerId,
-    ledgers,
-    resolveLedgerIdForSave,
-  ]);
+  }, [formData.companyId, formData.ledgerId, ledgers, resolveLedgerIdForSave]);
 
   const fetchHistory = useCallback(async () => {
     if (!formData.date) {
@@ -785,7 +892,6 @@ const AddPaymentReceived = () => {
       };
 
       if (companyPair.buyerCompany || companyPair.supplierCompany) {
-        // When companies are selected, show all their payments (not just today)
         if (companyPair.buyerCompany) {
           params.buyerCompany = companyPair.buyerCompany;
           entryParams.buyerCompany = companyPair.buyerCompany;
@@ -795,7 +901,6 @@ const AddPaymentReceived = () => {
           entryParams.supplierCompany = companyPair.supplierCompany;
         }
       } else {
-        // No company selected, show all payments for the selected date
         params.startDate = formData.date;
         params.endDate = formData.date;
         if (formData.ledgerType) params.ledgerType = formData.ledgerType;
@@ -831,8 +936,9 @@ const AddPaymentReceived = () => {
 
       const buyerCo = allCompanies.find(
         (c) =>
-          String(c.companyName || "").trim().toLowerCase() ===
-          String(pair.buyerCompany).trim().toLowerCase(),
+          String(c.companyName || "")
+            .trim()
+            .toLowerCase() === String(pair.buyerCompany).trim().toLowerCase(),
       );
 
       const ledger = buyerCo
@@ -936,14 +1042,15 @@ const AddPaymentReceived = () => {
   const fetchDateTotal = useCallback(async () => {
     try {
       const selectedDate = formData.date;
-      
-      // 1. Fetch Day Total (All payments for the date, regardless of company/ledger)
+
       const dayParams = {
         startDate: selectedDate,
         endDate: selectedDate,
         limit: 1000,
       };
-      const dayResponse = await api.get("/payment-received", { params: dayParams });
+      const dayResponse = await api.get("/payment-received", {
+        params: dayParams,
+      });
       const allPayments = dayResponse.data.data || [];
       const dTotal = allPayments.reduce(
         (sum, p) => sum + (p.amount || 0) + (p.claim || 0) + (p.tds || 0),
@@ -951,7 +1058,6 @@ const AddPaymentReceived = () => {
       );
       setDayTotal(dTotal);
 
-      // 2. Fetch Filtered Total (Based on current company filters)
       const params = {
         startDate: selectedDate,
         endDate: selectedDate,
@@ -959,8 +1065,10 @@ const AddPaymentReceived = () => {
       };
 
       if (companyPair.buyerCompany || companyPair.supplierCompany) {
-        if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
-        if (companyPair.supplierCompany) params.supplierCompany = companyPair.supplierCompany;
+        if (companyPair.buyerCompany)
+          params.buyerCompany = companyPair.buyerCompany;
+        if (companyPair.supplierCompany)
+          params.supplierCompany = companyPair.supplierCompany;
       } else {
         if (formData.ledgerType) params.ledgerType = formData.ledgerType;
         if (formData.ledgerId) params.ledgerId = formData.ledgerId;
@@ -990,30 +1098,37 @@ const AddPaymentReceived = () => {
   }, [fetchDateTotal]);
 
   const handleSaveAllAllocations = async () => {
-    const allocations = entries.filter(
-      (e) => {
-        if (e.isSaved && !editingPaymentId) return false;
-        if (parseFloat(e.allocatedAmount) <= 0.01) return false;
-        
-        const details = calculateTallyDetails(e);
-        const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(e.allocatedAmount) || 0));
-        const creditAmount = details.netAmount;
-        if (Math.abs(lorryBalance - creditAmount) < 0.01) {
-          return false;
-        }
-        return true;
-      },
-    );
+    const allocations = entries.filter((e) => {
+      if (e.isSaved && !editingPaymentId) return false;
+      if (parseFloat(e.allocatedAmount) <= 0.01) return false;
+
+      const details = calculateTallyDetails(e);
+      const lorryBalance = Math.max(
+        0,
+        details.dueAmount - (parseFloat(e.allocatedAmount) || 0),
+      );
+      const creditAmount = details.netAmount;
+      if (Math.abs(lorryBalance - creditAmount) < 0.01) {
+        return false;
+      }
+      return true;
+    });
 
     if (allocations.length === 0 && !editingPaymentId) {
-      toast.error("No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)");
+      toast.error(
+        "No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)",
+      );
       return;
     }
 
     const firstEntry = allocations[0] || entries[0];
-    const pairPayload = firstEntry ? buildCompanyPayload(firstEntry) : buildCompanyPayload();
+    const pairPayload = firstEntry
+      ? buildCompanyPayload(firstEntry)
+      : buildCompanyPayload();
     const ledgerId = resolveLedgerIdForSave();
-    const saveCompanyId = firstEntry ? resolveCompanyIdForSave(firstEntry) : formData.companyId;
+    const saveCompanyId = firstEntry
+      ? resolveCompanyIdForSave(firstEntry)
+      : formData.companyId;
 
     if (!saveCompanyId && !pairPayload.buyerCompany && !editingPaymentId) {
       toast.error("Select buyer company, then save");
@@ -1047,16 +1162,37 @@ const AddPaymentReceived = () => {
         ledgerType: recordLedgerType,
         ledgerId: ledgerId || formData.ledgerId || undefined,
         companyId: saveCompanyId || formData.companyId || undefined,
-        buyerCompany: pairPayload.buyerCompany || editingPayment?.buyerCompany || "",
-        supplierCompany: pairPayload.supplierCompany || editingPayment?.supplierCompany || "",
-        amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
-        claim: formData.paymentMode === "Claim" ? recordAmount : (Number(formData.claim) || 0),
-        tds: formData.paymentMode === "TDS" ? recordAmount : (Number(formData.tds) || 0),
+        buyerCompany:
+          pairPayload.buyerCompany || editingPayment?.buyerCompany || "",
+        supplierCompany:
+          pairPayload.supplierCompany || editingPayment?.supplierCompany || "",
+        amount:
+          formData.paymentMode === "Claim" || formData.paymentMode === "TDS"
+            ? 0
+            : recordAmount,
+        claim:
+          formData.paymentMode === "Claim"
+            ? recordAmount
+            : Number(formData.claim) || 0,
+        tds:
+          formData.paymentMode === "TDS"
+            ? recordAmount
+            : Number(formData.tds) || 0,
         paymentType: editingPaymentId
-          ? (allocationSource === "advance" ? "Adjustment" : (totalAllocated > 0 ? "Sauda-wise" : "Advance"))
-          : (allocationSource === "fresh" ? (totalAllocated > 0 ? "Sauda-wise" : "Advance") : "Adjustment"),
+          ? allocationSource === "advance"
+            ? "Adjustment"
+            : totalAllocated > 0
+              ? "Sauda-wise"
+              : "Advance"
+          : allocationSource === "fresh"
+            ? totalAllocated > 0
+              ? "Sauda-wise"
+              : "Advance"
+            : "Adjustment",
         paymentMode:
-          allocationSource === "fresh" || editingPaymentId ? formData.paymentMode : "Adjustment",
+          allocationSource === "fresh" || editingPaymentId
+            ? formData.paymentMode
+            : "Adjustment",
         mappings: allocations.map((e) => ({
           saudaNo: e.saudaNo,
           loadingEntryId: e._id,
@@ -1069,14 +1205,13 @@ const AddPaymentReceived = () => {
           allocationSource === "fresh" && recordAmount > totalAllocated
             ? `${formData.remarks || "Bulk Allocation"} | Unallocated: Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")}`
             : formData.remarks || "Bulk Allocation",
-        sellerBillNo: editingPayment?.sellerBillNo || formData.sellerBillNo || "",
+        sellerBillNo:
+          editingPayment?.sellerBillNo || formData.sellerBillNo || "",
       };
 
       if (editingPaymentId) {
         await api.put(`/payment-received/${editingPaymentId}`, payload);
-        toast.success(
-          `Updated payment with ${allocations.length} allocations`,
-        );
+        toast.success(`Updated payment with ${allocations.length} allocations`);
         setTimeout(() => navigate(-1), 1200);
       } else {
         await api.post("/payment-received", payload);
@@ -1222,20 +1357,20 @@ const AddPaymentReceived = () => {
     const numAmount = parseFloat(amount);
     let valueToStore = amount;
 
-    // Find the entry to check the condition
-    const entry = entries.find(e => e.uiKey === uiKey);
+    const entry = entries.find((e) => e.uiKey === uiKey);
     if (entry) {
       const details = calculateTallyDetails(entry);
       const lorryBalance = Math.max(0, details.dueAmount - numAmount);
       const creditAmount = details.netAmount;
       if (Math.abs(lorryBalance - creditAmount) < 0.01) {
-        toast.warning("Warning: Lorry Balance will equal Credit Amount, this entry cannot be saved");
+        toast.warning(
+          "Warning: Lorry Balance will equal Credit Amount, this entry cannot be saved",
+        );
       }
     }
 
     if (!Number.isNaN(numAmount)) {
-      // First, check if amount exceeds dueAmount (Lorry Balance)
-      if (numAmount > dueAmount + 0.01) { // small tolerance for floating point errors
+      if (numAmount > dueAmount + 0.01) {
         valueToStore = String(
           Math.round(Math.min(numAmount, dueAmount) * 100) / 100,
         );
@@ -1249,7 +1384,7 @@ const AddPaymentReceived = () => {
               ? "No Credit (Advance) balance for this buyer → seller"
               : "Select seller and use From Advance",
           );
-        } else if (numAmount > remaining) { 
+        } else if (numAmount > remaining) {
           valueToStore = String(
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
@@ -1260,11 +1395,8 @@ const AddPaymentReceived = () => {
       } else if (pool <= 0.01 && numAmount > 0) {
         toast.error("Enter payment amount in the form above first");
       } else {
-        const maxAllowed = Math.min(
-          remaining,
-          dueAmount,
-        );
-        if (numAmount > maxAllowed) { 
+        const maxAllowed = Math.min(remaining, dueAmount);
+        if (numAmount > maxAllowed) {
           valueToStore = String(
             Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
           );
@@ -1321,7 +1453,7 @@ const AddPaymentReceived = () => {
           : "Payment received · lorry adjustment"),
       rowRemarks: "",
       isSaved: false,
-      bankCharges: entry.bankCharges || 0, // Carry over bank charges to new row
+      bankCharges: entry.bankCharges || 0,
     };
     const newEntries = [...entries];
     newEntries.splice(index + 1, 0, newRow);
@@ -1334,9 +1466,12 @@ const AddPaymentReceived = () => {
 
   const handleSaveRow = async (entry) => {
     const details = calculateTallyDetails(entry);
-    const lorryBalance = Math.max(0, details.dueAmount - (parseFloat(entry.allocatedAmount) || 0));
+    const lorryBalance = Math.max(
+      0,
+      details.dueAmount - (parseFloat(entry.allocatedAmount) || 0),
+    );
     const creditAmount = details.netAmount;
-    
+
     if (Math.abs(lorryBalance - creditAmount) < 0.01 && !editingPaymentId) {
       toast.error("Cannot save: Lorry Balance equals Credit Amount");
       return;
@@ -1356,7 +1491,11 @@ const AddPaymentReceived = () => {
     const creditPool = Number(availableAllocationPool) || 0;
     const pairPayload = buildCompanyPayload(entry);
 
-    if (allocationSource === "advance" && numAllocated > remainingPool + 1 && !editingPaymentId) {
+    if (
+      allocationSource === "advance" &&
+      numAllocated > remainingPool + 1 &&
+      !editingPaymentId
+    ) {
       toast.error(
         `Cr. allocation cannot exceed Cr. advance (Rs. ${creditPool.toLocaleString("en-IN")} Cr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
       );
@@ -1396,7 +1535,11 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (allocationSource === "fresh" && saveAllocated > rowCreditLeft + 1 && !editingPaymentId) {
+    if (
+      allocationSource === "fresh" &&
+      saveAllocated > rowCreditLeft + 1 &&
+      !editingPaymentId
+    ) {
       if (
         effectiveCreditPool <= 0.01 &&
         (ledgerBalance.totalAdvanceBalance || 0) > 0
@@ -1416,7 +1559,12 @@ const AddPaymentReceived = () => {
     const ledgerId = resolveLedgerIdForSave();
 
     const saveCompanyId = resolveCompanyIdForSave(entry);
-    if (!isEditingEntry && !saveCompanyId && !pairPayload.buyerCompany && !editingPaymentId) {
+    if (
+      !isEditingEntry &&
+      !saveCompanyId &&
+      !pairPayload.buyerCompany &&
+      !editingPaymentId
+    ) {
       toast.error("Select buyer company filter, then save");
       return;
     }
@@ -1444,9 +1592,16 @@ const AddPaymentReceived = () => {
         toast.success(`Payment adjusted for ${entry.lorryNumber}`);
       } else if (editingPaymentId) {
         const recordLedgerType = formData.ledgerType || "Buyer";
-        const finalBuyer = pairPayload.buyerCompany || editingPayment?.buyerCompany || "";
-        const finalSupplier = pairPayload.supplierCompany || editingPayment?.supplierCompany || "";
-        const finalType = allocationSource === "advance" ? "Adjustment" : (numAllocated > 0 ? "Sauda-wise" : "Advance");
+        const finalBuyer =
+          pairPayload.buyerCompany || editingPayment?.buyerCompany || "";
+        const finalSupplier =
+          pairPayload.supplierCompany || editingPayment?.supplierCompany || "";
+        const finalType =
+          allocationSource === "advance"
+            ? "Adjustment"
+            : numAllocated > 0
+              ? "Sauda-wise"
+              : "Advance";
 
         const recordAmount =
           allocationSource === "fresh"
@@ -1463,7 +1618,11 @@ const AddPaymentReceived = () => {
           creditNote: entry.creditNote,
         };
         const updatedMappings = [
-          ...existingMappings.filter((m) => m.loadingEntryId?._id !== entry._id && m.loadingEntryId !== entry._id),
+          ...existingMappings.filter(
+            (m) =>
+              m.loadingEntryId?._id !== entry._id &&
+              m.loadingEntryId !== entry._id,
+          ),
           newMapping,
         ];
 
@@ -1474,9 +1633,18 @@ const AddPaymentReceived = () => {
           companyId: saveCompanyId || formData.companyId || undefined,
           buyerCompany: finalBuyer,
           supplierCompany: finalSupplier,
-          amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
-          claim: formData.paymentMode === "Claim" ? recordAmount : (Number(formData.claim) || 0),
-          tds: formData.paymentMode === "TDS" ? recordAmount : (Number(formData.tds) || 0),
+          amount:
+            formData.paymentMode === "Claim" || formData.paymentMode === "TDS"
+              ? 0
+              : recordAmount,
+          claim:
+            formData.paymentMode === "Claim"
+              ? recordAmount
+              : Number(formData.claim) || 0,
+          tds:
+            formData.paymentMode === "TDS"
+              ? recordAmount
+              : Number(formData.tds) || 0,
           paymentType: finalType,
           paymentMode: formData.paymentMode,
           mappings: updatedMappings,
@@ -1515,7 +1683,10 @@ const AddPaymentReceived = () => {
           ledgerId: ledgerId || undefined,
           companyId: saveCompanyId,
           ...pairPayload,
-          amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
+          amount:
+            formData.paymentMode === "Claim" || formData.paymentMode === "TDS"
+              ? 0
+              : recordAmount,
           claim: formData.paymentMode === "Claim" ? recordAmount : 0,
           tds: formData.paymentMode === "TDS" ? recordAmount : 0,
           paymentType:
@@ -1598,14 +1769,19 @@ const AddPaymentReceived = () => {
       const payload = {
         ...formData,
         date: formData.allocationDate || formData.date,
-        amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : formData.amount,
+        amount:
+          formData.paymentMode === "Claim" || formData.paymentMode === "TDS"
+            ? 0
+            : formData.amount,
         claim: formData.paymentMode === "Claim" ? formData.amount : 0,
         tds: formData.paymentMode === "TDS" ? formData.amount : 0,
         ledgerType: recordLedgerType,
         ledgerId: formData.ledgerId || undefined,
         companyId: formData.companyId,
-        buyerCompany: companyPair.buyerCompany || editingPayment?.buyerCompany || "",
-        supplierCompany: companyPair.supplierCompany || editingPayment?.supplierCompany || "",
+        buyerCompany:
+          companyPair.buyerCompany || editingPayment?.buyerCompany || "",
+        supplierCompany:
+          companyPair.supplierCompany || editingPayment?.supplierCompany || "",
         paymentType: "Advance",
         mappings: editingPayment?.mappings || [],
         remarks:
@@ -1802,8 +1978,13 @@ const AddPaymentReceived = () => {
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">
               {row.commodity}
             </span>
-            <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase">
-              {((row.unloadingWeight || 0) > 0 ? row.unloadingWeight : row.loadingWeight) || 0} MT
+            <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase tabular-nums">
+              {Number(
+                ((row.unloadingWeight || 0) > 0
+                  ? row.unloadingWeight
+                  : row.loadingWeight) || 0,
+              ).toFixed(3)}{" "}
+              MT
             </span>
           </div>
         </div>
@@ -1816,7 +1997,10 @@ const AddPaymentReceived = () => {
         return (
           <div className="flex flex-col gap-0.5">
             <span className="font-black text-rose-600 text-xs tabular-nums">
-              ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              ₹
+              {details.netAmount.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+              })}
             </span>
             <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
               Total Lorry Bill
@@ -1854,7 +2038,10 @@ const AddPaymentReceived = () => {
             </span>
             <span
               className={`text-[9px] font-black uppercase truncate ${
-                matchCompanyName(row.supplierCompany, companyPair.supplierCompany)
+                matchCompanyName(
+                  row.supplierCompany,
+                  companyPair.supplierCompany,
+                )
                   ? "text-green-700"
                   : "text-slate-400"
               }`}
@@ -1901,28 +2088,37 @@ const AddPaymentReceived = () => {
                   <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 shadow-sm">
                     <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
                     <span className="text-[7.5px]">
-                      Entry Pool: ₹{Number(formData.amount).toLocaleString("en-IN")}
+                      Entry Pool: ₹
+                      {Number(formData.amount).toLocaleString("en-IN")}
                     </span>
                   </div>
                 )}
-                {allocationSource === "advance" && (ledgerBalance.advanceBalance > 0 || ledgerBalance.totalAdvanceBalance > 0) && (
-                  <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shadow-sm">
-                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                    <span className="text-[7.5px]">
-                      Cr. Advance: ₹{(ledgerBalance.advanceBalance || ledgerBalance.totalAdvanceBalance).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                )}
+                {allocationSource === "advance" &&
+                  (ledgerBalance.advanceBalance > 0 ||
+                    ledgerBalance.totalAdvanceBalance > 0) && (
+                    <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shadow-sm">
+                      <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                      <span className="text-[7.5px]">
+                        Cr. Advance: ₹
+                        {(
+                          ledgerBalance.advanceBalance ||
+                          ledgerBalance.totalAdvanceBalance
+                        ).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
-            {/* Bill Breakdown */}
             <div className="grid grid-cols-6 gap-2 bg-white border border-slate-200 rounded px-3 py-2 shadow-sm">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                   Gross Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
-                  ₹{details.grossAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.grossAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -1930,7 +2126,10 @@ const AddPaymentReceived = () => {
                   Less: CD ({details.cdPercent}%)
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
-                  ₹{details.cdAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.cdAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -1941,13 +2140,14 @@ const AddPaymentReceived = () => {
                   type="number"
                   value={details.bankCharges}
                   onChange={(e) => {
-                    // Update the entry's bank charges
                     const newBankCharges = parseFloat(e.target.value) || 0;
-                    setEntries(prev => prev.map(e => 
-                      e.uiKey === row.uiKey 
-                        ? { ...e, bankCharges: newBankCharges } 
-                        : e
-                    ));
+                    setEntries((prev) =>
+                      prev.map((e) =>
+                        e.uiKey === row.uiKey
+                          ? { ...e, bankCharges: newBankCharges }
+                          : e,
+                      ),
+                    );
                   }}
                   disabled={row.isSaved && user?.role !== "Admin"}
                   className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold outline-none tabular-nums"
@@ -1958,7 +2158,10 @@ const AddPaymentReceived = () => {
                   Taxable Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
-                  ₹{details.taxableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.taxableAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -1966,7 +2169,10 @@ const AddPaymentReceived = () => {
                   Add: GST ({details.gstPercent}%)
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
-                  ₹{details.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.gstAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -1974,7 +2180,10 @@ const AddPaymentReceived = () => {
                   Credit Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
-                  ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.netAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -2002,7 +2211,9 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.debitNote || ""}
-                  onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
+                  onChange={(e) =>
+                    handleDebitNoteChange(row.uiKey, e.target.value)
+                  }
                   disabled={isLocked}
                   className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
@@ -2017,7 +2228,10 @@ const AddPaymentReceived = () => {
                   Lorry Bill (Dr.)
                 </span>
                 <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
-                  ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {details.netAmount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -2027,7 +2241,9 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.creditNote || ""}
-                  onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
+                  onChange={(e) =>
+                    handleCreditNoteChange(row.uiKey, e.target.value)
+                  }
                   disabled={isLocked}
                   className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
@@ -2082,12 +2298,19 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                   Lorry Balance
                 </span>
-                <span className={`h-8 px-2 rounded border text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm transition-all ${
-                  details.dueAmount - (parseFloat(row.allocatedAmount) || 0) > 0.01
-                    ? "bg-blue-50 border-blue-200 text-blue-700"
-                    : "bg-slate-100 border-slate-200 text-slate-400"
-                }`}>
-                  ₹{(Math.max(0, details.dueAmount - (parseFloat(row.allocatedAmount) || 0))).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                <span
+                  className={`h-8 px-2 rounded border text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm transition-all ${
+                    details.dueAmount - (parseFloat(row.allocatedAmount) || 0) >
+                    0.01
+                      ? "bg-blue-50 border-blue-200 text-blue-700"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                  }`}
+                >
+                  ₹
+                  {Math.max(
+                    0,
+                    details.dueAmount - (parseFloat(row.allocatedAmount) || 0),
+                  ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
@@ -2105,7 +2328,9 @@ const AddPaymentReceived = () => {
           <div className="flex flex-col gap-2 min-w-[140px]">
             <textarea
               value={row.rowRemarks}
-              onChange={(e) => handleRowRemarksChange(row.uiKey, e.target.value)}
+              onChange={(e) =>
+                handleRowRemarksChange(row.uiKey, e.target.value)
+              }
               disabled={isLocked}
               rows={2}
               className={`w-full px-3 py-2 rounded-lg border text-[10px] font-bold ${
@@ -2189,7 +2414,11 @@ const AddPaymentReceived = () => {
   return (
     <AdminPageShell
       title={editingPaymentId ? "Edit Payment Received" : "Payment Received"}
-      subtitle={editingPaymentId ? "Update payment allocation and adjust amounts" : "Record and allocate payments in Tally-style ledger format"}
+      subtitle={
+        editingPaymentId
+          ? "Update payment allocation and adjust amounts"
+          : "Record and allocate payments in Tally-style ledger format"
+      }
       icon={FaHistory}
     >
       <div className="max-w-7xl mx-auto space-y-6">
@@ -2252,39 +2481,65 @@ const AddPaymentReceived = () => {
           </div>
         </div>
 
-        {(editingPaymentId || liveUnadjustedAmount > 0.01 || (editingPayment?.unadjustedAmount || 0) > 0.01) && (
-          <div className={`rounded-2xl border shadow-sm overflow-hidden ${
-            editingPaymentId
-              ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50"
-              : liveUnadjustedAmount > 0
-                ? "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
-                : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-green-50"
-          }`}>
+        {(editingPaymentId ||
+          liveUnadjustedAmount > 0.01 ||
+          (editingPayment?.unadjustedAmount || 0) > 0.01) && (
+          <div
+            className={`rounded-2xl border shadow-sm overflow-hidden ${
+              editingPaymentId
+                ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50"
+                : liveUnadjustedAmount > 0
+                  ? "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
+                  : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-green-50"
+            }`}
+          >
             <div className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-inner ${
-                  editingPaymentId ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-blue-600"
-                }`}>
+                <div
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-inner ${
+                    editingPaymentId
+                      ? "bg-amber-100 text-amber-600"
+                      : "bg-blue-100 text-blue-600"
+                  }`}
+                >
                   <FaMoneyBillWave size={20} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    {editingPaymentId ? "Unadjusted Amount (On Account / Advance)" : "Unadjusted Amount — Available for Allocation"}
+                    {editingPaymentId
+                      ? "Unadjusted Amount (On Account / Advance)"
+                      : "Unadjusted Amount — Available for Allocation"}
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl sm:text-3xl font-black tabular-nums tracking-tight text-slate-800">
-                      ₹{liveUnadjustedAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹
+                      {liveUnadjustedAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
-                    {editingPaymentId && editingPayment && (editingPayment.unadjustedAmount || 0) !== liveUnadjustedAmount && (
-                      <span className="text-xs font-bold text-slate-400">
-                        (original: ₹{(Number(editingPayment.unadjustedAmount) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
-                      </span>
-                    )}
+                    {editingPaymentId &&
+                      editingPayment &&
+                      (editingPayment.unadjustedAmount || 0) !==
+                        liveUnadjustedAmount && (
+                        <span className="text-xs font-bold text-slate-400">
+                          (original: ₹
+                          {(
+                            Number(editingPayment.unadjustedAmount) || 0
+                          ).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                          )
+                        </span>
+                      )}
                   </div>
                   {editingPayment?.paymentType && (
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Type: {editingPayment.paymentType}
-                      {editingPayment.paymentMode ? ` · ${editingPayment.paymentMode}` : ""}
+                      {editingPayment.paymentMode
+                        ? ` · ${editingPayment.paymentMode}`
+                        : ""}
                     </span>
                   )}
                 </div>
@@ -2348,6 +2603,7 @@ const AddPaymentReceived = () => {
           creditByPair={ledgerBalance.creditByPair}
           dateTotal={dateTotal}
           onSelectCreditPair={handleSelectCreditPair}
+          isEditMode={!!editingPaymentId}
         />
 
         <PaymentRecordingPanel
@@ -2363,6 +2619,7 @@ const AddPaymentReceived = () => {
           companyPair={companyPair}
           fullCompanyMapping={fullCompanyMapping}
           history={history}
+          isEditMode={!!editingPaymentId}
         />
 
         {(formData.amount > 0 ||
@@ -2372,7 +2629,9 @@ const AddPaymentReceived = () => {
             debitToSeller={ledgerTopSummary.debitToSeller ?? 0}
             debitPostedToSeller={ledgerTopSummary.debitPostedToSeller ?? 0}
             debitPendingInForm={ledgerTopSummary.debitPendingInForm ?? 0}
-            creditBalanceRemaining={ledgerTopSummary.creditBalanceRemaining ?? 0}
+            creditBalanceRemaining={
+              ledgerTopSummary.creditBalanceRemaining ?? 0
+            }
             creditByPair={ledgerBalance.creditByPair}
             fullCompanyMapping={fullCompanyMapping}
             buyerCompany={companyPair.buyerCompany || ""}
@@ -2423,6 +2682,8 @@ const AddPaymentReceived = () => {
               onSaveAll={handleSaveAllAllocations}
               loading={loading}
               ledgerTopSummary={ledgerTopSummary}
+              isEditMode={!!editingPaymentId}
+              editingPaymentMappings={editingPayment?.mappings || []}
             />
           )}
 

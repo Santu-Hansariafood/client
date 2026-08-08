@@ -14,7 +14,6 @@ import {
   FaChartLine,
   FaCheckCircle,
   FaExclamationCircle,
-  FaFilePdf,
   FaSync,
 } from "react-icons/fa";
 import SaudaMISSection from "./components/SaudaMISSection";
@@ -26,7 +25,6 @@ import MisPageHeader from "./components/MisPageHeader";
 import {
   buildTallyVoucherRows,
   calculateVoucherTotals,
-  formatLedgerAmount,
   getLedgerRowClaimAmount,
 } from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
@@ -293,7 +291,7 @@ const ListPaymentReceived = () => {
           limit,
         },
       });
-      
+
       setPayments(response.data.data || []);
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
@@ -375,10 +373,7 @@ const ListPaymentReceived = () => {
   );
 
   const totalUnadjusted = useMemo(() => {
-    return payments.reduce(
-      (s, p) => s + (Number(p.unadjustedAmount) || 0),
-      0,
-    );
+    return payments.reduce((s, p) => s + (Number(p.unadjustedAmount) || 0), 0);
   }, [payments]);
 
   const handleRefresh = useCallback(() => {

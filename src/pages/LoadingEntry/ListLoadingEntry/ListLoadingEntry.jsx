@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import {
   MdVisibility,
@@ -137,6 +137,7 @@ const useLocalStorage = (key, initialValue) => {
 const ListLoadingEntry = () => {
   const { userRole, mobile: authMobile } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const mobile = location.state?.mobile || authMobile;
 
   const stateOptions = useMemo(() => {
@@ -480,7 +481,7 @@ const ListLoadingEntry = () => {
   const handleEdit = useCallback(
     async (entry) => {
       setSelectedEntry(entry);
-      
+
       let latestEntry = entry;
       if (entry._id) {
         try {
@@ -523,7 +524,7 @@ const ListLoadingEntry = () => {
         secondClaimRemarks: latestEntry.secondClaimRemarks || "",
         otherCharges: latestEntry.otherCharges || 0,
         otherChargesRemarks: latestEntry.otherChargesRemarks || "",
-        bankCharges: latestEntry.bankCharges || "", // No more default, manual entry
+        bankCharges: latestEntry.bankCharges || "",
         bankChargesRemarks: latestEntry.bankChargesRemarks || "",
         tds: latestEntry.tds || 0,
         tdsRemarks: latestEntry.tdsRemarks || "",
@@ -650,7 +651,7 @@ const ListLoadingEntry = () => {
                     parameterId: String(param.parameterId || ""),
                     parameterName: param.parameter || "",
                     standardValue: selectedStandardValue,
-                    paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
+                    paramValues: param.values || [],
                     actualValue: existingClaim?.actualValue || "",
                     claimAmount: existingClaim?.claimAmount || 0,
                     notes: existingClaim?.notes || "",
@@ -708,7 +709,6 @@ const ListLoadingEntry = () => {
             });
           }
 
-          // Now, add any existing claims from latestEntry that aren't already in initialClaims
           if (latestEntry.qualityClaims?.length > 0) {
             const existingClaimIds = new Set(
               initialClaims.map((c) => c.parameterId || c.parameterName),
@@ -724,61 +724,74 @@ const ListLoadingEntry = () => {
                 if (pId && !pName) {
                   pName = paramIdToNameMap.get(pId);
                 }
-                // Preserve all existing fields, including paramValues
                 return {
                   ...claim,
                   parameterName: pName || claim.parameterName,
-                  // If paramValues are missing, try to get them from commodity parameters if possible
-                  paramValues: claim.paramValues || (() => {
-                    if (fetchedCompany && selfOrder?.commodity) {
-                      const commodity = fetchedCompany.commodities?.find(
-                        (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
-                      );
-                      if (commodity && commodity.parameters) {
-                        const param = commodity.parameters.find(
-                          (p) =>
-                            (p.parameterId && String(p.parameterId) === pId) ||
-                            (p.parameter && pName && p.parameter.toLowerCase() === pName.toLowerCase())
+                  paramValues:
+                    claim.paramValues ||
+                    (() => {
+                      if (fetchedCompany && selfOrder?.commodity) {
+                        const commodity = fetchedCompany.commodities?.find(
+                          (c) =>
+                            c.name.toLowerCase() ===
+                            selfOrder.commodity.toLowerCase(),
                         );
-                        return param?.values || [];
+                        if (commodity && commodity.parameters) {
+                          const param = commodity.parameters.find(
+                            (p) =>
+                              (p.parameterId &&
+                                String(p.parameterId) === pId) ||
+                              (p.parameter &&
+                                pName &&
+                                p.parameter.toLowerCase() ===
+                                  pName.toLowerCase()),
+                          );
+                          return param?.values || [];
+                        }
                       }
-                    }
-                    return [];
-                  })(),
+                      return [];
+                    })(),
                 };
               });
             initialClaims = [...initialClaims, ...extraClaims];
           }
 
-          // If still no claims, just use latestEntry's quality claims
-          if (initialClaims.length === 0 && latestEntry.qualityClaims?.length > 0) {
+          if (
+            initialClaims.length === 0 &&
+            latestEntry.qualityClaims?.length > 0
+          ) {
             const claimsWithNames = latestEntry.qualityClaims.map((claim) => {
               let pName = claim.parameterName;
               const pId = String(claim.parameterId || "");
               if (pId && !pName) {
                 pName = paramIdToNameMap.get(pId);
               }
-              // Preserve all existing fields, including paramValues
               return {
                 ...claim,
                 parameterName: pName || claim.parameterName,
-                // If paramValues are missing, try to get them from commodity parameters if possible
-                paramValues: claim.paramValues || (() => {
-                  if (fetchedCompany && selfOrder?.commodity) {
-                    const commodity = fetchedCompany.commodities?.find(
-                      (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
-                    );
-                    if (commodity && commodity.parameters) {
-                      const param = commodity.parameters.find(
-                        (p) =>
-                          (p.parameterId && String(p.parameterId) === pId) ||
-                          (p.parameter && pName && p.parameter.toLowerCase() === pName.toLowerCase())
+                paramValues:
+                  claim.paramValues ||
+                  (() => {
+                    if (fetchedCompany && selfOrder?.commodity) {
+                      const commodity = fetchedCompany.commodities?.find(
+                        (c) =>
+                          c.name.toLowerCase() ===
+                          selfOrder.commodity.toLowerCase(),
                       );
-                      return param?.values || [];
+                      if (commodity && commodity.parameters) {
+                        const param = commodity.parameters.find(
+                          (p) =>
+                            (p.parameterId && String(p.parameterId) === pId) ||
+                            (p.parameter &&
+                              pName &&
+                              p.parameter.toLowerCase() ===
+                                pName.toLowerCase()),
+                        );
+                        return param?.values || [];
+                      }
                     }
-                  }
-                  return [];
-                })(),
+                    return [];
+                  })(),
               };
             });
             initialClaims = claimsWithNames;
@@ -844,7 +857,6 @@ const ListLoadingEntry = () => {
       setEditEntry((prev) => {
         const updated = { ...prev, [name]: value };
 
-        // If cancelled, don't recalculate anything
         if (prev.isRejected) {
           return updated;
         }
@@ -1026,7 +1038,9 @@ const ListLoadingEntry = () => {
         unloadingDate: editEntry.unloadingDate
           ? new Date(editEntry.unloadingDate).toISOString()
           : null,
-        dueDate: editEntry.dueDate ? new Date(editEntry.dueDate).toISOString() : null,
+        dueDate: editEntry.dueDate
+          ? new Date(editEntry.dueDate).toISOString()
+          : null,
         deliveryDate: editEntry.deliveryDate
           ? new Date(editEntry.deliveryDate).toISOString()
           : null,
@@ -1260,8 +1274,10 @@ const ListLoadingEntry = () => {
         paymentTermsMap[entry.saudaNo] || "N/A",
         rateMap[entry.saudaNo] ? `₹ ${rateMap[entry.saudaNo]}` : "N/A",
         entry.commodity || "N/A",
-        entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
-        entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
+        entry.loadingWeight ? Number(entry.loadingWeight).toFixed(3) : "0.000",
+        entry.unloadingWeight
+          ? Number(entry.unloadingWeight).toFixed(3)
+          : "0.000",
         <span
           key={`brokerage-${entry._id}`}
           className="font-bold text-slate-600"
@@ -1278,15 +1294,15 @@ const ListLoadingEntry = () => {
             entry.isRejected
               ? "bg-red-200 text-red-800"
               : statusMap[entry.saudaNo] === "closed"
-              ? "bg-red-100 text-red-700"
-              : "bg-emerald-100 text-emerald-700"
+                ? "bg-red-100 text-red-700"
+                : "bg-emerald-100 text-emerald-700"
           }`}
         >
           {entry.isRejected
             ? "Rejected"
             : statusMap[entry.saudaNo] === "closed"
-            ? "Closed"
-            : "Active"}
+              ? "Closed"
+              : "Active"}
         </span>,
         entry.lorryNumber,
         transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
@@ -1467,9 +1483,7 @@ const ListLoadingEntry = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
             {loading ? (
-              <div className="py-12">
-                <Loading />
-              </div>
+              <Loading />
             ) : (
               <>
                 {loadingEntries.length === 0 ? (
@@ -1549,6 +1563,21 @@ const ListLoadingEntry = () => {
                       setCurrentSelfOrder(null);
                     }}
                     isSaving={isSaving}
+                    onNavigateToPaymentReceived={(params) => {
+                      const qs = new URLSearchParams();
+                      if (params.payableAmount)
+                        qs.set("amount", String(params.payableAmount));
+                      if (params.loadingEntryId)
+                        qs.set("entryId", params.loadingEntryId);
+                      if (params.buyerCompany)
+                        qs.set("buyerCompany", params.buyerCompany);
+                      if (params.supplierCompany)
+                        qs.set("supplierCompany", params.supplierCompany);
+                      if (params.saudaNo) qs.set("saudaNo", params.saudaNo);
+                      if (params.lorryNumber)
+                        qs.set("lorryNumber", params.lorryNumber);
+                      navigate(`/payment-received/add?${qs.toString()}`);
+                    }}
                   />
                 )
               )}

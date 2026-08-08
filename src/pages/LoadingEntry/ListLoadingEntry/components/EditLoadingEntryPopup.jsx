@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { FaMoneyBillWave } from "react-icons/fa";
 import QualityClaimsTable, { calculateClaimAmount } from "./QualityClaimsTable";
 
 const DataDropdown = lazy(
@@ -24,6 +25,7 @@ const EditLoadingEntryPopup = ({
   paymentTermsMap,
   onClose,
   isSaving,
+  onNavigateToPaymentReceived,
 }) => {
   const qualityClaims = Array.isArray(editEntry?.qualityClaims)
     ? editEntry.qualityClaims
@@ -53,7 +55,7 @@ const EditLoadingEntryPopup = ({
     if (editEntry.isRejected) {
       return "0.00";
     }
-    
+
     const rate = Number(currentSelfOrder?.rate || 0);
     const weight = Number(editEntry.unloadingWeight || 0);
     const totalBill = rate * weight;
@@ -62,7 +64,7 @@ const EditLoadingEntryPopup = ({
     const gstPercent = Number(currentSelfOrder?.gst) || 0;
     const gstAmount = (totalBill - cdAmount) * (gstPercent / 100);
     const netAmount = totalBill - cdAmount + gstAmount;
-    
+
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
       : qualityClaims.reduce(
@@ -73,7 +75,7 @@ const EditLoadingEntryPopup = ({
     const otherCharges = Number(editEntry.otherCharges || 0);
     const bankCharges = Number(editEntry.bankCharges || 0);
     const tds = Number(editEntry.tds || 0);
-    
+
     return (
       netAmount -
       totalClaim -
@@ -85,7 +87,11 @@ const EditLoadingEntryPopup = ({
   };
 
   const handleRejectLorry = () => {
-    if (window.confirm("Are you sure you want to reject this lorry? This will set all brokerage and payable amounts to 0.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to reject this lorry? This will set all brokerage and payable amounts to 0.",
+      )
+    ) {
       setEditEntry((prev) => ({
         ...prev,
         isRejected: true,
@@ -98,10 +104,10 @@ const EditLoadingEntryPopup = ({
         otherCharges: 0,
         bankCharges: 0,
         tds: 0,
-        qualityClaims: (prev.qualityClaims || []).map(claim => ({
+        qualityClaims: (prev.qualityClaims || []).map((claim) => ({
           ...claim,
-          claimAmount: 0
-        }))
+          claimAmount: 0,
+        })),
       }));
     }
   };
@@ -339,16 +345,20 @@ const EditLoadingEntryPopup = ({
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1">
-            Loading Weight
+            Loading Weight (Tons)
           </label>
           <input
             type="number"
             name="loadingWeight"
-            value={editEntry.loadingWeight || ""}
+            value={
+              editEntry.loadingWeight != null && editEntry.loadingWeight !== ""
+                ? Number(editEntry.loadingWeight).toFixed(3)
+                : ""
+            }
             onChange={handleEditFieldChange}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             aria-label="Loading Weight"
-            step="0.01"
+            step="0.001"
           />
         </div>
         <div>
@@ -366,16 +376,21 @@ const EditLoadingEntryPopup = ({
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1">
-            Unloading Weight
+            Unloading Weight (Tons)
           </label>
           <input
             type="number"
             name="unloadingWeight"
-            value={editEntry.unloadingWeight || ""}
+            value={
+              editEntry.unloadingWeight != null &&
+              editEntry.unloadingWeight !== ""
+                ? Number(editEntry.unloadingWeight).toFixed(3)
+                : ""
+            }
             onChange={handleEditFieldChange}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             aria-label="Unloading Weight"
-            step="0.01"
+            step="0.001"
           />
         </div>
         <div>
@@ -555,7 +570,6 @@ const EditLoadingEntryPopup = ({
             </h4>
 
             <div className="space-y-4">
-              {/* Total Bill Value */}
               <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl shadow-sm border border-emerald-200">
                 <span className="font-bold text-slate-800 text-sm">
                   Total Bill Value:
@@ -569,7 +583,6 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {/* CD Percentage & Amount */}
               <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200">
                 <span className="font-bold text-slate-700 text-sm">
                   Less CD ({Number(currentSelfOrder?.cd || 0).toFixed(2)}%):
@@ -584,7 +597,6 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {/* GST Percentage & Amount */}
               <div className="flex justify-between items-center p-3 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl shadow-sm border border-cyan-200">
                 <span className="font-bold text-slate-700 text-sm">
                   Add GST ({Number(currentSelfOrder?.gst || 0).toFixed(2)}%):
@@ -602,7 +614,6 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {/* Net Amount */}
               <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-200">
                 <span className="font-bold text-slate-700 text-sm">
                   Net Amount:
@@ -625,7 +636,6 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {/* Manual Calculation Rate */}
               {editEntry.manualCalculationRate && (
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
                   <span className="font-semibold text-slate-700 text-sm">
@@ -637,7 +647,6 @@ const EditLoadingEntryPopup = ({
                 </div>
               )}
 
-              {/* Total Claim */}
               <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-orange-50 rounded-xl shadow-sm border border-green-200">
                 <span className="font-bold text-slate-800 text-sm">
                   Less Total Claim:
@@ -647,9 +656,7 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {/* Deductions Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 2nd Claim */}
                 <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-purple-200">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-700 text-sm">
@@ -659,7 +666,11 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.secondClaim != null ? editEntry.secondClaim : ""}
+                        value={
+                          editEntry.secondClaim != null
+                            ? editEntry.secondClaim
+                            : ""
+                        }
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -686,7 +697,6 @@ const EditLoadingEntryPopup = ({
                   />
                 </div>
 
-                {/* Other Charges */}
                 <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-teal-200">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-700 text-sm">
@@ -696,7 +706,11 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.otherCharges != null ? editEntry.otherCharges : ""}
+                        value={
+                          editEntry.otherCharges != null
+                            ? editEntry.otherCharges
+                            : ""
+                        }
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -723,7 +737,6 @@ const EditLoadingEntryPopup = ({
                   />
                 </div>
 
-                {/* Bank Charges */}
                 <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-orange-200">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-700 text-sm">
@@ -733,7 +746,11 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.bankCharges != null ? editEntry.bankCharges : ""}
+                        value={
+                          editEntry.bankCharges != null
+                            ? editEntry.bankCharges
+                            : ""
+                        }
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -760,7 +777,6 @@ const EditLoadingEntryPopup = ({
                   />
                 </div>
 
-                {/* TDS */}
                 <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-red-200">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-700 text-sm">
@@ -798,7 +814,6 @@ const EditLoadingEntryPopup = ({
                 </div>
               </div>
 
-              {/* General Remarks */}
               <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-200">
                 <span className="text-sm font-bold text-slate-700 block mb-2">
                   General Remarks:
@@ -817,12 +832,33 @@ const EditLoadingEntryPopup = ({
                 />
               </div>
 
-              {/* Payable Amount */}
-              <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
-                <span className="text-lg font-bold">Payable Amount:</span>
-                <span className="text-3xl font-black">
-                  ₹ {calculatePayableAmount()}
-                </span>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
+                <div className="flex-1 w-full sm:w-auto">
+                  <span className="text-lg font-bold">Payable Amount:</span>
+                  <span className="text-3xl font-black ml-3">
+                    ₹ {calculatePayableAmount()}
+                  </span>
+                </div>
+                {onNavigateToPaymentReceived && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onNavigateToPaymentReceived({
+                        payableAmount: calculatePayableAmount(),
+                        loadingEntryId: editEntry._id,
+                        buyerCompany:
+                          editEntry.buyerCompany || editEntry.consignee || "",
+                        supplierCompany: editEntry.supplierCompany || "",
+                        saudaNo: editEntry.saudaNo || "",
+                        lorryNumber: editEntry.lorryNumber || "",
+                      })
+                    }
+                    className="flex items-center gap-2 px-5 py-3 bg-white text-emerald-700 rounded-xl font-black text-sm uppercase tracking-wider shadow-xl hover:bg-emerald-50 transition-all border-2 border-white/50"
+                  >
+                    <FaMoneyBillWave size={16} />
+                    Record Payment Received
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -850,7 +886,11 @@ const EditLoadingEntryPopup = ({
                 <span className="text-slate-400 font-bold text-lg">₹</span>
                 <input
                   type="number"
-                  value={editEntry.manualClaimAmount != null ? editEntry.manualClaimAmount : ""}
+                  value={
+                    editEntry.manualClaimAmount != null
+                      ? editEntry.manualClaimAmount
+                      : ""
+                  }
                   onChange={(e) => {
                     setEditEntry((prev) => ({
                       ...prev,
@@ -974,10 +1014,12 @@ const EditLoadingEntryPopup = ({
 
       {editEntry.isRejected && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-semibold">This lorry has been rejected. All amounts are set to 0.</p>
+          <p className="text-red-800 font-semibold">
+            This lorry has been rejected. All amounts are set to 0.
+          </p>
         </div>
       )}
-      
+
       <div className="flex justify-between items-center pt-4 border-t mt-4">
         {!editEntry.isRejected && (
           <button

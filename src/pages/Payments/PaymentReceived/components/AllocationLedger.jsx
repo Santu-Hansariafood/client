@@ -41,6 +41,8 @@ const AllocationLedger = ({
   onSaveAll,
   loading,
   ledgerTopSummary = {},
+  isEditMode = false,
+  editingPaymentMappings = [],
 }) => {
   const {
     creditEntryTotal = 0,
@@ -50,9 +52,7 @@ const AllocationLedger = ({
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
   const showPagination =
-    entriesTotal > entriesPageSize &&
-    !fullCompanyMapping &&
-    !buyerOnlyMapping;
+    entriesTotal > entriesPageSize && !fullCompanyMapping && !buyerOnlyMapping;
   const showMappingBanner = hasBuyerCompany;
 
   const totalAllocated = (entries || []).reduce((sum, e) => {
@@ -100,9 +100,10 @@ const AllocationLedger = ({
                 </span>
                 <span className="text-sm font-black italic tracking-tight tabular-nums">
                   Rs.{" "}
-                  {Math.abs(allocationSource === "advance"
-                    ? unallocatedBalance
-                    : creditBalanceRemaining
+                  {Math.abs(
+                    allocationSource === "advance"
+                      ? unallocatedBalance
+                      : creditBalanceRemaining,
                   ).toLocaleString("en-IN")}
                 </span>
               </div>
@@ -121,7 +122,9 @@ const AllocationLedger = ({
                 ) : (
                   <FaCloudUploadAlt size={16} />
                 )}
-                {loading ? "Saving..." : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
+                {loading
+                  ? "Saving..."
+                  : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
               </button>
             )}
 
@@ -193,8 +196,8 @@ const AllocationLedger = ({
           />
         ) : (
           <p className="text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-            Select a <span className="text-[#1e3a5f]">buyer company</span> to load
-            linked sellers and allocate your payment entry amount.
+            Select a <span className="text-[#1e3a5f]">buyer company</span> to
+            load linked sellers and allocate your payment entry amount.
           </p>
         )}
       </div>
@@ -208,7 +211,10 @@ const AllocationLedger = ({
             <p className="text-sm text-slate-500 font-medium max-w-md mt-2">
               DATE & SAUDA, LORRY, PARTIES, BREAKDOWN, ALLOCATION and ACTION
               rows appear only for your selected buyer
-              {formData.ledgerType !== "Seller" ? " (and seller when chosen)" : ""}.
+              {formData.ledgerType !== "Seller"
+                ? " (and seller when chosen)"
+                : ""}
+              .
             </p>
           </div>
         ) : fetchingEntries ? (
@@ -243,7 +249,10 @@ const AllocationLedger = ({
                   Cr. Remaining:
                 </span>
                 <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1e3a5f] text-[10px] font-black tabular-nums border border-blue-100">
-                  Rs. {Math.abs(creditEntryTotal - debitToSeller).toLocaleString("en-IN")}
+                  Rs.{" "}
+                  {Math.abs(creditEntryTotal - debitToSeller).toLocaleString(
+                    "en-IN",
+                  )}
                 </span>
                 {buyerOnlyMapping && (
                   <span className="text-[10px] font-bold text-slate-500">
@@ -295,7 +304,8 @@ const AllocationLedger = ({
               ) : fullCompanyMapping && entries.length > 0 ? (
                 <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
                   {entries.length} pending line
-                  {entries.length !== 1 ? "s" : ""} · adjust against entry amount
+                  {entries.length !== 1 ? "s" : ""} · adjust against entry
+                  amount
                 </p>
               ) : null}
             </div>
@@ -317,7 +327,9 @@ const AllocationLedger = ({
                   </p>
                 </div>
 
-                <div className="text-white/20 text-3xl font-thin hidden lg:block">/</div>
+                <div className="text-white/20 text-3xl font-thin hidden lg:block">
+                  /
+                </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
@@ -341,9 +353,13 @@ const AllocationLedger = ({
                     Closing Balance
                   </p>
                   <div className="flex items-baseline gap-2">
-                    <p className={`text-2xl font-black tabular-nums tracking-tight ${
-                      creditBalanceRemaining > 0.01 ? "text-emerald-400" : "text-white/60"
-                    }`}>
+                    <p
+                      className={`text-2xl font-black tabular-nums tracking-tight ${
+                        creditBalanceRemaining > 0.01
+                          ? "text-emerald-400"
+                          : "text-white/60"
+                      }`}
+                    >
                       {formatLedgerAmount(creditBalanceRemaining)}
                     </p>
                     <span className="text-[10px] font-black text-blue-300/60 uppercase">
@@ -369,7 +385,9 @@ const AllocationLedger = ({
                     ) : (
                       <FaCloudUploadAlt size={16} />
                     )}
-                    {loading ? "Saving..." : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
+                    {loading
+                      ? "Saving..."
+                      : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
                   </button>
                 )}
                 <div className="text-right">
@@ -389,7 +407,9 @@ const AllocationLedger = ({
         ) : (
           <div className="py-32 flex flex-col items-center justify-center text-center px-8">
             <FaHistory size={32} className="text-slate-200 mb-4" />
-            <h4 className="text-lg font-bold text-slate-800">No records found</h4>
+            <h4 className="text-lg font-bold text-slate-800">
+              No records found
+            </h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
                 ? (ledgerBalance.advanceBalance ?? 0) > 0

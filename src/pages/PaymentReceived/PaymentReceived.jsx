@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback } from "react";
+import { lazy, Suspense, useCallback } from "react";
 import { FaPlus, FaClipboardList } from "react-icons/fa";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
@@ -28,23 +28,28 @@ const PaymentReceived = () => {
     setSelectedPayment,
     setShowForm,
     setShowDetails,
-    fetchPayments,
     savePayment,
     deletePayment,
     scanVoucher,
   } = usePaymentReceived();
 
-  const handleViewDetails = useCallback((payment) => {
-    setSelectedPayment(payment);
-    setShowDetails(true);
-    setShowForm(false);
-  }, [setSelectedPayment, setShowDetails, setShowForm]);
+  const handleViewDetails = useCallback(
+    (payment) => {
+      setSelectedPayment(payment);
+      setShowDetails(true);
+      setShowForm(false);
+    },
+    [setSelectedPayment, setShowDetails, setShowForm],
+  );
 
-  const handleEdit = useCallback((payment) => {
-    setSelectedPayment(payment);
-    setShowForm(true);
-    setShowDetails(false);
-  }, [setSelectedPayment, setShowForm, setShowDetails]);
+  const handleEdit = useCallback(
+    (payment) => {
+      setSelectedPayment(payment);
+      setShowForm(true);
+      setShowDetails(false);
+    },
+    [setSelectedPayment, setShowForm, setShowDetails],
+  );
 
   const handleAddNew = useCallback(() => {
     setSelectedPayment(null);

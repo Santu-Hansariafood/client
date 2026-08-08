@@ -1,4 +1,9 @@
-import { FaSave, FaMoneyBillWave, FaHistory, FaArrowRight } from "react-icons/fa";
+import {
+  FaSave,
+  FaMoneyBillWave,
+  FaHistory,
+  FaArrowRight,
+} from "react-icons/fa";
 import DateSelector from "../../../../common/DateSelector/DateSelector";
 
 const PaymentRecordingPanel = ({
@@ -14,6 +19,7 @@ const PaymentRecordingPanel = ({
   companyPair,
   fullCompanyMapping,
   history = [],
+  isEditMode = false,
 }) => {
   const totalBuyerAdvance = ledgerBalance.totalAdvanceBalance || 0;
   const pairSpecificAdvance = ledgerBalance.advanceBalance || 0;
@@ -21,7 +27,9 @@ const PaymentRecordingPanel = ({
   const pendingAmount = ledgerTopSummary.creditBalanceRemaining ?? 0;
 
   const handleDateChange = (date, name) => {
-    const formattedDate = date ? new Date(date).toISOString().split("T")[0] : "";
+    const formattedDate = date
+      ? new Date(date).toISOString().split("T")[0]
+      : "";
     handleInputChange({ target: { name, value: formattedDate } });
   };
 
@@ -92,10 +100,11 @@ const PaymentRecordingPanel = ({
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-12 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
                   Credit amount
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-black">
@@ -104,25 +113,101 @@ const PaymentRecordingPanel = ({
                   <input
                     type="number"
                     name="amount"
-                    value={formData.amount === 0 ? "" : formData.amount}
+                    value={
+                      formData.amount === 0
+                        ? ""
+                        : Number(formData.amount).toFixed(2)
+                    }
                     onChange={handleInputChange}
                     onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
-                    className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-emerald-100 bg-white focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-black text-lg text-emerald-900 shadow-sm"
+                    disabled={isEditMode}
+                    step="0.01"
+                    className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
+                      isEditMode
+                        ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
+                        : "border-emerald-100 focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-emerald-900"
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+                  Claim amount
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 font-black">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="claim"
+                    value={
+                      formData.claim === 0
+                        ? ""
+                        : Number(formData.claim).toFixed(2)
+                    }
+                    onChange={handleInputChange}
+                    onWheel={(e) => e.target.blur()}
+                    placeholder="0.00"
+                    disabled={isEditMode}
+                    step="0.01"
+                    className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
+                      isEditMode
+                        ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
+                        : "border-purple-100 focus:ring-4 focus:ring-purple-600/10 focus:border-purple-600 text-purple-900"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+                  TDS amount
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-600 font-black">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="tds"
+                    value={
+                      formData.tds === 0 ? "" : Number(formData.tds).toFixed(2)
+                    }
+                    onChange={handleInputChange}
+                    onWheel={(e) => e.target.blur()}
+                    placeholder="0.00"
+                    disabled={isEditMode}
+                    step="0.01"
+                    className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
+                      isEditMode
+                        ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
+                        : "border-rose-100 focus:ring-4 focus:ring-rose-600/10 focus:border-rose-600 text-rose-900"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
                   Payment mode
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
                 </label>
                 <div className="relative">
                   <select
                     name="paymentMode"
                     value={formData.paymentMode}
                     onChange={handleInputChange}
-                    className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer shadow-sm"
+                    disabled={isEditMode}
+                    className={`w-full h-[48px] px-4 rounded-xl border bg-white outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer shadow-sm ${
+                      isEditMode
+                        ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed opacity-80"
+                        : "border-slate-200 focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                    }`}
                   >
                     {paymentModes.map((mode) => (
                       <option key={mode.value} value={mode.value}>
@@ -148,8 +233,9 @@ const PaymentRecordingPanel = ({
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
                   Narration
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
                 </label>
                 <input
                   type="text"
@@ -157,42 +243,72 @@ const PaymentRecordingPanel = ({
                   value={formData.remarks}
                   onChange={handleInputChange}
                   placeholder="Payment details..."
-                  className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 shadow-sm"
+                  disabled={isEditMode}
+                  className={`w-full h-[48px] px-4 rounded-xl border bg-white outline-none transition-all font-bold text-slate-900 shadow-sm ${
+                    isEditMode
+                      ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
+                      : "border-slate-200 focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                  }`}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
                   Credit date
+                  {isEditMode && <span className="text-amber-600">🔒</span>}
                 </label>
-                <DateSelector
-                  selectedDate={formData.allocationDate}
-                  onChange={(date) => handleDateChange(date, "allocationDate")}
-                />
+                <div
+                  className={isEditMode ? "pointer-events-none opacity-70" : ""}
+                >
+                  <DateSelector
+                    selectedDate={formData.allocationDate}
+                    onChange={(date) =>
+                      !isEditMode && handleDateChange(date, "allocationDate")
+                    }
+                  />
+                </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isEditMode
+                      ? "bg-amber-200 text-amber-700"
+                      : "bg-slate-200 text-slate-500"
+                  }`}
+                >
                   <FaHistory size={12} />
                 </div>
                 <p className="text-[10px] font-bold text-slate-500 max-w-md">
-                  Credit balance from buyer will be recorded. Use the Allocation table below to post this credit against specific lorry bills (Dr.).
+                  {isEditMode
+                    ? "Edit Mode — adjust lorry allocations below. Header values (Amount, Claim, TDS) are locked."
+                    : "Credit balance from buyer will be recorded. Use the Allocation table below to post this credit against specific lorry bills (Dr.)."}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleRecordAdvance}
-                disabled={loading || formData.amount <= 0 || !hasResolvedLedger}
-                className={`h-[48px] px-8 flex items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                  formData.amount > 0 && !loading && hasResolvedLedger
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"
-                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                <FaSave />
-                {loading ? "Saving..." : "Record Credit Entry"}
-              </button>
+              {!isEditMode && (
+                <button
+                  type="button"
+                  onClick={handleRecordAdvance}
+                  disabled={
+                    loading || formData.amount <= 0 || !hasResolvedLedger
+                  }
+                  className={`h-[48px] px-8 flex items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                    formData.amount > 0 && !loading && hasResolvedLedger
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  }`}
+                >
+                  <FaSave />
+                  {loading ? "Saving..." : "Record Credit Entry"}
+                </button>
+              )}
+              {isEditMode && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-[10px] font-black uppercase tracking-wider">
+                  <span>🔒</span>
+                  Header Locked · Edit Allocations Below
+                </div>
+              )}
             </div>
           </div>
         </div>
