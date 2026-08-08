@@ -572,7 +572,7 @@ const EditLoadingEntryPopup = ({
               {/* CD Percentage & Amount */}
               <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200">
                 <span className="font-bold text-slate-700 text-sm">
-                  Less CD ({Number(currentSelfOrder?.cd || 0).toFixed(1)}%):
+                  Less CD ({Number(currentSelfOrder?.cd || 0).toFixed(2)}%):
                 </span>
                 <span className="text-lg font-black text-red-600">
                   - ₹{" "}
@@ -587,7 +587,7 @@ const EditLoadingEntryPopup = ({
               {/* GST Percentage & Amount */}
               <div className="flex justify-between items-center p-3 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl shadow-sm border border-cyan-200">
                 <span className="font-bold text-slate-700 text-sm">
-                  Add GST ({Number(currentSelfOrder?.gst || 0).toFixed(1)}%):
+                  Add GST ({Number(currentSelfOrder?.gst || 0).toFixed(2)}%):
                 </span>
                 <span className="text-lg font-black text-teal-700">
                   + ₹{" "}

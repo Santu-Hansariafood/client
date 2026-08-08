@@ -37,7 +37,7 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
           {cdValue > 0 && (
             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-yellow-100">
               <span className="font-semibold text-slate-700">
-                Less: CD ({cdValue.toFixed(1)}%)
+                Less: CD ({cdValue.toFixed(2)}%)
               </span>
               <span className="text-lg font-bold text-yellow-600">
                 - ₹ {cdAmount.toFixed(2)}
@@ -55,7 +55,7 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
           {gstValue > 0 && (
             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100">
               <span className="font-semibold text-slate-700">
-                Add: GST ({gstValue.toFixed(1)}%)
+                Add: GST ({gstValue.toFixed(2)}%)
               </span>
               <span className="text-lg font-bold text-pink-600">
                 + ₹ {gstAmount.toFixed(2)}
