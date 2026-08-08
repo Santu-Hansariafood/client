@@ -2,8 +2,8 @@ import { FaCoins, FaMinus } from "react-icons/fa";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const CreditBalancePanel = ({
-  creditEntryTotal = 0, // This is the payment amount from the buyer (Cr.)
-  debitToSeller = 0, // This is the sum of lorry amounts (Dr.)
+  creditEntryTotal = 0,
+  debitToSeller = 0,
   debitPostedToSeller = 0,
   debitPendingInForm = 0,
   creditBalanceRemaining = 0,
@@ -18,10 +18,6 @@ const CreditBalancePanel = ({
   const showSummary = creditEntryTotal > 0 || debitToSeller > 0;
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
-  // Final terminology mapping:
-  // Payment Received (Entry) -> Credit balance (Emerald)
-  // Bill Amounts (Lorry) -> Debit balance (Rose)
-  
   const creditLabel = fullCompanyMapping && buyerCompany && supplierCompany
     ? "Total Credit (Cr.)"
     : isAdvance

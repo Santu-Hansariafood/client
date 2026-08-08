@@ -1349,7 +1349,7 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (!/^\d*\.?\d*$/.test(amount)) return;
+    if (!/^\d*\.?\d{0,2}$/.test(amount)) return;
 
     const pool = Number(availableAllocationPool) || 0;
     const remaining = getRemainingAllocationForRow(uiKey);
@@ -2137,20 +2137,29 @@ const AddPaymentReceived = () => {
                   Less: Bank Charges
                 </span>
                 <input
-                  type="number"
-                  value={details.bankCharges}
+                  type="text"
+                  inputMode="decimal"
+                  value={
+                    row.bankCharges === 0 || row.bankCharges === ""
+                      ? ""
+                      : String(row.bankCharges)
+                  }
                   onChange={(e) => {
-                    const newBankCharges = parseFloat(e.target.value) || 0;
-                    setEntries((prev) =>
-                      prev.map((e) =>
-                        e.uiKey === row.uiKey
-                          ? { ...e, bankCharges: newBankCharges }
-                          : e,
-                      ),
-                    );
+                    const v = e.target.value;
+                    if (v === "" || /^\d*\.?\d{0,2}$/.test(v)) {
+                      const newBankCharges = v === "" ? 0 : parseFloat(v) || 0;
+                      setEntries((prev) =>
+                        prev.map((e) =>
+                          e.uiKey === row.uiKey
+                            ? { ...e, bankCharges: newBankCharges }
+                            : e,
+                        ),
+                      );
+                    }
                   }}
                   disabled={row.isSaved && user?.role !== "Admin"}
                   className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold outline-none tabular-nums"
+                  placeholder="0.00"
                 />
               </div>
               <div className="flex flex-col gap-0.5">

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FaSave,
   FaMoneyBillWave,
@@ -26,11 +27,63 @@ const PaymentRecordingPanel = ({
 
   const pendingAmount = ledgerTopSummary.creditBalanceRemaining ?? 0;
 
+  const [rawMoneyValues, setRawMoneyValues] = useState({
+    amount: "",
+    claim: "",
+    tds: "",
+  });
+  const [focusedField, setFocusedField] = useState(null);
+
   const handleDateChange = (date, name) => {
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
       : "";
     handleInputChange({ target: { name, value: formattedDate } });
+  };
+
+  const MONEY_REGEX = /^\d*\.?\d{0,2}$/;
+
+  const handleMoneyChange = (e, name) => {
+    const rawValue = e.target.value;
+    if (rawValue === "" || MONEY_REGEX.test(rawValue)) {
+      setRawMoneyValues((prev) => ({ ...prev, [name]: rawValue }));
+      handleInputChange({ target: { name, value: rawValue } });
+    }
+  };
+
+  const handleMoneyFocus = (name) => {
+    setFocusedField(name);
+    const currentValue = formData[name];
+    if (currentValue !== 0 && currentValue != null) {
+      setRawMoneyValues((prev) => ({
+        ...prev,
+        [name]: String(currentValue),
+      }));
+    }
+  };
+
+  const handleMoneyBlur = (e, name) => {
+    setFocusedField(null);
+    setRawMoneyValues((prev) => ({ ...prev, [name]: "" }));
+    const rawValue = e.target.value;
+    if (rawValue === "") return;
+    const numValue = parseFloat(rawValue);
+    if (!isNaN(numValue)) {
+      handleInputChange({
+        target: { name, value: numValue.toFixed(2) },
+      });
+    }
+  };
+
+  const formatMoneyValue = (name, numValue) => {
+    if (focusedField === name) {
+      const raw = rawMoneyValues[name];
+      if (raw !== "") return raw;
+    }
+    if (numValue === 0 || numValue === "" || numValue == null) return "";
+    const num = Number(numValue);
+    if (Number.isNaN(num)) return "";
+    return num.toFixed(2);
   };
 
   return (
@@ -111,18 +164,16 @@ const PaymentRecordingPanel = ({
                     ₹
                   </span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     name="amount"
-                    value={
-                      formData.amount === 0
-                        ? ""
-                        : Number(formData.amount).toFixed(2)
-                    }
-                    onChange={handleInputChange}
+                    value={formatMoneyValue("amount", formData.amount)}
+                    onChange={(e) => handleMoneyChange(e, "amount")}
+                    onFocus={() => handleMoneyFocus("amount")}
+                    onBlur={(e) => handleMoneyBlur(e, "amount")}
                     onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
                     disabled={isEditMode}
-                    step="0.01"
                     className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
                       isEditMode
                         ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
@@ -142,18 +193,16 @@ const PaymentRecordingPanel = ({
                     ₹
                   </span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     name="claim"
-                    value={
-                      formData.claim === 0
-                        ? ""
-                        : Number(formData.claim).toFixed(2)
-                    }
-                    onChange={handleInputChange}
+                    value={formatMoneyValue("claim", formData.claim)}
+                    onChange={(e) => handleMoneyChange(e, "claim")}
+                    onFocus={() => handleMoneyFocus("claim")}
+                    onBlur={(e) => handleMoneyBlur(e, "claim")}
                     onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
                     disabled={isEditMode}
-                    step="0.01"
                     className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
                       isEditMode
                         ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
@@ -173,16 +222,16 @@ const PaymentRecordingPanel = ({
                     ₹
                   </span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     name="tds"
-                    value={
-                      formData.tds === 0 ? "" : Number(formData.tds).toFixed(2)
-                    }
-                    onChange={handleInputChange}
+                    value={formatMoneyValue("tds", formData.tds)}
+                    onChange={(e) => handleMoneyChange(e, "tds")}
+                    onFocus={() => handleMoneyFocus("tds")}
+                    onBlur={(e) => handleMoneyBlur(e, "tds")}
                     onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
                     disabled={isEditMode}
-                    step="0.01"
                     className={`w-full h-[48px] pl-8 pr-4 rounded-xl border-2 bg-white outline-none transition-all font-black text-lg shadow-sm ${
                       isEditMode
                         ? "border-amber-200 bg-amber-50 text-slate-500 cursor-not-allowed"
