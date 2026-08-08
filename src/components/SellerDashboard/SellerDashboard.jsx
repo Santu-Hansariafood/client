@@ -6,9 +6,10 @@ import {
   useMemo,
   memo,
   useCallback,
+  useRef,
 } from "react";
 import PropTypes from "prop-types";
-import api from "../../utils/apiClient/apiClient";
+import api, { clearApiCache } from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import {
   FaGavel,
@@ -41,83 +42,89 @@ import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSecti
 
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
-const HeaderSection = memo(({ userName, totalBrokerage, onPrintIDCard, isPrinting }) => {
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
-  }, []);
+// ===================== Sub‑components =====================
 
-  return (
-    <div className="relative bg-white border border-emerald-100 rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-emerald-50/30 skew-x-12 translate-x-1/4" />
+const HeaderSection = memo(
+  ({ userName, totalBrokerage, onPrintIDCard, isPrinting }) => {
+    const greeting = useMemo(() => {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Good Morning";
+      if (hour < 17) return "Good Afternoon";
+      return "Good Evening";
+    }, []);
 
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
-        <div className="flex items-center gap-3 sm:gap-4 md:gap-8">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-28 md:h-28 bg-white rounded-xl md:rounded-3xl flex items-center justify-center shadow-lg md:shadow-xl shadow-emerald-100 ring-2 md:ring-4 ring-emerald-50/50 p-1.5 md:p-3 shrink-0">
-            <img
-              src={logo}
-              alt="Hansaria Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-2">
-              <span className="h-1 w-1 md:h-2 md:w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[7px] md:text-[10px] font-black text-emerald-600 uppercase tracking-[0.1em] md:tracking-[0.3em] truncate">
-                Hansaria Seller Portal
-              </p>
+    return (
+      <div className="relative bg-white border border-emerald-100 rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-emerald-50/30 skew-x-12 translate-x-1/4" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-8">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-28 md:h-28 bg-white rounded-xl md:rounded-3xl flex items-center justify-center shadow-lg md:shadow-xl shadow-emerald-100 ring-2 md:ring-4 ring-emerald-50/50 p-1.5 md:p-3 shrink-0">
+              <img
+                src={logo}
+                alt="Hansaria Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h1 className="text-lg sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">
-              {greeting},{" "}
-              <span className="text-emerald-600 block sm:inline truncate">
-                Mr. {userName?.split(" ")[0] || "Partner"}
-              </span>
-            </h1>
-            <div className="flex items-center gap-3 mt-1 md:mt-2">
-              <p className="text-slate-500/60 text-[9px] md:text-sm font-semibold hidden sm:block line-clamp-1">
-                Strategic intelligence and material logistics at your fingertips.
-              </p>
-              <button
-                onClick={onPrintIDCard}
-                disabled={isPrinting}
-                className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-emerald-600 text-white rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
-              >
-                {isPrinting ? "Generating..." : "Print ID Card"}
-              </button>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-2">
+                <span className="h-1 w-1 md:h-2 md:w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[7px] md:text-[10px] font-black text-emerald-600 uppercase tracking-[0.1em] md:tracking-[0.3em] truncate">
+                  Hansaria Seller Portal
+                </p>
+              </div>
+              <h1 className="text-lg sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">
+                {greeting},{" "}
+                <span className="text-emerald-600 block sm:inline truncate">
+                  Mr. {userName?.split(" ")[0] || "Partner"}
+                </span>
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 md:mt-2">
+                <p className="text-slate-500/60 text-[9px] md:text-sm font-semibold hidden sm:block line-clamp-1">
+                  Strategic intelligence and material logistics at your
+                  fingertips.
+                </p>
+                <button
+                  onClick={onPrintIDCard}
+                  disabled={isPrinting}
+                  className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-emerald-600 text-white rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                >
+                  {isPrinting ? "Generating..." : "Print ID Card"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:border-l lg:border-emerald-100 lg:pl-10 w-full lg:w-auto">
-          <div className="bg-emerald-50/50 border border-emerald-100 px-4 py-3 md:px-10 md:py-6 rounded-[1rem] md:rounded-[2rem] flex-1 sm:min-w-[200px] lg:min-w-[240px] shadow-inner text-center">
-            <p className="text-[7px] md:text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest mb-0.5 md:mb-2">
-              Brokerage
-            </p>
-            <div className="flex items-baseline justify-center gap-1 md:gap-1.5">
-              <span className="text-[8px] md:text-xs font-black text-emerald-600/40">
-                Rs.
-              </span>
-              <span className="text-lg sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter">
-                {totalBrokerage.toLocaleString("en-IN")}
-              </span>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:border-l lg:border-emerald-100 lg:pl-10 w-full lg:w-auto">
+            <div className="bg-emerald-50/50 border border-emerald-100 px-4 py-3 md:px-10 md:py-6 rounded-[1rem] md:rounded-[2rem] flex-1 sm:min-w-[200px] lg:min-w-[240px] shadow-inner text-center">
+              <p className="text-[7px] md:text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest mb-0.5 md:mb-2">
+                Brokerage
+              </p>
+              <div className="flex items-baseline justify-center gap-1 md:gap-1.5">
+                <span className="text-[8px] md:text-xs font-black text-emerald-600/40">
+                  Rs.
+                </span>
+                <span className="text-lg sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter">
+                  {totalBrokerage.toLocaleString("en-IN")}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 HeaderSection.displayName = "HeaderSection";
-
 HeaderSection.propTypes = {
   userName: PropTypes.string,
   totalBrokerage: PropTypes.number,
   onPrintIDCard: PropTypes.func,
   isPrinting: PropTypes.bool,
 };
+
+// ------------------------------------------------------------
 
 const StatCard = memo(
   ({ title, value, unit, icon, colorClass, subtitle, onClick }) => {
@@ -135,7 +142,11 @@ const StatCard = memo(
         role={onClick ? "button" : "article"}
         tabIndex={onClick ? 0 : undefined}
         aria-label={`${title}: ${value} ${unit || ""}`}
-        className={`bg-white p-3 sm:p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${onClick ? "cursor-pointer hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-emerald-500" : ""}`}
+        className={`bg-white p-3 sm:p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${
+          onClick
+            ? "cursor-pointer hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            : ""
+        }`}
       >
         <div
           className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${colorClass} bg-opacity-10 shadow-inner ring-2 md:ring-4 ring-white shrink-0`}
@@ -184,6 +195,8 @@ StatCard.propTypes = {
   onClick: PropTypes.func,
 };
 
+// ------------------------------------------------------------
+
 const CommodityItem = memo(
   ({ item, totalQuantity, onAction, actionLabel, type = "commodity" }) => {
     const brokerage = item?.brokerage || 0;
@@ -201,7 +214,9 @@ const CommodityItem = memo(
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-5">
           <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
             <div
-              className={`h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-lg md:rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform ${type === "company" ? "bg-indigo-700" : "bg-emerald-700"}`}
+              className={`h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-lg md:rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform ${
+                type === "company" ? "bg-indigo-700" : "bg-emerald-700"
+              }`}
             >
               <span className="text-[10px] md:text-sm font-black tracking-tighter italic">
                 {(item?._id || "NA").substring(0, 2).toUpperCase()}
@@ -209,7 +224,9 @@ const CommodityItem = memo(
             </div>
             <div className="min-w-0 flex-1">
               <h4
-                className={`text-[10px] md:text-sm font-black uppercase tracking-wider truncate ${type === "company" ? "text-indigo-800" : "text-emerald-800"}`}
+                className={`text-[10px] md:text-sm font-black uppercase tracking-wider truncate ${
+                  type === "company" ? "text-indigo-800" : "text-emerald-800"
+                }`}
               >
                 {item?._id || "Unknown Entity"}
               </h4>
@@ -226,7 +243,9 @@ const CommodityItem = memo(
                   aria-hidden="true"
                 />
                 <span
-                  className={`text-[6px] md:text-[9px] font-black uppercase tracking-widest truncate ${type === "company" ? "text-indigo-500" : "text-emerald-500"}`}
+                  className={`text-[6px] md:text-[9px] font-black uppercase tracking-widest truncate ${
+                    type === "company" ? "text-indigo-500" : "text-emerald-500"
+                  }`}
                 >
                   {type === "company" ? "Verified Node" : "Market Sync"}
                 </span>
@@ -241,7 +260,9 @@ const CommodityItem = memo(
               </p>
               <div className="flex items-baseline justify-start sm:justify-end gap-0.5">
                 <span
-                  className={`text-xs md:text-lg font-black ${type === "company" ? "text-indigo-800" : "text-emerald-800"}`}
+                  className={`text-xs md:text-lg font-black ${
+                    type === "company" ? "text-indigo-800" : "text-emerald-800"
+                  }`}
                 >
                   {quantity.toFixed(1)}
                 </span>
@@ -260,7 +281,9 @@ const CommodityItem = memo(
                   ₹
                 </span>
                 <span
-                  className={`text-xs md:text-lg font-black ${type === "company" ? "text-indigo-800" : "text-emerald-800"}`}
+                  className={`text-xs md:text-lg font-black ${
+                    type === "company" ? "text-indigo-800" : "text-emerald-800"
+                  }`}
                 >
                   {brokerage.toLocaleString("en-IN", {
                     minimumFractionDigits: 0,
@@ -276,7 +299,11 @@ const CommodityItem = memo(
                   onAction(item?._id);
                 }}
                 aria-label={actionLabel || "Download Report"}
-                className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 transition-all shadow-sm shrink-0 ${type === "company" ? "hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50" : "hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50"}`}
+                className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 transition-all shadow-sm shrink-0 ${
+                  type === "company"
+                    ? "hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50"
+                    : "hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50"
+                }`}
                 title={actionLabel || "Download Invoice"}
               >
                 <FaDownload
@@ -296,7 +323,9 @@ const CommodityItem = memo(
           aria-valuemax="100"
         >
           <div
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${type === "company" ? "bg-indigo-500" : "bg-emerald-500"}`}
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${
+              type === "company" ? "bg-indigo-500" : "bg-emerald-500"
+            }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -306,7 +335,6 @@ const CommodityItem = memo(
 );
 
 CommodityItem.displayName = "CommodityItem";
-
 CommodityItem.propTypes = {
   item: PropTypes.shape({
     _id: PropTypes.string,
@@ -319,6 +347,8 @@ CommodityItem.propTypes = {
   actionLabel: PropTypes.string,
   type: PropTypes.oneOf(["commodity", "company"]),
 };
+
+// ===================== Main Component =====================
 
 const SellerDashboard = () => {
   const { mobile, user } = useAuth();
@@ -335,6 +365,7 @@ const SellerDashboard = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const [logoBase64, setLogoBase64] = useState(null);
 
+  // ---- Logo conversion ----
   useEffect(() => {
     const convertLogo = async () => {
       try {
@@ -350,6 +381,7 @@ const SellerDashboard = () => {
     convertLogo();
   }, []);
 
+  // ---- State ----
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
@@ -359,63 +391,100 @@ const SellerDashboard = () => {
   const [commodityBreakdown, setCommodityBreakdown] = useState([]);
   const [companyBreakdown, setCompanyBreakdown] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const abortControllerRef = useRef(null);
+  const visibilityTimerRef = useRef(null);
+  const hasRenderedDataRef = useRef(false);
 
+  // ---- Helpers ----
+  const normalizePhone = useCallback((p) => {
+    const m = String(p || "")
+      .trim()
+      .match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    return m ? m[1] : p;
+  }, []);
+
+  const retryWithBackoff = useCallback(
+    async (fn, retries = 2, delayMs = 1000) => {
+      let lastErr;
+      for (let i = 0; i <= retries; i++) {
+        try {
+          return await fn();
+        } catch (err) {
+          lastErr = err;
+          if (i === retries) break;
+          await new Promise((res) => setTimeout(res, delayMs * 2 ** i));
+        }
+      }
+      throw lastErr;
+    },
+    [],
+  );
+
+  // ---- Data fetching ----
   const fetchData = useCallback(
-    async (isMounted = true) => {
+    async (options = {}) => {
+      const { forceNetwork = false, showLoading = true } = options;
+
       if (!mobile) {
         setError("Identification required. Please log in again.");
         setLoading(false);
         return;
       }
 
-      try {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      const hadPriorData = hasRenderedDataRef.current;
+      if (showLoading && !hadPriorData) {
         setLoading(true);
-        setError(null);
+      }
+      setError(null);
 
-        const [
-          sellersRes,
-          bidsRes,
-          participateRes,
-          ordersRes,
-          pendingRes,
-          statsRes,
-        ] = await Promise.all([
-          api
-            .get(`/sellers?mobile=${mobile}`)
-            .catch((e) => ({ data: [], error: e })),
-          api
-            .get("/bids?status=active")
-            .catch((e) => ({ data: { data: [] }, error: e })),
-          api
-            .get(`/participatebids?mobile=${mobile}&limit=1`)
-            .catch((e) => ({ data: { total: 0 }, error: e })),
-          api
-            .get(
-              `/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`,
-            )
-            .catch((e) => ({ data: { total: 0 }, error: e })),
-          api
-            .get(
-              `/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`,
-            )
-            .catch((e) => ({ data: { total: 0 }, error: e })),
-          api
-            .get(`/self-order/seller/stats?mobile=${mobile}`)
-            .catch((e) => ({ data: {}, error: e })),
-        ]);
-
-        if (!isMounted) return;
-
-        if (sellersRes.error || statsRes.error) {
-          throw new Error("Critical data sync failed");
+      try {
+        if (forceNetwork) {
+          clearApiCache();
         }
 
-        const normalizePhone = (p) => {
-          const m = String(p || "")
-            .trim()
-            .match(/^(?:\+91|0)?([6-9]\d{9})$/);
-          return m ? m[1] : p;
-        };
+        const signal = controller.signal;
+        const buildReq = (url, fallbackData) =>
+          retryWithBackoff(() =>
+            api.get(url, { signal }).catch((e) => ({
+              data: fallbackData,
+              error: e,
+            })),
+          );
+
+        const results = await Promise.allSettled([
+          buildReq(`/sellers?mobile=${mobile}`, []),
+          buildReq("/bids?status=active", { data: [] }),
+          buildReq(`/participatebids?mobile=${mobile}&limit=1`, { total: 0 }),
+          buildReq(
+            `/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`,
+            { total: 0 },
+          ),
+          buildReq(
+            `/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`,
+            { total: 0 },
+          ),
+          buildReq(`/self-order/seller/stats?mobile=${mobile}`, {}),
+        ]);
+
+        if (signal.aborted) return;
+
+        const unwrap = (r, fallback) =>
+          r.status === "fulfilled" && !r.value?.error
+            ? r.value
+            : { data: fallback, error: true };
+
+        const sellersRes = unwrap(results[0], []);
+        const bidsRes = unwrap(results[1], { data: [] });
+        const participateRes = unwrap(results[2], { total: 0 });
+        const ordersRes = unwrap(results[3], { total: 0 });
+        const pendingRes = unwrap(results[4], { total: 0 });
+        const statsRes = unwrap(results[5], {});
 
         const sellers = sellersRes?.data || [];
         const bids = bidsRes?.data?.data || bidsRes?.data || [];
@@ -426,18 +495,22 @@ const SellerDashboard = () => {
           ),
         );
 
-        if (!seller) {
-          setError("Seller profile not found. Please contact support.");
-          return;
+        const criticalFailed = !sellers.length || !seller;
+        if (criticalFailed && !hadPriorData) {
+          throw new Error(
+            sellersRes.error ? "Critical data sync failed" : "Missing seller",
+          );
         }
 
-        const activeSellerBids = bids.filter(
-          (bid) =>
-            bid.status === "active" &&
-            seller?.commodities?.some((c) => c?.name === bid?.commodity),
-        );
+        if (seller) {
+          const activeSellerBids = bids.filter(
+            (bid) =>
+              bid.status === "active" &&
+              seller?.commodities?.some((c) => c?.name === bid?.commodity),
+          );
+          setSellerBidCount(activeSellerBids.length);
+        }
 
-        setSellerBidCount(activeSellerBids.length);
         setParticipateBidCount(participateRes?.data?.total || 0);
         setOrderCount(ordersRes?.data?.total || 0);
         setPendingSaudaCount(pendingRes?.data?.total || 0);
@@ -445,23 +518,36 @@ const SellerDashboard = () => {
         setTotalQuantity(statsRes?.data?.totalUnloadingWeight || 0);
         setCommodityBreakdown(statsRes?.data?.commodityBreakdown || []);
         setCompanyBreakdown(statsRes?.data?.companyBreakdown || []);
+
+        hasRenderedDataRef.current = true;
+
+        if (criticalFailed && hadPriorData) {
+          toast.warn("Some data couldn't refresh. Showing latest values.");
+        }
       } catch (err) {
-        if (!isMounted) return;
-        setError(
-          "Unable to sync dashboard data. Check your connection and try again.",
-        );
+        if (abortControllerRef.current?.signal.aborted) return;
+        if (!hasRenderedDataRef.current) {
+          setError(
+            "Unable to sync dashboard data. Check your connection and try again.",
+          );
+        } else {
+          toast.warn("Refresh failed. Showing cached dashboard data.");
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (!abortControllerRef.current?.signal.aborted) {
+          setLoading(false);
+        }
       }
     },
-    [mobile],
+    [mobile, normalizePhone, retryWithBackoff],
   );
 
   const refreshDashboard = useCallback(() => {
     setRetryCount((prev) => prev + 1);
-    fetchData(true);
+    fetchData({ forceNetwork: true, showLoading: true });
   }, [fetchData]);
 
+  // ---- Notification handlers ----
   const handleNotificationClick = useCallback(
     async (notif) => {
       if (!notif.isRead) {
@@ -477,6 +563,7 @@ const SellerDashboard = () => {
 
   const togglePopup = useCallback((val) => setShowPopup(val), []);
 
+  // ---- Download Invoice ----
   const handleDownloadInvoice = useCallback(
     async (companyName) => {
       if (!companyName || !mobile) return;
@@ -503,7 +590,10 @@ const SellerDashboard = () => {
         );
         const upiId = "MSHANSARIAFOODPRIVATELIMITED.eazypay@icici";
         const upiName = "M/S.HANSARIA FOOD PRIVATE LIMITED";
-        const upiTxnRef = "EZYS9330433535";
+        // Dynamic UPI reference to avoid duplicates
+        const upiTxnRef = `INV-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 6)}`;
         const upiAmount = totalBrokerage.toFixed(2);
         const upiPaymentLink =
           `upi://pay?pa=${encodeURIComponent(upiId)}` +
@@ -550,7 +640,8 @@ const SellerDashboard = () => {
     [mobile],
   );
 
-  const handlePrintIDCard = async () => {
+  // ---- Print ID Card ----
+  const handlePrintIDCard = useCallback(async () => {
     if (!user) {
       toast.error("User data not found!");
       return;
@@ -574,21 +665,26 @@ const SellerDashboard = () => {
         color: { dark: "#000000", light: "#ffffff" },
       });
 
+      // Fallback for employeeId if user._id is too short
+      const employeeId =
+        user._id?.length >= 18
+          ? user._id.substring(18).toUpperCase()
+          : user._id?.slice(-6).toUpperCase() || "NA";
+
       const doc = (
         <EmployeeIDCardPDF
           user={{
             ...user,
             role: "SELLER PARTNER",
-             employeeId: user._id?.substring(18).toUpperCase(),
-           }}
-           qrCodeData={qrCodeUrl}
-           logoUrl={logoBase64}
-           role="Seller"
-         />
-       );
+            employeeId,
+          }}
+          qrCodeData={qrCodeUrl}
+          logoUrl={logoBase64}
+          role="Seller"
+        />
+      );
 
       const blob = await pdf(doc).toBlob();
-
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -614,8 +710,9 @@ const SellerDashboard = () => {
     } finally {
       setIsPrinting(false);
     }
-  };
+  }, [user, logoBase64]);
 
+  // ---- Navigation items ----
   const navigationItems = useMemo(
     () => [
       {
@@ -675,17 +772,50 @@ const SellerDashboard = () => {
         link: "/payment-release",
       },
     ],
-    [mobile, togglePopup, sellerBidCount, orderCount, pendingSaudaCount],
+    [
+      mobile,
+      togglePopup,
+      sellerBidCount,
+      orderCount,
+      pendingSaudaCount,
+      participateBidCount,
+    ],
   );
 
+  // ---- Effects ----
   useEffect(() => {
-    let isMounted = true;
-    if (mobile) fetchData(isMounted);
+    if (mobile) fetchData({ showLoading: true });
     return () => {
-      isMounted = false;
+      if (abortControllerRef.current) abortControllerRef.current.abort();
     };
-  }, [mobile, fetchData]);
+  }, [mobile, fetchData, retryCount]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      if (visibilityTimerRef.current) clearTimeout(visibilityTimerRef.current);
+      visibilityTimerRef.current = setTimeout(() => {
+        fetchData({ forceNetwork: false, showLoading: false });
+      }, 400);
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    const handleOnline = () => {
+      fetchData({ forceNetwork: true, showLoading: false });
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", handleOnline);
+    }
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("online", handleOnline);
+      }
+      if (visibilityTimerRef.current) clearTimeout(visibilityTimerRef.current);
+    };
+  }, [fetchData]);
+
+  // ---- Loading & Error ----
   if (loading) return <Loading />;
 
   if (error)
@@ -715,28 +845,30 @@ const SellerDashboard = () => {
       </AdminPageShell>
     );
 
+  // ---- Main render ----
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell noContentCard onRefresh={refreshDashboard}>
-        <div className="min-h-screen bg-[#f8fafc] p-3 sm:p-6 lg:p-10 space-y-6 md:space-y-10 lg:space-y-14 max-w-[1700px] mx-auto pb-10">
+        <div className="min-h-screen bg-[#f8fafc] p-3 sm:p-6 lg:p-10 space-y-4 sm:space-y-6 md:space-y-10 lg:space-y-14 max-w-[1700px] mx-auto pb-10">
+          {/* Header */}
           <header>
             <HeaderSection
               userName={user?.name}
               totalBrokerage={totalBrokerage}
-              onRefresh={refreshDashboard}
               onPrintIDCard={handlePrintIDCard}
               isPrinting={isPrinting}
             />
           </header>
 
+          {/* Navigation Cards - 2 columns on small screens */}
           <section aria-label="Quick Navigation">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
               {navigationItems.map((item, idx) => (
                 <StatCard
                   key={idx}
                   title={item.label}
                   value={item.count}
-                  subtitle="Open Module"
+                  subtitle={item.subtitle || "Open Module"}
                   icon={item.icon}
                   colorClass={item.color}
                   onClick={
@@ -748,8 +880,9 @@ const SellerDashboard = () => {
             </div>
           </section>
 
+          {/* Performance Metrics - 2 columns on small */}
           <section aria-label="Performance Metrics">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               <StatCard
                 title="Consolidated Volume"
                 value={totalQuantity.toFixed(2)}
@@ -760,7 +893,9 @@ const SellerDashboard = () => {
               />
               <StatCard
                 title="Strategic Earnings"
-                value={`Rs. ${Math.floor(totalBrokerage).toLocaleString("en-IN")}`}
+                value={`Rs. ${Math.floor(totalBrokerage).toLocaleString(
+                  "en-IN",
+                )}`}
                 icon={FaWallet}
                 colorClass="bg-emerald-600"
                 subtitle="Settled Brokerage"
@@ -785,38 +920,40 @@ const SellerDashboard = () => {
             </div>
           </section>
 
+          {/* Blog Section */}
           <DashboardBlogSection />
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 sm:gap-12 items-start">
+          {/* Commodity & Company Breakdown */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-start">
             {/* Material Intelligence */}
             <section
-              className="xl:col-span-6 bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-emerald-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
+              className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-emerald-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
               aria-label="Material Intelligence"
             >
-              <div className="p-4 md:p-8 border-b border-emerald-50 bg-emerald-50/20 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0">
+              <div className="p-3 sm:p-4 md:p-8 border-b border-emerald-50 bg-emerald-50/20 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0">
                     <FaChartBar
-                      className="text-base md:text-xl"
+                      className="text-base sm:text-lg md:text-xl"
                       aria-hidden="true"
                     />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm md:text-xl font-black text-emerald-800 uppercase tracking-tight italic truncate">
+                    <h3 className="text-sm sm:text-base md:text-xl font-black text-emerald-800 uppercase tracking-tight italic truncate">
                       Material{" "}
                       <span className="text-emerald-600">Intelligence</span>
                     </h3>
-                    <p className="text-[7px] md:text-[10px] font-black text-emerald-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">
+                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-emerald-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">
                       Precision Commodity Breakdown
                     </p>
                   </div>
                 </div>
-                <span className="text-[7px] md:text-[10px] font-black text-emerald-600 bg-white px-2 md:px-4 py-1 md:py-1.5 rounded-full border border-emerald-100 uppercase tracking-widest shadow-sm shrink-0">
+                <span className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-emerald-600 bg-white px-2 sm:px-3 md:px-4 py-1 rounded-full border border-emerald-100 uppercase tracking-widest shadow-sm shrink-0">
                   Sync Active
                 </span>
               </div>
               <div
-                className="p-3 sm:p-4 md:p-8 space-y-3 md:space-y-5"
+                className="p-3 sm:p-4 md:p-8 space-y-2 sm:space-y-3 md:space-y-5"
                 role="list"
               >
                 {commodityBreakdown.length > 0 ? (
@@ -828,12 +965,12 @@ const SellerDashboard = () => {
                     />
                   ))
                 ) : (
-                  <div className="py-12 md:py-24 text-center">
+                  <div className="py-8 sm:py-12 md:py-24 text-center">
                     <FaBoxOpen
-                      className="text-3xl md:text-5xl text-emerald-100 mx-auto mb-4 md:mb-6"
+                      className="text-2xl sm:text-3xl md:text-5xl text-emerald-100 mx-auto mb-3 sm:mb-4 md:mb-6"
                       aria-hidden="true"
                     />
-                    <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">
+                    <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
                       No intelligence data available
                     </p>
                   </div>
@@ -841,24 +978,25 @@ const SellerDashboard = () => {
               </div>
             </section>
 
+            {/* Company Performance */}
             <section
-              className="xl:col-span-6 bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-indigo-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
+              className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-indigo-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
               aria-label="Company Performance"
             >
-              <div className="p-4 md:p-8 border-b border-indigo-50 bg-indigo-50/20 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 shrink-0">
+              <div className="p-3 sm:p-4 md:p-8 border-b border-indigo-50 bg-indigo-50/20 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 shrink-0">
                     <FaChartBar
-                      className="text-base md:text-xl"
+                      className="text-base sm:text-lg md:text-xl"
                       aria-hidden="true"
                     />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm md:text-xl font-black text-indigo-800 uppercase tracking-tight italic truncate">
+                    <h3 className="text-sm sm:text-base md:text-xl font-black text-indigo-800 uppercase tracking-tight italic truncate">
                       Company{" "}
                       <span className="text-indigo-600">Performance</span>
                     </h3>
-                    <p className="text-[7px] md:text-[10px] font-black text-indigo-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">
+                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">
                       Entity Wise Revenue Insights
                     </p>
                   </div>
@@ -866,13 +1004,13 @@ const SellerDashboard = () => {
                 <button
                   onClick={() => togglePopup(true)}
                   aria-label="View Alerts"
-                  className="text-[7px] md:text-[10px] font-black text-indigo-600 bg-white px-2 md:px-4 py-1 md:py-1.5 rounded-full border border-indigo-100 uppercase tracking-widest shadow-sm hover:bg-indigo-600 hover:text-white transition-all shrink-0 focus:ring-2 focus:ring-indigo-500"
+                  className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-600 bg-white px-2 sm:px-3 md:px-4 py-1 rounded-full border border-indigo-100 uppercase tracking-widest shadow-sm hover:bg-indigo-600 hover:text-white transition-all shrink-0 focus:ring-2 focus:ring-indigo-500"
                 >
                   Alerts
                 </button>
               </div>
               <div
-                className="p-3 sm:p-4 md:p-8 space-y-3 md:space-y-5"
+                className="p-3 sm:p-4 md:p-8 space-y-2 sm:space-y-3 md:space-y-5"
                 role="list"
               >
                 {companyBreakdown.length > 0 ? (
@@ -887,12 +1025,12 @@ const SellerDashboard = () => {
                     />
                   ))
                 ) : (
-                  <div className="py-12 md:py-24 text-center">
+                  <div className="py-8 sm:py-12 md:py-24 text-center">
                     <FaBoxOpen
-                      className="text-3xl md:text-5xl text-indigo-100 mx-auto mb-4 md:mb-6"
+                      className="text-2xl sm:text-3xl md:text-5xl text-indigo-100 mx-auto mb-3 sm:mb-4 md:mb-6"
                       aria-hidden="true"
                     />
-                    <p className="text-indigo-800/40 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">
+                    <p className="text-indigo-800/40 font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
                       No performance data captured
                     </p>
                   </div>
@@ -901,51 +1039,53 @@ const SellerDashboard = () => {
             </section>
           </div>
 
-          <footer className="bg-emerald-900 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-emerald-200 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
-            <div className="flex items-center gap-6 md:gap-12 w-full md:w-auto justify-center md:justify-start">
+          {/* Footer CTA */}
+          <footer className="bg-emerald-900 p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 md:gap-12">
+            <div className="flex items-center gap-4 sm:gap-6 md:gap-12 w-full sm:w-auto justify-center sm:justify-start">
               <div className="flex flex-col">
-                <p className="text-emerald-400 text-[7px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-1 md:mb-2">
+                <p className="text-emerald-400 text-[7px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 sm:mb-1 md:mb-2">
                   Account Status
                 </p>
-                <div className="flex items-center gap-2 md:gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
                   <div
-                    className="h-2 w-2 md:h-3 md:w-3 rounded-full bg-emerald-500 animate-ping shrink-0"
+                    className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-3 md:w-3 rounded-full bg-emerald-500 animate-ping shrink-0"
                     aria-hidden="true"
                   ></div>
-                  <span className="text-white font-black uppercase tracking-widest text-[9px] md:text-sm">
+                  <span className="text-white font-black uppercase tracking-widest text-[8px] sm:text-[10px] md:text-sm">
                     Verified Partner
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
               <button
                 onClick={() =>
                   navigate("/Supplier-Bid-List", { state: { mobile } })
                 }
-                className="flex-1 sm:flex-none px-3 sm:px-8 py-3 md:py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-xs transition-all flex items-center justify-center gap-2 md:gap-3 focus:ring-2 focus:ring-white/50"
+                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 focus:ring-2 focus:ring-white/50"
               >
                 <FaChartBar
-                  className="text-emerald-400 text-[10px] md:text-base"
+                  className="text-emerald-400 text-[10px] sm:text-sm md:text-base"
                   aria-hidden="true"
                 />
-                <span className="truncate">Intelligence</span>
+                <span className="hidden xs:inline">Intelligence</span>
               </button>
               <button
                 onClick={() =>
                   navigate("/Supplier-Bid-List", { state: { mobile } })
                 }
-                className="flex-1 sm:flex-none px-3 sm:px-8 py-3 md:py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-xs transition-all shadow-xl shadow-emerald-900/50 flex items-center justify-center gap-2 md:gap-3 focus:ring-2 focus:ring-emerald-500"
+                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all shadow-xl shadow-emerald-900/50 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 focus:ring-2 focus:ring-emerald-500"
               >
                 <FaGavel
-                  className="text-[10px] md:text-base"
+                  className="text-[10px] sm:text-sm md:text-base"
                   aria-hidden="true"
                 />
-                <span className="truncate">Live Bidding</span>
+                Live Bidding
               </button>
             </div>
           </footer>
 
+          {/* Notifications Popup */}
           <PopupBox
             isOpen={showPopup}
             onClose={() => togglePopup(false)}
@@ -956,38 +1096,42 @@ const SellerDashboard = () => {
                 confirmedBids.map((notif, i) => (
                   <div
                     key={i}
-                    className={`p-8 rounded-[2.2rem] mb-6 border-2 transition-all duration-500 cursor-pointer ${
+                    className={`p-4 sm:p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.2rem] mb-4 sm:mb-6 border-2 transition-all duration-500 cursor-pointer ${
                       notif.isRead
                         ? "bg-slate-50 border-slate-100"
                         : "bg-emerald-50 border-emerald-200 shadow-lg shadow-emerald-100"
                     }`}
                     onClick={() => handleNotificationClick(notif)}
                   >
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex justify-between items-start mb-2 sm:mb-4">
                       <h4
-                        className={`font-black text-base uppercase tracking-tight ${notif.isRead ? "text-slate-600" : "text-emerald-800"}`}
+                        className={`font-black text-xs sm:text-sm md:text-base uppercase tracking-tight ${
+                          notif.isRead ? "text-slate-600" : "text-emerald-800"
+                        }`}
                       >
                         {notif.title}
                       </h4>
                       {!notif.isRead && (
-                        <span className="h-3 w-3 bg-emerald-500 rounded-full animate-ping" />
+                        <span className="h-2 w-2 sm:h-3 sm:w-3 bg-emerald-500 rounded-full animate-ping shrink-0" />
                       )}
                     </div>
                     <p
-                      className={`text-sm leading-relaxed ${notif.isRead ? "text-slate-500" : "text-emerald-800/80"} font-semibold`}
+                      className={`text-xs sm:text-sm leading-relaxed ${
+                        notif.isRead ? "text-slate-500" : "text-emerald-800/80"
+                      } font-semibold`}
                     >
                       {notif.message}
                     </p>
-                    <div className="mt-6 pt-6 border-t border-slate-200/50 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center">
-                          <FaBell className="text-[10px] text-emerald-600" />
+                    <div className="mt-4 sm:mt-6 pt-3 sm:pt-6 border-t border-slate-200/50 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center">
+                          <FaBell className="text-[8px] sm:text-[10px] text-emerald-600" />
                         </div>
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                        <p className="text-[8px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">
                           {new Date(notif.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
+                      <p className="text-[8px] sm:text-[10px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 px-2 sm:px-3 py-1 rounded-full">
                         {new Date(notif.createdAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -997,11 +1141,11 @@ const SellerDashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="py-24 text-center">
-                  <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-dashed border-slate-200">
-                    <FaBell className="text-4xl text-slate-200" />
+                <div className="py-12 sm:py-16 md:py-24 text-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 border-2 border-dashed border-slate-200">
+                    <FaBell className="text-2xl sm:text-3xl md:text-4xl text-slate-200" />
                   </div>
-                  <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-xs">
+                  <p className="text-slate-400 font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-xs">
                     All intelligence up to date
                   </p>
                 </div>
