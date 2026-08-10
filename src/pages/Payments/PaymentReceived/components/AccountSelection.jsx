@@ -47,9 +47,7 @@ const AccountSelection = ({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <div
-            className={`flex bg-slate-100 p-1 rounded-xl border border-slate-200 ${isEditMode ? "opacity-70" : ""}`}
-          >
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             {[
               {
                 id: "fresh",
@@ -65,32 +63,24 @@ const AccountSelection = ({
               <button
                 key={source.id}
                 type="button"
-                onClick={() => !isEditMode && setAllocationSource(source.id)}
-                disabled={isEditMode}
+                onClick={() => setAllocationSource(source.id)}
                 className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
                   allocationSource === source.id
                     ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-400 hover:text-slate-600"
-                } ${isEditMode ? "cursor-not-allowed" : ""}`}
+                }`}
               >
                 {source.icon}
                 {source.label}
-                {isEditMode && (
-                  <span className="ml-1 text-[8px] text-amber-600 font-black">
-                    🔒
-                  </span>
-                )}
               </button>
             ))}
           </div>
-          {allocationSource === "fresh" &&
-            (formData.amount || 0) <= 0 &&
-            !isEditMode && (
-              <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
-                Tip: Use From Advance to spend buyer Cr. advance on seller
-                lorries
-              </p>
-            )}
+          {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
+            <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
+              Tip: Use From Advance to spend buyer Cr. advance on seller
+              lorries
+            </p>
+          )}
         </div>
       </div>
 
@@ -104,46 +94,33 @@ const AccountSelection = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Entry date (vouchers)
-                {isEditMode && <span className="text-amber-600">🔒</span>}
               </label>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleInputChange}
-                disabled={isEditMode}
-                className={`w-full h-[42px] px-4 rounded-xl border focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f] outline-none transition-all font-bold text-slate-900 ${
-                  isEditMode
-                    ? "border-amber-200 bg-amber-50 cursor-not-allowed text-slate-500"
-                    : "border-slate-200 bg-white"
-                }`}
+                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f] outline-none transition-all font-bold text-slate-900"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Buyer company
-                {isEditMode && <span className="text-amber-600">🔒</span>}
               </label>
               <div className="relative">
                 <DataDropdown
                   options={primaryCompanyOptions}
                   selectedOptions={selectedCompanyOption}
                   onChange={(opt) =>
-                    !isEditMode &&
-                    (opt ? handleCompanyChange(opt) : handleClearCompany())
+                    opt ? handleCompanyChange(opt) : handleClearCompany()
                   }
                   placeholder="All buyers"
                   isMulti={false}
-                  isDisabled={isEditMode}
-                  className={`rounded-xl transition-all ${
-                    isEditMode
-                      ? "border-amber-200 bg-amber-50 opacity-80"
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
+                  className="rounded-xl transition-all border-slate-200 hover:border-slate-300"
                 />
-                {formData.companyId && !isEditMode && (
+                {formData.companyId && (
                   <button
                     type="button"
                     onClick={handleClearCompany}
@@ -154,26 +131,24 @@ const AccountSelection = ({
                   </button>
                 )}
               </div>
-              {formData.companyId && !hasResolvedLedger && !isEditMode && (
+              {formData.companyId && !hasResolvedLedger && (
                 <p className="text-[10px] font-bold text-green-600 ml-1">
                   No ledger linked — required only to record payment
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Seller company
-                {isEditMode && <span className="text-amber-600">🔒</span>}
               </label>
               <div className="relative">
                 <DataDropdown
                   options={opposingCompanyOptions}
                   selectedOptions={selectedOpposingCompanyOption}
                   onChange={(opt) =>
-                    !isEditMode &&
-                    (opt
+                    opt
                       ? handleOpposingCompanyChange(opt)
-                      : handleClearOpposingCompany())
+                      : handleClearOpposingCompany()
                   }
                   placeholder={
                     hasBuyerCompany
@@ -184,18 +159,13 @@ const AccountSelection = ({
                   }
                   isMulti={false}
                   isDisabled={
-                    isEditMode ||
-                    (formData.ledgerType === "Seller"
+                    formData.ledgerType === "Seller"
                       ? false
-                      : !hasBuyerCompany)
+                      : !hasBuyerCompany
                   }
-                  className={`rounded-xl transition-all ${
-                    isEditMode
-                      ? "border-amber-200 bg-amber-50 opacity-80"
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
+                  className="rounded-xl transition-all border-slate-200 hover:border-slate-300"
                 />
-                {formData.opposingCompanyId && !isEditMode && (
+                {formData.opposingCompanyId && (
                   <button
                     type="button"
                     onClick={handleClearOpposingCompany}
