@@ -86,6 +86,15 @@ const validateEntryData = (entry) => {
   if (!entry.lorryNumber?.trim()) errors.push("Lorry number is required");
   if (entry.loadingWeight && isNaN(parseFloat(entry.loadingWeight)))
     errors.push("Invalid loading weight");
+  if (entry.unloadingWeight && isNaN(parseFloat(entry.unloadingWeight)))
+    errors.push("Invalid unloading weight");
+  const loadingWt = parseFloat(entry.loadingWeight) || 0;
+  const unloadingWt = parseFloat(entry.unloadingWeight) || 0;
+  if (loadingWt > 0 && unloadingWt > loadingWt) {
+    errors.push(
+      `Unloading Weight (${unloadingWt.toFixed(3)} Tons) cannot exceed Loading Weight (${loadingWt.toFixed(3)} Tons)`,
+    );
+  }
   if (entry.freightRate && isNaN(parseFloat(entry.freightRate)))
     errors.push("Invalid freight rate");
   return errors;

@@ -379,19 +379,41 @@ const EditLoadingEntryPopup = ({
             Unloading Weight (Tons)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             name="unloadingWeight"
             value={
               editEntry.unloadingWeight != null &&
               editEntry.unloadingWeight !== ""
-                ? Number(editEntry.unloadingWeight).toFixed(3)
+                ? editEntry.unloadingWeight
                 : ""
             }
-            onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "" || /^\d*\.?\d{0,3}$/.test(val)) {
+                handleEditFieldChange(e);
+              }
+            }}
+            className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+              editEntry.loadingWeight &&
+              editEntry.unloadingWeight &&
+              parseFloat(editEntry.unloadingWeight) >
+                parseFloat(editEntry.loadingWeight)
+                ? "border-red-400 bg-red-50 focus:ring-red-500"
+                : "border-slate-300 focus:ring-emerald-500"
+            }`}
             aria-label="Unloading Weight"
-            step="0.001"
+            placeholder="e.g. 14.202 or 102.230"
           />
+          {editEntry.loadingWeight &&
+            editEntry.unloadingWeight &&
+            parseFloat(editEntry.unloadingWeight) >
+              parseFloat(editEntry.loadingWeight) && (
+              <p className="mt-1 text-xs text-red-600 font-semibold">
+                ⚠ Unloading Weight cannot exceed Loading Weight (
+                {Number(editEntry.loadingWeight).toFixed(3)} Tons)
+              </p>
+            )}
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1">

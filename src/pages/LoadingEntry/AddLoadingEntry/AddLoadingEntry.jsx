@@ -845,6 +845,15 @@ const AddLoadingEntry = () => {
   const handleUpdateEditingEntry = async () => {
     if (!editingEntry || !editingEntry._id) return;
 
+    const loadingWt = parseFloat(editingEntry.loadingWeight) || 0;
+    const unloadingWt = parseFloat(editingEntry.unloadingWeight) || 0;
+    if (loadingWt > 0 && unloadingWt > loadingWt) {
+      toast.error(
+        `Unloading Weight (${unloadingWt.toFixed(3)} Tons) cannot exceed Loading Weight (${loadingWt.toFixed(3)} Tons)`,
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       const weight = parseFloat(editingEntry.loadingWeight) || 0;
@@ -1114,16 +1123,43 @@ const AddLoadingEntry = () => {
                   <label className="text-xs font-bold text-slate-500 uppercase">
                     Unloading Weight (Tons)
                   </label>
-                  <DataInput
-                    type="number"
-                    value={editingEntry.unloadingWeight}
-                    onChange={(e) =>
-                      setEditingEntry({
-                        ...editingEntry,
-                        unloadingWeight: e.target.value,
-                      })
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={
+                      editingEntry.unloadingWeight != null &&
+                      editingEntry.unloadingWeight !== ""
+                        ? editingEntry.unloadingWeight
+                        : ""
                     }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || /^\d*\.?\d{0,3}$/.test(val)) {
+                        setEditingEntry({
+                          ...editingEntry,
+                          unloadingWeight: val,
+                        });
+                      }
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition text-sm ${
+                      editingEntry.loadingWeight &&
+                      editingEntry.unloadingWeight &&
+                      parseFloat(editingEntry.unloadingWeight) >
+                        parseFloat(editingEntry.loadingWeight)
+                        ? "border-red-400 bg-red-50 focus:ring-red-500"
+                        : ""
+                    }`}
+                    placeholder="e.g. 14.202 or 102.230"
                   />
+                  {editingEntry.loadingWeight &&
+                    editingEntry.unloadingWeight &&
+                    parseFloat(editingEntry.unloadingWeight) >
+                      parseFloat(editingEntry.loadingWeight) && (
+                      <p className="text-xs text-red-600 font-semibold">
+                        ⚠ Unloading Weight cannot exceed Loading Weight (
+                        {Number(editingEntry.loadingWeight).toFixed(3)} Tons)
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">
