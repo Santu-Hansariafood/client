@@ -369,9 +369,7 @@ const Dashboard = () => {
                 </div>
 
                 {worksLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                  </div>
+                  <Loading />
                 ) : works.length === 0 ? (
                   <div className="text-center py-12 bg-white/50 rounded-2xl border border-white/60">
                     <p className="text-slate-500 font-medium">
