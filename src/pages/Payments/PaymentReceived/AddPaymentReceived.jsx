@@ -1227,14 +1227,27 @@ const AddPaymentReceived = () => {
         }),
       );
 
-      if (allocationSource === "fresh" && !editingPaymentId) {
-        setFormData((prev) => ({
-          ...prev,
+      if (!editingPaymentId) {
+        setFormData({
+          date: new Date().toISOString().split("T")[0],
+          allocationDate: new Date().toISOString().split("T")[0],
+          ledgerType: formData.ledgerType || "Buyer",
+          ledgerId: "",
+          companyId: "",
+          opposingCompanyId: "",
           amount: 0,
           claim: 0,
           tds: 0,
-          ledgerId: prev.ledgerId || ledgerId,
-        }));
+          paymentType: "Sauda-wise",
+          paymentMode: "Bank",
+          remarks: "",
+          filterStartDate: "",
+          filterEndDate: "",
+        });
+        setSelectedLedger(null);
+        setBuyerSellerOptions([]);
+        setEntries([]);
+        setAllocationSource("fresh");
       }
 
       fetchEntries(entriesPage);
@@ -1722,14 +1735,27 @@ const AddPaymentReceived = () => {
           ),
         );
 
-        if (allocationSource === "fresh") {
-          setFormData((prev) => ({
-            ...prev,
+        if (!editingPaymentId && !isEditingEntry) {
+          setFormData({
+            date: new Date().toISOString().split("T")[0],
+            allocationDate: new Date().toISOString().split("T")[0],
+            ledgerType: formData.ledgerType || "Buyer",
+            ledgerId: "",
+            companyId: "",
+            opposingCompanyId: "",
             amount: 0,
             claim: 0,
             tds: 0,
-            ledgerId: prev.ledgerId || ledgerId,
-          }));
+            paymentType: "Sauda-wise",
+            paymentMode: "Bank",
+            remarks: "",
+            filterStartDate: "",
+            filterEndDate: "",
+          });
+          setSelectedLedger(null);
+          setBuyerSellerOptions([]);
+          setEntries([]);
+          setAllocationSource("fresh");
         }
       }
 
@@ -1799,13 +1825,27 @@ const AddPaymentReceived = () => {
         toast.success("Advance payment recorded");
       }
 
-      setFormData((prev) => ({
-        ...prev,
-        amount: 0,
-        claim: 0,
-        tds: 0,
-        remarks: "",
-      }));
+      if (!editingPaymentId) {
+        setFormData({
+          date: new Date().toISOString().split("T")[0],
+          allocationDate: new Date().toISOString().split("T")[0],
+          ledgerType: formData.ledgerType || "Buyer",
+          ledgerId: "",
+          companyId: "",
+          opposingCompanyId: "",
+          amount: 0,
+          claim: 0,
+          tds: 0,
+          paymentType: "Sauda-wise",
+          paymentMode: "Bank",
+          remarks: "",
+          filterStartDate: "",
+          filterEndDate: "",
+        });
+        setSelectedLedger(null);
+        setBuyerSellerOptions([]);
+        setAllocationSource("fresh");
+      }
       fetchHistory();
       fetchDateTotal();
       fetchLedgerBalance();
