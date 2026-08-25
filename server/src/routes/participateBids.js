@@ -75,8 +75,6 @@ router.post("/", async (req, res) => {
       loadingFrom,
       remarks,
       sellerCompany,
-      deliveryDate,
-      paymentTerms,
     } = req.body;
 
     if (!bidId || !mobile) {
@@ -133,6 +131,19 @@ router.post("/", async (req, res) => {
       resolvedCompany = String(match || "").trim();
     }
 
+    let resolvedDeliveryDate = null;
+    if (bid.bidDate && bid.delivery) {
+      const bidDeliveryDate = new Date(bid.bidDate);
+      const deliveryDays = Number(bid.delivery);
+      if (
+        !Number.isNaN(bidDeliveryDate.getTime()) &&
+        !Number.isNaN(deliveryDays)
+      ) {
+        bidDeliveryDate.setDate(bidDeliveryDate.getDate() + deliveryDays);
+        resolvedDeliveryDate = bidDeliveryDate;
+      }
+    }
+
     const item = await ParticipateBid.findOneAndUpdate(
       { bidId, mobile },
       {
@@ -141,8 +152,9 @@ router.post("/", async (req, res) => {
         loadingFrom,
         remarks,
         sellerCompany: resolvedCompany,
-        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-        paymentTerms: paymentTerms || "",
+        deliveryDate: resolvedDeliveryDate,
+        paymentTerms: bid.paymentTerms || "",
+        financeRequired: bid.financeRequired || "no",
       },
       { upsert: true, new: true, runValidators: true },
     );

@@ -117,7 +117,7 @@ router.get("/buyer-today", async (req, res) => {
       ],
     })
       .select(
-        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
+        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery financeRequired company unit status closedAt createdByMobile createdByRole",
       )
       .sort({ createdAt: -1 })
       .lean();
@@ -222,7 +222,7 @@ router.get("/supplier-today", async (req, res) => {
       ],
     })
       .select(
-        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
+        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery financeRequired company unit status closedAt createdByMobile createdByRole",
       )
       .sort({ createdAt: -1 })
       .lean();

@@ -25,6 +25,7 @@ const AdditionalFields = ({ state, handleChange }) => {
     { label: "End Time", field: "endTime", type: "time" },
     { label: "Payment Terms", field: "paymentTerms", type: "text" },
     { label: "Delivery", field: "delivery", type: "text" },
+    { label: "Finance Required", field: "financeRequired", type: "finance" },
     { label: "Status", field: "status", type: "toggle" },
   ];
 
@@ -39,6 +40,15 @@ const AdditionalFields = ({ state, handleChange }) => {
                 selectedDate={state[field] || getCurrentDate()}
                 onChange={(date) => handleChange(field, date)}
               />
+            ) : type === "finance" ? (
+              <select
+                value={state[field] || "no"}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              >
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
             ) : type === "toggle" ? (
               <div className="flex items-center gap-4 py-2">
                 <button

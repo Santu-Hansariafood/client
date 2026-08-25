@@ -16,6 +16,7 @@ const bidSchema = new mongoose.Schema(
     endTime: { type: String, required: true },
     paymentTerms: { type: String, default: "" },
     delivery: { type: String, default: "" },
+    financeRequired: { type: String, enum: ["yes", "no"], default: "no" },
     company: { type: String, default: "" },
     unit: { type: String, default: "" },
     status: { type: String, enum: ["active", "closed"], default: "active" },

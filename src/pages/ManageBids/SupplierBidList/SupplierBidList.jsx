@@ -1134,7 +1134,8 @@ const SupplierBidList = () => {
                     type="date"
                     className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                     value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    readOnly
+                    disabled
                   />
                 </label>
                 <label className="block">
@@ -1145,11 +1146,25 @@ const SupplierBidList = () => {
                     type="text"
                     className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                     value={paymentTerms}
-                    onChange={(e) => setPaymentTerms(e.target.value)}
+                    readOnly
+                    disabled
                     placeholder="e.g. 15 Days"
                   />
                 </label>
               </div>
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-700">
+                  Finance Required
+                </span>
+                <select
+                  value={selectedBid.financeRequired || "no"}
+                  disabled
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 shadow-sm"
+                >
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-700">
                   Remarks

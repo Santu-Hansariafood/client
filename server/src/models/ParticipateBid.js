@@ -10,6 +10,7 @@ const participateBidSchema = new mongoose.Schema(
     loadingFrom: { type: String, default: "" },
     deliveryDate: { type: Date, default: null },
     paymentTerms: { type: String, default: "" },
+    financeRequired: { type: String, enum: ["yes", "no"], default: "no" },
     remarks: { type: String, default: "" },
     status: {
       type: String,
