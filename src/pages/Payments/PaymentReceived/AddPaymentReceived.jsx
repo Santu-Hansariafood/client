@@ -251,6 +251,11 @@ const AddPaymentReceived = () => {
         gstAmount: 0,
         gstPercent: 0,
         netAmount: 0,
+        totalClaim: 0,
+        secondClaim: 0,
+        otherCharges: 0,
+        tds: 0,
+        payableAmount: 0,
         dueAmount: 0,
       };
     }
@@ -267,9 +272,20 @@ const AddPaymentReceived = () => {
     const cdAmount = grossAmount * (cdPercent / 100);
     const amountAfterCd = grossAmount - cdAmount;
     const amountAfterBankCharges = amountAfterCd - bankCharges;
-    const taxableAmount = amountAfterBankCharges;
+    const taxableAmount = amountAfterCd;
     const gstAmount = taxableAmount * (gstPercent / 100);
     const netAmount = taxableAmount + gstAmount;
+    const totalClaim = entry.manualClaim
+      ? Number(entry.manualClaimAmount) || 0
+      : (entry.qualityClaims || []).reduce(
+          (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+          0,
+        );
+    const secondClaim = Number(entry.secondClaim) || 0;
+    const otherCharges = Number(entry.otherCharges) || 0;
+    const tds = Number(entry.tds) || 0;
+    const payableAmount =
+      netAmount - totalClaim - secondClaim - otherCharges - tds;
 
     return {
       grossAmount,
@@ -282,8 +298,38 @@ const AddPaymentReceived = () => {
       gstAmount,
       gstPercent,
       netAmount,
+      totalClaim,
+      secondClaim,
+      otherCharges,
+      tds,
+      payableAmount,
       dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
     };
+  };
+
+  const validateBreakdownFields = (entry) => {
+    const requiredFields = [
+      ["Second claim", entry.secondClaim],
+      ["Second claim remarks", entry.secondClaimRemarks],
+      ["Other charges", entry.otherCharges],
+      ["Other charges remarks", entry.otherChargesRemarks],
+      ["Bank charges", entry.bankCharges],
+      ["Bank charges remarks", entry.bankChargesRemarks],
+      ["TDS", entry.tds],
+      ["TDS remarks", entry.tdsRemarks],
+      ["General remarks", entry.generalRemarks],
+    ];
+    const missingField = requiredFields.find(
+      ([, value]) =>
+        value === null ||
+        value === undefined ||
+        String(value).trim() === "",
+    );
+    if (missingField) {
+      toast.error(`Please enter ${missingField[0]} before saving`);
+      return false;
+    }
+    return true;
   };
 
   const resolveLedgerForCompany = useCallback(
@@ -713,7 +759,18 @@ const AddPaymentReceived = () => {
             creditNote: "Allocation posted",
             rowRemarks: "",
             isSaved: item.paymentStatus === "done",
+            qualityClaims: item.qualityClaims || [],
+            manualClaim: Boolean(item.manualClaim),
+            manualClaimAmount: Number(item.manualClaimAmount) || 0,
+            secondClaim: Number(item.secondClaim) || 0,
+            secondClaimRemarks: item.secondClaimRemarks || "",
+            otherCharges: Number(item.otherCharges) || 0,
+            otherChargesRemarks: item.otherChargesRemarks || "",
             bankCharges: Number(item.bankCharges) || 0,
+            bankChargesRemarks: item.bankChargesRemarks || "",
+            tds: Number(item.tds) || 0,
+            tdsRemarks: item.tdsRemarks || "",
+            generalRemarks: item.generalRemarks || "",
           })),
         );
         setEntriesTotal(
@@ -1121,6 +1178,9 @@ const AddPaymentReceived = () => {
       return;
     }
 
+    const entriesToValidate = allocations.length ? allocations : entries.slice(0, 1);
+    if (entriesToValidate.some((entry) => !validateBreakdownFields(entry))) return;
+
     const firstEntry = allocations[0] || entries[0];
     const pairPayload = firstEntry
       ? buildCompanyPayload(firstEntry)
@@ -1478,6 +1538,8 @@ const AddPaymentReceived = () => {
   };
 
   const handleSaveRow = async (entry) => {
+    if (!validateBreakdownFields(entry)) return;
+
     const details = calculateTallyDetails(entry);
     const lorryBalance = Math.max(
       0,
@@ -2152,7 +2214,7 @@ const AddPaymentReceived = () => {
             <div className="grid grid-cols-6 gap-2 bg-white border border-slate-200 rounded px-3 py-2 shadow-sm">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
-                  Gross Amount
+                  Total Bill Value
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹
@@ -2226,13 +2288,85 @@ const AddPaymentReceived = () => {
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
-                  Credit Amount
+                  Net Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.netAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                   })}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-purple-600 uppercase tracking-widest">
+                  Less 2nd Claim
+                </span>
+                <span className="h-6 px-2 rounded border border-purple-200 bg-white text-purple-700 text-[9px] font-bold flex items-center tabular-nums">
+                  - ₹{details.secondClaim.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.secondClaimRemarks}>
+                  {row.secondClaimRemarks || "Remarks required"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-teal-600 uppercase tracking-widest">
+                  Less Other Charges
+                </span>
+                <span className="h-6 px-2 rounded border border-teal-200 bg-white text-teal-700 text-[9px] font-bold flex items-center tabular-nums">
+                  - ₹{details.otherCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.otherChargesRemarks}>
+                  {row.otherChargesRemarks || "Remarks required"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-orange-600 uppercase tracking-widest">
+                  Less Bank Charges
+                </span>
+                <span className="h-6 px-2 rounded border border-orange-200 bg-white text-orange-700 text-[9px] font-bold flex items-center tabular-nums">
+                  - ₹{details.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.bankChargesRemarks}>
+                  {row.bankChargesRemarks || "Remarks required"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-red-600 uppercase tracking-widest">
+                  Less TDS
+                </span>
+                <span className="h-6 px-2 rounded border border-red-200 bg-white text-red-700 text-[9px] font-bold flex items-center tabular-nums">
+                  - ₹{details.tds.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.tdsRemarks}>
+                  {row.tdsRemarks || "Remarks required"}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
+                  Less Total Claim
+                </span>
+                <span className="h-6 px-2 rounded border border-rose-200 bg-white text-rose-700 text-[9px] font-bold flex items-center tabular-nums">
+                  - ₹{details.totalClaim.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">
+                  General Remarks
+                </span>
+                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-600 text-[9px] font-bold flex items-center normal-case truncate" title={row.generalRemarks}>
+                  {row.generalRemarks || "Remarks required"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[7px] font-black text-emerald-700 uppercase tracking-widest">
+                  Payable Amount
+                </span>
+                <span className="h-6 px-2 rounded border border-emerald-300 bg-white text-emerald-700 text-[9px] font-black flex items-center tabular-nums">
+                  ₹{Math.max(0, details.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

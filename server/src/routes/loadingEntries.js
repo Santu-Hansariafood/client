@@ -2089,7 +2089,7 @@ router.get("/", async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documentUrl documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole bankCharges isRejected",
+        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documentUrl documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole qualityClaims manualClaim manualClaimAmount secondClaim secondClaimRemarks otherCharges otherChargesRemarks bankCharges bankChargesRemarks tds tdsRemarks generalRemarks isRejected",
       )
       .populate("supplier", "sellerName")
       .lean();
