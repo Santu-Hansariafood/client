@@ -75,6 +75,7 @@ router.post("/", async (req, res) => {
       loadingFrom,
       remarks,
       sellerCompany,
+      financeRequired,
     } = req.body;
 
     if (!bidId || !mobile) {
@@ -154,7 +155,7 @@ router.post("/", async (req, res) => {
         sellerCompany: resolvedCompany,
         deliveryDate: resolvedDeliveryDate,
         paymentTerms: bid.paymentTerms || "",
-        financeRequired: bid.financeRequired || "no",
+        financeRequired: financeRequired === "yes" ? "yes" : "no",
       },
       { upsert: true, new: true, runValidators: true },
     );

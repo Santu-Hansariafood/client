@@ -55,6 +55,7 @@ const SupplierBidList = () => {
   const [remarks, setRemarks] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
+  const [financeRequired, setFinanceRequired] = useState("no");
   const [sellerCompany, setSellerCompany] = useState("");
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
@@ -166,6 +167,7 @@ const SupplierBidList = () => {
       setDeliveryDate(normalizedDeliveryDate);
 
       setPaymentTerms(existingParticipation.paymentTerms || "");
+      setFinanceRequired(existingParticipation.financeRequired || "no");
       setSellerCompany(existingParticipation.sellerCompany || "");
     } else {
       setRate(bid.rate || "");
@@ -185,6 +187,7 @@ const SupplierBidList = () => {
       }
       setDeliveryDate(defaultDeliveryDate);
       setPaymentTerms(bid.paymentTerms || "");
+      setFinanceRequired("no");
       if (companies.length === 1) {
         setSellerCompany(String(companies[0] || "").trim());
       } else {
@@ -216,6 +219,7 @@ const SupplierBidList = () => {
         remarks,
         deliveryDate,
         paymentTerms,
+        financeRequired,
         sellerCompany: String(sellerCompany || "").trim(),
       };
       await api.post("/participatebids", participationData);
@@ -1157,9 +1161,9 @@ const SupplierBidList = () => {
                   Finance Required
                 </span>
                 <select
-                  value={selectedBid.financeRequired || "no"}
-                  disabled
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 shadow-sm"
+                  value={financeRequired}
+                  onChange={(e) => setFinanceRequired(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 outline-none"
                 >
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
