@@ -19,6 +19,8 @@ import {
   FaPlus,
   FaTrash,
   FaMoneyBillWave,
+  FaTimes,
+  FaEdit,
 } from "react-icons/fa";
 
 import TabButton from "./components/TabButton";
@@ -83,6 +85,7 @@ const AddPaymentReceived = () => {
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingPayment, setEditingPayment] = useState(null);
   const [fetchingEditingPayment, setFetchingEditingPayment] = useState(false);
+  const [breakdownEntry, setBreakdownEntry] = useState(null);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -330,6 +333,18 @@ const AddPaymentReceived = () => {
       return false;
     }
     return true;
+  };
+
+  const handleBreakdownFieldChange = (field, value) => {
+    if (!breakdownEntry) return;
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.uiKey === breakdownEntry.uiKey
+          ? { ...entry, [field]: value }
+          : entry,
+      ),
+    );
+    setBreakdownEntry((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
   const resolveLedgerForCompany = useCallback(
@@ -1280,6 +1295,7 @@ const AddPaymentReceived = () => {
         );
       }
 
+      setBreakdownEntry(null);
       setEntries((prev) =>
         prev.map((e) => {
           const saved = allocations.some((a) => a.uiKey === e.uiKey);
@@ -1821,6 +1837,7 @@ const AddPaymentReceived = () => {
         }
       }
 
+      setBreakdownEntry(null);
       fetchEntries(entriesPage);
       fetchHistory();
       fetchDateTotal();
@@ -2211,7 +2228,23 @@ const AddPaymentReceived = () => {
                   )}
               </div>
             </div>
-            <div className="grid grid-cols-6 gap-2 bg-white border border-slate-200 rounded px-3 py-2 shadow-sm">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-[8px] font-black uppercase tracking-wider sm:grid-cols-4">
+                <span className="text-slate-500">Bill ₹{details.grossAmount.toFixed(2)}</span>
+                <span className="text-slate-500">Net ₹{details.netAmount.toFixed(2)}</span>
+                <span className="text-rose-600">Claims -₹{details.totalClaim.toFixed(2)}</span>
+                <span className="text-emerald-700">Payable ₹{Math.max(0, details.payableAmount).toFixed(2)}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBreakdownEntry(row)}
+                disabled={isLocked}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-[#1e3a5f] bg-[#1e3a5f] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-white transition hover:bg-[#152b47] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FaEdit size={11} /> Details
+              </button>
+            </div>
+            <div className="hidden">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                   Total Bill Value
@@ -2298,7 +2331,7 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
+            <div className="hidden">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-purple-600 uppercase tracking-widest">
                   Less 2nd Claim
@@ -2370,7 +2403,7 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-6 gap-3 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
+            <div className="grid grid-cols-3 gap-2 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
               <div className="flex flex-col gap-1">
                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                   Posting Date
@@ -2497,6 +2530,90 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
             </div>
+            {breakdownEntry?.uiKey === row.uiKey && (
+              <div
+                className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+                onClick={(event) => {
+                  if (event.target === event.currentTarget) setBreakdownEntry(null);
+                }}
+              >
+                <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-5 text-left shadow-2xl normal-case">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">Bill & Payable Calculation</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        Sauda {row.saudaNo} · Bill {row.billNumber || "-"}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="Close details">
+                      <FaTimes size={16} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {[
+                      ["Total Bill Value", details.grossAmount],
+                      [`Less CD (${details.cdPercent}%)`, details.cdAmount],
+                      [`Add GST (${details.gstPercent}%)`, details.gstAmount],
+                      ["Net Amount", details.netAmount],
+                      ["Less Total Claim", details.totalClaim],
+                      ["Payable Amount", Math.max(0, details.payableAmount)],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{label}</span>
+                        <span className="mt-1 block text-sm font-black tabular-nums text-slate-900">₹ {Number(value).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {[
+                      ["secondClaim", "Less 2nd Claim", "secondClaimRemarks"],
+                      ["otherCharges", "Less Other Charges", "otherChargesRemarks"],
+                      ["bankCharges", "Less Bank Charges", "bankChargesRemarks"],
+                      ["tds", "Less TDS", "tdsRemarks"],
+                    ].map(([amountField, label, remarksField]) => (
+                      <div key={amountField} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">{label}</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={breakdownEntry[amountField] ?? ""}
+                            onChange={(event) => handleBreakdownFieldChange(amountField, event.target.value)}
+                            disabled={isLocked}
+                            className="h-9 w-full rounded-lg border border-slate-200 pl-7 pr-3 text-sm font-bold outline-none focus:border-[#1e3a5f]"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={breakdownEntry[remarksField] || ""}
+                          onChange={(event) => handleBreakdownFieldChange(remarksField, event.target.value)}
+                          disabled={isLocked}
+                          className="mt-2 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                          placeholder="Remarks..."
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">General Remarks</label>
+                    <input
+                      type="text"
+                      value={breakdownEntry.generalRemarks || ""}
+                      onChange={(event) => handleBreakdownFieldChange("generalRemarks", event.target.value)}
+                      disabled={isLocked}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                      placeholder="Remarks..."
+                    />
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50">Close</button>
+                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg bg-[#1e3a5f] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#152b47]">Done</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       },
