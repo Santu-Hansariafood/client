@@ -328,7 +328,22 @@ router.post("/", authJwt, async (req, res) => {
               const cdAmount = grossAmount * (cdPercent / 100);
               const taxableAmount = grossAmount - cdAmount;
               const gstAmount = taxableAmount * (gstPercent / 100);
-              netAmount = taxableAmount + gstAmount;
+              const totalClaim = entry.manualClaim
+                ? Number(entry.manualClaimAmount) || 0
+                : (entry.qualityClaims || []).reduce(
+                    (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                    0,
+                  );
+              netAmount = Math.max(
+                0,
+                taxableAmount +
+                  gstAmount -
+                  totalClaim -
+                  (Number(entry.secondClaim) || 0) -
+                  (Number(entry.otherCharges) || 0) -
+                  (Number(entry.bankCharges) || 0) -
+                  (Number(entry.tds) || 0),
+              );
             }
 
             const newPaidAmount =
@@ -343,6 +358,21 @@ router.post("/", authJwt, async (req, res) => {
             const updateData = {
               paidAmount: newPaidAmount,
             };
+            for (const field of [
+              "secondClaim",
+              "secondClaimRemarks",
+              "otherCharges",
+              "otherChargesRemarks",
+              "bankCharges",
+              "bankChargesRemarks",
+              "tds",
+              "tdsRemarks",
+              "generalRemarks",
+            ]) {
+              if (Object.prototype.hasOwnProperty.call(mapping, field)) {
+                updateData[field] = mapping[field];
+              }
+            }
 
             if (newPaidAmount >= netAmount - 1 && netAmount > 0) {
               updateData.paymentStatus = "done";
@@ -880,7 +910,22 @@ const calculateLoadingEntryNetAmount = async (entry) => {
   const cdAmount = grossAmount * (cdPercent / 100);
   const taxableAmount = grossAmount - cdAmount;
   const gstAmount = taxableAmount * (gstPercent / 100);
-  return taxableAmount + gstAmount;
+  const totalClaim = entry.manualClaim
+    ? Number(entry.manualClaimAmount) || 0
+    : (entry.qualityClaims || []).reduce(
+        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+        0,
+      );
+  return Math.max(
+    0,
+    taxableAmount +
+      gstAmount -
+      totalClaim -
+      (Number(entry.secondClaim) || 0) -
+      (Number(entry.otherCharges) || 0) -
+      (Number(entry.bankCharges) || 0) -
+      (Number(entry.tds) || 0),
+  );
 };
 
 router.put("/:id", async (req, res) => {
@@ -1059,6 +1104,21 @@ router.put("/:id", async (req, res) => {
             }
 
             const updateObj = { paidAmount: newPaidAmount };
+            for (const field of [
+              "secondClaim",
+              "secondClaimRemarks",
+              "otherCharges",
+              "otherChargesRemarks",
+              "bankCharges",
+              "bankChargesRemarks",
+              "tds",
+              "tdsRemarks",
+              "generalRemarks",
+            ]) {
+              if (Object.prototype.hasOwnProperty.call(mapping, field)) {
+                updateObj[field] = mapping[field];
+              }
+            }
             if (netAmount > 0) {
               updateObj.paymentStatus =
                 newPaidAmount >= netAmount - 1 ? "done" : "pending";

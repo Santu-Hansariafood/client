@@ -306,33 +306,8 @@ const AddPaymentReceived = () => {
       otherCharges,
       tds,
       payableAmount,
-      dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
+      dueAmount: Math.max(0, payableAmount - (entry.paidAmount || 0)),
     };
-  };
-
-  const validateBreakdownFields = (entry) => {
-    const requiredFields = [
-      ["Second claim", entry.secondClaim],
-      ["Second claim remarks", entry.secondClaimRemarks],
-      ["Other charges", entry.otherCharges],
-      ["Other charges remarks", entry.otherChargesRemarks],
-      ["Bank charges", entry.bankCharges],
-      ["Bank charges remarks", entry.bankChargesRemarks],
-      ["TDS", entry.tds],
-      ["TDS remarks", entry.tdsRemarks],
-      ["General remarks", entry.generalRemarks],
-    ];
-    const missingField = requiredFields.find(
-      ([, value]) =>
-        value === null ||
-        value === undefined ||
-        String(value).trim() === "",
-    );
-    if (missingField) {
-      toast.error(`Please enter ${missingField[0]} before saving`);
-      return false;
-    }
-    return true;
   };
 
   const handleBreakdownFieldChange = (field, value) => {
@@ -1193,9 +1168,6 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    const entriesToValidate = allocations.length ? allocations : entries.slice(0, 1);
-    if (entriesToValidate.some((entry) => !validateBreakdownFields(entry))) return;
-
     const firstEntry = allocations[0] || entries[0];
     const pairPayload = firstEntry
       ? buildCompanyPayload(firstEntry)
@@ -1275,6 +1247,15 @@ const AddPaymentReceived = () => {
           remarks: e.rowRemarks,
           debitNote: e.debitNote,
           creditNote: e.creditNote,
+          secondClaim: Number(e.secondClaim) || 0,
+          secondClaimRemarks: e.secondClaimRemarks || "",
+          otherCharges: Number(e.otherCharges) || 0,
+          otherChargesRemarks: e.otherChargesRemarks || "",
+          bankCharges: Number(e.bankCharges) || 0,
+          bankChargesRemarks: e.bankChargesRemarks || "",
+          tds: Number(e.tds) || 0,
+          tdsRemarks: e.tdsRemarks || "",
+          generalRemarks: e.generalRemarks || "",
         })),
         remarks:
           allocationSource === "fresh" && recordAmount > totalAllocated
@@ -1554,8 +1535,6 @@ const AddPaymentReceived = () => {
   };
 
   const handleSaveRow = async (entry) => {
-    if (!validateBreakdownFields(entry)) return;
-
     const details = calculateTallyDetails(entry);
     const lorryBalance = Math.max(
       0,
@@ -1707,6 +1686,15 @@ const AddPaymentReceived = () => {
           remarks: entry.rowRemarks,
           debitNote: entry.debitNote,
           creditNote: entry.creditNote,
+          secondClaim: Number(entry.secondClaim) || 0,
+          secondClaimRemarks: entry.secondClaimRemarks || "",
+          otherCharges: Number(entry.otherCharges) || 0,
+          otherChargesRemarks: entry.otherChargesRemarks || "",
+          bankCharges: Number(entry.bankCharges) || 0,
+          bankChargesRemarks: entry.bankChargesRemarks || "",
+          tds: Number(entry.tds) || 0,
+          tdsRemarks: entry.tdsRemarks || "",
+          generalRemarks: entry.generalRemarks || "",
         };
         const updatedMappings = [
           ...existingMappings.filter(
@@ -1792,6 +1780,15 @@ const AddPaymentReceived = () => {
               remarks: lineRemark,
               debitNote: entry.debitNote,
               creditNote: entry.creditNote,
+              secondClaim: Number(entry.secondClaim) || 0,
+              secondClaimRemarks: entry.secondClaimRemarks || "",
+              otherCharges: Number(entry.otherCharges) || 0,
+              otherChargesRemarks: entry.otherChargesRemarks || "",
+              bankCharges: Number(entry.bankCharges) || 0,
+              bankChargesRemarks: entry.bankChargesRemarks || "",
+              tds: Number(entry.tds) || 0,
+              tdsRemarks: entry.tdsRemarks || "",
+              generalRemarks: entry.generalRemarks || "",
             },
           ],
           remarks:
