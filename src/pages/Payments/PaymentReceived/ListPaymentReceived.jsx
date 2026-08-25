@@ -743,6 +743,9 @@ const ListPaymentReceived = () => {
           gstPercent: 0,
           totalQualityClaims: 0,
           bankCharges: 0,
+          secondClaim: 0,
+          otherCharges: 0,
+          tds: 0,
         };
       if (e.isRejected)
         return {
@@ -754,6 +757,9 @@ const ListPaymentReceived = () => {
           gstPercent: 0,
           totalQualityClaims: 0,
           bankCharges: 0,
+          secondClaim: 0,
+          otherCharges: 0,
+          tds: 0,
         };
       const weight =
         (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
@@ -764,9 +770,9 @@ const ListPaymentReceived = () => {
       const cdAmount = grossAmount * (cdPercent / 100);
       const amountAfterCd = grossAmount - cdAmount;
       const bankCharges = Number(e.bankCharges) || 0;
-      const debit = amountAfterCd - bankCharges;
-      const gstAmount = debit * (gstPercent / 100);
-      const netAmount = debit + gstAmount;
+      const taxableAmount = amountAfterCd;
+      const gstAmount = taxableAmount * (gstPercent / 100);
+      const netAmountBeforeDeductions = taxableAmount + gstAmount;
 
       let totalQualityClaims = 0;
       if (e.qualityClaims && Array.isArray(e.qualityClaims)) {
@@ -774,6 +780,22 @@ const ListPaymentReceived = () => {
           return sum + (Number(claim.claimAmount) || 0);
         }, 0);
       }
+
+      const totalClaim = e.manualClaim
+        ? Number(e.manualClaimAmount) || 0
+        : totalQualityClaims;
+      const secondClaim = Number(e.secondClaim) || 0;
+      const otherCharges = Number(e.otherCharges) || 0;
+      const tds = Number(e.tds) || 0;
+      const netAmount = Math.max(
+        0,
+        netAmountBeforeDeductions -
+          totalClaim -
+          secondClaim -
+          otherCharges -
+          bankCharges -
+          tds,
+      );
 
       return {
         netAmount,
@@ -784,6 +806,9 @@ const ListPaymentReceived = () => {
         gstPercent,
         totalQualityClaims,
         bankCharges,
+        secondClaim,
+        otherCharges,
+        tds,
       };
     };
 
@@ -804,6 +829,9 @@ const ListPaymentReceived = () => {
       let totalQualityClaims = 0;
       let bankCharges = 0;
       let paymentClaimAmount = 0;
+      let paymentTdsAmount = 0;
+      let secondClaim = 0;
+      let otherCharges = 0;
 
       if (row.isOpening) {
         return {
@@ -822,6 +850,9 @@ const ListPaymentReceived = () => {
           gstPercent,
           totalQualityClaims,
           bankCharges,
+          secondClaim,
+          otherCharges,
+          paymentTdsAmount,
           paymentClaimAmount,
         };
       }
@@ -863,6 +894,9 @@ const ListPaymentReceived = () => {
         gstPercent = details.gstPercent;
         totalQualityClaims = details.totalQualityClaims;
         bankCharges = details.bankCharges;
+        secondClaim = details.secondClaim;
+        otherCharges = details.otherCharges;
+        paymentTdsAmount = details.tds;
         paymentClaimAmount = Number(raw?.claim) || 0;
       } else {
         remarks = row.particulars;
@@ -890,6 +924,9 @@ const ListPaymentReceived = () => {
         totalQualityClaims,
         bankCharges,
         paymentClaimAmount,
+        paymentTdsAmount,
+        secondClaim,
+        otherCharges,
       };
     };
 

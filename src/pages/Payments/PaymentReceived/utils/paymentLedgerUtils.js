@@ -174,6 +174,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           totalClaims: 0,
           cdAmount: 0,
           bankCharges: 0,
+          secondClaim: 0,
+          otherCharges: 0,
+          tds: 0,
         });
       } else {
         // It's a bill (Loading Entry): DEBIT = gross - cd - bank charges; Total = DEBIT + GST
@@ -195,6 +198,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
             return sum + (Number(claim.claimAmount) || 0);
           }, 0);
         }
+        const secondClaim = Number(item.secondClaim) || 0;
+        const otherCharges = Number(item.otherCharges) || 0;
+        const tds = Number(item.tds) || 0;
         
         const credit = 0;
         const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
@@ -221,6 +227,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           totalClaims,
           cdAmount,
           bankCharges,
+          secondClaim,
+          otherCharges,
+          tds,
         });
       }
     } else {
@@ -279,6 +288,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           totalClaims: mappedClaimAmount,
           cdAmount: 0,
           bankCharges: 0,
+          secondClaim: Number(payment.mappings?.[0]?.secondClaim) || 0,
+          otherCharges: Number(payment.mappings?.[0]?.otherCharges) || 0,
+          tds: Number(payment.mappings?.[0]?.tds) || 0,
         });
       }
 
@@ -312,6 +324,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           totalClaims: onAccountClaimAmount,
           cdAmount: 0,
           bankCharges: 0,
+          secondClaim: 0,
+          otherCharges: 0,
+          tds: Number(payment.tds) || 0,
         });
       }
     }

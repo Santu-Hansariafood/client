@@ -653,7 +653,7 @@ router.get("/", async (req, res) => {
           .populate("ledgerId", "name sellerName")
           .populate(
             "mappings.loadingEntryId",
-            "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight bankCharges",
+            "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany unloadingWeight loadingWeight qualityClaims manualClaim manualClaimAmount secondClaim secondClaimRemarks otherCharges otherChargesRemarks bankCharges bankChargesRemarks tds tdsRemarks generalRemarks",
           )
           .lean(),
         PaymentReceived.countDocuments(query),
