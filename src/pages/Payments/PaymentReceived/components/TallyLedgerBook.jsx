@@ -159,7 +159,7 @@ const TallyLedgerBook = ({
               Vch
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Gross Amount
+              Due Amount
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
               GST
@@ -186,7 +186,7 @@ const TallyLedgerBook = ({
               Credit
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
-              Balance
+              Due
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-center">
               Download
@@ -302,7 +302,7 @@ const TallyLedgerBook = ({
                       {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-                      {formatLedgerAmount(row.balance)}
+                      {formatLedgerAmount(row.raw?.uiType === "entry" ? row.debit : row.balance)}
                     </td>
                     <td className="px-3 py-2 text-center">
                       {!row.isOpening && (
@@ -511,7 +511,7 @@ const TallyLedgerBook = ({
                   {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-                  {formatLedgerAmount(row.balance)}
+                  {formatLedgerAmount(row.raw?.uiType === "entry" ? row.debit : row.balance)}
                 </td>
                 <td className="px-3 py-2 text-center">
                   {!row.isOpening && (

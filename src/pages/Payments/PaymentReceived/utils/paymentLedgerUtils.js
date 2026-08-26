@@ -106,6 +106,31 @@ export const getLedgerRowClaimAmount = (row = {}) =>
       0,
   ) || 0;
 
+const calculateOutstandingAmount = (entry) => {
+  if (!entry || entry.isRejected) return 0;
+  const weight =
+    Number(entry.unloadingWeight || 0) > 0
+      ? Number(entry.unloadingWeight)
+      : Number(entry.loadingWeight) || 0;
+  const gross = weight * (Number(entry.actualRate || entry.rate) || 0);
+  const cd = gross * ((Number(entry.cd) || 0) / 100);
+  const taxable = gross - cd;
+  const gst = taxable * ((Number(entry.gst) || 0) / 100);
+  const qualityClaims = entry.manualClaim
+    ? Number(entry.manualClaimAmount) || 0
+    : (entry.qualityClaims || []).reduce(
+        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+        0,
+      );
+  const deductions =
+    qualityClaims +
+    (Number(entry.secondClaim) || 0) +
+    (Number(entry.otherCharges) || 0) +
+    (Number(entry.bankCharges) || 0) +
+    (Number(entry.tds) || 0);
+  return Math.max(0, taxable + gst - deductions - (Number(entry.paidAmount) || 0));
+};
+
 /** Tally voucher rows: Date | Particulars | Vch Type | Debit | Credit | Balance */
 export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []) => {
   const allItems = [
@@ -179,7 +204,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           tds: 0,
         });
       } else {
-        // It's a bill (Loading Entry): DEBIT = gross - cd - bank charges; Total = DEBIT + GST
+        // Only the unpaid balance is shown in the Payment Received list.
         const weight = item.unloadingWeight || item.loadingWeight || 0;
         const rate = item.actualRate || item.rate || 0;
         const grossAmount = weight * rate;
@@ -190,7 +215,6 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const bankCharges = Number(item.bankCharges) || 0;
         const taxableAmount = amountAfterCd;
         const gstAmount = taxableAmount * (gstPercent / 100);
-        const totalBeforeDeductions = taxableAmount + gstAmount;
         
         // Calculate total quality claims
         let totalClaims = 0;
@@ -202,15 +226,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const secondClaim = Number(item.secondClaim) || 0;
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
-        const debit = Math.max(
-          0,
-          totalBeforeDeductions -
-            totalClaims -
-            secondClaim -
-            otherCharges -
-            bankCharges -
-            tds,
-        );
+        const dueAmount = calculateOutstandingAmount(item);
+        if (dueAmount <= 0.01) return;
+        const debit = dueAmount;
         
         const credit = 0;
         const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
@@ -232,7 +250,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           credit,
           balance,
           raw: item,
-          grossAmount,
+          grossAmount: dueAmount,
           gstAmount,
           totalClaims,
           cdAmount,
@@ -243,7 +261,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         });
       }
     } else {
-      // It's a payment
+      // Mapped payments are already reflected in each entry's paidAmount.
       const payment = item;
       const mappedTotal = (payment.mappings || []).reduce(
         (sum, m) => sum + (Number(m.allocatedAmount) || 0),
@@ -265,44 +283,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const supplierCompany = payment.supplierCompany || sellerFromMapping || "";
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
-      const mappedClaimAmount = mappedTotal > 0 ? paymentClaimAmount : 0;
       const onAccountClaimAmount = mappedTotal > 0 ? 0 : paymentClaimAmount;
-
-      // First add row for mapped amount
-      if (mappedTotal > 0) {
-        let mappedCredit = 0;
-        let mappedDebit = 0;
-        if (isBuyer) {
-          if (paymentType === "Adjustment") {
-            mappedDebit = mappedTotal;
-          } else {
-            mappedCredit = mappedTotal;
-          }
-        } else {
-          mappedDebit = mappedTotal;
-        }
-        balance = balance + mappedDebit - mappedCredit;
-        rows.push({
-          id: `${payment._id}-mapped`,
-          date,
-          particulars: buildPaymentParticulars(payment),
-          vchType: payment.paymentType || payment.paymentMode || "—",
-          buyerCompany,
-          supplierCompany,
-          debit: mappedDebit,
-          credit: mappedCredit,
-          balance,
-          raw: item,
-          grossAmount: 0,
-          gstAmount: 0,
-          totalClaims: mappedClaimAmount,
-          cdAmount: 0,
-          bankCharges: 0,
-          secondClaim: Number(payment.mappings?.[0]?.secondClaim) || 0,
-          otherCharges: Number(payment.mappings?.[0]?.otherCharges) || 0,
-          tds: Number(payment.mappings?.[0]?.tds) || 0,
-        });
-      }
 
       // Now add On Account row if there's unadjusted amount
       if (unadjustedAmount > 0.01) { // Tolerance for floating point errors
