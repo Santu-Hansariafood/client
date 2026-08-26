@@ -287,8 +287,8 @@ const AddPaymentReceived = () => {
     const secondClaim = Number(entry.secondClaim) || 0;
     const otherCharges = Number(entry.otherCharges) || 0;
     const tds = Number(entry.tds) || 0;
-    const payableAmount =
-      netAmount - totalClaim - secondClaim - otherCharges - tds;
+      const payableAmount = 
+        netAmount - totalClaim - secondClaim - otherCharges - tds - bankCharges;
 
     return {
       grossAmount,
@@ -2529,13 +2529,13 @@ const AddPaymentReceived = () => {
             </div>
             {breakdownEntry?.uiKey === row.uiKey && (
               <div
-                className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+                className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-y-auto bg-slate-900/60 p-3 backdrop-blur-sm sm:p-6"
                 onClick={(event) => {
                   if (event.target === event.currentTarget) setBreakdownEntry(null);
                 }}
               >
-                <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-5 text-left shadow-2xl normal-case">
-                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="my-auto flex max-h-[calc(100vh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl normal-case sm:max-h-[calc(100vh-3rem)]">
+                  <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
                     <div>
                       <h3 className="text-base font-black text-slate-900">Bill & Payable Calculation</h3>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -2546,6 +2546,7 @@ const AddPaymentReceived = () => {
                       <FaTimes size={16} />
                     </button>
                   </div>
+                  <div className="overflow-y-auto p-5 pt-4">
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {[
                       ["Total Bill Value", details.grossAmount],
@@ -2607,6 +2608,7 @@ const AddPaymentReceived = () => {
                   <div className="mt-4 flex justify-end gap-2">
                     <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50">Close</button>
                     <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg bg-[#1e3a5f] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#152b47]">Done</button>
+                  </div>
                   </div>
                 </div>
               </div>

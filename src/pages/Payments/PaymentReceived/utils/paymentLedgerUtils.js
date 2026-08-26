@@ -188,8 +188,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const cdAmount = grossAmount * (cdPercent / 100);
         const amountAfterCd = grossAmount - cdAmount;
         const bankCharges = Number(item.bankCharges) || 0;
-        const debit = amountAfterCd - bankCharges; // DEBIT = bill value (gross - cd - bank)
-        const gstAmount = debit * (gstPercent / 100);
+        const taxableAmount = amountAfterCd;
+        const gstAmount = taxableAmount * (gstPercent / 100);
+        const totalBeforeDeductions = taxableAmount + gstAmount;
         
         // Calculate total quality claims
         let totalClaims = 0;
@@ -201,6 +202,15 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const secondClaim = Number(item.secondClaim) || 0;
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
+        const debit = Math.max(
+          0,
+          totalBeforeDeductions -
+            totalClaims -
+            secondClaim -
+            otherCharges -
+            bankCharges -
+            tds,
+        );
         
         const credit = 0;
         const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
