@@ -818,10 +818,24 @@ const AddPaymentReceived = () => {
       hasAnyChange = true;
       return {
         ...e,
-        allocatedAmount: Number(mapping.amount || 0),
-        claimAmount: Number(mapping.claim || 0),
-        tdsAmount: Number(mapping.tds || 0),
-        bankCharges: Number(mapping.bankCharges || e.bankCharges || 0),
+        allocatedAmount:
+          mapping.allocatedAmount ?? mapping.amount ?? e.allocatedAmount,
+        qualityClaims: mapping.qualityClaims || e.qualityClaims || [],
+        manualClaim: mapping.manualClaim ?? e.manualClaim,
+        manualClaimAmount:
+          mapping.manualClaimAmount ?? e.manualClaimAmount ?? 0,
+        secondClaim: mapping.secondClaim ?? e.secondClaim ?? 0,
+        secondClaimRemarks:
+          mapping.secondClaimRemarks ?? e.secondClaimRemarks ?? "",
+        otherCharges: mapping.otherCharges ?? e.otherCharges ?? 0,
+        otherChargesRemarks:
+          mapping.otherChargesRemarks ?? e.otherChargesRemarks ?? "",
+        bankCharges: mapping.bankCharges ?? e.bankCharges ?? 0,
+        bankChargesRemarks:
+          mapping.bankChargesRemarks ?? e.bankChargesRemarks ?? "",
+        tds: mapping.tds ?? e.tds ?? 0,
+        tdsRemarks: mapping.tdsRemarks ?? e.tdsRemarks ?? "",
+        generalRemarks: mapping.generalRemarks ?? e.generalRemarks ?? "",
         rowRemarks: mapping.remarks || e.rowRemarks || "",
         debitNote: mapping.debitNote || e.debitNote || "Due against lorry",
         creditNote: mapping.creditNote || e.creditNote || "Allocation posted",
@@ -833,6 +847,7 @@ const AddPaymentReceived = () => {
 
     if (hasAnyChange) {
       setEntries(mergedEntries);
+      setBreakdownEntry(mergedEntries.find((entry) => entry.isCurrentVoucherAllocation));
     }
   }, [editingPaymentId, editingPayment, entries.length]);
 
