@@ -56,7 +56,8 @@ const PaymentList = () => {
     totalClaims: 0,
     totalBankCharges: 0,
     totalCredit: 0,
-    totalDue: 0
+    totalDue: 0,
+    totalRemainingLorryBalance: 0
   });
   
   // Company state
@@ -171,7 +172,7 @@ const PaymentList = () => {
     doc.setFont("helvetica");
 
     const tableColumn = [
-      "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Remarks"
+      "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Lorry Bal", "Remarks"
     ];
 
     const tableRows = data.map((item) => [
@@ -189,6 +190,7 @@ const PaymentList = () => {
       `Rs. ${Number(item.cdAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       `Rs. ${Number(item.bankCharges || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       `Rs. ${Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${Number(item.remainingLorryBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       item.generalRemarks || "-"
     ]);
 
@@ -428,7 +430,7 @@ const PaymentList = () => {
         tableData.push([
           {
             content: `SAUDA NO: ${saudaKey}`,
-            colSpan: 15,
+            colSpan: 16,
             styles: {
               fillColor: [200, 200, 200],
               fontStyle: "bold",
@@ -446,6 +448,7 @@ const PaymentList = () => {
           let cdAmount = item.cdAmount || 0;
           let bankCharges = Number(item.bankCharges) || 0;
           let balance = Number((grossAmount + gstAmount - claims - cdAmount - bankCharges).toFixed(2));
+          let lorryBalance = Number(item.remainingLorryBalance || 0);
 
           tableData.push([
             rowIdx,
@@ -462,6 +465,7 @@ const PaymentList = () => {
             cdAmount > 0 ? `Rs. ${Number(cdAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             bankCharges > 0 ? `Rs. ${Number(bankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             balance !== 0 ? `Rs. ${Number(balance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            lorryBalance > 0 ? `Rs. ${Number(lorryBalance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             item.generalRemarks || "-",
           ]);
         });
@@ -471,7 +475,7 @@ const PaymentList = () => {
         tableData.push([
           {
             content: "No records found",
-            colSpan: 15,
+            colSpan: 16,
             styles: {
               halign: "center",
               fontStyle: "bold",
@@ -511,6 +515,7 @@ const PaymentList = () => {
             "CD (Rs.)",
             "BANK CHGS (Rs.)",
             "BALANCE (Rs.)",
+            "LORRY BAL (Rs.)",
             "REMARKS",
           ],
         ],
@@ -540,18 +545,19 @@ const PaymentList = () => {
           0: { halign: "center", cellWidth: 7 },
           1: { halign: "center", cellWidth: 16 },
           2: { halign: "center", cellWidth: 16 },
-          3: { halign: "center", cellWidth: 30 },
-          4: { halign: "center", cellWidth: 16 },
-          5: { cellWidth: 22 },
-          6: { cellWidth: 22 },
-          7: { halign: "right", cellWidth: 18 },
-          8: { halign: "right", cellWidth: 18 },
-          9: { halign: "right", cellWidth: 18 },
-          10: { halign: "right", cellWidth: 18 },
-          11: { halign: "right", cellWidth: 18 },
-          12: { halign: "right", cellWidth: 18 },
-          13: { halign: "right", fontStyle: "bold", cellWidth: 20 },
-          14: { cellWidth: 35 },
+          3: { halign: "center", cellWidth: 28 },
+          4: { halign: "center", cellWidth: 15 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+          7: { halign: "right", cellWidth: 17 },
+          8: { halign: "right", cellWidth: 17 },
+          9: { halign: "right", cellWidth: 17 },
+          10: { halign: "right", cellWidth: 17 },
+          11: { halign: "right", cellWidth: 17 },
+          12: { halign: "right", cellWidth: 17 },
+          13: { halign: "right", fontStyle: "bold", cellWidth: 18 },
+          14: { halign: "right", fontStyle: "bold", cellWidth: 18 },
+          15: { cellWidth: 30 },
         },
         margin: { left: 7, right: 7, top: 7, bottom: 15 },
         tableWidth: "wrap",
@@ -780,6 +786,18 @@ const PaymentList = () => {
         maximumFractionDigits: 2
       })}`, margin + 60, dueSummaryY);
 
+      // Add total lorry balance
+      let lorrySummaryY = dueSummaryY + 12;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(180, 83, 9);
+      doc.text("TOTAL LORRY BALANCE:", margin + 10, lorrySummaryY);
+      doc.setFontSize(14);
+      doc.text(`Rs. ${Number((pdfTotals.totalRemainingLorryBalance || 0).toFixed(2)).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`, margin + 60, lorrySummaryY);
+
       // Add footer
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
@@ -813,7 +831,7 @@ const PaymentList = () => {
   };
 
   const headers = [
-    "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Remarks"
+    "No", "Date", "Sauda No", "Lorry No", "Bill No", "Buyer", "Seller", "Gross Amt", "GST", "Credit", "Claims", "CD", "Bank Chgs", "Balance", "Lorry Bal", "Remarks"
   ];
 
   const rows = data.map((item) => [
@@ -831,6 +849,7 @@ const PaymentList = () => {
     <span key={`cd-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.cdAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
     <span key={`bank-${item._id}`} className="font-black text-slate-700">Rs. {Number(item.bankCharges || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>,
     <span key={`dueamt-${item._id}`} className={`font-bold ${item.dueAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>Rs. {Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+    <span key={`lorrybal-${item._id}`} className={`font-bold ${item.remainingLorryBalance > 0 ? 'text-amber-600' : 'text-slate-400'}`}>Rs. {Number(item.remainingLorryBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
     item.generalRemarks || "-"
   ]);
 
@@ -991,7 +1010,7 @@ const PaymentList = () => {
           </div>
 
           {/* Additional Totals Row */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
               <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Claims</div>
               <div className="text-xs font-black text-slate-800">
@@ -1008,6 +1027,12 @@ const PaymentList = () => {
               <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Credit</div>
               <div className="text-xs font-black text-slate-800">
                 Rs. {Number(totals.totalCredit.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border border-amber-300 shadow-md">
+              <div className="text-sm font-bold text-amber-600 uppercase tracking-widest mb-2">Total Lorry Balance</div>
+              <div className="text-xs font-black text-amber-700">
+                Rs. {Number((totals.totalRemainingLorryBalance || 0).toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>

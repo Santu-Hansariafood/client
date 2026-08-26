@@ -3,6 +3,7 @@ import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Company from "../models/Company.js";
 import SellerCompany from "../models/SellerCompany.js";
+import PaymentReceived from "../models/PaymentReceived.js";
 import ExcelJS from "exceljs";
 
 const router = express.Router();
@@ -13,6 +14,29 @@ const escapeRegex = (string) => {
 
 const companyRegex = (name) =>
   new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
+
+const computeLorryAllocationSums = async (entryIds) => {
+  if (!entryIds || entryIds.length === 0) return {};
+  const result = await PaymentReceived.aggregate([
+    { $unwind: "$mappings" },
+    {
+      $match: {
+        "mappings.loadingEntryId": { $in: entryIds },
+      },
+    },
+    {
+      $group: {
+        _id: "$mappings.loadingEntryId",
+        totalAllocated: { $sum: { $ifNull: ["$mappings.allocatedAmount", 0] } },
+      },
+    },
+  ]);
+  const allocationMap = {};
+  result.forEach((r) => {
+    allocationMap[r._id.toString()] = Number(r.totalAllocated) || 0;
+  });
+  return allocationMap;
+};
 
 router.get("/", async (req, res) => {
   try {
@@ -66,9 +90,12 @@ router.get("/", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     const allItems = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance")
       .populate("supplier", "sellerName")
       .lean();
+
+    const entryIds = allItems.map((i) => i._id);
+    const allocationMap = await computeLorryAllocationSums(entryIds);
 
     // Get all sauda orders
     const saudaNos = [...new Set(allItems.map((i) => i.saudaNo).filter(Boolean))];
@@ -86,6 +113,9 @@ router.get("/", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = allItems.map((item) => {
+      const lorryAllocatedAmount = allocationMap[item._id.toString()] || 0;
+      const remainingLorryBalance = Math.max(0, (item.totalFreight || 0) - lorryAllocatedAmount);
+
       if (item.isRejected) {
         return {
           ...item,
@@ -102,6 +132,9 @@ router.get("/", async (req, res) => {
           bankCharges: 0,
           dueAmount: 0,
           buyerCompany: item.buyerCompany || "N/A",
+          totalFreight: item.totalFreight || 0,
+          lorryAllocatedAmount: 0,
+          remainingLorryBalance: 0,
         };
       }
 
@@ -162,6 +195,9 @@ router.get("/", async (req, res) => {
         bankCharges,
         dueAmount,
         buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
+        totalFreight: item.totalFreight || 0,
+        lorryAllocatedAmount,
+        remainingLorryBalance,
       };
     });
 
@@ -211,6 +247,7 @@ router.get("/", async (req, res) => {
     let totalBankCharges = 0;
     let totalCredit = 0;
     let totalDue = 0;
+    let totalRemainingLorryBalance = 0;
 
     processedItems.forEach(item => {
       totalGross += item.grossAmount || 0;
@@ -220,6 +257,7 @@ router.get("/", async (req, res) => {
       totalBankCharges += item.bankCharges || 0;
       totalCredit += item.paidAmount || 0;
       totalDue += item.dueAmount || 0;
+      totalRemainingLorryBalance += item.remainingLorryBalance || 0;
     });
 
     // Apply pagination
@@ -244,7 +282,8 @@ router.get("/", async (req, res) => {
         totalClaims,
         totalBankCharges,
         totalCredit,
-        totalDue
+        totalDue,
+        totalRemainingLorryBalance
       }
     });
   } catch (error) {
@@ -377,9 +416,12 @@ router.get("/export/excel", async (req, res) => {
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     let items = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance")
       .populate("supplier", "sellerName")
       .lean();
+
+    const excelEntryIds = items.map((i) => i._id);
+    const excelAllocationMap = await computeLorryAllocationSums(excelEntryIds);
 
     // Get all sauda orders
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
@@ -397,6 +439,9 @@ router.get("/export/excel", async (req, res) => {
 
     // Calculate due dates for all items
     let processedItems = items.map((item) => {
+      const lorryAllocatedAmount = excelAllocationMap[item._id.toString()] || 0;
+      const remainingLorryBalance = Math.max(0, (item.totalFreight || 0) - lorryAllocatedAmount);
+
       if (item.isRejected) {
         return {
           ...item,
@@ -413,6 +458,9 @@ router.get("/export/excel", async (req, res) => {
           bankCharges: 0,
           dueAmount: 0,
           buyerCompany: item.buyerCompany || "N/A",
+          totalFreight: item.totalFreight || 0,
+          lorryAllocatedAmount: 0,
+          remainingLorryBalance: 0,
         };
       }
 
@@ -473,6 +521,9 @@ router.get("/export/excel", async (req, res) => {
         bankCharges,
         dueAmount,
         buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
+        totalFreight: item.totalFreight || 0,
+        lorryAllocatedAmount,
+        remainingLorryBalance,
       };
     });
 
@@ -535,6 +586,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "CD", key: "cdAmount", width: 12 },
       { header: "Bank Chgs", key: "bankCharges", width: 12 },
       { header: "Balance", key: "dueAmount", width: 15 },
+      { header: "Lorry Balance", key: "remainingLorryBalance", width: 15 },
       { header: "Remarks", key: "generalRemarks", width: 30 },
     ];
 
@@ -557,6 +609,7 @@ router.get("/export/excel", async (req, res) => {
         cdAmount: Number(item.cdAmount || 0).toFixed(2),
         bankCharges: Number(item.bankCharges || 0).toFixed(2),
         dueAmount: Number(item.dueAmount || 0).toFixed(2),
+        remainingLorryBalance: Number(item.remainingLorryBalance || 0).toFixed(2),
         generalRemarks: item.generalRemarks || "-"
       });
     }
