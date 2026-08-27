@@ -1041,10 +1041,10 @@ const ListPaymentReceived = () => {
           rowData.billNo,
           (row.buyerCompany || "-").toUpperCase(),
           (row.supplierCompany || "-").toUpperCase(),
-          isEntryRow && formattedGross > 0
+          formattedGross > 0
             ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          isEntryRow && formattedGst > 0
+          formattedGst > 0
             ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
           formattedCredit > 0
@@ -1053,10 +1053,10 @@ const ListPaymentReceived = () => {
           formattedClaims > 0
             ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          isEntryRow && formattedCd > 0
+          formattedCd > 0
             ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          isEntryRow && formattedBankCharges > 0
+          formattedBankCharges > 0
             ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
           balance !== 0

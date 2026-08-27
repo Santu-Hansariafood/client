@@ -227,7 +227,6 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
         const dueAmount = calculateOutstandingAmount(item);
-        if (dueAmount <= 0.01) return;
         const debit = dueAmount;
         
         const credit = 0;

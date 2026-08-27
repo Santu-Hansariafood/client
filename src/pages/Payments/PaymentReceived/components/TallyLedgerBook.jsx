@@ -265,12 +265,12 @@ const TallyLedgerBook = ({
                       {row.vchType}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.raw?.uiType === "entry" && row.grossAmount > 0
+                      {row.grossAmount > 0
                         ? formatLedgerAmount(row.grossAmount)
                         : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.raw?.uiType === "entry" && row.gstAmount > 0
+                      {row.gstAmount > 0
                         ? formatLedgerAmount(row.gstAmount)
                         : ""}
                     </td>
@@ -280,12 +280,12 @@ const TallyLedgerBook = ({
                         : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.raw?.uiType === "entry" && row.cdAmount > 0
+                      {row.cdAmount > 0
                         ? formatLedgerAmount(row.cdAmount)
                         : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.raw?.uiType === "entry" && row.bankCharges > 0
+                      {row.bankCharges > 0
                         ? formatLedgerAmount(row.bankCharges)
                         : ""}
                     </td>
@@ -474,12 +474,12 @@ const TallyLedgerBook = ({
                   {row.vchType}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.raw?.uiType === "entry" && row.grossAmount > 0
+                  {row.grossAmount > 0
                     ? formatLedgerAmount(row.grossAmount)
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.raw?.uiType === "entry" && row.gstAmount > 0
+                  {row.gstAmount > 0
                     ? formatLedgerAmount(row.gstAmount)
                     : ""}
                 </td>
@@ -489,12 +489,12 @@ const TallyLedgerBook = ({
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.raw?.uiType === "entry" && row.cdAmount > 0
+                  {row.cdAmount > 0
                     ? formatLedgerAmount(row.cdAmount)
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.raw?.uiType === "entry" && row.bankCharges > 0
+                  {row.bankCharges > 0
                     ? formatLedgerAmount(row.bankCharges)
                     : ""}
                 </td>
