@@ -66,7 +66,10 @@ router.get("/", async (req, res) => {
     const andParts = [query];
 
     if (buyerCompany) {
-      andParts.push({ buyerCompany: companyRegex(buyerCompany) });
+      const buyerRegex = companyRegex(buyerCompany);
+      andParts.push({
+        $or: [{ buyerCompany: buyerRegex }, { consignee: buyerRegex }],
+      });
     }
 
     if (sellerCompany) {
@@ -175,7 +178,11 @@ router.get("/", async (req, res) => {
         }
       }
 
-      const dueAmount = Math.max(0, netAmount - (item.paidAmount || 0));
+      const paidAmount = Math.max(
+        Number(item.paidAmount) || 0,
+        lorryAllocatedAmount,
+      );
+      const dueAmount = Math.max(0, netAmount - paidAmount);
 
       return {
         ...item,
@@ -187,6 +194,7 @@ router.get("/", async (req, res) => {
           (item.unloadingWeight && item.unloadingWeight > 0
             ? item.unloadingWeight
             : item.loadingWeight || 0) * (order.rate || 0),
+        paidAmount,
         grossAmount,
         cdAmount,
         gstAmount,
@@ -392,7 +400,10 @@ router.get("/export/excel", async (req, res) => {
     const andParts = [query];
 
     if (buyerCompany) {
-      andParts.push({ buyerCompany: companyRegex(buyerCompany) });
+      const buyerRegex = companyRegex(buyerCompany);
+      andParts.push({
+        $or: [{ buyerCompany: buyerRegex }, { consignee: buyerRegex }],
+      });
     }
 
     if (sellerCompany) {
@@ -501,7 +512,11 @@ router.get("/export/excel", async (req, res) => {
         }
       }
 
-      const dueAmount = Math.max(0, netAmount - (item.paidAmount || 0));
+      const paidAmount = Math.max(
+        Number(item.paidAmount) || 0,
+        excelAllocationMap[item._id.toString()] || 0,
+      );
+      const dueAmount = Math.max(0, netAmount - paidAmount);
 
       return {
         ...item,
@@ -513,6 +528,7 @@ router.get("/export/excel", async (req, res) => {
           (item.unloadingWeight && item.unloadingWeight > 0
             ? item.unloadingWeight
             : item.loadingWeight || 0) * (order.rate || 0),
+        paidAmount,
         grossAmount,
         cdAmount,
         gstAmount,

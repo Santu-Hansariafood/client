@@ -143,23 +143,6 @@ const ListPaymentReceived = () => {
     return sellerCompanyOptions;
   }, [sellerCompanyOptions]);
 
-  const resolveLedgerForCompany = useCallback(
-    (companyId, ledgerType, ledgerList, buyerCompanies) => {
-      if (!companyId) return null;
-      if (true) {
-        return (
-          buyerCompanies.find((ledger) =>
-            (ledger.companyIds || ledger.companies || []).some((c) => {
-              const id = typeof c === "string" ? c : c._id || c.value || c.id;
-              return id === companyId;
-            }),
-          ) || null
-        );
-      }
-    },
-    [],
-  );
-
   useEffect(() => {
     const fetchSaudas = async () => {
       const buyerCompany =
@@ -297,27 +280,22 @@ const ListPaymentReceived = () => {
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
 
-      if (
-        filters.ledgerType &&
-        (filters.buyerCompany || filters.supplierCompany)
-      ) {
-        const entryParams = {
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-          limit: 1000,
-        };
-        if (filters.buyerCompany)
-          entryParams.buyerCompany = filters.buyerCompany;
-        if (filters.supplierCompany)
-          entryParams.supplierCompany = filters.supplierCompany;
-
-        const entriesRes = await api.get("/loading-entries", {
-          params: entryParams,
-        });
-        setListEntries(entriesRes.data.data || []);
-      } else {
-        setListEntries([]);
-      }
+      const entryParams = {
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        buyerCompany: filters.buyerCompany || undefined,
+        supplierCompany: filters.supplierCompany || undefined,
+        buyerId:
+          filters.ledgerType === "Buyer" ? filters.ledgerId || undefined : undefined,
+        supplier:
+          filters.ledgerType === "Seller" ? filters.ledgerId || undefined : undefined,
+        saudaNo: filters.saudaNo || undefined,
+        limit: 5000,
+      };
+      const entriesRes = await api.get("/loading-entries", {
+        params: entryParams,
+      });
+      setListEntries(entriesRes.data.data || []);
     } catch (error) {
       toast.error("Error fetching ledger data");
     } finally {
@@ -586,25 +564,22 @@ const ListPaymentReceived = () => {
       params,
     });
 
-    let allEntries = [];
-    if (
-      filters.ledgerType &&
-      (filters.buyerCompany || filters.supplierCompany)
-    ) {
-      const entryParams = {
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-        limit: 1000,
-      };
-      if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
-      if (filters.supplierCompany)
-        entryParams.supplierCompany = filters.supplierCompany;
-
-      const entriesRes = await api.get("/loading-entries", {
-        params: entryParams,
-      });
-      allEntries = entriesRes.data.data || [];
-    }
+    const entryParams = {
+      startDate: filters.startDate || undefined,
+      endDate: filters.endDate || undefined,
+      buyerCompany: filters.buyerCompany || undefined,
+      supplierCompany: filters.supplierCompany || undefined,
+      buyerId:
+        filters.ledgerType === "Buyer" ? filters.ledgerId || undefined : undefined,
+      supplier:
+        filters.ledgerType === "Seller" ? filters.ledgerId || undefined : undefined,
+      saudaNo: filters.saudaNo || undefined,
+      limit: 5000,
+    };
+    const entriesRes = await api.get("/loading-entries", {
+      params: entryParams,
+    });
+    const allEntries = entriesRes.data.data || [];
 
     const mappedEntries = (response.data.data || []).flatMap((payment) =>
       (payment.mappings || [])
@@ -1019,12 +994,17 @@ const ListPaymentReceived = () => {
         const isEntryRow = row.raw?.uiType === "entry";
         const displayClaimAmount = getLedgerRowClaimAmount(row);
 
-        let grossAmount = 0;
-        let gst = 0;
-        let claims = 0;
-        let cd = 0;
-        let bankCharges = 0;
-        let balance = 0;
+        let grossAmount = rowData.billAmount || 0;
+        let gst = rowData.gstAmount || 0;
+        let claims =
+          displayClaimAmount ||
+          rowData.totalQualityClaims + rowData.paymentClaimAmount;
+        let cd = rowData.cdAmount || 0;
+        let bankCharges = rowData.bankCharges || 0;
+        let balance = Number(row.balance || 0);
+        const displayCredit = isEntryRow
+          ? credit
+          : Math.max(credit, rowData.paidAmount || 0);
 
         if (isEntryRow) {
           grossAmount = row.grossAmount || 0;
@@ -1043,17 +1023,15 @@ const ListPaymentReceived = () => {
           saudaBankChargesTotal += bankCharges;
         }
 
-        saudaCreditTotal += credit;
+        saudaCreditTotal += displayCredit;
         saudaPaidTotal += rowData.paidAmount;
 
-        const formattedGross = isEntryRow ? Number(grossAmount.toFixed(2)) : 0;
-        const formattedCredit = Number(credit.toFixed(2));
-        const formattedGst = isEntryRow ? Number(gst.toFixed(2)) : 0;
-        const formattedClaims = Number(displayClaimAmount.toFixed(2));
-        const formattedCd = isEntryRow ? Number(cd.toFixed(2)) : 0;
-        const formattedBankCharges = isEntryRow
-          ? Number(bankCharges.toFixed(2))
-          : 0;
+        const formattedGross = Number(grossAmount.toFixed(2));
+        const formattedCredit = Number(displayCredit.toFixed(2));
+        const formattedGst = Number(gst.toFixed(2));
+        const formattedClaims = Number(claims.toFixed(2));
+        const formattedCd = Number(cd.toFixed(2));
+        const formattedBankCharges = Number(bankCharges.toFixed(2));
 
         tableData.push([
           rowIdx,

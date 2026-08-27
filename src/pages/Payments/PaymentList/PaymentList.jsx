@@ -31,6 +31,14 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-GB");
 };
 
+const formatQueryDate = (date) => {
+  if (!date) return undefined;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const PaymentList = () => {
   const { userRole } = useAuth();
   const location = useLocation();
@@ -101,8 +109,8 @@ const PaymentList = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: searchInput,
-          startDate: startDate ? startDate.toISOString() : undefined,
-          endDate: endDate ? endDate.toISOString() : undefined,
+          startDate: formatQueryDate(startDate),
+          endDate: formatQueryDate(endDate),
           paymentStatus,
           buyerCompany: selectedBuyerCompany?.label || selectedBuyerCompany?.companyName || undefined,
           sellerCompany: selectedSellerCompany?.label || selectedSellerCompany?.companyName || undefined,
@@ -148,8 +156,10 @@ const PaymentList = () => {
       const response = await api.get("/payments/export/excel", {
         params: {
           search: searchInput,
-          startDate: startDate ? startDate.toISOString() : undefined,
-          endDate: endDate ? endDate.toISOString() : undefined,
+          startDate: formatQueryDate(startDate),
+          endDate: formatQueryDate(endDate),
+          buyerCompany: selectedBuyerCompany?.label || selectedBuyerCompany?.companyName || undefined,
+          sellerCompany: selectedSellerCompany?.label || selectedSellerCompany?.companyName || undefined,
           paymentStatus,
         },
         responseType: "blob",
@@ -306,8 +316,8 @@ const PaymentList = () => {
           page: 1,
           limit: 5000,
           search: searchInput,
-          startDate: startDate ? startDate.toISOString() : undefined,
-          endDate: endDate ? endDate.toISOString() : undefined,
+          startDate: formatQueryDate(startDate),
+          endDate: formatQueryDate(endDate),
           paymentStatus,
           buyerCompany: selectedBuyerCompany?.label || selectedBuyerCompany?.companyName || undefined,
           sellerCompany: selectedSellerCompany?.label || selectedSellerCompany?.companyName || undefined,
