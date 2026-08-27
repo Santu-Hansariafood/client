@@ -215,7 +215,6 @@ const WeatherWidget = () => {
         height="h-auto max-h-[92vh]"
       >
         <div className="space-y-5 sm:space-y-6 -mt-2 pb-2">
-          {/* Hero */}
           <div
             className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white shadow-xl ${
               isNight
@@ -286,7 +285,6 @@ const WeatherWidget = () => {
             </div>
           </div>
 
-          {/* Forecast */}
           <div>
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 px-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-sky-500" />

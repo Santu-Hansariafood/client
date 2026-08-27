@@ -1304,8 +1304,8 @@ const AddPaymentReceived = () => {
           date: new Date().toISOString().split("T")[0],
           allocationDate: new Date().toISOString().split("T")[0],
           ledgerType: formData.ledgerType || "Buyer",
-          ledgerId: "",
-          companyId: "",
+          ledgerId: formData.ledgerId,
+          companyId: formData.companyId,
           opposingCompanyId: "",
           amount: 0,
           claim: 0,
@@ -1316,8 +1316,6 @@ const AddPaymentReceived = () => {
           filterStartDate: "",
           filterEndDate: "",
         });
-        setSelectedLedger(null);
-        setBuyerSellerOptions([]);
         setEntries([]);
         setAllocationSource("fresh");
       }
@@ -1830,8 +1828,8 @@ const AddPaymentReceived = () => {
             date: new Date().toISOString().split("T")[0],
             allocationDate: new Date().toISOString().split("T")[0],
             ledgerType: formData.ledgerType || "Buyer",
-            ledgerId: "",
-            companyId: "",
+            ledgerId: formData.ledgerId,
+            companyId: formData.companyId,
             opposingCompanyId: "",
             amount: 0,
             claim: 0,
@@ -1842,8 +1840,6 @@ const AddPaymentReceived = () => {
             filterStartDate: "",
             filterEndDate: "",
           });
-          setSelectedLedger(null);
-          setBuyerSellerOptions([]);
           setEntries([]);
           setAllocationSource("fresh");
         }
@@ -1921,8 +1917,8 @@ const AddPaymentReceived = () => {
           date: new Date().toISOString().split("T")[0],
           allocationDate: new Date().toISOString().split("T")[0],
           ledgerType: formData.ledgerType || "Buyer",
-          ledgerId: "",
-          companyId: "",
+          ledgerId: formData.ledgerId,
+          companyId: formData.companyId,
           opposingCompanyId: "",
           amount: 0,
           claim: 0,
@@ -1933,8 +1929,6 @@ const AddPaymentReceived = () => {
           filterStartDate: "",
           filterEndDate: "",
         });
-        setSelectedLedger(null);
-        setBuyerSellerOptions([]);
         setAllocationSource("fresh");
       }
       fetchHistory();
