@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaPlus, FaClipboardList } from "react-icons/fa";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
@@ -6,10 +7,10 @@ import { usePaymentReceived } from "./hooks/usePaymentReceived";
 
 const SearchBox = lazy(() => import("../../common/SearchBox/SearchBox"));
 const PaymentList = lazy(() => import("./components/PaymentList"));
-const PaymentForm = lazy(() => import("./components/PaymentForm"));
 const PaymentDetails = lazy(() => import("./components/PaymentDetails"));
 
 const PaymentReceived = () => {
+  const navigate = useNavigate();
   const {
     payments,
     loading,
@@ -19,16 +20,13 @@ const PaymentReceived = () => {
     totalItems,
     searchInput,
     selectedPayment,
-    showForm,
     showDetails,
     nextVoucherNumber,
     setCurrentPage,
     setItemsPerPage,
     setSearchInput,
     setSelectedPayment,
-    setShowForm,
     setShowDetails,
-    savePayment,
     deletePayment,
     scanVoucher,
   } = usePaymentReceived();
@@ -37,31 +35,25 @@ const PaymentReceived = () => {
     (payment) => {
       setSelectedPayment(payment);
       setShowDetails(true);
-      setShowForm(false);
     },
-    [setSelectedPayment, setShowDetails, setShowForm],
+    [setSelectedPayment, setShowDetails],
   );
 
   const handleEdit = useCallback(
     (payment) => {
-      setSelectedPayment(payment);
-      setShowForm(true);
-      setShowDetails(false);
+      navigate(`/payments/received/add?id=${payment._id}`);
     },
-    [setSelectedPayment, setShowForm, setShowDetails],
+    [navigate],
   );
 
   const handleAddNew = useCallback(() => {
-    setSelectedPayment(null);
-    setShowForm(true);
-    setShowDetails(false);
-  }, [setSelectedPayment, setShowForm, setShowDetails]);
+    navigate("/payments/received/add");
+  }, [navigate]);
 
   const handleCancel = useCallback(() => {
-    setShowForm(false);
     setShowDetails(false);
     setSelectedPayment(null);
-  }, [setShowForm, setShowDetails, setSelectedPayment]);
+  }, [setShowDetails, setSelectedPayment]);
 
   return (
     <AdminPageShell
@@ -125,18 +117,6 @@ const PaymentReceived = () => {
             onScanVoucher={scanVoucher}
           />
         </Suspense>
-
-        {showForm && (
-          <Suspense fallback={<Loading />}>
-            <PaymentForm
-              payment={selectedPayment}
-              onSave={savePayment}
-              onCancel={handleCancel}
-              loading={loading}
-              nextVoucherNumber={nextVoucherNumber}
-            />
-          </Suspense>
-        )}
 
         {showDetails && (
           <Suspense fallback={<Loading />}>
