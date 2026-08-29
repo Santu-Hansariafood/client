@@ -996,7 +996,7 @@ const ListPaymentReceived = () => {
       group.forEach(({ row, rowData }) => {
         rowIdx++;
 
-        const credit = row.credit || 0;
+        const credit = Number(row.credit) || 0;
         const isEntryRow = row.raw?.uiType === "entry";
         const displayClaimAmount = getLedgerRowClaimAmount(row);
 
@@ -1008,18 +1008,24 @@ const ListPaymentReceived = () => {
         let cd = rowData.cdAmount || 0;
         let bankCharges = rowData.bankCharges || 0;
         let balance = Number(row.balance || 0);
+        const entryPaidAmount = Number(
+          rowData.paidAmount || row.raw?.paidAmount || 0,
+        );
         const displayCredit = isEntryRow
-          ? credit
-          : Math.max(credit, rowData.paidAmount || 0);
+          ? Math.max(credit, entryPaidAmount)
+          : Math.max(credit, Number(rowData.paidAmount) || 0);
 
         if (isEntryRow) {
           grossAmount = row.grossAmount || 0;
           gst = row.gstAmount || 0;
-          claims =
+          claims = Number(
             displayClaimAmount ||
-            rowData.totalQualityClaims + rowData.paymentClaimAmount;
-          cd = row.cdAmount || 0;
-          bankCharges = row.bankCharges || 0;
+              rowData.totalQualityClaims + rowData.paymentClaimAmount ||
+              row.raw?.manualClaimAmount ||
+              0,
+          );
+          cd = Number(row.cdAmount || 0);
+          bankCharges = Number(row.bankCharges || 0);
           balance = Number(row.debit || row.balance || 0);
 
           saudaGrossTotal += grossAmount;
@@ -1052,18 +1058,10 @@ const ListPaymentReceived = () => {
           formattedGst > 0
             ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
-          formattedCredit > 0
-            ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
-          formattedClaims > 0
-            ? `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
-          formattedCd > 0
-            ? `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
-          formattedBankCharges > 0
-            ? `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
+          `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           balance !== 0
             ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
