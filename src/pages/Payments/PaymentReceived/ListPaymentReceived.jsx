@@ -555,6 +555,7 @@ const ListPaymentReceived = () => {
   };
 
   const generateMISReportPDF = async () => {
+    clearApiCache();
     const params = {
       ...filters,
       limit: 5000,

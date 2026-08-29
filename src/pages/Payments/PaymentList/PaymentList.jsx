@@ -212,7 +212,7 @@ const PaymentList = () => {
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 28);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 35,
@@ -286,7 +286,7 @@ const PaymentList = () => {
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 28);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 35,
@@ -309,6 +309,7 @@ const PaymentList = () => {
       const toastId = toast.loading("Generating MIS report...");
 
       console.log("Starting MIS PDF download...");
+      clearApiCache();
 
       // Fetch all data without pagination for PDF
       const response = await api.get("/payments", {
@@ -457,7 +458,8 @@ const PaymentList = () => {
           let claims = item.totalQualityClaims || 0;
           let cdAmount = item.cdAmount || 0;
           let bankCharges = Number(item.bankCharges) || 0;
-          let balance = Number((grossAmount + gstAmount - claims - cdAmount - bankCharges).toFixed(2));
+          let balance = Number(item.dueAmount || 0);
+          let credit = Number(item.paidAmount || 0);
           let lorryBalance = Number(item.remainingLorryBalance || 0);
 
           tableData.push([
@@ -470,7 +472,7 @@ const PaymentList = () => {
             (item.supplierCompany || "-").toUpperCase(),
             grossAmount > 0 ? `Rs. ${Number(grossAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             gstAmount > 0 ? `Rs. ${Number(gstAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
-            "",
+            credit > 0 ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             claims > 0 ? `Rs. ${Number(claims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             cdAmount > 0 ? `Rs. ${Number(cdAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             bankCharges > 0 ? `Rs. ${Number(bankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
