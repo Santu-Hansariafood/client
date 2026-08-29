@@ -182,7 +182,15 @@ router.get("/", async (req, res) => {
         Number(item.paidAmount) || 0,
         lorryAllocatedAmount,
       );
-      const dueAmount = Math.max(0, netAmount - totalQualityClaims - paidAmount);
+      const dueAmount = Math.max(
+        0,
+        grossAmount -
+          totalQualityClaims -
+          bankCharges -
+          cdAmount +
+          gstAmount -
+          paidAmount,
+      );
 
       return {
         ...item,
@@ -516,7 +524,15 @@ router.get("/export/excel", async (req, res) => {
         Number(item.paidAmount) || 0,
         excelAllocationMap[item._id.toString()] || 0,
       );
-      const dueAmount = Math.max(0, netAmount - paidAmount);
+      const dueAmount = Math.max(
+        0,
+        grossAmount -
+          totalQualityClaims -
+          bankCharges -
+          cdAmount +
+          gstAmount -
+          paidAmount,
+      );
 
       return {
         ...item,

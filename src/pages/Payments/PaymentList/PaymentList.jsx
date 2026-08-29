@@ -47,7 +47,9 @@ const getPdfDueAmount = (item) => {
   if (item.netAmount !== undefined && item.netAmount !== null) {
     return Math.max(
       0,
-      (Number(item.netAmount) || 0) - (Number(item.paidAmount) || 0),
+      (Number(item.netAmount) || 0) -
+        (Number(item.totalQualityClaims) || 0) -
+        (Number(item.paidAmount) || 0),
     );
   }
 
