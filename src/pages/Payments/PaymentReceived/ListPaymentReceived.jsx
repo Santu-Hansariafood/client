@@ -1000,7 +1000,6 @@ const ListPaymentReceived = () => {
         const isEntryRow = row.raw?.uiType === "entry";
         const displayClaimAmount = getLedgerRowClaimAmount(row);
 
-        let grossAmount = rowData.billAmount || 0;
         let gst = rowData.gstAmount || 0;
         let claims =
           displayClaimAmount ||
@@ -1016,7 +1015,6 @@ const ListPaymentReceived = () => {
           : Math.max(credit, Number(rowData.paidAmount) || 0);
 
         if (isEntryRow) {
-          grossAmount = row.grossAmount || 0;
           gst = row.gstAmount || 0;
           claims = Number(
             displayClaimAmount ||
@@ -1034,12 +1032,16 @@ const ListPaymentReceived = () => {
           saudaBankChargesTotal += bankCharges;
         }
 
-        saudaDebitTotal += Number(row.debit) || 0;
+        const unloadingDebit = isEntryRow
+          ? (Number(row.raw?.unloadingWeight) || 0) *
+            (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+          : Number(row.debit) || 0;
+        saudaDebitTotal += unloadingDebit;
         saudaCreditTotal += displayCredit;
         saudaPaidTotal += rowData.paidAmount;
 
         const formattedCredit = Number(displayCredit.toFixed(2));
-        const formattedDebit = Number((Number(row.debit) || 0).toFixed(2));
+        const formattedDebit = Number(unloadingDebit.toFixed(2));
         const formattedGst = Number(gst.toFixed(2));
         const formattedClaims = Number(claims.toFixed(2));
         const formattedCd = Number(cd.toFixed(2));
