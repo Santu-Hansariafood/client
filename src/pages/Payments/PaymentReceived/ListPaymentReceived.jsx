@@ -868,7 +868,7 @@ const ListPaymentReceived = () => {
         billAmount = details.netAmount;
         paidAmount = raw.paidAmount || 0;
         payableAmount = details.dueAmount;
-        remarks = raw.generalRemarks || "-";
+        remarks = raw.generalRemarks || raw.remarks || row.particulars || "-";
         qualityClaims = raw.qualityClaims || [];
         cdAmount = details.cdAmount;
         gstAmount = details.gstAmount;
@@ -887,7 +887,12 @@ const ListPaymentReceived = () => {
         billAmount = details.netAmount;
         paidAmount = Number(firstMapping?.allocatedAmount || 0);
         payableAmount = details.dueAmount;
-        remarks = firstMapping?.remarks || raw.remarks || "-";
+        remarks =
+          firstMapping?.generalRemarks ||
+          firstMapping?.remarks ||
+          raw.remarks ||
+          row.particulars ||
+          "-";
         qualityClaims = loadingEntry?.qualityClaims || [];
         cdAmount = details.cdAmount;
         gstAmount = details.gstAmount;
@@ -1015,7 +1020,7 @@ const ListPaymentReceived = () => {
             rowData.totalQualityClaims + rowData.paymentClaimAmount;
           cd = row.cdAmount || 0;
           bankCharges = row.bankCharges || 0;
-          balance = Number(row.debit || 0);
+          balance = Number(row.debit || row.balance || 0);
 
           saudaGrossTotal += grossAmount;
           saudaCdTotal += cd;
@@ -1027,7 +1032,6 @@ const ListPaymentReceived = () => {
         saudaCreditTotal += displayCredit;
         saudaPaidTotal += rowData.paidAmount;
 
-        const formattedGross = Number(grossAmount.toFixed(2));
         const formattedCredit = Number(displayCredit.toFixed(2));
         const formattedGst = Number(gst.toFixed(2));
         const formattedClaims = Number(claims.toFixed(2));
@@ -1042,8 +1046,8 @@ const ListPaymentReceived = () => {
           rowData.billNo,
           (row.buyerCompany || "-").toUpperCase(),
           (row.supplierCompany || "-").toUpperCase(),
-          formattedGross > 0
-            ? `Rs. ${formattedGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          balance > 0
+            ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
           formattedGst > 0
             ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

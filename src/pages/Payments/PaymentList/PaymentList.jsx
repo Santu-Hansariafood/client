@@ -39,6 +39,31 @@ const formatQueryDate = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+const getPdfDueAmount = (item) => {
+  if (item.dueAmount !== undefined && item.dueAmount !== null) {
+    return Math.max(0, Number(item.dueAmount) || 0);
+  }
+
+  if (item.netAmount !== undefined && item.netAmount !== null) {
+    return Math.max(
+      0,
+      (Number(item.netAmount) || 0) - (Number(item.paidAmount) || 0),
+    );
+  }
+
+  const grossAmount = Number(item.grossAmount) || 0;
+  const gstAmount = Number(item.gstAmount) || 0;
+  const claims = Number(item.totalQualityClaims) || 0;
+  const cdAmount = Number(item.cdAmount) || 0;
+  const bankCharges = Number(item.bankCharges) || 0;
+  const paidAmount = Number(item.paidAmount) || 0;
+
+  return Math.max(
+    0,
+    grossAmount + gstAmount - claims - cdAmount - bankCharges - paidAmount,
+  );
+};
+
 const PaymentList = () => {
   const { userRole } = useAuth();
   const location = useLocation();
@@ -199,9 +224,9 @@ const PaymentList = () => {
       `Rs. ${Number(item.totalQualityClaims || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       `Rs. ${Number(item.cdAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       `Rs. ${Number(item.bankCharges || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      `Rs. ${Number(item.dueAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${getPdfDueAmount(item).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       `Rs. ${Number(item.remainingLorryBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-      item.generalRemarks || "-"
+      item.generalRemarks || item.remarks || "-"
     ]);
 
     doc.setFontSize(18);
@@ -453,12 +478,12 @@ const PaymentList = () => {
         group.forEach((item) => {
           rowIdx++;
           
-          let grossAmount = item.grossAmount || 0;
           let gstAmount = item.gstAmount || 0;
           let claims = item.totalQualityClaims || 0;
           let cdAmount = item.cdAmount || 0;
           let bankCharges = Number(item.bankCharges) || 0;
-          let balance = Number(item.dueAmount || 0);
+          const dueAmount = getPdfDueAmount(item);
+          let balance = dueAmount;
           let credit = Number(item.paidAmount || 0);
           let lorryBalance = Number(item.remainingLorryBalance || 0);
 
@@ -470,7 +495,7 @@ const PaymentList = () => {
             item.billNumber || "-",
             (item.buyerCompany || "-").toUpperCase(),
             (item.supplierCompany || "-").toUpperCase(),
-            grossAmount > 0 ? `Rs. ${Number(grossAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+            `Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             gstAmount > 0 ? `Rs. ${Number(gstAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             credit > 0 ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             claims > 0 ? `Rs. ${Number(claims.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
@@ -478,7 +503,7 @@ const PaymentList = () => {
             bankCharges > 0 ? `Rs. ${Number(bankCharges.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             balance !== 0 ? `Rs. ${Number(balance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
             lorryBalance > 0 ? `Rs. ${Number(lorryBalance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
-            item.generalRemarks || "-",
+            item.generalRemarks || item.remarks || "-",
           ]);
         });
       });
@@ -520,7 +545,7 @@ const PaymentList = () => {
             "BILL NO",
             "BUYER",
             "SELLER",
-            "GROSS AMOUNT (Rs.)",
+            "DUE AMOUNT (Rs.)",
             "GST (Rs.)",
             "CREDIT (Rs.)",
             "CLAIMS (Rs.)",
