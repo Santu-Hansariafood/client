@@ -973,7 +973,7 @@ const ListPaymentReceived = () => {
 
     Object.values(groupedByCompanySauda).forEach(
       ({ buyerCompany, supplierCompany, saudaKey, rows: group }) => {
-      let saudaGrossTotal = 0;
+      let saudaDebitTotal = 0;
       let saudaCreditTotal = 0;
       let saudaPaidTotal = 0;
       let saudaCdTotal = 0;
@@ -1028,20 +1028,18 @@ const ListPaymentReceived = () => {
           bankCharges = Number(row.bankCharges || 0);
           balance = Number(row.debit || row.balance || 0);
 
-          saudaGrossTotal += grossAmount;
           saudaCdTotal += cd;
           saudaGstTotal += gst;
           saudaQualityClaimsTotal += claims;
           saudaBankChargesTotal += bankCharges;
         }
 
+        saudaDebitTotal += Number(row.debit) || 0;
         saudaCreditTotal += displayCredit;
         saudaPaidTotal += rowData.paidAmount;
 
         const formattedCredit = Number(displayCredit.toFixed(2));
-        const formattedDebit = Number(
-          (Number(row.debit) || (isEntryRow ? balance : 0)).toFixed(2),
-        );
+        const formattedDebit = Number((Number(row.debit) || 0).toFixed(2));
         const formattedGst = Number(gst.toFixed(2));
         const formattedClaims = Number(claims.toFixed(2));
         const formattedCd = Number(cd.toFixed(2));
@@ -1107,7 +1105,7 @@ const ListPaymentReceived = () => {
             halign: "right",
           },
         },
-        `Rs. ${Number(saudaGrossTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
