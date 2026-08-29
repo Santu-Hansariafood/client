@@ -1148,7 +1148,7 @@ const ListPaymentReceived = () => {
           "BILL NO",
           "BUYER",
           "SELLER",
-          "DEBIT (Rs.)",
+          "DEBIT AMOUNT (Rs.)",
           "GST (Rs.)",
           "CREDIT (Rs.)",
           "CLAIMS (Rs.)",
