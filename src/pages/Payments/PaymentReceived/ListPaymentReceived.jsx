@@ -1039,6 +1039,9 @@ const ListPaymentReceived = () => {
         saudaPaidTotal += rowData.paidAmount;
 
         const formattedCredit = Number(displayCredit.toFixed(2));
+        const formattedDebit = Number(
+          (Number(row.debit) || (isEntryRow ? balance : 0)).toFixed(2),
+        );
         const formattedGst = Number(gst.toFixed(2));
         const formattedClaims = Number(claims.toFixed(2));
         const formattedCd = Number(cd.toFixed(2));
@@ -1052,9 +1055,7 @@ const ListPaymentReceived = () => {
           rowData.billNo,
           (row.buyerCompany || "-").toUpperCase(),
           (row.supplierCompany || "-").toUpperCase(),
-          balance > 0
-            ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
+          `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           formattedGst > 0
             ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "",
@@ -1147,7 +1148,7 @@ const ListPaymentReceived = () => {
           "BILL NO",
           "BUYER",
           "SELLER",
-          "DUE AMOUNT (Rs.)",
+          "DEBIT (Rs.)",
           "GST (Rs.)",
           "CREDIT (Rs.)",
           "CLAIMS (Rs.)",
