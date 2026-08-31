@@ -18,35 +18,34 @@ const CreditBalancePanel = ({
   const showSummary = creditEntryTotal > 0 || debitToSeller > 0;
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
-  const creditLabel = fullCompanyMapping && buyerCompany && supplierCompany
-    ? "Total Credit (Cr.)"
-    : isAdvance
-      ? "Total Credit (Advance) · Cr."
-      : "Total Credit Received (Cr.)";
+  const creditLabel =
+    fullCompanyMapping && buyerCompany && supplierCompany
+      ? "Total Credit (Cr.)"
+      : isAdvance
+        ? "Total Credit (Advance) · Cr."
+        : "Total Credit Received (Cr.)";
 
-  const creditHint = fullCompanyMapping && buyerCompany && supplierCompany
-    ? `available payment from ${buyerCompany}`
-    : isAdvance
-      ? "Buyer advance on account (Cr.)"
-      : "Amount received from buyer (entry above)";
+  const creditHint =
+    fullCompanyMapping && buyerCompany && supplierCompany
+      ? `available payment from ${buyerCompany}`
+      : isAdvance
+        ? "Buyer advance on account (Cr.)"
+        : "Amount received from buyer (entry above)";
 
-  const debitLabel = isAdvance
-    ? "Debit to seller · Dr."
-    : "Lorry Bill (Dr.)";
+  const debitLabel = isAdvance ? "Debit to seller · Dr." : "Lorry Bill (Dr.)";
 
   const debitHint = isAdvance
     ? "Posted to seller lorries"
     : "Total bill amount for seller lorries";
 
-  const remainingLabel = isAdvance
-    ? "Cr. balance left"
-    : "Balance (Cr. left)";
+  const remainingLabel = isAdvance ? "Cr. balance left" : "Balance (Cr. left)";
 
-  const headerTitle = fullCompanyMapping && buyerCompany && supplierCompany
-    ? `Credit balance from ${buyerCompany} to ${supplierCompany}`
-    : isAdvance
-      ? "Buyer → seller · advance (Cr. − Dr.)"
-      : "Buyer → seller · payment received (Cr.) & lorry adjustment (Dr.)";
+  const headerTitle =
+    fullCompanyMapping && buyerCompany && supplierCompany
+      ? `Credit balance from ${buyerCompany} to ${supplierCompany}`
+      : isAdvance
+        ? "Buyer → seller · advance (Cr. − Dr.)"
+        : "Buyer → seller · payment received (Cr.) & lorry adjustment (Dr.)";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/80 p-4 shadow-sm">
@@ -93,7 +92,7 @@ const CreditBalancePanel = ({
         <div className="rounded-lg border border-[#1e3a5f]/25 bg-[#eef4ff] px-4 py-3 relative">
           <FaMinus
             className="hidden sm:block absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300"
-            size={10} 
+            size={10}
           />
           <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
             {remainingLabel}
@@ -102,9 +101,7 @@ const CreditBalancePanel = ({
             {formatLedgerAmount(Math.abs(creditEntryTotal - debitToSeller))}
           </p>
           <p className="text-[9px] font-bold text-slate-500 mt-1 normal-case">
-            {isAdvance
-              ? "Cr. − Dr."
-              : "Difference (Credit − Debit)"}
+            {isAdvance ? "Cr. − Dr." : "Difference (Credit − Debit)"}
           </p>
         </div>
       </div>
@@ -120,10 +117,8 @@ const CreditBalancePanel = ({
       {showSummary && fullCompanyMapping && supplierCompany && (
         <p className="text-[10px] font-bold text-slate-500 mb-2">
           {buyerCompany} → {supplierCompany}:{" "}
-          {formatLedgerAmount(creditEntryTotal)}{" "}
-          Cr. −{" "}
-          {formatLedgerAmount(debitToSeller)}{" "}
-          Dr. ={" "}
+          {formatLedgerAmount(creditEntryTotal)} Cr. −{" "}
+          {formatLedgerAmount(debitToSeller)} Dr. ={" "}
           {formatLedgerAmount(Math.abs(creditEntryTotal - debitToSeller))}{" "}
           {isAdvance ? "Cr. left" : "Credit remaining"}
         </p>

@@ -3,6 +3,7 @@ import {
   formatLedgerAmount,
   buildPaymentParticulars,
 } from "../utils/paymentLedgerUtils";
+import Loading from "../../../../common/Loading/Loading";
 
 const SimplePaymentList = ({
   payments = [],
@@ -10,14 +11,7 @@ const SimplePaymentList = ({
   emptyMessage = "No payments recorded for this period.",
 }) => {
   if (loading) {
-    return (
-      <div className="py-24 flex flex-col items-center justify-center gap-3">
-        <div className="w-10 h-10 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-          Loading payments...
-        </p>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!payments.length) {
@@ -28,7 +22,10 @@ const SimplePaymentList = ({
     );
   }
 
-  const totalAmount = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalAmount = payments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0,
+  );
   const totalClaim = payments.reduce((sum, p) => sum + Number(p.claim || 0), 0);
   const totalTds = payments.reduce((sum, p) => sum + Number(p.tds || 0), 0);
   const grandTotal = totalAmount + totalClaim + totalTds;
@@ -75,19 +72,38 @@ const SimplePaymentList = ({
         <table className="w-full min-w-[800px] border-collapse text-left">
           <thead>
             <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Date</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Buyer</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Seller</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Amount</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Claim</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">TDS</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Mode</th>
-              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">Narration</th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Buyer
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Seller
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Amount
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Claim
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                TDS
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Mode
+              </th>
+              <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
+                Narration
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {payments.map((payment, idx) => (
-              <tr key={payment._id || idx} className="hover:bg-slate-50/50 transition-colors">
+              <tr
+                key={payment._id || idx}
+                className="hover:bg-slate-50/50 transition-colors"
+              >
                 <td className="px-4 py-4 text-[11px] font-bold text-slate-900">
                   {new Date(payment.date).toLocaleDateString("en-GB")}
                 </td>
@@ -111,7 +127,10 @@ const SimplePaymentList = ({
                     {payment.paymentMode}
                   </span>
                 </td>
-                <td className="px-4 py-4 text-[11px] text-slate-600 font-medium max-w-xs truncate" title={buildPaymentParticulars(payment)}>
+                <td
+                  className="px-4 py-4 text-[11px] text-slate-600 font-medium max-w-xs truncate"
+                  title={buildPaymentParticulars(payment)}
+                >
                   {buildPaymentParticulars(payment) || "—"}
                 </td>
               </tr>

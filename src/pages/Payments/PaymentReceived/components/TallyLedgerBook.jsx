@@ -280,9 +280,7 @@ const TallyLedgerBook = ({
                         : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.cdAmount > 0
-                        ? formatLedgerAmount(row.cdAmount)
-                        : ""}
+                      {row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
                       {row.bankCharges > 0
@@ -290,10 +288,14 @@ const TallyLedgerBook = ({
                         : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.secondClaim > 0 ? formatLedgerAmount(row.secondClaim) : ""}
+                      {row.secondClaim > 0
+                        ? formatLedgerAmount(row.secondClaim)
+                        : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                      {row.otherCharges > 0 ? formatLedgerAmount(row.otherCharges) : ""}
+                      {row.otherCharges > 0
+                        ? formatLedgerAmount(row.otherCharges)
+                        : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
                       {row.tds > 0 ? formatLedgerAmount(row.tds) : ""}
@@ -302,7 +304,9 @@ const TallyLedgerBook = ({
                       {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
                     </td>
                     <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-                      {formatLedgerAmount(row.raw?.uiType === "entry" ? row.debit : row.balance)}
+                      {formatLedgerAmount(
+                        row.raw?.uiType === "entry" ? row.debit : row.balance,
+                      )}
                     </td>
                     <td className="px-3 py-2 text-center">
                       {!row.isOpening && (
@@ -479,9 +483,7 @@ const TallyLedgerBook = ({
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.gstAmount > 0
-                    ? formatLedgerAmount(row.gstAmount)
-                    : ""}
+                  {row.gstAmount > 0 ? formatLedgerAmount(row.gstAmount) : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
                   {displayedClaimAmount > 0
@@ -489,9 +491,7 @@ const TallyLedgerBook = ({
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.cdAmount > 0
-                    ? formatLedgerAmount(row.cdAmount)
-                    : ""}
+                  {row.cdAmount > 0 ? formatLedgerAmount(row.cdAmount) : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
                   {row.bankCharges > 0
@@ -499,10 +499,14 @@ const TallyLedgerBook = ({
                     : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.secondClaim > 0 ? formatLedgerAmount(row.secondClaim) : ""}
+                  {row.secondClaim > 0
+                    ? formatLedgerAmount(row.secondClaim)
+                    : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-                  {row.otherCharges > 0 ? formatLedgerAmount(row.otherCharges) : ""}
+                  {row.otherCharges > 0
+                    ? formatLedgerAmount(row.otherCharges)
+                    : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
                   {row.tds > 0 ? formatLedgerAmount(row.tds) : ""}
@@ -511,7 +515,9 @@ const TallyLedgerBook = ({
                   {row.credit > 0 ? formatLedgerAmount(row.credit) : ""}
                 </td>
                 <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-                  {formatLedgerAmount(row.raw?.uiType === "entry" ? row.debit : row.balance)}
+                  {formatLedgerAmount(
+                    row.raw?.uiType === "entry" ? row.debit : row.balance,
+                  )}
                 </td>
                 <td className="px-3 py-2 text-center">
                   {!row.isOpening && (

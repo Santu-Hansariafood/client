@@ -353,24 +353,66 @@ const formatAmount = (value) => {
 
 const numberToWords = (num) => {
   const a = [
-    "", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ",
-    "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ",
-    "Seventeen ", "Eighteen ", "Nineteen ",
+    "",
+    "One ",
+    "Two ",
+    "Three ",
+    "Four ",
+    "Five ",
+    "Six ",
+    "Seven ",
+    "Eight ",
+    "Nine ",
+    "Ten ",
+    "Eleven ",
+    "Twelve ",
+    "Thirteen ",
+    "Fourteen ",
+    "Fifteen ",
+    "Sixteen ",
+    "Seventeen ",
+    "Eighteen ",
+    "Nineteen ",
   ];
   const b = [
-    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
   ];
 
   const makeWords = (n) => {
     if (n < 20) return a[n];
     if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
     if (n < 1000)
-      return a[Math.floor(n / 100)] + "Hundred " + (n % 100 !== 0 ? makeWords(n % 100) : "");
+      return (
+        a[Math.floor(n / 100)] +
+        "Hundred " +
+        (n % 100 !== 0 ? makeWords(n % 100) : "")
+      );
     if (n < 100000)
-      return makeWords(Math.floor(n / 1000)) + "Thousand " + (n % 1000 !== 0 ? makeWords(n % 1000) : "");
+      return (
+        makeWords(Math.floor(n / 1000)) +
+        "Thousand " +
+        (n % 1000 !== 0 ? makeWords(n % 1000) : "")
+      );
     if (n < 10000000)
-      return makeWords(Math.floor(n / 100000)) + "Lakh " + (n % 100000 !== 0 ? makeWords(n % 100000) : "");
-    return makeWords(Math.floor(n / 10000000)) + "Crore " + (n % 10000000 !== 0 ? makeWords(n % 10000000) : "");
+      return (
+        makeWords(Math.floor(n / 100000)) +
+        "Lakh " +
+        (n % 100000 !== 0 ? makeWords(n % 100000) : "")
+      );
+    return (
+      makeWords(Math.floor(n / 10000000)) +
+      "Crore " +
+      (n % 10000000 !== 0 ? makeWords(n % 10000000) : "")
+    );
   };
 
   const integer = Math.floor(num);
@@ -431,37 +473,46 @@ const renderAddressDetails = (details, type = "buyer") => {
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
 
-const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, voucherNumber }) => {
+const PaymentVoucherPDF = ({
+  row,
+  buyerCompany,
+  sellerCompany,
+  qrCodeUrl,
+  voucherNumber,
+}) => {
   const hasClaims =
     row.raw?.qualityClaims &&
-    row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
+    row.raw.qualityClaims.filter((c) => Number(c.claimAmount) > 0).length > 0;
 
   const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
   let totalClaims = 0;
   if (hasClaims) {
     totalClaims = row.raw.qualityClaims
-      .filter(c => Number(c.claimAmount) > 0)
+      .filter((c) => Number(c.claimAmount) > 0)
       .reduce((sum, c) => sum + Number(c.claimAmount), 0);
   }
   const paymentClaim = Number(row.raw?.claim || 0);
   const paymentTDS = Number(row.raw?.tds || 0);
   const finalAmount = totalAmount - (totalClaims + paymentClaim + paymentTDS);
 
-  // Get all entries
   let allEntries = [];
-  if (row.uiType === 'entry' || (row.raw && !row.raw.mappings && row.raw.loadingWeight)) {
-    allEntries = [{
-      loadingEntry: row.raw,
-      mapping: null
-    }];
+  if (
+    row.uiType === "entry" ||
+    (row.raw && !row.raw.mappings && row.raw.loadingWeight)
+  ) {
+    allEntries = [
+      {
+        loadingEntry: row.raw,
+        mapping: null,
+      },
+    ];
   } else {
-    allEntries = (row.raw?.mappings || []).map(mapping => ({
+    allEntries = (row.raw?.mappings || []).map((mapping) => ({
       loadingEntry: mapping.loadingEntryId,
-      mapping: mapping
+      mapping: mapping,
     }));
   }
 
-  // Helper to calculate breakdown for an entry
   const calculateBreakdown = (loadingEntry) => {
     if (!loadingEntry) return null;
     if (loadingEntry.isRejected) {
@@ -478,7 +529,10 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         netAmount: 0,
       };
     }
-    const weight = (loadingEntry.unloadingWeight || 0) > 0 ? loadingEntry.unloadingWeight : loadingEntry.loadingWeight || 0;
+    const weight =
+      (loadingEntry.unloadingWeight || 0) > 0
+        ? loadingEntry.unloadingWeight
+        : loadingEntry.loadingWeight || 0;
     const rate = loadingEntry.actualRate || 0;
     const cdPercent = loadingEntry.cd || 0;
     const gstPercent = loadingEntry.gst || 0;
@@ -502,49 +556,49 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
       taxableAmount,
       gstAmount,
       gstPercent,
-      netAmount
+      netAmount,
     };
   };
-  
-  // Get payment mode from raw data
+
   const paymentMode = row.raw?.paymentMode || "—";
 
   const bankDetails = sellerCompany?.bankDetails?.[0] || {};
 
-  // Helper to get non-N/A values
   const getValue = (...candidates) => {
     for (const value of candidates) {
-      if (value && String(value).trim() !== "" && String(value).trim() !== "N/A") {
+      if (
+        value &&
+        String(value).trim() !== "" &&
+        String(value).trim() !== "N/A"
+      ) {
         return String(value).trim();
       }
     }
     return "-";
   };
 
-  // Get values for first entry for top metadata
   const firstEntry = allEntries[0];
   const loadingEntry = firstEntry?.loadingEntry;
   const firstMapping = firstEntry?.mapping;
-  
+
   const billNo = getValue(
     loadingEntry?.billNumber,
     row.raw?.billNo,
     row.raw?.billNumber,
-    row.billNo
+    row.billNo,
   );
   const saudaNo = getValue(
     firstMapping?.saudaNo,
     loadingEntry?.saudaNo,
     row.raw?.saudaNo,
-    row.saudaNo
+    row.saudaNo,
   );
   const lorryNo = getValue(
     loadingEntry?.lorryNumber,
     row.raw?.lorryNumber,
-    row.lorryNo
+    row.lorryNo,
   );
 
-  // Generate detailed QR code content
   const generateQRContent = () => {
     const details = [];
     details.push("HANSARIA FOOD PRIVATE LIMITED");
@@ -613,33 +667,32 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
           </View>
         </View>
 
-        {/* Render each entry */}
         {allEntries.map((entry, entryIndex) => {
           const breakdown = calculateBreakdown(entry.loadingEntry);
           const entryBillNo = getValue(
             entry.loadingEntry?.billNumber,
-            entry.mapping?.billNumber
+            entry.mapping?.billNumber,
           );
           const entrySaudaNo = getValue(
             entry.mapping?.saudaNo,
-            entry.loadingEntry?.saudaNo
+            entry.loadingEntry?.saudaNo,
           );
-          const entryLorryNo = getValue(
-            entry.loadingEntry?.lorryNumber
-          );
+          const entryLorryNo = getValue(entry.loadingEntry?.lorryNumber);
 
           return (
             <View key={entryIndex}>
-              {/* Entry header */}
               {allEntries.length > 1 && (
                 <View style={styles.entryHeader}>
                   <Text style={{ fontWeight: "bold" }}>
-                    Entry {entryIndex + 1}: {entrySaudaNo || entryLorryNo || entryBillNo || "On Account"}
+                    Entry {entryIndex + 1}:{" "}
+                    {entrySaudaNo ||
+                      entryLorryNo ||
+                      entryBillNo ||
+                      "On Account"}
                   </Text>
                 </View>
               )}
-              
-              {/* Bill Breakdown */}
+
               {breakdown ? (
                 <View style={styles.claimsTable}>
                   <View style={styles.claimsTableHeader}>
@@ -652,49 +705,77 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                   </View>
                   <View style={styles.claimsTableRow}>
                     <Text style={styles.col1}>Gross Amount</Text>
-                    <Text style={styles.col4}>{formatAmount(breakdown.grossAmount)}</Text>
+                    <Text style={styles.col4}>
+                      {formatAmount(breakdown.grossAmount)}
+                    </Text>
                   </View>
                   {breakdown.cdAmount > 0 && (
                     <View style={styles.claimsTableRow}>
-                      <Text style={styles.col1}>Less: CD ({breakdown.cdPercent}%)</Text>
-                      <Text style={styles.col4}>- {formatAmount(breakdown.cdAmount)}</Text>
+                      <Text style={styles.col1}>
+                        Less: CD ({breakdown.cdPercent}%)
+                      </Text>
+                      <Text style={styles.col4}>
+                        - {formatAmount(breakdown.cdAmount)}
+                      </Text>
                     </View>
                   )}
                   {breakdown.bankCharges > 0 && (
                     <View style={styles.claimsTableRow}>
                       <Text style={styles.col1}>Less: Bank Charges</Text>
-                      <Text style={styles.col4}>- {formatAmount(breakdown.bankCharges)}</Text>
+                      <Text style={styles.col4}>
+                        - {formatAmount(breakdown.bankCharges)}
+                      </Text>
                     </View>
                   )}
                   <View style={styles.claimsTableRow}>
                     <Text style={styles.col1}>Taxable Amount</Text>
-                    <Text style={styles.col4}>{formatAmount(breakdown.taxableAmount)}</Text>
+                    <Text style={styles.col4}>
+                      {formatAmount(breakdown.taxableAmount)}
+                    </Text>
                   </View>
                   {breakdown.gstAmount > 0 && (
                     <View style={styles.claimsTableRow}>
-                      <Text style={styles.col1}>Add: GST ({breakdown.gstPercent}%)</Text>
-                      <Text style={styles.col4}>+ {formatAmount(breakdown.gstAmount)}</Text>
-                    </View>
-                  )}
-                  <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
-                    <Text style={[styles.col1, { fontWeight: "bold" }]}>Claim Amount</Text>
-                    <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(breakdown.netAmount)}</Text>
-                  </View>
-                  {entry.mapping?.allocatedAmount && Number(entry.mapping.allocatedAmount) > 0 && (
-                    <View style={styles.claimsTableRow}>
-                      <Text style={styles.col1}>Allocated Amount</Text>
-                      <Text style={[styles.col4, { color: "#2e7d32", fontWeight: "bold" }]}>
-                        {formatAmount(entry.mapping.allocatedAmount)}
+                      <Text style={styles.col1}>
+                        Add: GST ({breakdown.gstPercent}%)
+                      </Text>
+                      <Text style={styles.col4}>
+                        + {formatAmount(breakdown.gstAmount)}
                       </Text>
                     </View>
                   )}
+                  <View
+                    style={[
+                      styles.claimsTableRow,
+                      { backgroundColor: "#f5f5f5" },
+                    ]}
+                  >
+                    <Text style={[styles.col1, { fontWeight: "bold" }]}>
+                      Claim Amount
+                    </Text>
+                    <Text style={[styles.col4, { fontWeight: "bold" }]}>
+                      {formatAmount(breakdown.netAmount)}
+                    </Text>
+                  </View>
+                  {entry.mapping?.allocatedAmount &&
+                    Number(entry.mapping.allocatedAmount) > 0 && (
+                      <View style={styles.claimsTableRow}>
+                        <Text style={styles.col1}>Allocated Amount</Text>
+                        <Text
+                          style={[
+                            styles.col4,
+                            { color: "#2e7d32", fontWeight: "bold" },
+                          ]}
+                        >
+                          {formatAmount(entry.mapping.allocatedAmount)}
+                        </Text>
+                      </View>
+                    )}
                 </View>
               ) : null}
             </View>
           );
         })}
 
-        {/* If no entries (pure on account payment) */}
         {allEntries.length === 0 && (
           <View style={styles.claimsTable}>
             <View style={styles.claimsTableHeader}>
@@ -705,9 +786,15 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
                 Amount (Rs)
               </Text>
             </View>
-            <View style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}>
-              <Text style={[styles.col1, { fontWeight: "bold" }]}>On Account Payment</Text>
-              <Text style={[styles.col4, { fontWeight: "bold" }]}>{formatAmount(row.raw?.amount || totalAmount)}</Text>
+            <View
+              style={[styles.claimsTableRow, { backgroundColor: "#f5f5f5" }]}
+            >
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>
+                On Account Payment
+              </Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>
+                {formatAmount(row.raw?.amount || totalAmount)}
+              </Text>
             </View>
           </View>
         )}
@@ -721,9 +808,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
               <Text style={[styles.col2, { fontWeight: "bold" }]}>
                 Standard
               </Text>
-              <Text style={[styles.col3, { fontWeight: "bold" }]}>
-                Actual
-              </Text>
+              <Text style={[styles.col3, { fontWeight: "bold" }]}>Actual</Text>
               <Text style={[styles.col4, { fontWeight: "bold" }]}>
                 Amount (Rs)
               </Text>
@@ -751,33 +836,31 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
 
         <View style={styles.summarySection}>
           <View style={styles.qrSection}>
-            <Text
-              style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}
-            >
+            <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>
               SCAN & VERIFY
             </Text>
             {qrCodeUrl && (
               <Image src={qrCodeUrl} style={{ width: 55, height: 55 }} />
             )}
-            <Text style={styles.qrLabel}>
-              Voucher: {voucherNumber || "-"}
-            </Text>
+            <Text style={styles.qrLabel}>Voucher: {voucherNumber || "-"}</Text>
           </View>
           <View style={styles.totalSection}>
-            {/* TDS and Claim from payment */}
             {Number(row.raw?.claim || 0) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.metaLabel}>Claim:</Text>
-                <Text style={styles.metaValue}>{formatAmount(row.raw.claim)}</Text>
+                <Text style={styles.metaValue}>
+                  {formatAmount(row.raw.claim)}
+                </Text>
               </View>
             )}
             {Number(row.raw?.tds || 0) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.metaLabel}>TDS:</Text>
-                <Text style={styles.metaValue}>{formatAmount(row.raw.tds)}</Text>
+                <Text style={styles.metaValue}>
+                  {formatAmount(row.raw.tds)}
+                </Text>
               </View>
             )}
-            {/* Quality claims */}
             {hasClaims && (
               <View style={styles.summaryRow}>
                 <Text style={styles.metaLabel}>Total Quality Claims:</Text>
@@ -788,7 +871,9 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
             )}
             <View style={styles.summaryRow}>
               <Text style={styles.metaLabel}>Payment Amount:</Text>
-              <Text style={styles.metaValue}>{formatAmount(row.raw?.amount || totalAmount)}</Text>
+              <Text style={styles.metaValue}>
+                {formatAmount(row.raw?.amount || totalAmount)}
+              </Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.metaLabel}>Payment Mode:</Text>
@@ -809,46 +894,43 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
           </View>
         </View>
 
-        {sellerCompany?.bankDetails &&
-          sellerCompany.bankDetails.length > 0 && (
-            <View style={styles.bankSection}>
-              <Text style={styles.bankTitle}>Bank Account Details</Text>
-              <View style={styles.bankGrid}>
-                <View style={styles.bankItem}>
-                  <Text style={styles.bankLabel}>Beneficiary Name</Text>
-                  <Text style={styles.bankValue}>
-                    {bankDetails.accountHolderName ||
-                      row.supplierCompany ||
-                      "-"}
-                  </Text>
-                </View>
-                <View style={styles.bankItem}>
-                  <Text style={styles.bankLabel}>Bank Name</Text>
-                  <Text style={styles.bankValue}>
-                    {bankDetails.bankName || "-"}
-                  </Text>
-                </View>
-                <View style={styles.bankItem}>
-                  <Text style={styles.bankLabel}>Account Number</Text>
-                  <Text style={styles.bankValue}>
-                    {bankDetails.accountNumber || "-"}
-                  </Text>
-                </View>
-                <View style={styles.bankItem}>
-                  <Text style={styles.bankLabel}>IFSC Code</Text>
-                  <Text style={styles.bankValue}>
-                    {bankDetails.ifscCode || "-"}
-                  </Text>
-                </View>
-                <View style={styles.bankItem}>
-                  <Text style={styles.bankLabel}>Branch</Text>
-                  <Text style={styles.bankValue}>
-                    {bankDetails.branchName || "-"}
-                  </Text>
-                </View>
+        {sellerCompany?.bankDetails && sellerCompany.bankDetails.length > 0 && (
+          <View style={styles.bankSection}>
+            <Text style={styles.bankTitle}>Bank Account Details</Text>
+            <View style={styles.bankGrid}>
+              <View style={styles.bankItem}>
+                <Text style={styles.bankLabel}>Beneficiary Name</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.accountHolderName || row.supplierCompany || "-"}
+                </Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.bankLabel}>Bank Name</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.bankName || "-"}
+                </Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.bankLabel}>Account Number</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.accountNumber || "-"}
+                </Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.bankLabel}>IFSC Code</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.ifscCode || "-"}
+                </Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.bankLabel}>Branch</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.branchName || "-"}
+                </Text>
               </View>
             </View>
-          )}
+          </View>
+        )}
 
         <View style={styles.signatorySection}>
           <View style={styles.signatoryBox}>
@@ -872,9 +954,17 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <Text style={styles.footerText}>
-This document is generated automatically based on information provided by Either Buyer or Seller and is intended solely for informational and record-keeping purposes. {"\n"}
-Hansaria Food Private Limited does not verify or guarantee the accuracy, completeness, or authenticity of the information and shall not be liable for any errors, omissions, disputes, claims, losses, or legal consequences arising from the underlying transaction. {"\n"}
-This document does not constitute a legal contract, proof of payment, tax invoice, financial instrument, or acknowledgment of liability.
+            This document is generated automatically based on information
+            provided by Either Buyer or Seller and is intended solely for
+            informational and record-keeping purposes. {"\n"}
+            Hansaria Food Private Limited does not verify or guarantee the
+            accuracy, completeness, or authenticity of the information and shall
+            not be liable for any errors, omissions, disputes, claims, losses,
+            or legal consequences arising from the underlying transaction.{" "}
+            {"\n"}
+            This document does not constitute a legal contract, proof of
+            payment, tax invoice, financial instrument, or acknowledgment of
+            liability.
           </Text>
         </View>
       </Page>

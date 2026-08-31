@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { pdf } from "@react-pdf/renderer";
 import QRCode from "qrcode";
-import PaymentVoucherPDF from "./components/PaymentVoucherPDF";
-import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 
 import {
@@ -16,12 +14,16 @@ import {
   FaExclamationCircle,
   FaSync,
 } from "react-icons/fa";
-import SaudaMISSection from "./components/SaudaMISSection";
-import MisStatCard from "./components/MisStatCard";
-import MisFilterPanel from "./components/MisFilterPanel";
-import MisVoucherLedger from "./components/MisVoucherLedger";
-import MisLorryLedger from "./components/MisLorryLedger";
-import MisPageHeader from "./components/MisPageHeader";
+
+const SaudaMISSection = lazy(() => import("./components/SaudaMISSection"));
+const MisStatCard = lazy(() => import("./components/MisStatCard"));
+const MisFilterPanel = lazy(() => import("./components/MisFilterPanel"));
+const MisVoucherLedger = lazy(() => import("./components/MisVoucherLedger"));
+const MisLorryLedger = lazy(() => import("./components/MisLorryLedger"));
+const MisPageHeader = lazy(() => import("./components/MisPageHeader"));
+const PaymentVoucherPDF = lazy(() => import("./components/PaymentVoucherPDF"));
+const AdminPageShell = lazy(() => import("../../../common/AdminPageShell/AdminPageShell"));
+
 import {
   buildTallyVoucherRows,
   calculateVoucherTotals,
@@ -286,9 +288,13 @@ const ListPaymentReceived = () => {
         buyerCompany: filters.buyerCompany || undefined,
         supplierCompany: filters.supplierCompany || undefined,
         buyerId:
-          filters.ledgerType === "Buyer" ? filters.ledgerId || undefined : undefined,
+          filters.ledgerType === "Buyer"
+            ? filters.ledgerId || undefined
+            : undefined,
         supplier:
-          filters.ledgerType === "Seller" ? filters.ledgerId || undefined : undefined,
+          filters.ledgerType === "Seller"
+            ? filters.ledgerId || undefined
+            : undefined,
         saudaNo: filters.saudaNo || undefined,
         limit: 5000,
       };
@@ -307,25 +313,22 @@ const ListPaymentReceived = () => {
     fetchPayments();
   }, [page, filters]);
 
-  const tallyListRows = useMemo(
-    () => {
-      const mappedEntries = payments.flatMap((payment) =>
-        (payment.mappings || [])
-          .map((mapping) => mapping.loadingEntryId)
-          .filter(Boolean),
-      );
-      const entriesById = new Map();
-      [...listEntries, ...mappedEntries].forEach((entry) => {
-        if (entry?._id) entriesById.set(String(entry._id), entry);
-      });
-      return buildTallyVoucherRows(
-        payments,
-        openingBalance,
-        Array.from(entriesById.values()),
-      );
-    },
-    [payments, openingBalance, listEntries],
-  );
+  const tallyListRows = useMemo(() => {
+    const mappedEntries = payments.flatMap((payment) =>
+      (payment.mappings || [])
+        .map((mapping) => mapping.loadingEntryId)
+        .filter(Boolean),
+    );
+    const entriesById = new Map();
+    [...listEntries, ...mappedEntries].forEach((entry) => {
+      if (entry?._id) entriesById.set(String(entry._id), entry);
+    });
+    return buildTallyVoucherRows(
+      payments,
+      openingBalance,
+      Array.from(entriesById.values()),
+    );
+  }, [payments, openingBalance, listEntries]);
 
   const stats = useMemo(() => {
     const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);
@@ -571,9 +574,13 @@ const ListPaymentReceived = () => {
       buyerCompany: filters.buyerCompany || undefined,
       supplierCompany: filters.supplierCompany || undefined,
       buyerId:
-        filters.ledgerType === "Buyer" ? filters.ledgerId || undefined : undefined,
+        filters.ledgerType === "Buyer"
+          ? filters.ledgerId || undefined
+          : undefined,
       supplier:
-        filters.ledgerType === "Seller" ? filters.ledgerId || undefined : undefined,
+        filters.ledgerType === "Seller"
+          ? filters.ledgerId || undefined
+          : undefined,
       saudaNo: filters.saudaNo || undefined,
       limit: 5000,
     };
@@ -951,20 +958,20 @@ const ListPaymentReceived = () => {
         );
       })
       .forEach((row) => {
-      const rowData = extractRowData(row);
-      const saudaKey = rowData.saudaNo || "NO SAUDA";
-      const buyerCompany = row.buyerCompany || "NO BUYER";
-      const supplierCompany = row.supplierCompany || "NO SELLER";
-      const groupKey = `${buyerCompany}::${supplierCompany}::${saudaKey}`;
-      if (!groupedByCompanySauda[groupKey]) {
-        groupedByCompanySauda[groupKey] = {
-          buyerCompany,
-          supplierCompany,
-          saudaKey,
-          rows: [],
-        };
-      }
-      groupedByCompanySauda[groupKey].rows.push({ row, rowData });
+        const rowData = extractRowData(row);
+        const saudaKey = rowData.saudaNo || "NO SAUDA";
+        const buyerCompany = row.buyerCompany || "NO BUYER";
+        const supplierCompany = row.supplierCompany || "NO SELLER";
+        const groupKey = `${buyerCompany}::${supplierCompany}::${saudaKey}`;
+        if (!groupedByCompanySauda[groupKey]) {
+          groupedByCompanySauda[groupKey] = {
+            buyerCompany,
+            supplierCompany,
+            saudaKey,
+            rows: [],
+          };
+        }
+        groupedByCompanySauda[groupKey].rows.push({ row, rowData });
       });
 
     let rowIdx = 0;
@@ -973,154 +980,156 @@ const ListPaymentReceived = () => {
 
     Object.values(groupedByCompanySauda).forEach(
       ({ buyerCompany, supplierCompany, saudaKey, rows: group }) => {
-      let saudaDebitTotal = 0;
-      let saudaCreditTotal = 0;
-      let saudaPaidTotal = 0;
-      let saudaCdTotal = 0;
-      let saudaGstTotal = 0;
-      let saudaQualityClaimsTotal = 0;
-      let saudaBankChargesTotal = 0;
-
-      tableData.push([
-        {
-          content: `BUYER: ${buyerCompany} | SELLER: ${supplierCompany} | SAUDA NO: ${saudaKey}`,
-          colSpan: 15,
-          styles: {
-            fillColor: [200, 200, 200],
-            fontStyle: "bold",
-            halign: "center",
-          },
-        },
-      ]);
-
-      group.forEach(({ row, rowData }) => {
-        rowIdx++;
-
-        const credit = Number(row.credit) || 0;
-        const isEntryRow = row.raw?.uiType === "entry";
-        const displayClaimAmount = getLedgerRowClaimAmount(row);
-
-        let gst = rowData.gstAmount || 0;
-        let claims =
-          displayClaimAmount ||
-          rowData.totalQualityClaims + rowData.paymentClaimAmount;
-        let cd = rowData.cdAmount || 0;
-        let bankCharges = rowData.bankCharges || 0;
-        let balance = Number(row.balance || 0);
-        const entryPaidAmount = Number(
-          rowData.paidAmount || row.raw?.paidAmount || 0,
-        );
-        const displayCredit = isEntryRow
-          ? Math.max(credit, entryPaidAmount)
-          : Math.max(credit, Number(rowData.paidAmount) || 0);
-
-        if (isEntryRow) {
-          gst = row.gstAmount || 0;
-          claims = Number(
-            displayClaimAmount ||
-              rowData.totalQualityClaims + rowData.paymentClaimAmount ||
-              row.raw?.manualClaimAmount ||
-              0,
-          );
-          cd = Number(row.cdAmount || 0);
-          bankCharges = Number(row.bankCharges || 0);
-          balance = Number(row.debit || row.balance || 0);
-
-          saudaCdTotal += cd;
-          saudaGstTotal += gst;
-          saudaQualityClaimsTotal += claims;
-          saudaBankChargesTotal += bankCharges;
-        }
-
-        const unloadingDebit = isEntryRow
-          ? (Number(row.raw?.unloadingWeight) || 0) *
-            (Number(row.raw?.actualRate || row.raw?.rate) || 0)
-          : Number(row.debit) || 0;
-        saudaDebitTotal += unloadingDebit;
-        saudaCreditTotal += displayCredit;
-        saudaPaidTotal += rowData.paidAmount;
-
-        const formattedCredit = Number(displayCredit.toFixed(2));
-        const formattedDebit = Number(unloadingDebit.toFixed(2));
-        const formattedGst = Number(gst.toFixed(2));
-        const formattedClaims = Number(claims.toFixed(2));
-        const formattedCd = Number(cd.toFixed(2));
-        const formattedBankCharges = Number(bankCharges.toFixed(2));
+        let saudaDebitTotal = 0;
+        let saudaCreditTotal = 0;
+        let saudaPaidTotal = 0;
+        let saudaCdTotal = 0;
+        let saudaGstTotal = 0;
+        let saudaQualityClaimsTotal = 0;
+        let saudaBankChargesTotal = 0;
 
         tableData.push([
-          rowIdx,
-          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
-          rowData.saudaNo,
-          rowData.lorryNo,
-          rowData.billNo,
-          (row.buyerCompany || "-").toUpperCase(),
-          (row.supplierCompany || "-").toUpperCase(),
-          `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          formattedGst > 0
-            ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
-          `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          balance !== 0
-            ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : "",
-          rowData.remarks,
+          {
+            content: `BUYER: ${buyerCompany} | SELLER: ${supplierCompany} | SAUDA NO: ${saudaKey}`,
+            colSpan: 15,
+            styles: {
+              fillColor: [200, 200, 200],
+              fontStyle: "bold",
+              halign: "center",
+            },
+          },
         ]);
 
-        const validClaims = rowData.qualityClaims.filter(
-          (c) => Number(c.claimAmount) > 0,
+        group.forEach(({ row, rowData }) => {
+          rowIdx++;
+
+          const credit = Number(row.credit) || 0;
+          const isEntryRow = row.raw?.uiType === "entry";
+          const displayClaimAmount = getLedgerRowClaimAmount(row);
+
+          let gst = rowData.gstAmount || 0;
+          let claims =
+            displayClaimAmount ||
+            rowData.totalQualityClaims + rowData.paymentClaimAmount;
+          let cd = rowData.cdAmount || 0;
+          let bankCharges = rowData.bankCharges || 0;
+          let balance = Number(row.balance || 0);
+          const entryPaidAmount = Number(
+            rowData.paidAmount || row.raw?.paidAmount || 0,
+          );
+          const displayCredit = isEntryRow
+            ? Math.max(credit, entryPaidAmount)
+            : Math.max(credit, Number(rowData.paidAmount) || 0);
+
+          if (isEntryRow) {
+            gst = row.gstAmount || 0;
+            claims = Number(
+              displayClaimAmount ||
+                rowData.totalQualityClaims + rowData.paymentClaimAmount ||
+                row.raw?.manualClaimAmount ||
+                0,
+            );
+            cd = Number(row.cdAmount || 0);
+            bankCharges = Number(row.bankCharges || 0);
+            balance = Number(row.debit || row.balance || 0);
+
+            saudaCdTotal += cd;
+            saudaGstTotal += gst;
+            saudaQualityClaimsTotal += claims;
+            saudaBankChargesTotal += bankCharges;
+          }
+
+          const unloadingDebit = isEntryRow
+            ? (Number(row.raw?.unloadingWeight) || 0) *
+              (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+            : Number(row.debit) || 0;
+          saudaDebitTotal += unloadingDebit;
+          saudaCreditTotal += displayCredit;
+          saudaPaidTotal += rowData.paidAmount;
+
+          const formattedCredit = Number(displayCredit.toFixed(2));
+          const formattedDebit = Number(unloadingDebit.toFixed(2));
+          const formattedGst = Number(gst.toFixed(2));
+          const formattedClaims = Number(claims.toFixed(2));
+          const formattedCd = Number(cd.toFixed(2));
+          const formattedBankCharges = Number(bankCharges.toFixed(2));
+
+          tableData.push([
+            rowIdx,
+            row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
+            rowData.saudaNo,
+            rowData.lorryNo,
+            rowData.billNo,
+            (row.buyerCompany || "-").toUpperCase(),
+            (row.supplierCompany || "-").toUpperCase(),
+            `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            formattedGst > 0
+              ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "",
+            `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            balance !== 0
+              ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "",
+            rowData.remarks,
+          ]);
+
+          const validClaims = rowData.qualityClaims.filter(
+            (c) => Number(c.claimAmount) > 0,
+          );
+          if (validClaims.length > 0) {
+            validClaims.forEach((claim) => {
+              tableData.push([
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+              ]);
+            });
+          }
+        });
+
+        const saudaBalance = Number(
+          group
+            .reduce((sum, { row }) => sum + Number(row.debit || 0), 0)
+            .toFixed(2),
         );
-        if (validClaims.length > 0) {
-          validClaims.forEach((claim) => {
-            tableData.push([
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-            ]);
-          });
-        }
-      });
-
-      const saudaBalance = Number(
-        group.reduce((sum, { row }) => sum + Number(row.debit || 0), 0).toFixed(2),
-      );
-      tableData.push([
-        {
-          content: `TOTAL FOR SAUDA ${saudaKey}`,
-          colSpan: 7,
-          styles: {
-            fontStyle: "bold",
-            halign: "right",
+        tableData.push([
+          {
+            content: `TOTAL FOR SAUDA ${saudaKey}`,
+            colSpan: 7,
+            styles: {
+              fontStyle: "bold",
+              halign: "right",
+            },
           },
-        },
-        `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaCdTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${Number(saudaBankChargesTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        "",
-      ]);
+          `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${Number(saudaCdTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${Number(saudaBankChargesTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          "",
+        ]);
 
-      saudaTotals[`${buyerCompany}::${supplierCompany}::${saudaKey}`] = {
-        debit: saudaBalance,
-        credit: saudaCreditTotal,
-      };
+        saudaTotals[`${buyerCompany}::${supplierCompany}::${saudaKey}`] = {
+          debit: saudaBalance,
+          credit: saudaCreditTotal,
+        };
       },
     );
 

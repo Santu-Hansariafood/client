@@ -51,7 +51,7 @@ const MisFilterPanel = ({
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -60,9 +60,9 @@ const MisFilterPanel = ({
           >
             <FaUndo size={12} /> Reset
           </button>
-          
+
           <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
-          
+
           <button
             type="button"
             onClick={onPrint}
@@ -76,7 +76,7 @@ const MisFilterPanel = ({
             )}
             {printing ? "Generating…" : "Print PDF"}
           </button>
-          
+
           <button
             type="button"
             onClick={() => onSendEmail("MIS")}
@@ -102,7 +102,6 @@ const MisFilterPanel = ({
       </div>
 
       <div className="p-4 sm:p-6 space-y-4">
-        {/* First row: Ledger type, Primary company, Opposing company */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
@@ -132,7 +131,9 @@ const MisFilterPanel = ({
                 selectedOptions={selectedCompany}
                 onChange={onCompanySelect}
                 placeholder={
-                  ledgerTypeDisabled ? "Select ledger type first" : "Select buyer company…"
+                  ledgerTypeDisabled
+                    ? "Select ledger type first"
+                    : "Select buyer company…"
                 }
                 isMulti={false}
                 isDisabled={ledgerTypeDisabled}
@@ -159,7 +160,6 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        {/* Second row: Sauda no, Period */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">

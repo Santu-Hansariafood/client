@@ -38,7 +38,9 @@ const StatDashboard = ({
         label="Total Payment Received"
         value={`Rs. ${dateTotal.toLocaleString("en-IN")}`}
         subValue={
-          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
+          fullCompanyMapping &&
+          companyPair?.buyerCompany &&
+          companyPair?.supplierCompany
             ? `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`
             : accountLabel
               ? `${accountLabel} Ledger`
@@ -50,12 +52,12 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaExclamationCircle size={18} />}
-        label={formData.ledgerType === "Seller" ? "Seller Due" : "Buyer Due (Dr.)"}
+        label={
+          formData.ledgerType === "Seller" ? "Seller Due" : "Buyer Due (Dr.)"
+        }
         value={`Rs. ${(ledgerBalance.outstandingBalance ?? 0).toLocaleString("en-IN")}`}
         subValue={
-          companyPair?.buyerCompany
-            ? "Outstanding balance"
-            : "Select companies"
+          companyPair?.buyerCompany ? "Outstanding balance" : "Select companies"
         }
         color="bg-rose-50"
         iconColor="text-rose-600"
@@ -65,11 +67,7 @@ const StatDashboard = ({
         icon={<FaMoneyBillWave size={18} />}
         label={isAdvance ? "Total Advance (Cr.)" : "Total Credit (Cr.)"}
         value={`Rs. ${creditEntryTotal.toLocaleString("en-IN")}`}
-        subValue={
-          isAdvance
-            ? "Total available credit"
-            : "Total receipt amount"
-        }
+        subValue={isAdvance ? "Total available credit" : "Total receipt amount"}
         color="bg-emerald-50"
         iconColor="text-emerald-600"
       />

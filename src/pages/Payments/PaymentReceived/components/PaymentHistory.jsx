@@ -5,6 +5,8 @@ import {
   formatLedgerAmount,
   hasFullCompanyMapping,
 } from "../utils/paymentLedgerUtils";
+import { Suspense } from "react";
+import Loading from "../../../../common/Loading/Loading";
 
 const PaymentHistory = ({
   fetchingHistory,
@@ -20,9 +22,9 @@ const PaymentHistory = ({
   const fullMapping = hasFullCompanyMapping(companyPair);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <Suspense fallback={<Loading />}>
+      <div className="flex flex-col h-full">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-white shadow-sm">
               <FaHistory size={14} />
@@ -101,7 +103,9 @@ const PaymentHistory = ({
             {onPrintVoucher && tallyRows[tallyRows.length - 1]?.raw && (
               <button
                 type="button"
-                onClick={() => onPrintVoucher(tallyRows[tallyRows.length - 1].raw)}
+                onClick={() =>
+                  onPrintVoucher(tallyRows[tallyRows.length - 1].raw)
+                }
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-black uppercase tracking-widest"
               >
                 <FaPrint size={12} /> Print last voucher
@@ -110,7 +114,7 @@ const PaymentHistory = ({
           </div>
         )}
       </div>
-    </div>
+    </Suspense>
   );
 };
 

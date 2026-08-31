@@ -11,7 +11,8 @@ const MisPageHeader = ({ activeTab, onTabChange }) => {
           Accounts · MIS
         </p>
         <p className="text-sm text-slate-500 font-medium max-w-xl">
-          Company-to-company Tally ledger, voucher register, and sauda drill-down
+          Company-to-company Tally ledger, voucher register, and sauda
+          drill-down
         </p>
       </div>
       <div className="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 shadow-inner">

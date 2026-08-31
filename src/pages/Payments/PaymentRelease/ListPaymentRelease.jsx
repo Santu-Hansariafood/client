@@ -55,11 +55,9 @@ const ListPaymentRelease = () => {
         endDate: endDate ? endDate.toISOString() : undefined,
       };
 
-      // Auto-filter for seller users
       if (userRole === "Seller" && user?.sellerName) {
         params.sellerName = user.sellerName;
       } else {
-        // Only allow filter for admin/employee
         if (sellerCompanyFilter) params.sellerCompany = sellerCompanyFilter;
         if (sellerNameFilter) params.sellerName = sellerNameFilter;
       }
@@ -150,7 +148,6 @@ const ListPaymentRelease = () => {
         endDate: endDate ? endDate.toISOString() : undefined,
       };
 
-      // Auto-filter for seller users
       if (userRole === "Seller" && user?.sellerName) {
         params.sellerName = user.sellerName;
       } else {

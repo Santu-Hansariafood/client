@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
@@ -23,15 +23,19 @@ import {
   FaEdit,
 } from "react-icons/fa";
 
-import TabButton from "./components/TabButton";
-import StatDashboard from "./components/StatDashboard";
-import AccountSelection from "./components/AccountSelection";
-import PaymentRecordingPanel from "./components/PaymentRecordingPanel";
-import CreditBalancePanel from "./components/CreditBalancePanel";
-import AllocationLedger from "./components/AllocationLedger";
-import PaymentHistory from "./components/PaymentHistory";
-import AnalyticalSummary from "./components/AnalyticalSummary";
-import SimplePaymentList from "./components/SimplePaymentList";
+const TabButton = lazy(() => import("./components/TabButton"));
+const StatDashboard = lazy(() => import("./components/StatDashboard"));
+const AccountSelection = lazy(() => import("./components/AccountSelection"));
+const PaymentRecordingPanel = lazy(
+  () => import("./components/PaymentRecordingPanel"),
+);
+const CreditBalancePanel = lazy(
+  () => import("./components/CreditBalancePanel"),
+);
+const AllocationLedger = lazy(() => import("./components/AllocationLedger"));
+const PaymentHistory = lazy(() => import("./components/PaymentHistory"));
+const AnalyticalSummary = lazy(() => import("./components/AnalyticalSummary"));
+const SimplePaymentList = lazy(() => import("./components/SimplePaymentList"));
 import {
   resolveCompanyPair,
   buildTallyVoucherRows,
@@ -287,8 +291,8 @@ const AddPaymentReceived = () => {
     const secondClaim = Number(entry.secondClaim) || 0;
     const otherCharges = Number(entry.otherCharges) || 0;
     const tds = Number(entry.tds) || 0;
-      const payableAmount = 
-        netAmount - totalClaim - secondClaim - otherCharges - tds - bankCharges;
+    const payableAmount =
+      netAmount - totalClaim - secondClaim - otherCharges - tds - bankCharges;
 
     return {
       grossAmount,
@@ -847,7 +851,9 @@ const AddPaymentReceived = () => {
 
     if (hasAnyChange) {
       setEntries(mergedEntries);
-      setBreakdownEntry(mergedEntries.find((entry) => entry.isCurrentVoucherAllocation));
+      setBreakdownEntry(
+        mergedEntries.find((entry) => entry.isCurrentVoucherAllocation),
+      );
     }
   }, [editingPaymentId, editingPayment, entries.length]);
 
@@ -2236,10 +2242,18 @@ const AddPaymentReceived = () => {
             </div>
             <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-[8px] font-black uppercase tracking-wider sm:grid-cols-4">
-                <span className="text-slate-500">Bill ₹{details.grossAmount.toFixed(2)}</span>
-                <span className="text-slate-500">Net ₹{details.netAmount.toFixed(2)}</span>
-                <span className="text-rose-600">Claims -₹{details.totalClaim.toFixed(2)}</span>
-                <span className="text-emerald-700">Payable ₹{Math.max(0, details.payableAmount).toFixed(2)}</span>
+                <span className="text-slate-500">
+                  Bill ₹{details.grossAmount.toFixed(2)}
+                </span>
+                <span className="text-slate-500">
+                  Net ₹{details.netAmount.toFixed(2)}
+                </span>
+                <span className="text-rose-600">
+                  Claims -₹{details.totalClaim.toFixed(2)}
+                </span>
+                <span className="text-emerald-700">
+                  Payable ₹{Math.max(0, details.payableAmount).toFixed(2)}
+                </span>
               </div>
               <button
                 type="button"
@@ -2343,9 +2357,15 @@ const AddPaymentReceived = () => {
                   Less 2nd Claim
                 </span>
                 <span className="h-6 px-2 rounded border border-purple-200 bg-white text-purple-700 text-[9px] font-bold flex items-center tabular-nums">
-                  - ₹{details.secondClaim.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  - ₹
+                  {details.secondClaim.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
-                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.secondClaimRemarks}>
+                <span
+                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  title={row.secondClaimRemarks}
+                >
                   {row.secondClaimRemarks || "Remarks required"}
                 </span>
               </div>
@@ -2354,9 +2374,15 @@ const AddPaymentReceived = () => {
                   Less Other Charges
                 </span>
                 <span className="h-6 px-2 rounded border border-teal-200 bg-white text-teal-700 text-[9px] font-bold flex items-center tabular-nums">
-                  - ₹{details.otherCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  - ₹
+                  {details.otherCharges.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
-                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.otherChargesRemarks}>
+                <span
+                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  title={row.otherChargesRemarks}
+                >
                   {row.otherChargesRemarks || "Remarks required"}
                 </span>
               </div>
@@ -2365,9 +2391,15 @@ const AddPaymentReceived = () => {
                   Less Bank Charges
                 </span>
                 <span className="h-6 px-2 rounded border border-orange-200 bg-white text-orange-700 text-[9px] font-bold flex items-center tabular-nums">
-                  - ₹{details.bankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  - ₹
+                  {details.bankCharges.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
-                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.bankChargesRemarks}>
+                <span
+                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  title={row.bankChargesRemarks}
+                >
                   {row.bankChargesRemarks || "Remarks required"}
                 </span>
               </div>
@@ -2376,9 +2408,15 @@ const AddPaymentReceived = () => {
                   Less TDS
                 </span>
                 <span className="h-6 px-2 rounded border border-red-200 bg-white text-red-700 text-[9px] font-bold flex items-center tabular-nums">
-                  - ₹{details.tds.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  - ₹
+                  {details.tds.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
-                <span className="text-[7px] font-bold normal-case text-slate-500 truncate" title={row.tdsRemarks}>
+                <span
+                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  title={row.tdsRemarks}
+                >
                   {row.tdsRemarks || "Remarks required"}
                 </span>
               </div>
@@ -2389,14 +2427,20 @@ const AddPaymentReceived = () => {
                   Less Total Claim
                 </span>
                 <span className="h-6 px-2 rounded border border-rose-200 bg-white text-rose-700 text-[9px] font-bold flex items-center tabular-nums">
-                  - ₹{details.totalClaim.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  - ₹
+                  {details.totalClaim.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">
                   General Remarks
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-600 text-[9px] font-bold flex items-center normal-case truncate" title={row.generalRemarks}>
+                <span
+                  className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-600 text-[9px] font-bold flex items-center normal-case truncate"
+                  title={row.generalRemarks}
+                >
                   {row.generalRemarks || "Remarks required"}
                 </span>
               </div>
@@ -2405,7 +2449,10 @@ const AddPaymentReceived = () => {
                   Payable Amount
                 </span>
                 <span className="h-6 px-2 rounded border border-emerald-300 bg-white text-emerald-700 text-[9px] font-black flex items-center tabular-nums">
-                  ₹{Math.max(0, details.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹
+                  {Math.max(0, details.payableAmount).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -2540,84 +2587,143 @@ const AddPaymentReceived = () => {
               <div
                 className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-y-auto bg-slate-900/60 p-3 backdrop-blur-sm sm:p-6"
                 onClick={(event) => {
-                  if (event.target === event.currentTarget) setBreakdownEntry(null);
+                  if (event.target === event.currentTarget)
+                    setBreakdownEntry(null);
                 }}
               >
                 <div className="my-auto flex max-h-[calc(100vh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl normal-case sm:max-h-[calc(100vh-3rem)]">
                   <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
                     <div>
-                      <h3 className="text-base font-black text-slate-900">Bill & Payable Calculation</h3>
+                      <h3 className="text-base font-black text-slate-900">
+                        Bill & Payable Calculation
+                      </h3>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         Sauda {row.saudaNo} · Bill {row.billNumber || "-"}
                       </p>
                     </div>
-                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="Close details">
+                    <button
+                      type="button"
+                      onClick={() => setBreakdownEntry(null)}
+                      className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      title="Close details"
+                    >
                       <FaTimes size={16} />
                     </button>
                   </div>
                   <div className="overflow-y-auto p-5 pt-4">
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {[
-                      ["Total Bill Value", details.grossAmount],
-                      [`Less CD (${details.cdPercent}%)`, details.cdAmount],
-                      [`Add GST (${details.gstPercent}%)`, details.gstAmount],
-                      ["Net Amount", details.netAmount],
-                      ["Less Total Claim", details.totalClaim],
-                      ["Payable Amount", Math.max(0, details.payableAmount)],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{label}</span>
-                        <span className="mt-1 block text-sm font-black tabular-nums text-slate-900">₹ {Number(value).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {[
-                      ["secondClaim", "Less 2nd Claim", "secondClaimRemarks"],
-                      ["otherCharges", "Less Other Charges", "otherChargesRemarks"],
-                      ["bankCharges", "Less Bank Charges", "bankChargesRemarks"],
-                      ["tds", "Less TDS", "tdsRemarks"],
-                    ].map(([amountField, label, remarksField]) => (
-                      <div key={amountField} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">{label}</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {[
+                        ["Total Bill Value", details.grossAmount],
+                        [`Less CD (${details.cdPercent}%)`, details.cdAmount],
+                        [`Add GST (${details.gstPercent}%)`, details.gstAmount],
+                        ["Net Amount", details.netAmount],
+                        ["Less Total Claim", details.totalClaim],
+                        ["Payable Amount", Math.max(0, details.payableAmount)],
+                      ].map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                        >
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">
+                            {label}
+                          </span>
+                          <span className="mt-1 block text-sm font-black tabular-nums text-slate-900">
+                            ₹ {Number(value).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {[
+                        ["secondClaim", "Less 2nd Claim", "secondClaimRemarks"],
+                        [
+                          "otherCharges",
+                          "Less Other Charges",
+                          "otherChargesRemarks",
+                        ],
+                        [
+                          "bankCharges",
+                          "Less Bank Charges",
+                          "bankChargesRemarks",
+                        ],
+                        ["tds", "Less TDS", "tdsRemarks"],
+                      ].map(([amountField, label, remarksField]) => (
+                        <div
+                          key={amountField}
+                          className="rounded-xl border border-slate-200 bg-white p-3"
+                        >
+                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">
+                            {label}
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">
+                              ₹
+                            </span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={breakdownEntry[amountField] ?? ""}
+                              onChange={(event) =>
+                                handleBreakdownFieldChange(
+                                  amountField,
+                                  event.target.value,
+                                )
+                              }
+                              disabled={isLocked}
+                              className="h-9 w-full rounded-lg border border-slate-200 pl-7 pr-3 text-sm font-bold outline-none focus:border-[#1e3a5f]"
+                              placeholder="0.00"
+                            />
+                          </div>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={breakdownEntry[amountField] ?? ""}
-                            onChange={(event) => handleBreakdownFieldChange(amountField, event.target.value)}
+                            type="text"
+                            value={breakdownEntry[remarksField] || ""}
+                            onChange={(event) =>
+                              handleBreakdownFieldChange(
+                                remarksField,
+                                event.target.value,
+                              )
+                            }
                             disabled={isLocked}
-                            className="h-9 w-full rounded-lg border border-slate-200 pl-7 pr-3 text-sm font-bold outline-none focus:border-[#1e3a5f]"
-                            placeholder="0.00"
+                            className="mt-2 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                            placeholder="Remarks..."
                           />
                         </div>
-                        <input
-                          type="text"
-                          value={breakdownEntry[remarksField] || ""}
-                          onChange={(event) => handleBreakdownFieldChange(remarksField, event.target.value)}
-                          disabled={isLocked}
-                          className="mt-2 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
-                          placeholder="Remarks..."
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">General Remarks</label>
-                    <input
-                      type="text"
-                      value={breakdownEntry.generalRemarks || ""}
-                      onChange={(event) => handleBreakdownFieldChange("generalRemarks", event.target.value)}
-                      disabled={isLocked}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
-                      placeholder="Remarks..."
-                    />
-                  </div>
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50">Close</button>
-                    <button type="button" onClick={() => setBreakdownEntry(null)} className="rounded-lg bg-[#1e3a5f] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#152b47]">Done</button>
-                  </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">
+                        General Remarks
+                      </label>
+                      <input
+                        type="text"
+                        value={breakdownEntry.generalRemarks || ""}
+                        onChange={(event) =>
+                          handleBreakdownFieldChange(
+                            "generalRemarks",
+                            event.target.value,
+                          )
+                        }
+                        disabled={isLocked}
+                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                        placeholder="Remarks..."
+                      />
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBreakdownEntry(null)}
+                        className="rounded-lg border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50"
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBreakdownEntry(null)}
+                        className="rounded-lg bg-[#1e3a5f] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#152b47]"
+                      >
+                        Done
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

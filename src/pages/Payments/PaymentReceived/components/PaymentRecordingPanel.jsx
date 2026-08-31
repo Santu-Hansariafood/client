@@ -287,15 +287,15 @@ const PaymentRecordingPanel = ({
                   <FaHistory size={12} />
                 </div>
                 <p className="text-[10px] font-bold text-slate-500 max-w-md">
-                  Credit balance from buyer will be recorded. Use the Allocation table below to post this credit against specific lorry bills (Dr.).
+                  Credit balance from buyer will be recorded. Use the Allocation
+                  table below to post this credit against specific lorry bills
+                  (Dr.).
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleRecordAdvance}
-                disabled={
-                  loading || formData.amount <= 0 || !hasResolvedLedger
-                }
+                disabled={loading || formData.amount <= 0 || !hasResolvedLedger}
                 className={`h-[48px] px-8 flex items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
                   formData.amount > 0 && !loading && hasResolvedLedger
                     ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"

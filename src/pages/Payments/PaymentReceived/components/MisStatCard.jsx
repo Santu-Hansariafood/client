@@ -1,10 +1,4 @@
-const MisStatCard = ({
-  icon,
-  label,
-  value,
-  subValue,
-  accent = "slate",
-}) => {
+const MisStatCard = ({ icon, label, value, subValue, accent = "slate" }) => {
   const accents = {
     slate: "from-slate-500/10 to-slate-500/5 border-slate-200 text-slate-700",
     emerald:

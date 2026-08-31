@@ -77,8 +77,7 @@ const AccountSelection = ({
           </div>
           {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
             <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
-              Tip: Use From Advance to spend buyer Cr. advance on seller
-              lorries
+              Tip: Use From Advance to spend buyer Cr. advance on seller lorries
             </p>
           )}
         </div>
@@ -159,9 +158,7 @@ const AccountSelection = ({
                   }
                   isMulti={false}
                   isDisabled={
-                    formData.ledgerType === "Seller"
-                      ? false
-                      : !hasBuyerCompany
+                    formData.ledgerType === "Seller" ? false : !hasBuyerCompany
                   }
                   className="rounded-xl transition-all border-slate-200 hover:border-slate-300"
                 />
