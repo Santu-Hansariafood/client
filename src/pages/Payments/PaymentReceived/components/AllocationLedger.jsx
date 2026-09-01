@@ -117,11 +117,7 @@ const AllocationLedger = ({
                 disabled={loading}
                 className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl shadow-xl shadow-blue-200 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest animate-in fade-in zoom-in duration-300"
               >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <FaCloudUploadAlt size={16} />
-                )}
+                {loading ? <Loading /> : <FaCloudUploadAlt size={16} />}
                 {loading
                   ? "Saving..."
                   : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
@@ -380,11 +376,7 @@ const AllocationLedger = ({
                     disabled={loading}
                     className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl shadow-blue-900/50 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest"
                   >
-                    {loading ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <FaCloudUploadAlt size={16} />
-                    )}
+                    {loading ? <Loading /> : <FaCloudUploadAlt size={16} />}
                     {loading
                       ? "Saving..."
                       : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}

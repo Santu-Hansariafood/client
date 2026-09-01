@@ -6,6 +6,7 @@ import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaArrowLeft, FaSave, FaList, FaBarcode } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import Loading from "../../../common/Loading/Loading";
 
 const AddVendorCode = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const AddVendorCode = () => {
         data.map((g) => ({
           value: g._id,
           label: g.groupName,
-        }))
+        })),
       );
     } catch {
       toast.error("Failed to load groups");
@@ -48,7 +49,7 @@ const AddVendorCode = () => {
         data.map((c) => ({
           value: c._id,
           label: c.companyName,
-        }))
+        })),
       );
     } catch {
       toast.error("Failed to load buyer companies");
@@ -63,9 +64,8 @@ const AddVendorCode = () => {
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       const formatted = data.map((s) => ({
         value: s._id,
-        label: (s.companies && s.companies.length > 0) 
-          ? s.companies[0] 
-          : s.sellerName,
+        label:
+          s.companies && s.companies.length > 0 ? s.companies[0] : s.sellerName,
       }));
       setSellers(formatted);
     } catch (err) {
@@ -123,7 +123,8 @@ const AddVendorCode = () => {
       toast.success("Vendor code created successfully");
       navigate("/vendor-code/list");
     } catch (error) {
-      const msg = error.response?.data?.message || "Failed to create vendor code";
+      const msg =
+        error.response?.data?.message || "Failed to create vendor code";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -160,8 +161,12 @@ const AddVendorCode = () => {
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-2">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold text-lg">1</div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">Buyer Selection</h2>
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold text-lg">
+                    1
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Buyer Selection
+                  </h2>
                 </div>
 
                 <div className="space-y-4">
@@ -193,8 +198,12 @@ const AddVendorCode = () => {
 
               <div className="space-y-6">
                 <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-2">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600 font-bold text-lg">2</div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">Seller Selection</h2>
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600 font-bold text-lg">
+                    2
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Seller Selection
+                  </h2>
                 </div>
 
                 <DataDropdown
@@ -210,8 +219,12 @@ const AddVendorCode = () => {
             {isReady && (
               <div className="mt-10 pt-10 border-t border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
                 <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-8">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 font-bold text-lg">3</div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">Assign Vendor Code</h2>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 font-bold text-lg">
+                    3
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Assign Vendor Code
+                  </h2>
                 </div>
                 <div className="max-w-md bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
                   <DataInput
@@ -223,8 +236,13 @@ const AddVendorCode = () => {
                     required
                   />
                   <div className="flex items-start gap-2 mt-3 text-slate-400">
-                    <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded font-bold mt-0.5">INFO</span>
-                    <p className="text-xs">Only uppercase letters (A-Z) and numbers (0-9) are allowed.</p>
+                    <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded font-bold mt-0.5">
+                      INFO
+                    </span>
+                    <p className="text-xs">
+                      Only uppercase letters (A-Z) and numbers (0-9) are
+                      allowed.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -242,10 +260,7 @@ const AddVendorCode = () => {
               }`}
             >
               {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processing...
-                </>
+                <Loading />
               ) : (
                 <>
                   <FaSave className="text-lg" />

@@ -68,10 +68,7 @@ const BlogDetail = () => {
     }
   };
 
-  if (loading)
-    return (
-        <Loading size="lg" />
-    );
+  if (loading) return <Loading size="lg" />;
   if (!blog) return <div className="p-10 text-center">News not found</div>;
 
   const galleryImages =

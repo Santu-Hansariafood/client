@@ -157,9 +157,7 @@ const ListEmployee = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loading size="lg" />
-          </div>
+          <Loading />
         ) : (
           <>
             <Tables headers={headers} rows={rows} />

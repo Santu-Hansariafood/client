@@ -31,8 +31,12 @@ const DownloadSauda = ({
     initialSellerProfileData || [],
   );
   const [companyData, setCompanyData] = useState(initialCompanyData || []);
-  const [commodityData, setCommodityData] = useState(initialCommodityData || []);
-  const [qualityParameterData, setQualityParameterData] = useState(initialQualityParameterData || []);
+  const [commodityData, setCommodityData] = useState(
+    initialCommodityData || [],
+  );
+  const [qualityParameterData, setQualityParameterData] = useState(
+    initialQualityParameterData || [],
+  );
   const [loading, setLoading] = useState(
     !(
       hasLookupItems(initialConsigneeData) &&
@@ -77,7 +81,15 @@ const DownloadSauda = ({
 
     const fetchData = async () => {
       try {
-        const [cData, sData, bData, spData, companyRows, commodityRows, qpData] = await Promise.all([
+        const [
+          cData,
+          sData,
+          bData,
+          spData,
+          companyRows,
+          commodityRows,
+          qpData,
+        ] = await Promise.all([
           hasLookupItems(initialConsigneeData)
             ? Promise.resolve(initialConsigneeData)
             : fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
@@ -279,13 +291,12 @@ const DownloadSauda = ({
   const handleManualDownload = async () => {
     setIsGenerating(true);
     try {
-       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
-       await downloadFile(blob, `HANS-2026-2027-${data.saudaNo}.pdf`);
-       if (autoEmail) {
+      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+      await downloadFile(blob, `HANS-2026-2027-${data.saudaNo}.pdf`);
+      if (autoEmail) {
         await handleAutoEmail();
       }
     } catch (error) {
-      console.error("PDF Download error:", error);
       toast.error("Failed to generate PDF.");
     } finally {
       setIsGenerating(false);

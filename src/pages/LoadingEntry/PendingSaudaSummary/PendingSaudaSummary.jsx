@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 
 import { toast } from "react-toastify";
-import { FaClock, FaStore, FaTruck, FaBoxOpen, FaSearch, FaSync } from "react-icons/fa";
+import {
+  FaClock,
+  FaStore,
+  FaTruck,
+  FaBoxOpen,
+  FaSearch,
+  FaSync,
+} from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
@@ -11,7 +18,9 @@ import Buttons from "../../../common/Buttons/Buttons";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 const PendingSaudaSummary = () => {
@@ -56,10 +65,10 @@ const PendingSaudaSummary = () => {
           limit: itemsPerPage,
           search: searchTerm,
           userRole,
-          mobile
-        }
+          mobile,
+        },
       });
-      
+
       const { data: pagedData, total, summaryStats: stats } = response.data;
       setData(pagedData || []);
       setTotalItems(total || 0);
@@ -75,7 +84,6 @@ const PendingSaudaSummary = () => {
         });
       }
       setLastUpdated(new Date());
-
     } catch (error) {
       console.error("Error fetching pending sauda summary:", error);
       toast.error("Failed to fetch pending sauda summary");
@@ -144,16 +152,28 @@ const PendingSaudaSummary = () => {
           {getConsigneeName(item.consignee)}
         </span>
       </div>,
-      <span key={`qty-${index}`} className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-green-600 bg-green-50 border-green-100"} px-3 py-1 rounded-lg border`}>
+      <span
+        key={`qty-${index}`}
+        className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-green-600 bg-green-50 border-green-100"} px-3 py-1 rounded-lg border`}
+      >
         {item.totalPendingQuantity.toFixed(2)} T
       </span>,
-      <span key={`loaded-qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+      <span
+        key={`loaded-qty-${index}`}
+        className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100"
+      >
         {(item.totalUnloadingWeight || 0).toFixed(2)} T
       </span>,
       <div key={`brokerage-${index}`} className="flex flex-col text-[11px]">
-        <span className="font-black text-slate-900">Total: ₹{totalBrokerage.toFixed(2)}</span>
-        <span className="text-emerald-600 font-bold">Loaded: ₹{loadedBrokerage.toFixed(2)}</span>
-        <span className="text-green-600 font-bold">Pending: ₹{pendingBrokerage.toFixed(2)}</span>
+        <span className="font-black text-slate-900">
+          Total: ₹{totalBrokerage.toFixed(2)}
+        </span>
+        <span className="text-emerald-600 font-bold">
+          Loaded: ₹{loadedBrokerage.toFixed(2)}
+        </span>
+        <span className="text-green-600 font-bold">
+          Pending: ₹{pendingBrokerage.toFixed(2)}
+        </span>
       </div>,
       <span key={`count-${index}`} className="font-bold text-slate-600">
         {item.saudaCount}
@@ -192,14 +212,22 @@ const PendingSaudaSummary = () => {
                 <FaClock size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">System Intelligence</p>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Pending Sauda Summary</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">
+                  System Intelligence
+                </p>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  Pending Sauda Summary
+                </h3>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Last Intelligence Update</p>
-                <p className="text-xs font-bold text-slate-600">{lastUpdated.toLocaleTimeString()}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  Last Intelligence Update
+                </p>
+                <p className="text-xs font-bold text-slate-600">
+                  {lastUpdated.toLocaleTimeString()}
+                </p>
               </div>
               <Buttons
                 label="Refresh Data"
@@ -214,31 +242,51 @@ const PendingSaudaSummary = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pending Weight</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                Total Pending Weight
+              </p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
-                {summaryStats.totalPendingWeight.toFixed(2)} <span className="text-lg opacity-40">T</span>
+                {summaryStats.totalPendingWeight.toFixed(2)}{" "}
+                <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Unloading Weight</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                Total Unloading Weight
+              </p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter text-emerald-600">
-                {summaryStats.totalUnloadingWeight.toFixed(2)} <span className="text-lg opacity-40">T</span>
+                {summaryStats.totalUnloadingWeight.toFixed(2)}{" "}
+                <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Brokerage</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                Total Brokerage
+              </p>
               <h3 className="text-3xl font-black text-slate-900 tracking-tighter">
-                ₹{(summaryStats.totalLoadedBrokerage + summaryStats.totalPendingBrokerage).toFixed(0)}
+                ₹
+                {(
+                  summaryStats.totalLoadedBrokerage +
+                  summaryStats.totalPendingBrokerage
+                ).toFixed(0)}
               </h3>
               <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                <span className="text-emerald-600">Loaded: ₹{summaryStats.totalLoadedBrokerage.toFixed(0)}</span>
-                <span className="text-green-600">Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}</span>
+                <span className="text-emerald-600">
+                  Loaded: ₹{summaryStats.totalLoadedBrokerage.toFixed(0)}
+                </span>
+                <span className="text-green-600">
+                  Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}
+                </span>
               </div>
             </div>
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Consignees / Sellers</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                Consignees / Sellers
+              </p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
-                {summaryStats.totalConsignees} <span className="text-lg opacity-40">/</span> {summaryStats.activeSellers}
+                {summaryStats.totalConsignees}{" "}
+                <span className="text-lg opacity-40">/</span>{" "}
+                {summaryStats.activeSellers}
               </h3>
             </div>
           </div>
@@ -260,9 +308,7 @@ const PendingSaudaSummary = () => {
 
             <div className="rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/5 overflow-hidden">
               {loading ? (
-                <div className="h-64 flex items-center justify-center">
-                  <Loading />
-                </div>
+                <Loading />
               ) : data.length === 0 ? (
                 <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
                   <FaBoxOpen size={48} className="text-slate-200" />

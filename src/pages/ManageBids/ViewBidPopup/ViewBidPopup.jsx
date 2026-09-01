@@ -65,7 +65,12 @@ const ViewBidPopup = ({ bidId, onClose }) => {
         ["Commodity", bidDetails.commodity || "N/A"],
         ["Quantity", `${bidDetails.quantity || 0} TONS`],
         ["Rate", `Rs. ${bidDetails.rate || 0}`],
-        ["Bid Date", bidDetails.bidDate ? new Date(bidDetails.bidDate).toLocaleDateString("en-GB") : "N/A"],
+        [
+          "Bid Date",
+          bidDetails.bidDate
+            ? new Date(bidDetails.bidDate).toLocaleDateString("en-GB")
+            : "N/A",
+        ],
         ["Start Time", bidDetails.startTime || "N/A"],
         ["End Time", bidDetails.endTime || "N/A"],
         ["Payment Terms", `${bidDetails.paymentTerms || 0} Days`],
@@ -83,7 +88,10 @@ const ViewBidPopup = ({ bidId, onClose }) => {
 
       let finalY = doc.lastAutoTable.finalY + 10;
 
-      if (bidDetails.parameters && Object.keys(bidDetails.parameters).length > 0) {
+      if (
+        bidDetails.parameters &&
+        Object.keys(bidDetails.parameters).length > 0
+      ) {
         doc.setFont("helvetica", "bold");
         doc.text("Quality Parameters", 15, finalY);
         doc.setFont("helvetica", "normal");
@@ -163,7 +171,6 @@ const ViewBidPopup = ({ bidId, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-800/60 backdrop-blur-sm flex justify-center items-center p-4 z-[9999]">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-xl font-bold text-green-800 uppercase tracking-tight">
             {bidDetails?.type || "Bid"} Details
@@ -177,12 +184,9 @@ const ViewBidPopup = ({ bidId, onClose }) => {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
           {loading ? (
-            <div className="py-20">
-              <Loading />
-            </div>
+            <Loading />
           ) : error ? (
             <div className="py-10 text-center">
               <div className="bg-rose-50 text-rose-600 p-4 rounded-xl border border-rose-100 mb-4">
@@ -200,87 +204,130 @@ const ViewBidPopup = ({ bidId, onClose }) => {
               <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Group</span>
-                  <span className="font-semibold text-gray-900">{bidDetails.group || "N/A"}</span>
+                  <span className="font-semibold text-gray-900">
+                    {bidDetails.group || "N/A"}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Commodity</span>
-                  <span className="font-semibold text-gray-900">{bidDetails.commodity || "N/A"}</span>
+                  <span className="font-semibold text-gray-900">
+                    {bidDetails.commodity || "N/A"}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Origin</span>
-                  <span className="font-semibold text-gray-900">{bidDetails.origin || "N/A"}</span>
+                  <span className="font-semibold text-gray-900">
+                    {bidDetails.origin || "N/A"}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Consignee</span>
-                  <span className="font-semibold text-gray-900">{bidDetails.consignee || "N/A"}</span>
+                  <span className="font-semibold text-gray-900">
+                    {bidDetails.consignee || "N/A"}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Quantity</span>
-                  <span className="font-semibold text-gray-900">{bidDetails.quantity || 0} TONS</span>
+                  <span className="font-semibold text-gray-900">
+                    {bidDetails.quantity || 0} TONS
+                  </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Rate</span>
-                  <span className="font-semibold text-emerald-600 text-base">₹{bidDetails.rate || 0}</span>
+                  <span className="font-semibold text-emerald-600 text-base">
+                    ₹{bidDetails.rate || 0}
+                  </span>
                 </div>
               </div>
 
-              {/* Quality Parameters */}
-              {bidDetails.parameters && Object.keys(bidDetails.parameters).length > 0 && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                    Quality Parameters
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(bidDetails.parameters).map(([key, vals]) => (
-                      <div key={key} className="bg-white p-3 rounded-lg border border-gray-200">
-                        <span className="text-gray-600 text-xs font-semibold block mb-2">{key}</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {vals?.baseValue && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-xs">Base</span>
-                              <span className="font-bold text-gray-900 text-xs">{vals.baseValue}</span>
+              {bidDetails.parameters &&
+                Object.keys(bidDetails.parameters).length > 0 && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                      Quality Parameters
+                    </h3>
+                    <div className="space-y-3">
+                      {Object.entries(bidDetails.parameters).map(
+                        ([key, vals]) => (
+                          <div
+                            key={key}
+                            className="bg-white p-3 rounded-lg border border-gray-200"
+                          >
+                            <span className="text-gray-600 text-xs font-semibold block mb-2">
+                              {key}
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                              {vals?.baseValue && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-500 text-xs">
+                                    Base
+                                  </span>
+                                  <span className="font-bold text-gray-900 text-xs">
+                                    {vals.baseValue}
+                                  </span>
+                                </div>
+                              )}
+                              {vals?.maxValue && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-500 text-xs">
+                                    Max
+                                  </span>
+                                  <span className="font-bold text-gray-900 text-xs">
+                                    {vals.maxValue}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {vals?.maxValue && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-xs">Max</span>
-                              <span className="font-bold text-gray-900 text-xs">{vals.maxValue}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                          </div>
+                        ),
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Time & Terms */}
               <div className="grid grid-cols-2 gap-4 text-sm pt-2">
                 <div className="p-3 rounded-xl border border-gray-100 bg-emerald-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">Bid Date</span>
+                  <span className="text-gray-500 text-xs block mb-1">
+                    Bid Date
+                  </span>
                   <span className="font-medium">
-                    {bidDetails.bidDate ? new Date(bidDetails.bidDate).toLocaleDateString("en-GB") : "N/A"}
+                    {bidDetails.bidDate
+                      ? new Date(bidDetails.bidDate).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl border border-gray-100 bg-emerald-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">Time Range</span>
+                  <span className="text-gray-500 text-xs block mb-1">
+                    Time Range
+                  </span>
                   <span className="font-medium">
-                    {bidDetails.startTime || "00:00"} - {bidDetails.endTime || "00:00"}
+                    {bidDetails.startTime || "00:00"} -{" "}
+                    {bidDetails.endTime || "00:00"}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl border border-gray-100 bg-blue-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">Payment Terms</span>
-                  <span className="font-medium text-blue-700">{bidDetails.paymentTerms || 0} Days</span>
+                  <span className="text-gray-500 text-xs block mb-1">
+                    Payment Terms
+                  </span>
+                  <span className="font-medium text-blue-700">
+                    {bidDetails.paymentTerms || 0} Days
+                  </span>
                 </div>
                 <div className="p-3 rounded-xl border border-gray-100 bg-blue-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">Delivery</span>
-                  <span className="font-medium text-blue-700">{bidDetails.delivery || 0} Days</span>
+                  <span className="text-gray-500 text-xs block mb-1">
+                    Delivery
+                  </span>
+                  <span className="font-medium text-blue-700">
+                    {bidDetails.delivery || 0} Days
+                  </span>
                 </div>
               </div>
 
               {/* Notes */}
               <div className="pt-2">
-                <span className="text-gray-500 text-xs block mb-1 uppercase font-bold tracking-wider">Notes</span>
+                <span className="text-gray-500 text-xs block mb-1 uppercase font-bold tracking-wider">
+                  Notes
+                </span>
                 <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-xl border border-dashed border-gray-200 italic">
                   {bidDetails.notes || "No additional notes provided."}
                 </p>
@@ -289,7 +336,6 @@ const ViewBidPopup = ({ bidId, onClose }) => {
           ) : null}
         </div>
 
-        {/* Footer Actions */}
         {!loading && !error && bidDetails && (
           <div className="p-6 border-t border-gray-100 bg-gray-50/50">
             <button

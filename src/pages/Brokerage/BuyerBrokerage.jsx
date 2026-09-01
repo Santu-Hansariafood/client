@@ -83,7 +83,13 @@ const BuyerBrokerage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchInput, startDate, endDate, selectedBuyer, brokerageStatus]);
+  }, [
+    debouncedSearchInput,
+    startDate,
+    endDate,
+    selectedBuyer,
+    brokerageStatus,
+  ]);
 
   useEffect(() => {
     setSelectedIds([]);
@@ -619,7 +625,14 @@ const BuyerBrokerage = () => {
           ),
         ];
       }),
-    [data, currentPage, itemsPerPage, selectedIds, handleMarkPaid, updatingPayment],
+    [
+      data,
+      currentPage,
+      itemsPerPage,
+      selectedIds,
+      handleMarkPaid,
+      updatingPayment,
+    ],
   );
 
   return (
@@ -768,7 +781,8 @@ const BuyerBrokerage = () => {
                     Buyer Brokerage Payment
                   </h3>
                   <p className="text-sm text-slate-500 font-medium">
-                    Mark one entry, selected entries, or the full filtered list as paid.
+                    Mark one entry, selected entries, or the full filtered list
+                    as paid.
                   </p>
                 </div>
 
@@ -803,12 +817,7 @@ const BuyerBrokerage = () => {
 
             <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-4 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
               {loading ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-4">
-                  <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">
-                    Synchronizing Data...
-                  </p>
-                </div>
+                <Loading />
               ) : (
                 <>
                   <div className="rounded-[1.5rem] overflow-hidden border border-slate-100">

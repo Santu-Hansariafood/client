@@ -158,7 +158,14 @@ const ListSellerDetails = () => {
       }
     };
     fetchSellers();
-  }, [currentPage, itemsPerPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchTerm,
+    selectedCommodity,
+    selectedCompany,
+    selectedStatus,
+  ]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -347,9 +354,7 @@ const ListSellerDetails = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 overflow-hidden">
             {loading ? (
-              <div className="h-64 flex items-center justify-center">
-                <Loading />
-              </div>
+              <Loading />
             ) : sellers.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
                 <FaSearch size={40} className="text-slate-200" />

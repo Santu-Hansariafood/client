@@ -283,9 +283,7 @@ const ListPaymentRelease = () => {
         <div className="bg-white rounded-[2.5rem] p-4 shadow-xl border border-slate-100 overflow-hidden">
           <Suspense fallback={<Loading />}>
             {loading ? (
-              <div className="flex justify-center py-12">
-                <Loading />
-              </div>
+              <Loading />
             ) : (
               <>
                 <Tables headers={headers} rows={rows} />

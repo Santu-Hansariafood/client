@@ -174,12 +174,7 @@ const SaudaMISSection = () => {
 
         <div className="p-2">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-4">
-              <Loading size="lg" />
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                Searching Saudas...
-              </p>
-            </div>
+            <Loading />
           ) : saudas.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

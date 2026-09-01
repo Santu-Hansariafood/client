@@ -607,9 +607,7 @@ const BlogManagement = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-full py-20">
-              <Loading size="lg" />
-            </div>
+              <Loading />
           ) : blogs.length > 0 ? (
             blogs.map((blog) => (
               <div

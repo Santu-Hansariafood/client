@@ -5,7 +5,12 @@ import { toast } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { formatDateTime } from "../../utils/textUtils/textUtils";
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaUserTag } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaUserTag,
+} from "react-icons/fa";
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
@@ -35,8 +40,9 @@ const ConfirmBids = () => {
       }
 
       const responses = await Promise.all(endpoints);
-      
-      const bidParticipants = responses[0].data?.data || responses[0].data || [];
+
+      const bidParticipants =
+        responses[0].data?.data || responses[0].data || [];
       const sellers = responses[1].data?.data || responses[1].data || [];
       const matchedBid = responses[2].data;
       const confirmedBids = responses[3].data?.data || responses[3].data || [];
@@ -52,12 +58,19 @@ const ConfirmBids = () => {
             .join(" ");
 
         const allowedGroups = (buyerInfo.groups || []).map(normalize);
-        const allowedCompanies = (buyerInfo.companies || []).map(c => String(c).trim());
+        const allowedCompanies = (buyerInfo.companies || []).map((c) =>
+          String(c).trim(),
+        );
         const bidGroup = normalize(matchedBid.group);
         const bidCompany = String(matchedBid.company || "").trim();
-        const isOwnBid = String(matchedBid.createdByMobile || "") === String(mobile || "");
+        const isOwnBid =
+          String(matchedBid.createdByMobile || "") === String(mobile || "");
 
-        if (!isOwnBid && !allowedGroups.includes(bidGroup) && !allowedCompanies.includes(bidCompany)) {
+        if (
+          !isOwnBid &&
+          !allowedGroups.includes(bidGroup) &&
+          !allowedCompanies.includes(bidCompany)
+        ) {
           toast.error("You are not authorized to view this bid.");
           navigate("/manage-bids/bid-list");
           return;
@@ -271,14 +284,18 @@ const ConfirmBids = () => {
                 Back
               </button>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Confirm Bids</h2>
-                <p className="text-sm text-slate-500 font-medium">Review and accept the best offers for your bid</p>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Confirm Bids
+                </h2>
+                <p className="text-sm text-slate-500 font-medium">
+                  Review and accept the best offers for your bid
+                </p>
               </div>
             </div>
           </div>
 
           {loading ? (
-              <Loading />
+            <Loading />
           ) : (
             <div className="space-y-6">
               {bidDetails && (
@@ -287,30 +304,52 @@ const ConfirmBids = () => {
                     <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
                       <FaUserTag />
                     </span>
-                    <h3 className="text-lg font-bold text-slate-800">Bid Summary</h3>
+                    <h3 className="text-lg font-bold text-slate-800">
+                      Bid Summary
+                    </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Commodity</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{bidDetails.commodity}</p>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Commodity
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                        {bidDetails.commodity}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Route</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{bidDetails.origin} → {bidDetails.consignee}</p>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Route
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                        {bidDetails.origin} → {bidDetails.consignee}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quantity</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{bidDetails.quantity} MT</p>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Quantity
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                        {bidDetails.quantity} MT
+                      </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Target Rate</p>
-                      <p className="text-sm font-bold text-emerald-600 mt-0.5">₹{bidDetails.rate}</p>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Target Rate
+                      </p>
+                      <p className="text-sm font-bold text-emerald-600 mt-0.5">
+                        ₹{bidDetails.rate}
+                      </p>
                     </div>
                   </div>
                   {bidDetails.notes && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Notes</p>
-                      <p className="text-xs text-slate-600 mt-1 italic">{bidDetails.notes}</p>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Notes
+                      </p>
+                      <p className="text-xs text-slate-600 mt-1 italic">
+                        {bidDetails.notes}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -318,7 +357,9 @@ const ConfirmBids = () => {
 
               <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-800">Participating Sellers</h3>
+                  <h3 className="font-bold text-slate-800">
+                    Participating Sellers
+                  </h3>
                   <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
                     {participants.length} Sellers
                   </span>
@@ -339,21 +380,35 @@ const ConfirmBids = () => {
           >
             <div className="space-y-6 p-2">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                <div className={`grid ${userRole === "Buyer" ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
+                <div
+                  className={`grid ${userRole === "Buyer" ? "grid-cols-1" : "grid-cols-2"} gap-4`}
+                >
                   {userRole !== "Buyer" && (
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seller</p>
-                      <p className="text-sm font-bold text-slate-800">{selectedBid?.sellerName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Seller
+                      </p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {selectedBid?.sellerName}
+                      </p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Company</p>
-                    <p className="text-sm font-bold text-slate-800">{selectedBid?.company}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Company
+                    </p>
+                    <p className="text-sm font-bold text-slate-800">
+                      {selectedBid?.company}
+                    </p>
                   </div>
                   {userRole !== "Buyer" && (
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</p>
-                      <p className="text-sm font-bold text-slate-800">{selectedBid?.phone}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Phone
+                      </p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {selectedBid?.phone}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -361,12 +416,20 @@ const ConfirmBids = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Seller Rate</p>
-                  <p className="text-lg font-bold text-blue-700">₹{selectedBid?.rate}</p>
+                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                    Seller Rate
+                  </p>
+                  <p className="text-lg font-bold text-blue-700">
+                    ₹{selectedBid?.rate}
+                  </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Seller Qty</p>
-                  <p className="text-lg font-bold text-indigo-700">{selectedBid?.quantity} MT</p>
+                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                    Seller Qty
+                  </p>
+                  <p className="text-lg font-bold text-indigo-700">
+                    {selectedBid?.quantity} MT
+                  </p>
                 </div>
               </div>
 

@@ -647,9 +647,7 @@ const PendingLoadingList = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 overflow-hidden">
             {loading ? (
-              <div className="py-20 flex justify-center">
-                <Loading />
-              </div>
+              <Loading />
             ) : data.length > 0 ? (
               <>
                 <div className="overflow-x-auto">

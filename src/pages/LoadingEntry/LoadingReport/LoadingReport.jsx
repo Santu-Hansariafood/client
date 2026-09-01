@@ -541,9 +541,7 @@ const LoadingReport = () => {
 
             <div className="p-4">
               {loading ? (
-                <div className="py-20">
-                  <Loading />
-                </div>
+                <Loading />
               ) : (
                 <>
                   <Tables headers={headers} rows={rows} />

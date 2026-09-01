@@ -2,6 +2,7 @@ import { lazy, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
+import Loading from "../../common/Loading/Loading";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
@@ -65,7 +66,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
             Agent Name
           </label>
           {loading ? (
-            <p className="text-sm text-slate-500 py-3">Loading agents...</p>
+            <Loading />
           ) : (
             <DataDropdown
               placeholder="Select Agent"

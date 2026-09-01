@@ -42,8 +42,6 @@ import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSecti
 
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
-// ===================== Sub‑components =====================
-
 const HeaderSection = memo(
   ({ userName, totalBrokerage, onPrintIDCard, isPrinting }) => {
     const greeting = useMemo(() => {
@@ -124,8 +122,6 @@ HeaderSection.propTypes = {
   isPrinting: PropTypes.bool,
 };
 
-// ------------------------------------------------------------
-
 const StatCard = memo(
   ({ title, value, unit, icon, colorClass, subtitle, onClick }) => {
     const handleKeyDown = (e) => {
@@ -194,8 +190,6 @@ StatCard.propTypes = {
   subtitle: PropTypes.string,
   onClick: PropTypes.func,
 };
-
-// ------------------------------------------------------------
 
 const CommodityItem = memo(
   ({ item, totalQuantity, onAction, actionLabel, type = "commodity" }) => {
@@ -348,8 +342,6 @@ CommodityItem.propTypes = {
   type: PropTypes.oneOf(["commodity", "company"]),
 };
 
-// ===================== Main Component =====================
-
 const SellerDashboard = () => {
   const { mobile, user } = useAuth();
   const {
@@ -365,7 +357,6 @@ const SellerDashboard = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const [logoBase64, setLogoBase64] = useState(null);
 
-  // ---- Logo conversion ----
   useEffect(() => {
     const convertLogo = async () => {
       try {
@@ -381,7 +372,6 @@ const SellerDashboard = () => {
     convertLogo();
   }, []);
 
-  // ---- State ----
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
@@ -395,7 +385,6 @@ const SellerDashboard = () => {
   const visibilityTimerRef = useRef(null);
   const hasRenderedDataRef = useRef(false);
 
-  // ---- Helpers ----
   const normalizePhone = useCallback((p) => {
     const m = String(p || "")
       .trim()
@@ -420,7 +409,6 @@ const SellerDashboard = () => {
     [],
   );
 
-  // ---- Data fetching ----
   const fetchData = useCallback(
     async (options = {}) => {
       const { forceNetwork = false, showLoading = true } = options;
@@ -547,7 +535,6 @@ const SellerDashboard = () => {
     fetchData({ forceNetwork: true, showLoading: true });
   }, [fetchData]);
 
-  // ---- Notification handlers ----
   const handleNotificationClick = useCallback(
     async (notif) => {
       if (!notif.isRead) {
@@ -563,7 +550,6 @@ const SellerDashboard = () => {
 
   const togglePopup = useCallback((val) => setShowPopup(val), []);
 
-  // ---- Download Invoice ----
   const handleDownloadInvoice = useCallback(
     async (companyName) => {
       if (!companyName || !mobile) return;
@@ -590,7 +576,6 @@ const SellerDashboard = () => {
         );
         const upiId = "MSHANSARIAFOODPRIVATELIMITED.eazypay@icici";
         const upiName = "M/S.HANSARIA FOOD PRIVATE LIMITED";
-        // Dynamic UPI reference to avoid duplicates
         const upiTxnRef = `INV-${Date.now()}-${Math.random()
           .toString(36)
           .substr(2, 6)}`;
@@ -640,7 +625,6 @@ const SellerDashboard = () => {
     [mobile],
   );
 
-  // ---- Print ID Card ----
   const handlePrintIDCard = useCallback(async () => {
     if (!user) {
       toast.error("User data not found!");
@@ -665,7 +649,6 @@ const SellerDashboard = () => {
         color: { dark: "#000000", light: "#ffffff" },
       });
 
-      // Fallback for employeeId if user._id is too short
       const employeeId =
         user._id?.length >= 18
           ? user._id.substring(18).toUpperCase()
@@ -712,7 +695,6 @@ const SellerDashboard = () => {
     }
   }, [user, logoBase64]);
 
-  // ---- Navigation items ----
   const navigationItems = useMemo(
     () => [
       {
@@ -782,7 +764,6 @@ const SellerDashboard = () => {
     ],
   );
 
-  // ---- Effects ----
   useEffect(() => {
     if (mobile) fetchData({ showLoading: true });
     return () => {
@@ -815,7 +796,6 @@ const SellerDashboard = () => {
     };
   }, [fetchData]);
 
-  // ---- Loading & Error ----
   if (loading) return <Loading />;
 
   if (error)
@@ -845,12 +825,10 @@ const SellerDashboard = () => {
       </AdminPageShell>
     );
 
-  // ---- Main render ----
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell noContentCard onRefresh={refreshDashboard}>
         <div className="min-h-screen bg-[#f8fafc] p-3 sm:p-6 lg:p-10 space-y-4 sm:space-y-6 md:space-y-10 lg:space-y-14 max-w-[1700px] mx-auto pb-10">
-          {/* Header */}
           <header>
             <HeaderSection
               userName={user?.name}
@@ -860,7 +838,6 @@ const SellerDashboard = () => {
             />
           </header>
 
-          {/* Navigation Cards - 2 columns on small screens */}
           <section aria-label="Quick Navigation">
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
               {navigationItems.map((item, idx) => (
@@ -880,7 +857,6 @@ const SellerDashboard = () => {
             </div>
           </section>
 
-          {/* Performance Metrics - 2 columns on small */}
           <section aria-label="Performance Metrics">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               <StatCard
@@ -920,12 +896,9 @@ const SellerDashboard = () => {
             </div>
           </section>
 
-          {/* Blog Section */}
           <DashboardBlogSection />
 
-          {/* Commodity & Company Breakdown */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-start">
-            {/* Material Intelligence */}
             <section
               className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-emerald-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
               aria-label="Material Intelligence"
@@ -978,7 +951,6 @@ const SellerDashboard = () => {
               </div>
             </section>
 
-            {/* Company Performance */}
             <section
               className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-indigo-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500"
               aria-label="Company Performance"
@@ -1039,7 +1011,6 @@ const SellerDashboard = () => {
             </section>
           </div>
 
-          {/* Footer CTA */}
           <footer className="bg-emerald-900 p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 md:gap-12">
             <div className="flex items-center gap-4 sm:gap-6 md:gap-12 w-full sm:w-auto justify-center sm:justify-start">
               <div className="flex flex-col">
@@ -1085,7 +1056,6 @@ const SellerDashboard = () => {
             </div>
           </footer>
 
-          {/* Notifications Popup */}
           <PopupBox
             isOpen={showPopup}
             onClose={() => togglePopup(false)}

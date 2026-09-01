@@ -241,12 +241,7 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
           </div>
 
           {loading ? (
-            <div className="py-24 flex flex-col items-center justify-center gap-4">
-              <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                Fetching interactions...
-              </p>
-            </div>
+            <Loading />
           ) : interactions.length === 0 ? (
             <div className="py-24 text-center">
               <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6 shadow-inner">

@@ -37,7 +37,7 @@ const NewsArchive = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filterDate, setFilterDate] = useState("");
   const [category, setCategory] = useState("All");
-  const [viewMode, setViewMode] = useState("archive"); // "archive" or "bookmarks"
+  const [viewMode, setViewMode] = useState("archive");
 
   useEffect(() => {
     fetchNews();
@@ -100,7 +100,6 @@ const NewsArchive = () => {
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-[#1e3a5f] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200">
@@ -150,7 +149,6 @@ const NewsArchive = () => {
           </div>
         </div>
 
-        {/* Filters */}
         {viewMode === "archive" && (
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
@@ -205,12 +203,9 @@ const NewsArchive = () => {
           </div>
         )}
 
-        {/* News Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
-            <div className="col-span-full py-32">
-              <Loading size="lg" />
-            </div>
+            <Loading />
           ) : blogs.length > 0 ? (
             blogs.map((blog) => (
               <div
@@ -319,7 +314,6 @@ const NewsArchive = () => {
           )}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && viewMode === "archive" && (
           <div className="flex justify-center items-center gap-4 pt-10">
             <button

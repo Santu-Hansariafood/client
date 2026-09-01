@@ -349,7 +349,7 @@ const TallyLedgerBook = ({
                               {({ loading }) => (
                                 <button className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow">
                                   {loading ? (
-                                    "Loading..."
+                                    <Loading />
                                   ) : (
                                     <FaFilePdf size={14} />
                                   )}

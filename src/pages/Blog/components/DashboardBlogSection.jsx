@@ -24,12 +24,7 @@ const DashboardBlogSection = () => {
     fetchLatest();
   }, []);
 
-  if (loading)
-    return (
-      <div className="h-48 flex items-center justify-center">
-        <Loading size="sm" />
-      </div>
-    );
+  if (loading) return <Loading />;
 
   return (
     <div className="mt-8">

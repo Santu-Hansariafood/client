@@ -71,65 +71,70 @@ const ParticipateBidAdmin = () => {
       .join(" ");
   }, []);
 
-  const fetchData = useCallback(async (isSilent = false) => {
-    try {
-      if (!isSilent) setLoading(true);
+  const fetchData = useCallback(
+    async (isSilent = false) => {
+      try {
+        if (!isSilent) setLoading(true);
 
-      if (userRole === "Buyer") {
-        const res = await api.get("/bids/buyer-today", {
-          params: {
-            mobile,
-            date: selectedDate.toISOString().split("T")[0],
-          },
-        });
+        if (userRole === "Buyer") {
+          const res = await api.get("/bids/buyer-today", {
+            params: {
+              mobile,
+              date: selectedDate.toISOString().split("T")[0],
+            },
+          });
 
-        const { bids: bidsData, participations, buyer } = res.data;
-        setIsBuyerAdmin(buyer.isAdmin || false);
+          const { bids: bidsData, participations, buyer } = res.data;
+          setIsBuyerAdmin(buyer.isAdmin || false);
 
-        const groups = (buyer.groups || []).map(normalize);
+          const groups = (buyer.groups || []).map(normalize);
 
-        const companies = (buyer.companies || []).map((c) => String(c).trim());
-
-        setBuyerGroups(groups);
-
-        const allowedBids = bidsData.filter((bid) => {
-          const bidGroup = normalize(bid.group);
-
-          const isOwnBid =
-            String(bid.createdByMobile || "") === String(mobile || "");
-
-          const belongsToGroup = groups.includes(bidGroup);
-
-          const belongsToCompany = companies.includes(
-            String(bid.company || "").trim(),
+          const companies = (buyer.companies || []).map((c) =>
+            String(c).trim(),
           );
 
-          return isOwnBid || belongsToGroup || belongsToCompany;
-        });
+          setBuyerGroups(groups);
 
-        setBids(allowedBids);
-        setParticipationBids(participations);
-      } else {
-        const dateStr = selectedDate.toISOString().split("T")[0];
-        const [bidsRes, participateRes] = await Promise.all([
-          api.get("/bids", { params: { date: dateStr } }),
-          api.get("/participatebids", { params: { date: dateStr } }),
-        ]);
+          const allowedBids = bidsData.filter((bid) => {
+            const bidGroup = normalize(bid.group);
 
-        const bidsData = bidsRes.data?.data || bidsRes.data || [];
+            const isOwnBid =
+              String(bid.createdByMobile || "") === String(mobile || "");
 
-        const participations =
-          participateRes.data?.data || participateRes.data || [];
+            const belongsToGroup = groups.includes(bidGroup);
 
-        setBids(bidsData);
-        setParticipationBids(participations);
+            const belongsToCompany = companies.includes(
+              String(bid.company || "").trim(),
+            );
+
+            return isOwnBid || belongsToGroup || belongsToCompany;
+          });
+
+          setBids(allowedBids);
+          setParticipationBids(participations);
+        } else {
+          const dateStr = selectedDate.toISOString().split("T")[0];
+          const [bidsRes, participateRes] = await Promise.all([
+            api.get("/bids", { params: { date: dateStr } }),
+            api.get("/participatebids", { params: { date: dateStr } }),
+          ]);
+
+          const bidsData = bidsRes.data?.data || bidsRes.data || [];
+
+          const participations =
+            participateRes.data?.data || participateRes.data || [];
+
+          setBids(bidsData);
+          setParticipationBids(participations);
+        }
+      } catch (error) {
+        console.error("Fetch failed", error);
+      } finally {
+        if (!isSilent) setLoading(false);
       }
-    } catch (error) {
-      console.error("Fetch failed", error);
-    } finally {
-      if (!isSilent) setLoading(false);
-    }
-  }, [mobile, normalize, selectedDate, userRole, selectedGroup]);
+    },
+    [mobile, normalize, selectedDate, userRole, selectedGroup],
+  );
 
   useEffect(() => {
     fetchData();
@@ -356,25 +361,51 @@ const ParticipateBidAdmin = () => {
       (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
       <div key={`date-${bid.bidId}`} className="flex flex-col">
         <span className="font-bold text-slate-700">
-          {new Date(bid.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}
+          {new Date(bid.date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+          })}
         </span>
         <span className="text-[10px] text-slate-400 font-medium uppercase">
-          {new Date(bid.date).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+          {new Date(bid.date).toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </span>
       </div>,
-      <span key={`group-${bid.bidId}`} className="font-black text-emerald-700 uppercase tracking-tighter">{bid.group}</span>,
-      <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">{bid.consignee}</span>,
+      <span
+        key={`group-${bid.bidId}`}
+        className="font-black text-emerald-700 uppercase tracking-tighter"
+      >
+        {bid.group}
+      </span>,
+      <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">
+        {bid.consignee}
+      </span>,
       bid.origin,
-      <span key={`commodity-${bid.bidId}`} className="font-bold text-slate-600">{bid.commodity}</span>,
+      <span key={`commodity-${bid.bidId}`} className="font-bold text-slate-600">
+        {bid.commodity}
+      </span>,
       <div key={`sellers-${bid.bidId}`} className="max-w-[150px]">
         <p className="text-xs font-medium text-slate-600 truncate">
           {Array.from(bid.sellers || []).join(", ") || "N/A"}
         </p>
       </div>,
-      <span key={`bidqty-${bid.bidId}`} className="font-black text-slate-900">{bid.quantity} T</span>,
-      <span key={`bidrate-${bid.bidId}`} className="font-black text-emerald-600">₹{bid.rates}</span>,
-      <span key={`partyqty-${bid.bidId}`} className="font-bold text-blue-600">{bid.quantities} T</span>,
-      <span key={`partyrate-${bid.bidId}`} className="font-bold text-blue-600">₹{bid.rate}</span>,
+      <span key={`bidqty-${bid.bidId}`} className="font-black text-slate-900">
+        {bid.quantity} T
+      </span>,
+      <span
+        key={`bidrate-${bid.bidId}`}
+        className="font-black text-emerald-600"
+      >
+        ₹{bid.rates}
+      </span>,
+      <span key={`partyqty-${bid.bidId}`} className="font-bold text-blue-600">
+        {bid.quantities} T
+      </span>,
+      <span key={`partyrate-${bid.bidId}`} className="font-bold text-blue-600">
+        ₹{bid.rate}
+      </span>,
       <div key={`status-${bid.bidId}`} className="flex flex-col gap-1">
         {bid.pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-green-200">
@@ -387,7 +418,9 @@ const ParticipateBidAdmin = () => {
             Complete
           </span>
         ) : (
-          <span className="text-[10px] font-bold text-slate-400 uppercase">No Activity</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">
+            No Activity
+          </span>
         )}
       </div>,
       <button
@@ -398,7 +431,10 @@ const ParticipateBidAdmin = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <span className="relative z-10 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <FaUsers size={12} className="group-hover:scale-110 transition-transform" />
+          <FaUsers
+            size={12}
+            className="group-hover:scale-110 transition-transform"
+          />
           {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
         </span>
       </button>,
@@ -562,9 +598,7 @@ const ParticipateBidAdmin = () => {
           )}
 
           {loading ? (
-            <div className="py-32 flex justify-center">
-              <Loading />
-            </div>
+            <Loading />
           ) : (
             <div className="space-y-6">
               <div className="rounded-[2rem] bg-white border shadow overflow-hidden">
