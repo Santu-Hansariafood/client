@@ -54,13 +54,12 @@ router.get("/", async (req, res) => {
     };
 
     if (paymentStatus === "done") {
-      // For Received List: include entries where paidAmount > 0 OR paymentStatus is "done"
       query.$or = [
         { paymentStatus: "done" },
         { paidAmount: { $gt: 0 } }
       ];
     } else if (paymentStatus === "due") {
-      query.paymentStatus = "pending"; // Due is a subset of pending
+      query.paymentStatus = "pending";
     }
 
     const andParts = [query];
@@ -89,18 +88,16 @@ router.get("/", async (req, res) => {
       });
     }
 
-    // Get all loading entries first without date filtering to calculate due dates
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     const allItems = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight loadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight loadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance secondClaim secondClaimRemarks otherCharges otherChargesRemarks bankChargesRemarks tds tdsRemarks manualClaim manualClaimAmount")
       .populate("supplier", "sellerName")
       .lean();
 
     const entryIds = allItems.map((i) => i._id);
     const allocationMap = await computeLorryAllocationSums(entryIds);
 
-    // Get all sauda orders
     const saudaNos = [...new Set(allItems.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo buyerCompany paymentTerms rate cd gst")
@@ -114,7 +111,6 @@ router.get("/", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate due dates for all items
     let processedItems = allItems.map((item) => {
       const lorryAllocatedAmount = allocationMap[item._id.toString()] || 0;
       const remainingLorryBalance = Math.max(0, (item.totalFreight || 0) - lorryAllocatedAmount);
@@ -122,6 +118,7 @@ router.get("/", async (req, res) => {
       if (item.isRejected) {
         return {
           ...item,
+          qualityClaimsDetails: [],
           paymentTerms: 0,
           dueDate: null,
           isDue: false,
@@ -149,13 +146,13 @@ router.get("/", async (req, res) => {
 
       const isDue = item.paymentStatus === "pending" && today >= dueDate;
 
-      // Calculate detailed amounts for MIS format
       let grossAmount = 0;
       let cdAmount = 0;
       let gstAmount = 0;
       let netAmount = 0;
       let totalQualityClaims = 0;
       let bankCharges = 0;
+      let qualityClaimsDetails = [];
 
       if (order) {
         const weight =
@@ -174,7 +171,32 @@ router.get("/", async (req, res) => {
         netAmount = taxableAmount + gstAmount;
 
         if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
-          totalQualityClaims = item.qualityClaims.reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0);
+          qualityClaimsDetails = item.qualityClaims.map((c) => ({
+            parameterId: c.parameterId,
+            parameterName: c.parameterName,
+            standardValue: c.standardValue,
+            actualValue: c.actualValue,
+            claimAmount: Number(c.claimAmount) || 0,
+            notes: c.notes || "",
+          }));
+          totalQualityClaims = qualityClaimsDetails.reduce(
+            (sum, c) => sum + c.claimAmount,
+            0
+          );
+        }
+
+        if (item.manualClaim) {
+          totalQualityClaims = Number(item.manualClaimAmount) || 0;
+          qualityClaimsDetails = [
+            {
+              parameterId: "manual",
+              parameterName: "Manual Claim",
+              standardValue: null,
+              actualValue: null,
+              claimAmount: totalQualityClaims,
+              notes: "Report not received - manual entry",
+            },
+          ];
         }
       }
 
@@ -194,6 +216,7 @@ router.get("/", async (req, res) => {
 
       return {
         ...item,
+        qualityClaimsDetails,
         paymentTerms: terms,
         dueDate,
         isDue,
@@ -217,7 +240,6 @@ router.get("/", async (req, res) => {
       };
     });
 
-    // Apply date filtering based on payment status
     if (startDate || endDate) {
       const dateFilter = {};
       if (startDate) dateFilter.$gte = new Date(startDate);
@@ -230,11 +252,11 @@ router.get("/", async (req, res) => {
       if (paymentStatus === "due") {
         processedItems = processedItems.filter(item => {
           if (!item.dueDate) return false;
-          const dueDate = new Date(item.dueDate);
+          const dueDt = new Date(item.dueDate);
           let matchesStart = true;
           let matchesEnd = true;
-          if (dateFilter.$gte) matchesStart = dueDate >= dateFilter.$gte;
-          if (dateFilter.$lte) matchesEnd = dueDate <= dateFilter.$lte;
+          if (dateFilter.$gte) matchesStart = dueDt >= dateFilter.$gte;
+          if (dateFilter.$lte) matchesEnd = dueDt <= dateFilter.$lte;
           return matchesStart && matchesEnd;
         });
       } else {
@@ -250,12 +272,10 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // If "due" filter is applied, filter only due items
     if (paymentStatus === "due") {
       processedItems = processedItems.filter((item) => item.isDue);
     }
 
-    // Calculate totals
     let totalGross = 0;
     let totalCd = 0;
     let totalGst = 0;
@@ -276,11 +296,9 @@ router.get("/", async (req, res) => {
       totalRemainingLorryBalance += item.remainingLorryBalance || 0;
     });
 
-    // Apply pagination
     const totalItems = processedItems.length;
     const paginatedItems = processedItems.slice((page - 1) * limit, page * limit);
 
-    // Add Sl No after filtering
     const finalItems = paginatedItems.map((item, index) => ({
       ...item,
       slNo: (page - 1) * limit + index + 1,
@@ -396,13 +414,12 @@ router.get("/export/excel", async (req, res) => {
 
     let query = { unloadingWeight: { $gt: 0 } };
     if (paymentStatus === "done") {
-      // For Received List: include entries where paidAmount > 0 OR paymentStatus is "done"
       query.$or = [
         { paymentStatus: "done" },
         { paidAmount: { $gt: 0 } }
       ];
     } else if (paymentStatus === "due") {
-      query.paymentStatus = "pending"; // Due is a subset of pending
+      query.paymentStatus = "pending";
     }
 
     const andParts = [query];
@@ -431,18 +448,16 @@ router.get("/export/excel", async (req, res) => {
       });
     }
 
-    // Get all loading entries first without date filtering to calculate due dates
     const tempQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
     let items = await LoadingEntry.find(tempQuery)
       .sort({ unloadingDate: -1, createdAt: -1 })
-      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight loadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance")
+      .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight loadingWeight unloadingDate paymentStatus paidAmount supplier billNumber generalRemarks qualityClaims bankCharges isRejected totalFreight advance balance secondClaim secondClaimRemarks otherCharges otherChargesRemarks bankChargesRemarks tds tdsRemarks manualClaim manualClaimAmount")
       .populate("supplier", "sellerName")
       .lean();
 
     const excelEntryIds = items.map((i) => i._id);
     const excelAllocationMap = await computeLorryAllocationSums(excelEntryIds);
 
-    // Get all sauda orders
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo buyerCompany paymentTerms rate cd gst")
@@ -456,7 +471,6 @@ router.get("/export/excel", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate due dates for all items
     let processedItems = items.map((item) => {
       const lorryAllocatedAmount = excelAllocationMap[item._id.toString()] || 0;
       const remainingLorryBalance = Math.max(0, (item.totalFreight || 0) - lorryAllocatedAmount);
@@ -464,6 +478,7 @@ router.get("/export/excel", async (req, res) => {
       if (item.isRejected) {
         return {
           ...item,
+          qualityClaimsDetails: [],
           paymentTerms: 0,
           dueDate: null,
           isDue: false,
@@ -491,13 +506,13 @@ router.get("/export/excel", async (req, res) => {
 
       const isDue = item.paymentStatus === "pending" && today >= dueDate;
 
-      // Calculate detailed amounts for MIS format
       let grossAmount = 0;
       let cdAmount = 0;
       let gstAmount = 0;
       let netAmount = 0;
       let totalQualityClaims = 0;
       let bankCharges = 0;
+      let qualityClaimsDetails = [];
 
       if (order) {
         const weight =
@@ -516,7 +531,32 @@ router.get("/export/excel", async (req, res) => {
         netAmount = taxableAmount + gstAmount;
 
         if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
-          totalQualityClaims = item.qualityClaims.reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0);
+          qualityClaimsDetails = item.qualityClaims.map((c) => ({
+            parameterId: c.parameterId,
+            parameterName: c.parameterName,
+            standardValue: c.standardValue,
+            actualValue: c.actualValue,
+            claimAmount: Number(c.claimAmount) || 0,
+            notes: c.notes || "",
+          }));
+          totalQualityClaims = qualityClaimsDetails.reduce(
+            (sum, c) => sum + c.claimAmount,
+            0
+          );
+        }
+
+        if (item.manualClaim) {
+          totalQualityClaims = Number(item.manualClaimAmount) || 0;
+          qualityClaimsDetails = [
+            {
+              parameterId: "manual",
+              parameterName: "Manual Claim",
+              standardValue: null,
+              actualValue: null,
+              claimAmount: totalQualityClaims,
+              notes: "Report not received - manual entry",
+            },
+          ];
         }
       }
 
@@ -536,6 +576,7 @@ router.get("/export/excel", async (req, res) => {
 
       return {
         ...item,
+        qualityClaimsDetails,
         paymentTerms: terms,
         dueDate,
         isDue,
@@ -559,7 +600,6 @@ router.get("/export/excel", async (req, res) => {
       };
     });
 
-    // Apply date filtering based on payment status
     if (startDate || endDate) {
       const dateFilter = {};
       if (startDate) dateFilter.$gte = new Date(startDate);
@@ -572,11 +612,11 @@ router.get("/export/excel", async (req, res) => {
       if (paymentStatus === "due") {
         processedItems = processedItems.filter(item => {
           if (!item.dueDate) return false;
-          const dueDate = new Date(item.dueDate);
+          const dueDt = new Date(item.dueDate);
           let matchesStart = true;
           let matchesEnd = true;
-          if (dateFilter.$gte) matchesStart = dueDate >= dateFilter.$gte;
-          if (dateFilter.$lte) matchesEnd = dueDate <= dateFilter.$lte;
+          if (dateFilter.$gte) matchesStart = dueDt >= dateFilter.$gte;
+          if (dateFilter.$lte) matchesEnd = dueDt <= dateFilter.$lte;
           return matchesStart && matchesEnd;
         });
       } else {
@@ -592,12 +632,10 @@ router.get("/export/excel", async (req, res) => {
       }
     }
 
-    // If "due" filter is applied, filter only due items
     if (paymentStatus === "due") {
       processedItems = processedItems.filter((item) => item.isDue);
     }
 
-    // Sort items
     processedItems.sort((a, b) => new Date(b.unloadingDate) - new Date(a.unloadingDate));
 
     const workbook = new ExcelJS.Workbook();
@@ -611,20 +649,46 @@ router.get("/export/excel", async (req, res) => {
       { header: "Bill No", key: "billNumber", width: 12 },
       { header: "Buyer", key: "buyerCompany", width: 25 },
       { header: "Seller", key: "sellerCompany", width: 25 },
+      { header: "Weight (T)", key: "weight", width: 12 },
+      { header: "Rate", key: "rate", width: 10 },
       { header: "Gross Amt", key: "grossAmount", width: 15 },
-      { header: "GST", key: "gstAmount", width: 12 },
-      { header: "Credit", key: "paidAmount", width: 12 },
-      { header: "Claims", key: "totalQualityClaims", width: 12 },
       { header: "CD", key: "cdAmount", width: 12 },
+      { header: "GST", key: "gstAmount", width: 12 },
+      { header: "Claims", key: "totalQualityClaims", width: 12 },
+      { header: "Claim Details", key: "claimDetails", width: 50 },
       { header: "Bank Chgs", key: "bankCharges", width: 12 },
+      { header: "2nd Claim", key: "secondClaim", width: 12 },
+      { header: "Other Chgs", key: "otherCharges", width: 12 },
+      { header: "TDS", key: "tds", width: 12 },
+      { header: "Credit", key: "paidAmount", width: 12 },
       { header: "Balance", key: "dueAmount", width: 15 },
       { header: "Lorry Balance", key: "remainingLorryBalance", width: 15 },
       { header: "Remarks", key: "generalRemarks", width: 30 },
     ];
 
+    let claimDetailsText = "";
     for (let i = 0; i < processedItems.length; i++) {
       const item = processedItems[i];
-      worksheet.addRow({
+      const weight =
+        item.unloadingWeight && item.unloadingWeight > 0
+          ? item.unloadingWeight
+          : item.loadingWeight || 0;
+      if (item.qualityClaimsDetails && item.qualityClaimsDetails.length > 0) {
+        claimDetailsText = item.qualityClaimsDetails
+          .map((c) => {
+            const std =
+              c.standardValue != null
+                ? Number(c.standardValue).toFixed(2)
+                : "-";
+            const act =
+              c.actualValue != null ? Number(c.actualValue).toFixed(2) : "-";
+            return `${c.parameterName || "Claim"}(Std:${std}%/Act:${act}%:Rs${c.claimAmount.toFixed(2)})`;
+          })
+          .join(" | ");
+      } else {
+        claimDetailsText = "-";
+      }
+      const row = worksheet.addRow({
         slNo: i + 1,
         unloadingDate: item.unloadingDate
           ? new Date(item.unloadingDate).toLocaleDateString("en-GB")
@@ -634,24 +698,109 @@ router.get("/export/excel", async (req, res) => {
         billNumber: item.billNumber || "-",
         buyerCompany: item.buyerCompany || "N/A",
         sellerCompany: item.supplierCompany || "N/A",
+        weight: Number(weight).toFixed(3),
+        rate: Number(item.rate || 0).toFixed(2),
         grossAmount: Number(item.grossAmount || 0).toFixed(2),
-        gstAmount: Number(item.gstAmount || 0).toFixed(2),
-        paidAmount: Number(item.paidAmount || 0).toFixed(2),
-        totalQualityClaims: Number(item.totalQualityClaims || 0).toFixed(2),
         cdAmount: Number(item.cdAmount || 0).toFixed(2),
+        gstAmount: Number(item.gstAmount || 0).toFixed(2),
+        totalQualityClaims: Number(item.totalQualityClaims || 0).toFixed(2),
+        claimDetails: claimDetailsText,
         bankCharges: Number(item.bankCharges || 0).toFixed(2),
+        secondClaim: Number(item.secondClaim || 0).toFixed(2),
+        otherCharges: Number(item.otherCharges || 0).toFixed(2),
+        tds: Number(item.tds || 0).toFixed(2),
+        paidAmount: Number(item.paidAmount || 0).toFixed(2),
         dueAmount: Number(item.dueAmount || 0).toFixed(2),
         remainingLorryBalance: Number(item.remainingLorryBalance || 0).toFixed(2),
         generalRemarks: item.generalRemarks || "-"
       });
     }
 
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    headerRow.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFE0E0E0" },
+      fgColor: { argb: "FF1A3A5F" },
     };
+    headerRow.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+    headerRow.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    headerRow.height = 30;
+
+    const dataEndRow = worksheet.rowCount;
+    const totalsRow = worksheet.addRow({
+      slNo: "",
+      unloadingDate: "",
+      saudaNo: "",
+      lorryNumber: "",
+      billNumber: "",
+      buyerCompany: "",
+      sellerCompany: "",
+      weight: "",
+      rate: "TOTALS ->",
+      grossAmount: Number(processedItems.reduce((s, i) => s + (i.grossAmount || 0), 0)).toFixed(2),
+      cdAmount: Number(processedItems.reduce((s, i) => s + (i.cdAmount || 0), 0)).toFixed(2),
+      gstAmount: Number(processedItems.reduce((s, i) => s + (i.gstAmount || 0), 0)).toFixed(2),
+      totalQualityClaims: Number(processedItems.reduce((s, i) => s + (i.totalQualityClaims || 0), 0)).toFixed(2),
+      claimDetails: "",
+      bankCharges: Number(processedItems.reduce((s, i) => s + (i.bankCharges || 0), 0)).toFixed(2),
+      secondClaim: Number(processedItems.reduce((s, i) => s + (i.secondClaim || 0), 0)).toFixed(2),
+      otherCharges: Number(processedItems.reduce((s, i) => s + (i.otherCharges || 0), 0)).toFixed(2),
+      tds: Number(processedItems.reduce((s, i) => s + (i.tds || 0), 0)).toFixed(2),
+      paidAmount: Number(processedItems.reduce((s, i) => s + (i.paidAmount || 0), 0)).toFixed(2),
+      dueAmount: Number(processedItems.reduce((s, i) => s + (i.dueAmount || 0), 0)).toFixed(2),
+      remainingLorryBalance: Number(processedItems.reduce((s, i) => s + (i.remainingLorryBalance || 0), 0)).toFixed(2),
+      generalRemarks: ""
+    });
+    const tRow = worksheet.getRow(dataEndRow + 1);
+    tRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    tRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF059669" },
+    };
+    tRow.alignment = { vertical: "middle", horizontal: "right" };
+    tRow.border = {
+      top: { style: "double" },
+      left: { style: "thin" },
+      bottom: { style: "double" },
+      right: { style: "thin" },
+    };
+    tRow.height = 24;
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1 && rowNumber <= dataEndRow) {
+        row.eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFE2E8F0" } },
+            left: { style: "thin", color: { argb: "FFE2E8F0" } },
+            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+            right: { style: "thin", color: { argb: "FFE2E8F0" } },
+          };
+          cell.alignment = { vertical: "middle", wrapText: true };
+          if (colNumber >= 8) {
+            cell.alignment.horizontal = "right";
+          }
+          if (colNumber <= 7) {
+            cell.alignment.horizontal = "left";
+          }
+        });
+        if (rowNumber % 2 === 0) {
+          row.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF8FAFC" },
+          };
+        }
+      }
+    });
+
+    worksheet.views = [{ state: "frozen", ySplit: 1 }];
 
     res.setHeader(
       "Content-Type",

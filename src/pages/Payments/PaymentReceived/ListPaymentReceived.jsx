@@ -25,8 +25,11 @@ const PaymentVoucherPDF = lazy(() => import("./components/PaymentVoucherPDF"));
 const AdminPageShell = lazy(() => import("../../../common/AdminPageShell/AdminPageShell"));
 
 import {
+  buildEntryBreakdown,
+  buildPaymentAllocationBreakdown,
   buildTallyVoucherRows,
   calculateVoucherTotals,
+  formatBreakdownText,
   getLedgerRowClaimAmount,
 } from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
@@ -1054,6 +1057,11 @@ const ListPaymentReceived = () => {
           const formattedCd = Number(cd.toFixed(2));
           const formattedBankCharges = Number(bankCharges.toFixed(2));
 
+          const rowBreakdown = isEntryRow
+            ? buildEntryBreakdown(row.raw)
+            : buildPaymentAllocationBreakdown(row.raw);
+          const breakdownText = formatBreakdownText(rowBreakdown) || rowData.remarks || "-";
+
           tableData.push([
             rowIdx,
             row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
@@ -1073,7 +1081,7 @@ const ListPaymentReceived = () => {
             balance !== 0
               ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            rowData.remarks,
+            breakdownText,
           ]);
 
           const validClaims = rowData.qualityClaims.filter(
@@ -1164,7 +1172,7 @@ const ListPaymentReceived = () => {
           "CD (Rs.)",
           "BANK CHGS (Rs.)",
           "BALANCE (Rs.)",
-          "REMARKS",
+          "BILL / CLAIM BREAKDOWN",
         ],
       ],
       body: tableData,

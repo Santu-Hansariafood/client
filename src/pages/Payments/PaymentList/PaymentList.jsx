@@ -18,6 +18,10 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { downloadFile } from "../../../utils/fileDownloader";
 import logoUrl from "../../../assets/Hans.png";
+import {
+  buildEntryBreakdown,
+  formatBreakdownText,
+} from "../PaymentReceived/utils/paymentLedgerUtils";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -575,6 +579,8 @@ const PaymentList = () => {
           let credit = Number(item.paidAmount || 0);
           let lorryBalance = Number(item.remainingLorryBalance || 0);
 
+          const detailBreakdown = formatBreakdownText(buildEntryBreakdown(item));
+
           tableData.push([
             rowIdx,
             item.unloadingDate
@@ -607,7 +613,7 @@ const PaymentList = () => {
             lorryBalance > 0
               ? `Rs. ${Number(lorryBalance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            item.generalRemarks || item.remarks || "-",
+            detailBreakdown || item.generalRemarks || item.remarks || "-",
           ]);
         });
       });
@@ -651,7 +657,7 @@ const PaymentList = () => {
             "BANK CHGS (Rs.)",
             "BALANCE (Rs.)",
             "LORRY BAL (Rs.)",
-            "REMARKS",
+            "BILL / CLAIM BREAKDOWN",
           ],
         ],
         body: tableData,

@@ -59,9 +59,9 @@ const EditLoadingEntryPopup = ({
     const rate = Number(currentSelfOrder?.rate || 0);
     const weight = Number(editEntry.unloadingWeight || 0);
     const totalBill = rate * weight;
-    const cdPercent = Number(currentSelfOrder?.cd) || 0;
+    const cdPercent = Number(currentSelfOrder?.cd || 0);
     const cdAmount = totalBill * (cdPercent / 100);
-    const gstPercent = Number(currentSelfOrder?.gst) || 0;
+    const gstPercent = Number(currentSelfOrder?.gst || 0);
     const gstAmount = (totalBill - cdAmount) * (gstPercent / 100);
     const netAmount = totalBill - cdAmount + gstAmount;
 
@@ -144,6 +144,161 @@ const EditLoadingEntryPopup = ({
     } else {
       setEditEntry((prev) => ({ ...prev, manualCalculationRate: newRate }));
     }
+  };
+
+  const buildBreakdownItems = () => {
+    const rate = Number(currentSelfOrder?.rate || 0);
+    const weight = Number(editEntry.unloadingWeight || 0);
+    const cdPercent = Number(currentSelfOrder?.cd || 0);
+    const gstPercent = Number(currentSelfOrder?.gst || 0);
+    const grossAmount = weight * rate;
+    const cdAmount = grossAmount * (cdPercent / 100);
+    const gstAmount = (grossAmount - cdAmount) * (gstPercent / 100);
+
+    const items = [];
+    items.push({
+      type: "add",
+      label: "Gross Amount",
+      detail: `${weight.toFixed(3)} T x Rs${rate.toFixed(2)}/Ton`,
+      amount: grossAmount,
+      color: "text-slate-700",
+      bg: "bg-slate-50",
+      border: "border-slate-200",
+      sign: "+",
+      signColor: "text-emerald-600",
+    });
+    if (cdAmount > 0) {
+      items.push({
+        type: "deduct",
+        label: `CD (${cdPercent.toFixed(2)}%)`,
+        detail: "Cash Discount on Gross",
+        amount: cdAmount,
+        color: "text-yellow-700",
+        bg: "bg-yellow-50",
+        border: "border-yellow-200",
+        sign: "-",
+        signColor: "text-red-500",
+      });
+    }
+    if (gstAmount > 0) {
+      items.push({
+        type: "add",
+        label: `GST (${gstPercent.toFixed(2)}%)`,
+        detail: `On (Gross - CD) = Rs${(grossAmount - cdAmount).toFixed(2)}`,
+        amount: gstAmount,
+        color: "text-pink-700",
+        bg: "bg-pink-50",
+        border: "border-pink-200",
+        sign: "+",
+        signColor: "text-emerald-600",
+      });
+    }
+
+    if (editEntry.manualClaim) {
+      const mca = Number(editEntry.manualClaimAmount || 0);
+      if (mca > 0) {
+        items.push({
+          type: "deduct",
+          label: "Manual Quality Claim",
+          detail: "Report not received - manual entry",
+          amount: mca,
+          color: "text-red-700",
+          bg: "bg-red-50",
+          border: "border-red-200",
+          sign: "-",
+          signColor: "text-red-500",
+        });
+      }
+    } else {
+      qualityClaims.forEach((claim) => {
+        const claimAmt = Number(claim.claimAmount) || 0;
+        if (claimAmt > 0) {
+          const std =
+            claim.standardValue != null
+              ? Number(claim.standardValue).toFixed(2)
+              : "-";
+          const act =
+            claim.actualValue != null
+              ? Number(claim.actualValue).toFixed(2)
+              : "-";
+          items.push({
+            type: "deduct",
+            label: `Claim: ${claim.parameterName || "Unnamed"}`,
+            detail: `Std: ${std}% / Act: ${act}%${
+              claim.notes ? ` . ${claim.notes}` : ""
+            }`,
+            amount: claimAmt,
+            color: "text-red-700",
+            bg: "bg-red-50",
+            border: "border-red-200",
+            sign: "-",
+            signColor: "text-red-500",
+          });
+        }
+      });
+    }
+
+    const secondClaim = Number(editEntry.secondClaim || 0);
+    if (secondClaim > 0) {
+      items.push({
+        type: "deduct",
+        label: "2nd Claim",
+        detail: editEntry.secondClaimRemarks || "Secondary deduction",
+        amount: secondClaim,
+        color: "text-purple-700",
+        bg: "bg-purple-50",
+        border: "border-purple-200",
+        sign: "-",
+        signColor: "text-red-500",
+      });
+    }
+
+    const otherCharges = Number(editEntry.otherCharges || 0);
+    if (otherCharges > 0) {
+      items.push({
+        type: "deduct",
+        label: "Other Charges",
+        detail: editEntry.otherChargesRemarks || "Miscellaneous charges",
+        amount: otherCharges,
+        color: "text-teal-700",
+        bg: "bg-teal-50",
+        border: "border-teal-200",
+        sign: "-",
+        signColor: "text-red-500",
+      });
+    }
+
+    const bankCharges = Number(editEntry.bankCharges || 0);
+    if (bankCharges > 0) {
+      items.push({
+        type: "deduct",
+        label: "Bank Charges",
+        detail: editEntry.bankChargesRemarks || "Bank processing charges",
+        amount: bankCharges,
+        color: "text-orange-700",
+        bg: "bg-orange-50",
+        border: "border-orange-200",
+        sign: "-",
+        signColor: "text-red-500",
+      });
+    }
+
+    const tds = Number(editEntry.tds || 0);
+    if (tds > 0) {
+      items.push({
+        type: "deduct",
+        label: "TDS",
+        detail: editEntry.tdsRemarks || "Tax Deducted at Source",
+        amount: tds,
+        color: "text-rose-800",
+        bg: "bg-rose-50",
+        border: "border-rose-200",
+        sign: "-",
+        signColor: "text-red-500",
+      });
+    }
+
+    return items;
   };
 
   return (
@@ -410,7 +565,7 @@ const EditLoadingEntryPopup = ({
             parseFloat(editEntry.unloadingWeight) >
               parseFloat(editEntry.loadingWeight) && (
               <p className="mt-1 text-xs text-red-600 font-semibold">
-                ⚠ Unloading Weight cannot exceed Loading Weight (
+                ! Unloading Weight cannot exceed Loading Weight (
                 {Number(editEntry.loadingWeight).toFixed(3)} Tons)
               </p>
             )}
@@ -581,101 +736,80 @@ const EditLoadingEntryPopup = ({
               Total Claim:
             </span>
             <span className="text-lg font-black text-indigo-600">
-              ₹ {totalClaimAmount}
+              Rs {totalClaimAmount}
             </span>
           </div>
 
           <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-5 shadow-sm">
             <h4 className="text-base font-bold text-emerald-900 mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Bill & Payable Calculation
+              Bill & Payable Calculation - Purpose-wise Breakdown
             </h4>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl shadow-sm border border-emerald-200">
-                <span className="font-bold text-slate-800 text-sm">
-                  Total Bill Value:
-                </span>
-                <span className="text-xl font-black text-emerald-700">
-                  ₹{" "}
-                  {(
-                    Number(editEntry.unloadingWeight || 0) *
-                    Number(currentSelfOrder?.rate || 0)
-                  ).toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200">
-                <span className="font-bold text-slate-700 text-sm">
-                  Less CD ({Number(currentSelfOrder?.cd || 0).toFixed(2)}%):
-                </span>
-                <span className="text-lg font-black text-red-600">
-                  - ₹{" "}
-                  {(
-                    Number(editEntry.unloadingWeight || 0) *
-                    Number(currentSelfOrder?.rate || 0) *
-                    (Number(currentSelfOrder?.cd || 0) / 100)
-                  ).toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl shadow-sm border border-cyan-200">
-                <span className="font-bold text-slate-700 text-sm">
-                  Add GST ({Number(currentSelfOrder?.gst || 0).toFixed(2)}%):
-                </span>
-                <span className="text-lg font-black text-teal-700">
-                  + ₹{" "}
-                  {(
-                    (Number(editEntry.unloadingWeight || 0) *
-                      Number(currentSelfOrder?.rate || 0) -
-                      Number(editEntry.unloadingWeight || 0) *
-                        Number(currentSelfOrder?.rate || 0) *
-                        (Number(currentSelfOrder?.cd || 0) / 100)) *
-                    (Number(currentSelfOrder?.gst || 0) / 100)
-                  ).toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-200">
-                <span className="font-bold text-slate-700 text-sm">
-                  Net Amount:
-                </span>
-                <span className="text-lg font-black text-purple-700">
-                  ₹{" "}
-                  {(
-                    Number(editEntry.unloadingWeight || 0) *
-                      Number(currentSelfOrder?.rate || 0) -
-                    Number(editEntry.unloadingWeight || 0) *
-                      Number(currentSelfOrder?.rate || 0) *
-                      (Number(currentSelfOrder?.cd || 0) / 100) +
-                    (Number(editEntry.unloadingWeight || 0) *
-                      Number(currentSelfOrder?.rate || 0) -
-                      Number(editEntry.unloadingWeight || 0) *
-                        Number(currentSelfOrder?.rate || 0) *
-                        (Number(currentSelfOrder?.cd || 0) / 100)) *
-                      (Number(currentSelfOrder?.gst || 0) / 100)
-                  ).toFixed(2)}
-                </span>
-              </div>
-
               {editEntry.manualCalculationRate && (
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
                   <span className="font-semibold text-slate-700 text-sm">
                     Manual Calculation Rate:
                   </span>
                   <span className="text-lg font-bold text-emerald-600">
-                    ₹ {Number(editEntry.manualCalculationRate).toFixed(2)}
+                    Rs {Number(editEntry.manualCalculationRate).toFixed(2)}
                   </span>
                 </div>
               )}
 
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-orange-50 rounded-xl shadow-sm border border-green-200">
-                <span className="font-bold text-slate-800 text-sm">
-                  Less Total Claim:
-                </span>
-                <span className="text-lg font-black text-red-600">
-                  - ₹ {totalClaimAmount}
-                </span>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-600">
+                  <div className="col-span-1 text-center">+/-</div>
+                  <div className="col-span-6">Particulars & Purpose</div>
+                  <div className="col-span-3">Detail / Remarks</div>
+                  <div className="col-span-2 text-right">Amount (Rs)</div>
+                </div>
+                {buildBreakdownItems().map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-100 ${item.bg} last:border-b-0 hover:brightness-95 transition-all`}
+                  >
+                    <div className="col-span-1 flex items-center justify-center">
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-black ${item.signColor} bg-white/70 shadow-sm border`}
+                      >
+                        {item.sign}
+                      </span>
+                    </div>
+                    <div className="col-span-6 flex flex-col justify-center">
+                      <span
+                        className={`text-sm font-black ${item.color}`}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                    <div className="col-span-3 flex items-center">
+                      <span className="text-[10px] font-semibold text-slate-500 leading-snug">
+                        {item.detail}
+                      </span>
+                    </div>
+                    <div
+                      className={`col-span-2 flex items-center justify-end ${item.color}`}
+                    >
+                      <span className="text-sm font-black tabular-nums">
+                        {item.amount.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div className="grid grid-cols-12 gap-2 px-4 py-4 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white border-t-2 border-emerald-700">
+                  <div className="col-span-10 flex items-center">
+                    <span className="text-[10px] font-black uppercase tracking-wider leading-tight">
+                      Net Payable = Gross - CD - Claims - BankChgs - 2ndClaim - Others - TDS + GST
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex items-center justify-end">
+                    <span className="text-xl font-black tabular-nums">
+                      = Rs {calculatePayableAmount()}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -685,7 +819,7 @@ const EditLoadingEntryPopup = ({
                       Less 2nd Claim:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">₹</span>
+                      <span className="text-slate-400 font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -714,7 +848,7 @@ const EditLoadingEntryPopup = ({
                         secondClaimRemarks: e.target.value,
                       }));
                     }}
-                    placeholder="Remarks..."
+                    placeholder="Purpose / Remarks..."
                     className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 bg-slate-50"
                   />
                 </div>
@@ -725,7 +859,7 @@ const EditLoadingEntryPopup = ({
                       Less Other Charges:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">₹</span>
+                      <span className="text-slate-400 font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -754,7 +888,7 @@ const EditLoadingEntryPopup = ({
                         otherChargesRemarks: e.target.value,
                       }));
                     }}
-                    placeholder="Remarks..."
+                    placeholder="Purpose / Remarks..."
                     className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 bg-slate-50"
                   />
                 </div>
@@ -765,7 +899,7 @@ const EditLoadingEntryPopup = ({
                       Less Bank Charges:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">₹</span>
+                      <span className="text-slate-400 font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -794,7 +928,7 @@ const EditLoadingEntryPopup = ({
                         bankChargesRemarks: e.target.value,
                       }));
                     }}
-                    placeholder="Remarks..."
+                    placeholder="Purpose / Remarks..."
                     className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 bg-slate-50"
                   />
                 </div>
@@ -805,7 +939,7 @@ const EditLoadingEntryPopup = ({
                       Less TDS:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">₹</span>
+                      <span className="text-slate-400 font-bold">Rs</span>
                       <input
                         type="number"
                         value={editEntry.tds != null ? editEntry.tds : ""}
@@ -830,7 +964,7 @@ const EditLoadingEntryPopup = ({
                         tdsRemarks: e.target.value,
                       }));
                     }}
-                    placeholder="Remarks..."
+                    placeholder="Purpose / Remarks..."
                     className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 bg-slate-50"
                   />
                 </div>
@@ -858,7 +992,7 @@ const EditLoadingEntryPopup = ({
                 <div className="flex-1 w-full sm:w-auto">
                   <span className="text-lg font-bold">Payable Amount:</span>
                   <span className="text-3xl font-black ml-3">
-                    ₹ {calculatePayableAmount()}
+                    Rs {calculatePayableAmount()}
                   </span>
                 </div>
                 {onNavigateToPaymentReceived && (
@@ -869,7 +1003,9 @@ const EditLoadingEntryPopup = ({
                         payableAmount: calculatePayableAmount(),
                         loadingEntryId: editEntry._id,
                         buyerCompany:
-                          editEntry.buyerCompany || editEntry.consignee || "",
+                          editEntry.buyerCompany ||
+                          editEntry.consignee ||
+                          "",
                         supplierCompany: editEntry.supplierCompany || "",
                         saudaNo: editEntry.saudaNo || "",
                         lorryNumber: editEntry.lorryNumber || "",
@@ -905,7 +1041,7 @@ const EditLoadingEntryPopup = ({
 
             {editEntry.manualClaim && (
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-slate-400 font-bold text-lg">₹</span>
+                <span className="text-slate-400 font-bold text-lg">Rs</span>
                 <input
                   type="number"
                   value={
@@ -929,7 +1065,7 @@ const EditLoadingEntryPopup = ({
 
           <p className="mt-3 text-[11px] text-slate-500 italic">
             * Claim Amount is automatically calculated based on (Actual -
-            Standard) × Sauda Rate (₹
+            Standard) x Sauda Rate (Rs
             {currentSelfOrder?.rate || 0})
           </p>
         </>
@@ -943,9 +1079,9 @@ const EditLoadingEntryPopup = ({
         {!editEntry.unloadingWeight || !editEntry.unloadingDate ? (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-800">
-              ⓘ Tip: Fill in both <b>Unloading Weight</b> and{" "}
+              i Tip: Fill in both <b>Unloading Weight</b> and{" "}
               <b>Unloading Date</b> to ensure the entry is complete. Document
-              upload is enabled regardless — Kanta Slip / Unloading Challan can
+              upload is enabled regardless - Kanta Slip / Unloading Challan can
               be attached first.
             </p>
           </div>
@@ -995,7 +1131,7 @@ const EditLoadingEntryPopup = ({
         <div className="mt-8 pt-6 border-t border-slate-200">
           <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-            Document Attachments &amp; Quality Reports
+            Document Attachments & Quality Reports
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FileUpload

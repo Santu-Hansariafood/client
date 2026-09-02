@@ -131,6 +131,169 @@ const calculateOutstandingAmount = (entry) => {
   return Math.max(0, taxable + gst - deductions - (Number(entry.paidAmount) || 0));
 };
 
+export const buildEntryBreakdown = (entry) => {
+  if (!entry || entry.isRejected) return [];
+  const breakdown = [];
+  const weight =
+    (entry.unloadingWeight && entry.unloadingWeight > 0)
+      ? entry.unloadingWeight
+      : entry.loadingWeight || 0;
+  const rate = entry.actualRate || entry.rate || 0;
+  const grossAmount = weight * rate;
+  const cdPercent = entry.cd || 0;
+  const gstPercent = entry.gst || 0;
+  const cdAmount = grossAmount * (cdPercent / 100);
+  const amountAfterCd = grossAmount - cdAmount;
+  const bankCharges = Number(entry.bankCharges) || 0;
+  const taxableAmount = amountAfterCd;
+  const gstAmount = taxableAmount * (gstPercent / 100);
+
+  if (grossAmount > 0) {
+    breakdown.push({
+      type: "add",
+      label: `Gross Amount (${weight.toFixed(3)}T × ₹${rate.toFixed(2)})`,
+      amount: grossAmount,
+      category: "gross",
+    });
+  }
+  if (cdAmount > 0) {
+    breakdown.push({
+      type: "deduct",
+      label: `CD (${cdPercent.toFixed(2)}% on Gross)`,
+      amount: cdAmount,
+      category: "cd",
+    });
+  }
+  if (gstAmount > 0) {
+    breakdown.push({
+      type: "add",
+      label: `GST (${gstPercent.toFixed(2)}% on Taxable)`,
+      amount: gstAmount,
+      category: "gst",
+    });
+  }
+  if (entry.qualityClaims && Array.isArray(entry.qualityClaims)) {
+    entry.qualityClaims.forEach((claim) => {
+      const claimAmt = Number(claim.claimAmount) || 0;
+      if (claimAmt > 0) {
+        const std = claim.standardValue != null ? Number(claim.standardValue).toFixed(2) : "-";
+        const act = claim.actualValue != null ? Number(claim.actualValue).toFixed(2) : "-";
+        breakdown.push({
+          type: "deduct",
+          label: `Quality Claim: ${claim.parameterName || "Unnamed"} (Std:${std}% / Act:${act}%)${claim.notes ? ` · ${claim.notes}` : ""}`,
+          amount: claimAmt,
+          category: "qualityClaim",
+          parameterName: claim.parameterName,
+          standardValue: claim.standardValue,
+          actualValue: claim.actualValue,
+        });
+      }
+    });
+  }
+  if (entry.manualClaim && entry.manualClaimAmount) {
+    const mca = Number(entry.manualClaimAmount) || 0;
+    if (mca > 0) {
+      breakdown.push({
+        type: "deduct",
+        label: `Manual Quality Claim (Report not received)`,
+        amount: mca,
+        category: "qualityClaim",
+        parameterName: "Manual Claim",
+      });
+    }
+  }
+  const secondClaim = Number(entry.secondClaim) || 0;
+  if (secondClaim > 0) {
+    breakdown.push({
+      type: "deduct",
+      label: `2nd Claim${entry.secondClaimRemarks ? ` · ${entry.secondClaimRemarks}` : ""}`,
+      amount: secondClaim,
+      category: "secondClaim",
+    });
+  }
+  const otherCharges = Number(entry.otherCharges) || 0;
+  if (otherCharges > 0) {
+    breakdown.push({
+      type: "deduct",
+      label: `Other Charges${entry.otherChargesRemarks ? ` · ${entry.otherChargesRemarks}` : ""}`,
+      amount: otherCharges,
+      category: "otherCharges",
+    });
+  }
+  if (bankCharges > 0) {
+    breakdown.push({
+      type: "deduct",
+      label: `Bank Charges${entry.bankChargesRemarks ? ` · ${entry.bankChargesRemarks}` : ""}`,
+      amount: bankCharges,
+      category: "bankCharges",
+    });
+  }
+  const tds = Number(entry.tds) || 0;
+  if (tds > 0) {
+    breakdown.push({
+      type: "deduct",
+      label: `TDS${entry.tdsRemarks ? ` · ${entry.tdsRemarks}` : ""}`,
+      amount: tds,
+      category: "tds",
+    });
+  }
+  return breakdown;
+};
+
+export const buildPaymentAllocationBreakdown = (payment) => {
+  if (!payment || !Array.isArray(payment.mappings) || payment.mappings.length === 0) return [];
+  const breakdown = [];
+  payment.mappings.forEach((mapping, idx) => {
+    const loadingEntry = mapping.loadingEntryId || {};
+    const allocatedAmt = Number(mapping.allocatedAmount) || 0;
+    if (allocatedAmt <= 0) return;
+    const parts = [];
+    if (mapping.secondClaim && Number(mapping.secondClaim) > 0) {
+      parts.push({
+        type: "deduct",
+        label: `2nd Claim${mapping.secondClaimRemarks ? ` · ${mapping.secondClaimRemarks}` : ""}`,
+        amount: Number(mapping.secondClaim),
+      });
+    }
+    if (mapping.otherCharges && Number(mapping.otherCharges) > 0) {
+      parts.push({
+        type: "deduct",
+        label: `Other Charges${mapping.otherChargesRemarks ? ` · ${mapping.otherChargesRemarks}` : ""}`,
+        amount: Number(mapping.otherCharges),
+      });
+    }
+    if (mapping.bankCharges && Number(mapping.bankCharges) > 0) {
+      parts.push({
+        type: "deduct",
+        label: `Bank Charges${mapping.bankChargesRemarks ? ` · ${mapping.bankChargesRemarks}` : ""}`,
+        amount: Number(mapping.bankCharges),
+      });
+    }
+    if (mapping.tds && Number(mapping.tds) > 0) {
+      parts.push({
+        type: "deduct",
+        label: `TDS${mapping.tdsRemarks ? ` · ${mapping.tdsRemarks}` : ""}`,
+        amount: Number(mapping.tds),
+      });
+    }
+    breakdown.push({
+      mappingIndex: idx,
+      paymentDate: payment.date,
+      voucherNo: payment.voucherNumber,
+      paymentMode: payment.paymentMode,
+      saudaNo: mapping.saudaNo || loadingEntry.saudaNo || "-",
+      lorryNumber: loadingEntry.lorryNumber || "-",
+      billNumber: loadingEntry.billNumber || mapping.billNumber || "-",
+      allocatedAmount: allocatedAmt,
+      debitNote: mapping.debitNote || "",
+      creditNote: mapping.creditNote || "",
+      remarks: mapping.remarks || mapping.generalRemarks || "",
+      parts,
+    });
+  });
+  return breakdown;
+};
+
 /** Tally voucher rows: Date | Particulars | Vch Type | Debit | Credit | Balance */
 export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []) => {
   const allItems = [
@@ -139,15 +302,14 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
   ];
 
   const sorted = allItems.sort((a, b) => {
-    const da = new Date(a.date || a.loadingDate).getTime();
-    const db = new Date(b.date || b.loadingDate).getTime();
+    const da = new Date(a.date || a.unloadingDate || a.loadingDate).getTime();
+    const db = new Date(b.date || b.unloadingDate || b.loadingDate).getTime();
     if (da !== db) return da - db;
-    
-    // Sort payments after entries on the same day if they are related
+
     if (a.uiType !== b.uiType) {
       return a.uiType === 'entry' ? -1 : 1;
     }
-    
+
     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
   });
 
@@ -169,18 +331,19 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       totalClaims: 0,
       cdAmount: 0,
       bankCharges: 0,
+      breakdown: [],
+      paymentAllocations: [],
     });
   }
 
   sorted.forEach((item) => {
     if (item.uiType === 'entry') {
-      // Check if entry is cancelled
       if (item.isRejected) {
         const particulars = `Rejected: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
         const vchType = "Rejected";
         const buyerCompany = item.buyerCompany || "";
         const supplierCompany = item.supplierCompany || "";
-        const date = item.loadingDate;
+        const date = item.unloadingDate || item.loadingDate;
         const id = `entry-${item._id}`;
 
         rows.push({
@@ -202,10 +365,16 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           secondClaim: 0,
           otherCharges: 0,
           tds: 0,
+          weight: item.unloadingWeight || item.loadingWeight || 0,
+          rate: item.actualRate || item.rate || 0,
+          breakdown: [],
+          paymentAllocations: [],
         });
       } else {
-        // Only the unpaid balance is shown in the Payment Received list.
-        const weight = item.unloadingWeight || item.loadingWeight || 0;
+        const weight =
+          (item.unloadingWeight && item.unloadingWeight > 0)
+            ? item.unloadingWeight
+            : item.loadingWeight || 0;
         const rate = item.actualRate || item.rate || 0;
         const grossAmount = weight * rate;
         const cdPercent = item.cd || 0;
@@ -215,27 +384,60 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         const bankCharges = Number(item.bankCharges) || 0;
         const taxableAmount = amountAfterCd;
         const gstAmount = taxableAmount * (gstPercent / 100);
-        
-        // Calculate total quality claims
+
         let totalClaims = 0;
         if (item.qualityClaims && Array.isArray(item.qualityClaims)) {
           totalClaims = item.qualityClaims.reduce((sum, claim) => {
             return sum + (Number(claim.claimAmount) || 0);
           }, 0);
         }
+        if (item.manualClaim && item.manualClaimAmount) {
+          totalClaims += Number(item.manualClaimAmount) || 0;
+        }
         const secondClaim = Number(item.secondClaim) || 0;
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
         const dueAmount = calculateOutstandingAmount(item);
         const debit = dueAmount;
-        
+
         const credit = 0;
-        const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+        const hasUnloading = item.unloadingWeight && item.unloadingWeight > 0;
+        const particulars = [
+          `Bill: ${item.saudaNo}`,
+          `Lorry: ${item.lorryNumber}`,
+          item.billNumber ? `Inv: ${item.billNumber}` : "",
+          hasUnloading
+            ? `Unld: ${Number(item.unloadingWeight).toFixed(3)}T`
+            : `Load: ${Number(weight).toFixed(3)}T`,
+          `@ ₹${Number(rate).toFixed(2)}`,
+        ].filter(Boolean).join(" | ");
         const vchType = "Bill";
         const buyerCompany = item.buyerCompany || "";
         const supplierCompany = item.supplierCompany || "";
-        const date = item.loadingDate;
+        const date = item.unloadingDate || item.loadingDate;
         const id = `entry-${item._id}`;
+
+        const paymentAllocationsForEntry = [];
+        payments.forEach((pay) => {
+          if (pay.mappings && Array.isArray(pay.mappings)) {
+            pay.mappings.forEach((mapping) => {
+              const entryId =
+                typeof mapping.loadingEntryId === "object" && mapping.loadingEntryId
+                  ? mapping.loadingEntryId._id
+                  : mapping.loadingEntryId;
+              if (String(entryId) === String(item._id)) {
+                paymentAllocationsForEntry.push({
+                  paymentId: pay._id,
+                  paymentDate: pay.date,
+                  voucherNo: pay.voucherNumber,
+                  paymentMode: pay.paymentMode,
+                  allocatedAmount: Number(mapping.allocatedAmount) || 0,
+                  remarks: mapping.remarks || "",
+                });
+              }
+            });
+          }
+        });
 
         balance = balance + debit - credit;
         rows.push({
@@ -257,10 +459,17 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           secondClaim,
           otherCharges,
           tds,
+          weight,
+          rate,
+          isUnloading: hasUnloading,
+          unloadingDate: item.unloadingDate || null,
+          loadingDate: item.loadingDate || null,
+          billNumber: item.billNumber || "",
+          breakdown: buildEntryBreakdown(item),
+          paymentAllocations: paymentAllocationsForEntry,
         });
       }
     } else {
-      // Mapped payments are already reflected in each entry's paidAmount.
       const payment = item;
       const mappedTotal = (payment.mappings || []).reduce(
         (sum, m) => sum + (Number(m.allocatedAmount) || 0),
@@ -270,7 +479,6 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const isBuyer = payment.ledgerType === "Buyer";
       const paymentType = payment.paymentType || "";
       const calculatedUnadjustedAmount = Math.max(0, totalPaymentAmount - mappedTotal);
-      // Older records may have unadjustedAmount saved from amount only, so keep the higher valid value.
       const unadjustedAmount = payment.unadjustedAmount !== undefined &&
         payment.unadjustedAmount !== null
         ? Math.max(Number(payment.unadjustedAmount) || 0, calculatedUnadjustedAmount)
@@ -283,9 +491,100 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
       const onAccountClaimAmount = mappedTotal > 0 ? 0 : paymentClaimAmount;
+      const paymentAllocBreakdown = buildPaymentAllocationBreakdown(payment);
 
-      // Now add On Account row if there's unadjusted amount
-      if (unadjustedAmount > 0.01) { // Tolerance for floating point errors
+      if (payment.mappings && payment.mappings.length > 0) {
+        payment.mappings.forEach((mapping, mIdx) => {
+          const allocatedAmt = Number(mapping.allocatedAmount) || 0;
+          if (allocatedAmt <= 0) return;
+          const loadingEntry = mapping.loadingEntryId || {};
+          const lorryNum = loadingEntry.lorryNumber || "—";
+          const billNum = loadingEntry.billNumber || "";
+          let allocatedCredit = 0;
+          let allocatedDebit = 0;
+          if (isBuyer) {
+            if (paymentType === "Adjustment") {
+              allocatedDebit = allocatedAmt;
+            } else {
+              allocatedCredit = allocatedAmt;
+            }
+          } else {
+            allocatedDebit = allocatedAmt;
+          }
+          balance = balance + allocatedDebit - allocatedCredit;
+          const mapParts = [];
+          if (mapping.secondClaim && Number(mapping.secondClaim) > 0) {
+            mapParts.push({
+              type: "deduct",
+              label: `2nd Claim${mapping.secondClaimRemarks ? ` · ${mapping.secondClaimRemarks}` : ""}`,
+              amount: Number(mapping.secondClaim),
+            });
+          }
+          if (mapping.otherCharges && Number(mapping.otherCharges) > 0) {
+            mapParts.push({
+              type: "deduct",
+              label: `Other Charges${mapping.otherChargesRemarks ? ` · ${mapping.otherChargesRemarks}` : ""}`,
+              amount: Number(mapping.otherCharges),
+            });
+          }
+          if (mapping.bankCharges && Number(mapping.bankCharges) > 0) {
+            mapParts.push({
+              type: "deduct",
+              label: `Bank Charges${mapping.bankChargesRemarks ? ` · ${mapping.bankChargesRemarks}` : ""}`,
+              amount: Number(mapping.bankCharges),
+            });
+          }
+          if (mapping.tds && Number(mapping.tds) > 0) {
+            mapParts.push({
+              type: "deduct",
+              label: `TDS${mapping.tdsRemarks ? ` · ${mapping.tdsRemarks}` : ""}`,
+              amount: Number(mapping.tds),
+            });
+          }
+          rows.push({
+            id: `${payment._id}-map-${mIdx}`,
+            date,
+            particulars: [
+              `PYT: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
+              `Lorry ${lorryNum}`,
+              billNum ? `Bill ${billNum}` : "",
+              payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+            ].filter(Boolean).join(" | "),
+            vchType: payment.paymentMode || payment.paymentType || "—",
+            buyerCompany,
+            supplierCompany,
+            debit: allocatedDebit,
+            credit: allocatedCredit,
+            balance,
+            raw: item,
+            grossAmount: 0,
+            gstAmount: 0,
+            totalClaims: 0,
+            cdAmount: 0,
+            bankCharges: Number(mapping.bankCharges) || 0,
+            secondClaim: Number(mapping.secondClaim) || 0,
+            otherCharges: Number(mapping.otherCharges) || 0,
+            tds: Number(mapping.tds) || Number(payment.tds) || 0,
+            weight: loadingEntry.unloadingWeight || loadingEntry.loadingWeight || 0,
+            rate: loadingEntry.actualRate || loadingEntry.rate || 0,
+            isPaymentRow: true,
+            mappingIndex: mIdx,
+            voucherNo: payment.voucherNumber,
+            paymentMode: payment.paymentMode,
+            saudaNo: mapping.saudaNo || loadingEntry.saudaNo || "",
+            lorryNumber: lorryNum,
+            billNumber: billNum,
+            allocatedAmount: allocatedAmt,
+            debitNote: mapping.debitNote || "",
+            creditNote: mapping.creditNote || "",
+            generalRemarks: mapping.remarks || mapping.generalRemarks || "",
+            breakdown: mapParts,
+            paymentAllocations: [],
+          });
+        });
+      }
+
+      if (unadjustedAmount > 0.01) {
         let unadjustedCredit = 0;
         let unadjustedDebit = 0;
         if (isBuyer) {
@@ -298,10 +597,17 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           unadjustedDebit = unadjustedAmount;
         }
         balance = balance + unadjustedDebit - unadjustedCredit;
+        const entriesPart = payment.entries && Array.isArray(payment.entries) && payment.entries.length > 0
+          ? payment.entries
+          : [];
         rows.push({
           id: `${payment._id}-on-account`,
           date,
-          particulars: "On Account",
+          particulars: [
+            "On Account",
+            payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+            payment.remarks ? payment.remarks : "",
+          ].filter(Boolean).join(" | "),
           vchType: payment.paymentType || payment.paymentMode || "—",
           buyerCompany,
           supplierCompany,
@@ -317,6 +623,23 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           secondClaim: 0,
           otherCharges: 0,
           tds: Number(payment.tds) || 0,
+          isPaymentRow: true,
+          isOnAccount: true,
+          voucherNo: payment.voucherNumber,
+          paymentMode: payment.paymentMode,
+          claim: Number(payment.claim) || 0,
+          breakdown: entriesPart.map((e) => ({
+            type: "add",
+            label: [
+              e.description || "Part Payment",
+              e.date ? `Dt: ${new Date(e.date).toLocaleDateString("en-GB")}` : "",
+            ].filter(Boolean).join(" · "),
+            amount: Number(e.amount) || 0,
+            date: e.date,
+            description: e.description,
+          })),
+          paymentAllocations: [],
+          partEntries: entriesPart,
         });
       }
     }
@@ -391,6 +714,22 @@ export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
 
 export const formatLedgerAmount = (n) =>
   `₹ ${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const formatBreakdownText = (breakdown = []) => {
+  if (!Array.isArray(breakdown) || breakdown.length === 0) return "";
+
+  const parts = breakdown
+    .filter((item) => Number(item.amount || 0) > 0)
+    .map((item) => {
+      const prefix = item.paymentDate ? `${item.paymentDate} | ` : "";
+      const label = item.label || item.description || "Adjustment";
+      const amount = formatLedgerAmount(item.amount);
+      const typeTag = item.type === "add" ? "ADD" : "DEDUCT";
+      return `${prefix}${typeTag}: ${label} ${amount}`;
+    });
+
+  return parts.join(" | ");
+};
 
 /**
  * Top summary by mode:
