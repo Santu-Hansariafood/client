@@ -22,7 +22,9 @@ const MisVoucherLedger = lazy(() => import("./components/MisVoucherLedger"));
 const MisLorryLedger = lazy(() => import("./components/MisLorryLedger"));
 const MisPageHeader = lazy(() => import("./components/MisPageHeader"));
 const PaymentVoucherPDF = lazy(() => import("./components/PaymentVoucherPDF"));
-const AdminPageShell = lazy(() => import("../../../common/AdminPageShell/AdminPageShell"));
+const AdminPageShell = lazy(
+  () => import("../../../common/AdminPageShell/AdminPageShell"),
+);
 
 import {
   buildEntryBreakdown,
@@ -1060,7 +1062,13 @@ const ListPaymentReceived = () => {
           const rowBreakdown = isEntryRow
             ? buildEntryBreakdown(row.raw)
             : buildPaymentAllocationBreakdown(row.raw);
-          const breakdownText = formatBreakdownText(rowBreakdown) || rowData.remarks || "-";
+          const breakdownText = row.raw?.isRejected
+            ? "REJECTED"
+            : Number(
+                  row.raw?.unloadingWeight || row.raw?.loadingWeight || 0,
+                ) === 0
+              ? "UNLOADING 0"
+              : formatBreakdownText(rowBreakdown) || rowData.remarks || "-";
 
           tableData.push([
             rowIdx,
@@ -1212,7 +1220,7 @@ const ListPaymentReceived = () => {
         11: { halign: "right", cellWidth: 18 },
         12: { halign: "right", cellWidth: 18 },
         13: { halign: "right", fontStyle: "bold", cellWidth: 20 },
-        14: { cellWidth: 35 },
+        14: { cellWidth: 55, overflow: "linebreak", halign: "left" },
       },
       margin: { left: 7, right: 7, top: 7, bottom: 15 },
       tableWidth: "wrap",

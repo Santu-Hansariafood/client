@@ -1,5 +1,3 @@
-/** Company pair + Tally-style ledger row builders for Payment Received. */
-
 export const getCompanyPairFromForm = (
   formData,
   selectedCompanyOption,
@@ -23,7 +21,6 @@ export const getCompanyPairFromForm = (
   };
 };
 
-/** Resolve buyer/seller names from primary + opposing dropdowns (company _id or seller name). */
 export const resolveCompanyPair = (
   formData,
   selectedCompanyOption,
@@ -128,14 +125,17 @@ const calculateOutstandingAmount = (entry) => {
     (Number(entry.otherCharges) || 0) +
     (Number(entry.bankCharges) || 0) +
     (Number(entry.tds) || 0);
-  return Math.max(0, taxable + gst - deductions - (Number(entry.paidAmount) || 0));
+  return Math.max(
+    0,
+    taxable + gst - deductions - (Number(entry.paidAmount) || 0),
+  );
 };
 
 export const buildEntryBreakdown = (entry) => {
   if (!entry || entry.isRejected) return [];
   const breakdown = [];
   const weight =
-    (entry.unloadingWeight && entry.unloadingWeight > 0)
+    entry.unloadingWeight && entry.unloadingWeight > 0
       ? entry.unloadingWeight
       : entry.loadingWeight || 0;
   const rate = entry.actualRate || entry.rate || 0;
@@ -176,8 +176,14 @@ export const buildEntryBreakdown = (entry) => {
     entry.qualityClaims.forEach((claim) => {
       const claimAmt = Number(claim.claimAmount) || 0;
       if (claimAmt > 0) {
-        const std = claim.standardValue != null ? Number(claim.standardValue).toFixed(2) : "-";
-        const act = claim.actualValue != null ? Number(claim.actualValue).toFixed(2) : "-";
+        const std =
+          claim.standardValue != null
+            ? Number(claim.standardValue).toFixed(2)
+            : "-";
+        const act =
+          claim.actualValue != null
+            ? Number(claim.actualValue).toFixed(2)
+            : "-";
         breakdown.push({
           type: "deduct",
           label: `Quality Claim: ${claim.parameterName || "Unnamed"} (Std:${std}% / Act:${act}%)${claim.notes ? ` · ${claim.notes}` : ""}`,
@@ -241,7 +247,12 @@ export const buildEntryBreakdown = (entry) => {
 };
 
 export const buildPaymentAllocationBreakdown = (payment) => {
-  if (!payment || !Array.isArray(payment.mappings) || payment.mappings.length === 0) return [];
+  if (
+    !payment ||
+    !Array.isArray(payment.mappings) ||
+    payment.mappings.length === 0
+  )
+    return [];
   const breakdown = [];
   payment.mappings.forEach((mapping, idx) => {
     const loadingEntry = mapping.loadingEntryId || {};
@@ -294,11 +305,14 @@ export const buildPaymentAllocationBreakdown = (payment) => {
   return breakdown;
 };
 
-/** Tally voucher rows: Date | Particulars | Vch Type | Debit | Credit | Balance */
-export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []) => {
+export const buildTallyVoucherRows = (
+  payments,
+  openingBalance = 0,
+  entries = [],
+) => {
   const allItems = [
-    ...payments.map(p => ({ ...p, uiType: 'payment' })),
-    ...entries.map(e => ({ ...e, uiType: 'entry' }))
+    ...payments.map((p) => ({ ...p, uiType: "payment" })),
+    ...entries.map((e) => ({ ...e, uiType: "entry" })),
   ];
 
   const sorted = allItems.sort((a, b) => {
@@ -307,7 +321,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
     if (da !== db) return da - db;
 
     if (a.uiType !== b.uiType) {
-      return a.uiType === 'entry' ? -1 : 1;
+      return a.uiType === "entry" ? -1 : 1;
     }
 
     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
@@ -337,7 +351,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
   }
 
   sorted.forEach((item) => {
-    if (item.uiType === 'entry') {
+    if (item.uiType === "entry") {
       if (item.isRejected) {
         const particulars = `Rejected: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
         const vchType = "Rejected";
@@ -372,7 +386,7 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
         });
       } else {
         const weight =
-          (item.unloadingWeight && item.unloadingWeight > 0)
+          item.unloadingWeight && item.unloadingWeight > 0
             ? item.unloadingWeight
             : item.loadingWeight || 0;
         const rate = item.actualRate || item.rate || 0;
@@ -410,7 +424,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
             ? `Unld: ${Number(item.unloadingWeight).toFixed(3)}T`
             : `Load: ${Number(weight).toFixed(3)}T`,
           `@ ₹${Number(rate).toFixed(2)}`,
-        ].filter(Boolean).join(" | ");
+        ]
+          .filter(Boolean)
+          .join(" | ");
         const vchType = "Bill";
         const buyerCompany = item.buyerCompany || "";
         const supplierCompany = item.supplierCompany || "";
@@ -422,7 +438,8 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           if (pay.mappings && Array.isArray(pay.mappings)) {
             pay.mappings.forEach((mapping) => {
               const entryId =
-                typeof mapping.loadingEntryId === "object" && mapping.loadingEntryId
+                typeof mapping.loadingEntryId === "object" &&
+                mapping.loadingEntryId
                   ? mapping.loadingEntryId._id
                   : mapping.loadingEntryId;
               if (String(entryId) === String(item._id)) {
@@ -478,16 +495,26 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
       const totalPaymentAmount = getPaymentCompositeAmount(payment);
       const isBuyer = payment.ledgerType === "Buyer";
       const paymentType = payment.paymentType || "";
-      const calculatedUnadjustedAmount = Math.max(0, totalPaymentAmount - mappedTotal);
-      const unadjustedAmount = payment.unadjustedAmount !== undefined &&
+      const calculatedUnadjustedAmount = Math.max(
+        0,
+        totalPaymentAmount - mappedTotal,
+      );
+      const unadjustedAmount =
+        payment.unadjustedAmount !== undefined &&
         payment.unadjustedAmount !== null
-        ? Math.max(Number(payment.unadjustedAmount) || 0, calculatedUnadjustedAmount)
-        : calculatedUnadjustedAmount;
+          ? Math.max(
+              Number(payment.unadjustedAmount) || 0,
+              calculatedUnadjustedAmount,
+            )
+          : calculatedUnadjustedAmount;
 
-      const sellerFromMapping = payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
-      const buyerFromMapping = payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
+      const sellerFromMapping =
+        payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
+      const buyerFromMapping =
+        payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
       const buyerCompany = payment.buyerCompany || buyerFromMapping || "";
-      const supplierCompany = payment.supplierCompany || sellerFromMapping || "";
+      const supplierCompany =
+        payment.supplierCompany || sellerFromMapping || "";
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
       const onAccountClaimAmount = mappedTotal > 0 ? 0 : paymentClaimAmount;
@@ -549,7 +576,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
               `Lorry ${lorryNum}`,
               billNum ? `Bill ${billNum}` : "",
               payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
-            ].filter(Boolean).join(" | "),
+            ]
+              .filter(Boolean)
+              .join(" | "),
             vchType: payment.paymentMode || payment.paymentType || "—",
             buyerCompany,
             supplierCompany,
@@ -565,7 +594,8 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
             secondClaim: Number(mapping.secondClaim) || 0,
             otherCharges: Number(mapping.otherCharges) || 0,
             tds: Number(mapping.tds) || Number(payment.tds) || 0,
-            weight: loadingEntry.unloadingWeight || loadingEntry.loadingWeight || 0,
+            weight:
+              loadingEntry.unloadingWeight || loadingEntry.loadingWeight || 0,
             rate: loadingEntry.actualRate || loadingEntry.rate || 0,
             isPaymentRow: true,
             mappingIndex: mIdx,
@@ -597,9 +627,12 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
           unadjustedDebit = unadjustedAmount;
         }
         balance = balance + unadjustedDebit - unadjustedCredit;
-        const entriesPart = payment.entries && Array.isArray(payment.entries) && payment.entries.length > 0
-          ? payment.entries
-          : [];
+        const entriesPart =
+          payment.entries &&
+          Array.isArray(payment.entries) &&
+          payment.entries.length > 0
+            ? payment.entries
+            : [];
         rows.push({
           id: `${payment._id}-on-account`,
           date,
@@ -607,7 +640,9 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
             "On Account",
             payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
             payment.remarks ? payment.remarks : "",
-          ].filter(Boolean).join(" | "),
+          ]
+            .filter(Boolean)
+            .join(" | "),
           vchType: payment.paymentType || payment.paymentMode || "—",
           buyerCompany,
           supplierCompany,
@@ -632,8 +667,12 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
             type: "add",
             label: [
               e.description || "Part Payment",
-              e.date ? `Dt: ${new Date(e.date).toLocaleDateString("en-GB")}` : "",
-            ].filter(Boolean).join(" · "),
+              e.date
+                ? `Dt: ${new Date(e.date).toLocaleDateString("en-GB")}`
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" · "),
             amount: Number(e.amount) || 0,
             date: e.date,
             description: e.description,
@@ -648,7 +687,6 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0, entries = []
   return rows;
 };
 
-/** Calculate totals from voucher rows */
 export const calculateVoucherTotals = (rows) => {
   return rows.reduce(
     (totals, row) => {
@@ -670,11 +708,10 @@ export const calculateVoucherTotals = (rows) => {
       totalClaims: 0,
       totalCd: 0,
       totalBankCharges: 0,
-    }
+    },
   );
 };
 
-/** Outstanding sauda lines: Dr = due, Cr = paid + allocation (Cr. posting). */
 export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
   entries.map((entry) => {
     if (entry.isRejected) {
@@ -723,7 +760,10 @@ export const formatBreakdownText = (breakdown = []) => {
     .map((item) => {
       const prefix = item.paymentDate ? `${item.paymentDate} | ` : "";
       const label = item.label || item.description || "Adjustment";
-      const amount = formatLedgerAmount(item.amount);
+      const amount = Number(item.amount || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
       const typeTag = item.type === "add" ? "ADD" : "DEDUCT";
       return `${prefix}${typeTag}: ${label} ${amount}`;
     });
@@ -731,11 +771,6 @@ export const formatBreakdownText = (breakdown = []) => {
   return parts.join(" | ");
 };
 
-/**
- * Top summary by mode:
- * - Payment Received: receipt (Cr.) − adjusted lorry-wise (Dr.) = unallocated (Cr.)
- * - From Advance: Cr. advance − Dr. to seller = Cr. left
- */
 export const computeBuyerSellerLedgerSummary = ({
   allocationSource = "fresh",
   formAmount = 0,
@@ -753,17 +788,12 @@ export const computeBuyerSellerLedgerSummary = ({
 
   const entryCr = Number(formAmount) || 0;
 
-  // Total Credit (Cr.) = All advance balance + today's entry
   const existingAdvance = fullCompanyMapping
     ? Number(ledgerBalance.advanceBalance) || 0
     : Number(ledgerBalance.totalAdvanceBalance) || 0;
 
-  // In Tally style, Total Credit is what we have to spend
-  // User request: Credit amount = total credit amount from all credits
   const creditEntryTotal = existingAdvance + postedDr + entryCr;
 
-  // In Tally style, Total Debit is the liability (Lorry Bills)
-  // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
   const debitToSeller = Number(totalDueFromTable) || 0;
 
   const creditBalanceRemaining = creditEntryTotal - tableDr - postedDr;
@@ -789,11 +819,14 @@ export const matchCompanyName = (value, filterName) => {
   );
 };
 
-/** Keep loading rows that match selected buyer / seller filters. */
 export const filterEntriesForCompanyScope = (
   items,
   companyPair,
-  { pendingOnly = false, unadjustedOnly = false, excludeFullyPaid = false } = {},
+  {
+    pendingOnly = false,
+    unadjustedOnly = false,
+    excludeFullyPaid = false,
+  } = {},
   calculateDue,
 ) =>
   items.filter((item) => {
@@ -823,7 +856,6 @@ export const filterEntriesForCompanyScope = (
     return true;
   });
 
-/** Due amount from enriched loading row (self-order rate on API). */
 export const calculateEntryDueAmount = (item) => {
   if (item.isRejected) return 0;
   const weight =

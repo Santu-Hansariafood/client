@@ -447,8 +447,6 @@ const PaymentList = () => {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 10;
 
-      console.log("Doc created, adding header...");
-      // Add company header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
       doc.setTextColor(26, 58, 95);
@@ -579,7 +577,15 @@ const PaymentList = () => {
           let credit = Number(item.paidAmount || 0);
           let lorryBalance = Number(item.remainingLorryBalance || 0);
 
-          const detailBreakdown = formatBreakdownText(buildEntryBreakdown(item));
+          const detailBreakdown = item.isRejected
+            ? "REJECTED"
+            : Number(item.unloadingWeight || 0) === 0 &&
+                Number(item.loadingWeight || 0) === 0
+              ? "UNLOADING 0"
+              : formatBreakdownText(buildEntryBreakdown(item)) ||
+                item.generalRemarks ||
+                item.remarks ||
+                "-";
 
           tableData.push([
             rowIdx,
@@ -613,7 +619,7 @@ const PaymentList = () => {
             lorryBalance > 0
               ? `Rs. ${Number(lorryBalance.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            detailBreakdown || item.generalRemarks || item.remarks || "-",
+            detailBreakdown,
           ]);
         });
       });
@@ -698,7 +704,7 @@ const PaymentList = () => {
           12: { halign: "right", cellWidth: 17 },
           13: { halign: "right", fontStyle: "bold", cellWidth: 18 },
           14: { halign: "right", fontStyle: "bold", cellWidth: 18 },
-          15: { cellWidth: 30 },
+          15: { cellWidth: 55, overflow: "linebreak", halign: "left" },
         },
         margin: { left: 7, right: 7, top: 7, bottom: 15 },
         tableWidth: "wrap",
@@ -1272,7 +1278,6 @@ const PaymentList = () => {
             </div>
           </div>
 
-          {/* Additional Totals Row */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
               <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
