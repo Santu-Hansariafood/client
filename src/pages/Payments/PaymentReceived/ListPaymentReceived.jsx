@@ -1084,14 +1084,17 @@ const ListPaymentReceived = () => {
           tableData.push([
             entryDate ? new Date(entryDate).toLocaleDateString("en-GB") : "-",
             `${particulars}${statusText ? ` | ${statusText}` : ""}`,
+            isEntryRow ? "Bill" : "Payment",
+            isEntryRow
+              ? rowData.billNo !== "-"
+                ? rowData.billNo
+                : "-"
+              : row.raw?.voucherNumber || row.voucherNo || "-",
             formattedDebit > 0
               ? `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
             formattedCredit > 0
               ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            balance !== 0
-              ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
           ]);
         });
@@ -1100,7 +1103,7 @@ const ListPaymentReceived = () => {
         tableData.push([
           {
             content: `TOTAL FOR SAUDA ${saudaKey}`,
-            colSpan: 2,
+            colSpan: 4,
             styles: {
               fontStyle: "bold",
               halign: "right",
@@ -1108,7 +1111,6 @@ const ListPaymentReceived = () => {
           },
           `Rs. ${saudaDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         ]);
 
         const saudaDifference = Number(
@@ -1123,7 +1125,7 @@ const ListPaymentReceived = () => {
         tableData.push([
           {
             content: `DIFFERENCE FOR SAUDA ${saudaKey}`,
-            colSpan: 2,
+            colSpan: 4,
             styles: {
               fontStyle: "bold",
               textColor: [26, 58, 95],
@@ -1132,7 +1134,6 @@ const ListPaymentReceived = () => {
           },
           "",
           saudaDifferenceText,
-          "",
         ]);
 
         saudaTotals[`${buyerCompany}::${supplierCompany}::${saudaKey}`] = {
@@ -1146,7 +1147,7 @@ const ListPaymentReceived = () => {
       tableData.push([
         {
           content: "No records found",
-          colSpan: 5,
+          colSpan: 6,
           styles: {
             halign: "center",
             fontStyle: "bold",
@@ -1161,9 +1162,10 @@ const ListPaymentReceived = () => {
         [
           "DATE",
           "PARTICULARS",
+          "VCH TYPE",
+          "VCH NO.",
           "DEBIT (Dr.)",
           "CREDIT (Cr.)",
-          "BALANCE",
         ],
       ],
       body: tableData,
@@ -1190,12 +1192,12 @@ const ListPaymentReceived = () => {
       },
       didParseCell: (data) => {
         if (data.section !== "body") return;
-        if (data.column.index === 2) {
+        if (data.column.index === 4) {
           data.cell.styles.fillColor = [239, 246, 255];
           data.cell.styles.textColor = [30, 64, 175];
           data.cell.styles.fontStyle = "bold";
         }
-        if (data.column.index === 3) {
+        if (data.column.index === 5) {
           data.cell.styles.fillColor = [236, 253, 245];
           data.cell.styles.textColor = [4, 120, 87];
           data.cell.styles.fontStyle = "bold";
@@ -1206,11 +1208,12 @@ const ListPaymentReceived = () => {
         }
       },
       columnStyles: {
-        0: { halign: "center", cellWidth: 28 },
-        1: { cellWidth: 165, overflow: "linebreak", halign: "left" },
-        2: { halign: "right", cellWidth: 30 },
-        3: { halign: "right", cellWidth: 30 },
-        4: { halign: "right", fontStyle: "bold", cellWidth: 30 },
+        0: { halign: "center", cellWidth: 24 },
+        1: { cellWidth: 132, overflow: "linebreak", halign: "left" },
+        2: { halign: "center", cellWidth: 28 },
+        3: { halign: "center", cellWidth: 25 },
+        4: { halign: "right", cellWidth: 38 },
+        5: { halign: "right", fontStyle: "bold", cellWidth: 38 },
       },
       margin: { left: 8, right: 8, top: 7, bottom: 15 },
       tableWidth: "wrap",
