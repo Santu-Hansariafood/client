@@ -136,6 +136,10 @@ const PaymentList = () => {
     fetchCompanies();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchInput]);
+
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {

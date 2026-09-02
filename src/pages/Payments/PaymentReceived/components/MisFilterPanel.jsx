@@ -25,6 +25,21 @@ const MisFilterPanel = ({
 }) => {
   return (
     <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden">
+      <div className="px-4 sm:px-6 pt-5 sm:pt-6">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+            Search lorry no.
+          </label>
+          <input
+            type="text"
+            value={filters.search || ""}
+            onChange={(e) => onFilterChange("search", e.target.value)}
+            placeholder="Search by lorry number, voucher, company or sauda"
+            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none transition-all"
+          />
+        </div>
+      </div>
+
       <div className="px-4 sm:px-6 py-5 sm:py-6 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="relative">

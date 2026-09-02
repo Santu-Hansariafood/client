@@ -580,20 +580,48 @@ router.get("/", async (req, res) => {
       companyId,
       buyerCompany,
       supplierCompany,
+      search,
       startDate,
       endDate,
-      search,
       page = 1,
       limit = 10,
     } = req.query;
+
     const query = {};
+    const searchClauses = [];
 
     if (search) {
-      const searchNum = Number(search);
-      query.$or = [
-        { sellerBillNo: { $regex: new RegExp(escapeRegex(search), "i") } },
-        ...(!isNaN(searchNum) ? [{ voucherNumber: searchNum }] : []),
-      ];
+      const searchTerm = String(search).trim();
+      if (searchTerm) {
+        const searchNum = Number(searchTerm);
+        const searchRegex = new RegExp(escapeRegex(searchTerm), "i");
+
+        const matchingEntryIds = await LoadingEntry.find(
+          { lorryNumber: { $regex: searchRegex } },
+          { _id: 1 },
+        ).lean();
+
+        const lorryEntryIds = matchingEntryIds.map((entry) => entry._id);
+
+        searchClauses.push({
+          $or: [
+            { sellerBillNo: { $regex: searchRegex } },
+            { buyerCompany: { $regex: searchRegex } },
+            { supplierCompany: { $regex: searchRegex } },
+            { remarks: { $regex: searchRegex } },
+            { "mappings.saudaNo": { $regex: searchRegex } },
+            { "mappings.remarks": { $regex: searchRegex } },
+            ...(lorryEntryIds.length > 0
+              ? [{ "mappings.loadingEntryId": { $in: lorryEntryIds } }]
+              : []),
+            ...(!isNaN(searchNum) ? [{ voucherNumber: searchNum }] : []),
+          ],
+        });
+      }
+    }
+
+    if (searchClauses.length > 0) {
+      query.$and = searchClauses;
     }
 
     if (ledgerType) query.ledgerType = ledgerType;
