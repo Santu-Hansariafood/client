@@ -856,8 +856,11 @@ const ListPaymentReceived = () => {
         gstPercent = details.gstPercent;
         totalQualityClaims = details.totalQualityClaims;
         bankCharges = details.bankCharges;
+        secondClaim = details.secondClaim;
+        otherCharges = details.otherCharges;
+        paymentTdsAmount = details.tds;
       } else if (raw?.mappings?.length > 0) {
-        const firstMapping = raw.mappings[0];
+        const firstMapping = raw.mappings[row.mappingIndex] || raw.mappings[0];
         const loadingEntry = firstMapping?.loadingEntryId;
         const details = calculateTallyDetails(loadingEntry);
         saudaNo = firstMapping?.saudaNo || loadingEntry?.saudaNo || "-";
@@ -1009,18 +1012,27 @@ const ListPaymentReceived = () => {
             saudaBankChargesTotal += bankCharges;
           }
 
-          const unloadingDebit = isEntryRow
+          const grossDebit = isEntryRow
             ? (Number(row.raw?.unloadingWeight) || 0) *
               (Number(row.raw?.actualRate || row.raw?.rate) || 0)
-            : Number(row.debit) || 0;
-          saudaDebitTotal += unloadingDebit + gst - claims - cd - bankCharges;
-          saudaCreditTotal += displayCredit;
+            : Math.max(0, Number(row.debit) || 0);
+          const deductionTotal =
+            claims +
+            cd +
+            bankCharges +
+            (Number(rowData.secondClaim) || 0) +
+            (Number(rowData.otherCharges) || 0) +
+            (Number(rowData.paymentTdsAmount) || 0);
+          const rowDebit = isEntryRow
+            ? Math.max(0, grossDebit - deductionTotal)
+            : grossDebit;
+          const rowCredit = isEntryRow ? Math.max(0, Number(gst) || 0) : displayCredit;
+          saudaDebitTotal += rowDebit;
+          saudaCreditTotal += rowCredit;
           saudaPaidTotal += rowData.paidAmount;
 
-          const formattedCredit = Number(displayCredit.toFixed(2));
-          const formattedDebit = Number(
-            Math.max(0, unloadingDebit + gst - claims - cd - bankCharges).toFixed(2),
-          );
+          const formattedCredit = Number(rowCredit.toFixed(2));
+          const formattedDebit = Number(rowDebit.toFixed(2));
           ledgerDebitTotal += formattedDebit;
           ledgerCreditTotal += formattedCredit;
           const entryDate = isEntryRow
@@ -1031,21 +1043,22 @@ const ListPaymentReceived = () => {
           const loadingDate = isEntryRow ? row.raw?.loadingDate : null;
           const unloadingDate = isEntryRow ? row.raw?.unloadingDate : null;
           const mappedLorries = !isEntryRow
-            ? (row.raw?.mappings || [])
-                .map((mapping) => {
-                  const entry = mapping.loadingEntryId || {};
-                  const lorry = entry.lorryNumber || "-";
-                  const bill = entry.billNumber || "-";
-                  return `LORRY: ${lorry}${bill !== "-" ? ` / BILL: ${bill}` : ""}`;
-                })
-                .filter(Boolean)
-                .join(" | ")
+            ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
             : "";
           const adjustmentParts = [
-            gst > 0 ? `GST +${gst.toFixed(2)}` : "",
+            gst > 0 ? `GST CREDIT +${gst.toFixed(2)}` : "",
             cd > 0 ? `CD -${cd.toFixed(2)}` : "",
             claims > 0 ? `CLAIM -${claims.toFixed(2)}` : "",
             bankCharges > 0 ? `BANK CHARGES -${bankCharges.toFixed(2)}` : "",
+            rowData.secondClaim > 0
+              ? `2ND CLAIM -${Number(rowData.secondClaim).toFixed(2)}`
+              : "",
+            rowData.otherCharges > 0
+              ? `OTHER CHARGES -${Number(rowData.otherCharges).toFixed(2)}`
+              : "",
+            rowData.paymentTdsAmount > 0
+              ? `TDS -${Number(rowData.paymentTdsAmount).toFixed(2)}`
+              : "",
           ].filter(Boolean);
           const particulars = [
             `BUYER: ${(row.buyerCompany || buyerCompany || "-").toUpperCase()}`,
@@ -1055,8 +1068,8 @@ const ListPaymentReceived = () => {
             isEntryRow
               ? `LOAD DATE: ${formatReportDate(loadingDate)} | UNLOAD DATE: ${formatReportDate(unloadingDate)}`
               : "",
-            isEntryRow ? "BILL ENTRY" : `PAYMENT${row.raw?.paymentType ? ` (${row.raw.paymentType})` : ""}`,
-            adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
+            isEntryRow ? "BILL ENTRY" : "PAYMENT ENTRY",
+            adjustmentParts.length > 0 ? `DEDUCTIONS: ${adjustmentParts.join(" | ")}` : "",
             !isEntryRow && rowData.remarks !== "-" ? rowData.remarks : "",
           ]
             .filter(Boolean)
@@ -1193,13 +1206,13 @@ const ListPaymentReceived = () => {
         }
       },
       columnStyles: {
-        0: { halign: "center", cellWidth: 22 },
-        1: { cellWidth: 115, overflow: "linebreak", halign: "left" },
-        2: { halign: "right", cellWidth: 28 },
-        3: { halign: "right", cellWidth: 28 },
-        4: { halign: "right", fontStyle: "bold", cellWidth: 28 },
+        0: { halign: "center", cellWidth: 28 },
+        1: { cellWidth: 165, overflow: "linebreak", halign: "left" },
+        2: { halign: "right", cellWidth: 30 },
+        3: { halign: "right", cellWidth: 30 },
+        4: { halign: "right", fontStyle: "bold", cellWidth: 30 },
       },
-      margin: { left: 7, right: 7, top: 7, bottom: 15 },
+      margin: { left: 8, right: 8, top: 7, bottom: 15 },
       tableWidth: "wrap",
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();

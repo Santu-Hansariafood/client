@@ -676,7 +676,7 @@ router.get("/", async (req, res) => {
           .skip((page - 1) * limit)
           .limit(parseInt(limit))
           .select(
-            "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds unadjustedAmount paymentMode paymentType mappings remarks createdAt",
+            "date voucherNumber ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds unadjustedAmount paymentMode paymentType mappings remarks createdAt",
           )
           .populate("ledgerId", "name sellerName")
           .populate(
