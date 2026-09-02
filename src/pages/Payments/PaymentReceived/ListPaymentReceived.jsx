@@ -1162,8 +1162,8 @@ const ListPaymentReceived = () => {
         [
           "DATE",
           "PARTICULARS",
-          "VCH TYPE",
-          "VCH NO.",
+          "PAYMENT TYPE",
+          "BILL NO.",
           "DEBIT (Dr.)",
           "CREDIT (Cr.)",
         ],
