@@ -1026,6 +1026,17 @@ const ListPaymentReceived = () => {
           const entryDate = isEntryRow
             ? row.raw?.loadingDate || row.raw?.unloadingDate || row.date
             : row.date;
+          const mappedLorries = !isEntryRow
+            ? (row.raw?.mappings || [])
+                .map((mapping) => {
+                  const entry = mapping.loadingEntryId || {};
+                  const lorry = entry.lorryNumber || "-";
+                  const bill = entry.billNumber || "-";
+                  return `LORRY: ${lorry}${bill !== "-" ? ` / BILL: ${bill}` : ""}`;
+                })
+                .filter(Boolean)
+                .join(" | ")
+            : "";
           const adjustmentParts = [
             gst > 0 ? `GST +${gst.toFixed(2)}` : "",
             cd > 0 ? `CD -${cd.toFixed(2)}` : "",
@@ -1035,8 +1046,8 @@ const ListPaymentReceived = () => {
           const particulars = [
             `BUYER: ${(row.buyerCompany || buyerCompany || "-").toUpperCase()}`,
             rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
-            rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : "",
-            rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
+            mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
+            !mappedLorries && rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
             isEntryRow ? "BILL ENTRY" : `PAYMENT${row.raw?.paymentType ? ` (${row.raw.paymentType})` : ""}`,
             adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
             !isEntryRow && rowData.remarks !== "-" ? rowData.remarks : "",
@@ -1078,6 +1089,30 @@ const ListPaymentReceived = () => {
           `Rs. ${saudaDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        ]);
+
+        const saudaDifference = Number(
+          (saudaDebitTotal - saudaCreditTotal).toFixed(2),
+        );
+        const saudaDifferenceText =
+          saudaDifference > 0
+            ? `Rs. ${saudaDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
+            : saudaDifference < 0
+              ? `Rs. ${Math.abs(saudaDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
+              : "NIL";
+        tableData.push([
+          {
+            content: `DIFFERENCE FOR SAUDA ${saudaKey}`,
+            colSpan: 2,
+            styles: {
+              fontStyle: "bold",
+              textColor: [26, 58, 95],
+              halign: "right",
+            },
+          },
+          "",
+          saudaDifferenceText,
+          "",
         ]);
 
         saudaTotals[`${buyerCompany}::${supplierCompany}::${saudaKey}`] = {
@@ -1493,14 +1528,14 @@ const ListPaymentReceived = () => {
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(
-      "TOTAL DUE - TOTAL CREDIT = DIFFERENCE",
+      "OPENING BALANCE + TOTAL DEBIT - TOTAL CREDIT = DIFFERENCE",
       margin + 10,
       finalSectionY + 5,
     );
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    const formulaLine1 = `Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Due)`;
+    const formulaLine1 = `Rs. ${Number(openingBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Opening) + Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Debit)`;
     const formulaLine2 = ` - Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Credit)`;
     const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? "Dr" : difference < 0 ? "Cr" : "NIL"})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
