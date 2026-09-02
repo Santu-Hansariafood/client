@@ -43,7 +43,6 @@ const ListPaymentReceived = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [sendingEmailIds, setSendingEmailIds] = useState(new Set());
   const [payments, setPayments] = useState([]);
-  const [listEntries, setListEntries] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [openingBalance, setOpeningBalance] = useState(0);
@@ -287,27 +286,6 @@ const ListPaymentReceived = () => {
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
-
-      const entryParams = {
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
-        buyerCompany: filters.buyerCompany || undefined,
-        supplierCompany: filters.supplierCompany || undefined,
-        buyerId:
-          filters.ledgerType === "Buyer"
-            ? filters.ledgerId || undefined
-            : undefined,
-        supplier:
-          filters.ledgerType === "Seller"
-            ? filters.ledgerId || undefined
-            : undefined,
-        saudaNo: filters.saudaNo || undefined,
-        limit: 5000,
-      };
-      const entriesRes = await api.get("/loading-entries", {
-        params: entryParams,
-      });
-      setListEntries(entriesRes.data.data || []);
     } catch (error) {
       toast.error("Error fetching ledger data");
     } finally {
@@ -320,21 +298,12 @@ const ListPaymentReceived = () => {
   }, [page, filters]);
 
   const tallyListRows = useMemo(() => {
-    const mappedEntries = payments.flatMap((payment) =>
-      (payment.mappings || [])
-        .map((mapping) => mapping.loadingEntryId)
-        .filter(Boolean),
-    );
-    const entriesById = new Map();
-    [...listEntries, ...mappedEntries].forEach((entry) => {
-      if (entry?._id) entriesById.set(String(entry._id), entry);
-    });
     return buildTallyVoucherRows(
       payments,
       openingBalance,
-      Array.from(entriesById.values()),
+      [],
     );
-  }, [payments, openingBalance, listEntries]);
+  }, [payments, openingBalance]);
 
   const stats = useMemo(() => {
     const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);
