@@ -27,11 +27,8 @@ const AdminPageShell = lazy(
 );
 
 import {
-  buildEntryBreakdown,
-  buildPaymentAllocationBreakdown,
   buildTallyVoucherRows,
   calculateVoucherTotals,
-  formatBreakdownText,
   getLedgerRowClaimAmount,
 } from "./utils/paymentLedgerUtils";
 import Loading from "../../../common/Loading/Loading";
@@ -950,9 +947,10 @@ const ListPaymentReceived = () => {
         groupedByCompanySauda[groupKey].rows.push({ row, rowData });
       });
 
-    let rowIdx = 0;
     const tableData = [];
     const saudaTotals = {};
+    let ledgerDebitTotal = 0;
+    let ledgerCreditTotal = 0;
 
     Object.values(groupedByCompanySauda).forEach(
       ({ buyerCompany, supplierCompany, saudaKey, rows: group }) => {
@@ -966,8 +964,8 @@ const ListPaymentReceived = () => {
 
         tableData.push([
           {
-            content: `BUYER: ${buyerCompany} | SELLER: ${supplierCompany} | SAUDA NO: ${saudaKey}`,
-            colSpan: 15,
+            content: `BUYER: ${buyerCompany} | SAUDA NO: ${saudaKey}`,
+            colSpan: 5,
             styles: {
               fillColor: [200, 200, 200],
               fontStyle: "bold",
@@ -977,7 +975,6 @@ const ListPaymentReceived = () => {
         ]);
 
         group.forEach(({ row, rowData }) => {
-          rowIdx++;
 
           const credit = Number(row.credit) || 0;
           const isEntryRow = row.raw?.uiType === "entry";
@@ -990,11 +987,8 @@ const ListPaymentReceived = () => {
           let cd = rowData.cdAmount || 0;
           let bankCharges = rowData.bankCharges || 0;
           let balance = Number(row.balance || 0);
-          const entryPaidAmount = Number(
-            rowData.paidAmount || row.raw?.paidAmount || 0,
-          );
           const displayCredit = isEntryRow
-            ? Math.max(credit, entryPaidAmount)
+            ? 0
             : Math.max(credit, Number(rowData.paidAmount) || 0);
 
           if (isEntryRow) {
@@ -1019,98 +1013,71 @@ const ListPaymentReceived = () => {
             ? (Number(row.raw?.unloadingWeight) || 0) *
               (Number(row.raw?.actualRate || row.raw?.rate) || 0)
             : Number(row.debit) || 0;
-          saudaDebitTotal += unloadingDebit;
+          saudaDebitTotal += unloadingDebit + gst - claims - cd - bankCharges;
           saudaCreditTotal += displayCredit;
           saudaPaidTotal += rowData.paidAmount;
 
           const formattedCredit = Number(displayCredit.toFixed(2));
-          const formattedDebit = Number(unloadingDebit.toFixed(2));
-          const formattedGst = Number(gst.toFixed(2));
-          const formattedClaims = Number(claims.toFixed(2));
-          const formattedCd = Number(cd.toFixed(2));
-          const formattedBankCharges = Number(bankCharges.toFixed(2));
+          const formattedDebit = Number(
+            Math.max(0, unloadingDebit + gst - claims - cd - bankCharges).toFixed(2),
+          );
+          ledgerDebitTotal += formattedDebit;
+          ledgerCreditTotal += formattedCredit;
+          const entryDate = isEntryRow
+            ? row.raw?.loadingDate || row.raw?.unloadingDate || row.date
+            : row.date;
+          const adjustmentParts = [
+            gst > 0 ? `GST +${gst.toFixed(2)}` : "",
+            cd > 0 ? `CD -${cd.toFixed(2)}` : "",
+            claims > 0 ? `CLAIM -${claims.toFixed(2)}` : "",
+            bankCharges > 0 ? `BANK CHARGES -${bankCharges.toFixed(2)}` : "",
+          ].filter(Boolean);
+          const particulars = [
+            `BUYER: ${(row.buyerCompany || buyerCompany || "-").toUpperCase()}`,
+            rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
+            rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : "",
+            rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
+            isEntryRow ? "BILL ENTRY" : `PAYMENT${row.raw?.paymentType ? ` (${row.raw.paymentType})` : ""}`,
+            adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
+            !isEntryRow && rowData.remarks !== "-" ? rowData.remarks : "",
+          ]
+            .filter(Boolean)
+            .join(" | ");
 
-          const rowBreakdown = isEntryRow
-            ? buildEntryBreakdown(row.raw)
-            : buildPaymentAllocationBreakdown(row.raw);
-          const breakdownText = row.raw?.isRejected
+          const statusText = row.raw?.isRejected
             ? "REJECTED"
-            : Number(
-                  row.raw?.unloadingWeight || row.raw?.loadingWeight || 0,
-                ) === 0
+            : Number(row.raw?.unloadingWeight || row.raw?.loadingWeight || 0) === 0
               ? "UNLOADING 0"
-              : formatBreakdownText(rowBreakdown) || rowData.remarks || "-";
+              : "";
 
           tableData.push([
-            rowIdx,
-            row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
-            rowData.saudaNo,
-            rowData.lorryNo,
-            rowData.billNo,
-            (row.buyerCompany || "-").toUpperCase(),
-            (row.supplierCompany || "-").toUpperCase(),
-            `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            formattedGst > 0
-              ? `Rs. ${formattedGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            entryDate ? new Date(entryDate).toLocaleDateString("en-GB") : "-",
+            `${particulars}${statusText ? ` | ${statusText}` : ""}`,
+            formattedDebit > 0
+              ? `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            `Rs. ${formattedClaims.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            `Rs. ${formattedCd.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            `Rs. ${formattedBankCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            formattedCredit > 0
+              ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "",
             balance !== 0
               ? `Rs. ${balance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "",
-            breakdownText,
           ]);
-
-          const validClaims = rowData.qualityClaims.filter(
-            (c) => Number(c.claimAmount) > 0,
-          );
-          if (validClaims.length > 0) {
-            validClaims.forEach((claim) => {
-              tableData.push([
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-              ]);
-            });
-          }
         });
 
-        const saudaBalance = Number(
-          group
-            .reduce((sum, { row }) => sum + Number(row.debit || 0), 0)
-            .toFixed(2),
-        );
+        const saudaBalance = Number(saudaDebitTotal.toFixed(2));
         tableData.push([
           {
             content: `TOTAL FOR SAUDA ${saudaKey}`,
-            colSpan: 7,
+            colSpan: 2,
             styles: {
               fontStyle: "bold",
               halign: "right",
             },
           },
-          `Rs. ${Number(saudaDebitTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${Number(saudaGstTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs. ${saudaDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           `Rs. ${Number(saudaCreditTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${Number(saudaQualityClaimsTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${Number(saudaCdTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          `Rs. ${Number(saudaBankChargesTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           `Rs. ${saudaBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          "",
         ]);
 
         saudaTotals[`${buyerCompany}::${supplierCompany}::${saudaKey}`] = {
@@ -1124,7 +1091,7 @@ const ListPaymentReceived = () => {
       tableData.push([
         {
           content: "No records found",
-          colSpan: 15,
+          colSpan: 5,
           styles: {
             halign: "center",
             fontStyle: "bold",
@@ -1137,21 +1104,11 @@ const ListPaymentReceived = () => {
       startY: currentY,
       head: [
         [
-          "NO",
           "DATE",
-          "SAUDA NO",
-          "LORRY NO",
-          "BILL NO",
-          "BUYER",
-          "SELLER",
-          "DEBIT AMOUNT (Rs.)",
-          "GST (Rs.)",
-          "CREDIT (Rs.)",
-          "CLAIMS (Rs.)",
-          "CD (Rs.)",
-          "BANK CHGS (Rs.)",
-          "BALANCE (Rs.)",
-          "BILL / CLAIM BREAKDOWN",
+          "PARTICULARS",
+          "DEBIT (Dr.)",
+          "CREDIT (Cr.)",
+          "BALANCE",
         ],
       ],
       body: tableData,
@@ -1177,21 +1134,11 @@ const ListPaymentReceived = () => {
         fillColor: [245, 245, 245],
       },
       columnStyles: {
-        0: { halign: "center", cellWidth: 7 },
-        1: { halign: "center", cellWidth: 16 },
-        2: { halign: "center", cellWidth: 16 },
-        3: { halign: "center", cellWidth: 16 },
-        4: { halign: "center", cellWidth: 16 },
-        5: { cellWidth: 22 },
-        6: { cellWidth: 22 },
-        7: { halign: "right", cellWidth: 18 },
-        8: { halign: "right", cellWidth: 18 },
-        9: { halign: "right", cellWidth: 18 },
-        10: { halign: "right", cellWidth: 18 },
-        11: { halign: "right", cellWidth: 18 },
-        12: { halign: "right", cellWidth: 18 },
-        13: { halign: "right", fontStyle: "bold", cellWidth: 20 },
-        14: { cellWidth: 55, overflow: "linebreak", halign: "left" },
+        0: { halign: "center", cellWidth: 22 },
+        1: { cellWidth: 115, overflow: "linebreak", halign: "left" },
+        2: { halign: "right", cellWidth: 28 },
+        3: { halign: "right", cellWidth: 28 },
+        4: { halign: "right", fontStyle: "bold", cellWidth: 28 },
       },
       margin: { left: 7, right: 7, top: 7, bottom: 15 },
       tableWidth: "wrap",
@@ -1219,16 +1166,13 @@ const ListPaymentReceived = () => {
     let grandTotalGst = 0;
     let grandTotalQualityClaims = 0;
     let grandTotalBankCharges = 0;
-    let totalGross = 0;
-    let totalCredit = 0;
+    let totalGross = ledgerDebitTotal;
+    let totalCredit = ledgerCreditTotal;
 
     reportRows.forEach((row) => {
       if (!row.isOpening) {
-        totalCredit += row.credit || 0;
-
         if (row.raw?.uiType === "entry") {
           const grossAmount = row.grossAmount || 0;
-          totalGross += grossAmount;
 
           const rowData = extractRowData(row);
           grandTotalCd += row.cdAmount || 0;
@@ -1243,7 +1187,9 @@ const ListPaymentReceived = () => {
 
     const totalGrossNum = Number(totalGross.toFixed(2));
     const totalCreditNum = Number(totalCredit.toFixed(2));
-    const difference = Number((totalGrossNum - totalCreditNum).toFixed(2));
+    const difference = Number(
+      (Number(openingBalance || 0) + totalGrossNum - totalCreditNum).toFixed(2),
+    );
 
     const finalY = doc.lastAutoTable?.finalY || 70;
     doc.addPage();
@@ -1305,7 +1251,7 @@ const ListPaymentReceived = () => {
 
     const formattedTotalGross = Number(totalGross.toFixed(2));
     doc.text(
-      "TOTAL DUE",
+      "TOTAL DEBIT",
       margin + (pageWidth - 2 * margin) / 14,
       summaryY + 8.5,
       { align: "center" },
