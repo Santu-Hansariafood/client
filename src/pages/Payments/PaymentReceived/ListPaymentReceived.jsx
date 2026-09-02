@@ -1026,6 +1026,10 @@ const ListPaymentReceived = () => {
           const entryDate = isEntryRow
             ? row.raw?.loadingDate || row.raw?.unloadingDate || row.date
             : row.date;
+          const formatReportDate = (date) =>
+            date ? new Date(date).toLocaleDateString("en-GB") : "-";
+          const loadingDate = isEntryRow ? row.raw?.loadingDate : null;
+          const unloadingDate = isEntryRow ? row.raw?.unloadingDate : null;
           const mappedLorries = !isEntryRow
             ? (row.raw?.mappings || [])
                 .map((mapping) => {
@@ -1048,6 +1052,9 @@ const ListPaymentReceived = () => {
             rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
             mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
             !mappedLorries && rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
+            isEntryRow
+              ? `LOAD DATE: ${formatReportDate(loadingDate)} | UNLOAD DATE: ${formatReportDate(unloadingDate)}`
+              : "",
             isEntryRow ? "BILL ENTRY" : `PAYMENT${row.raw?.paymentType ? ` (${row.raw.paymentType})` : ""}`,
             adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
             !isEntryRow && rowData.remarks !== "-" ? rowData.remarks : "",
@@ -1167,6 +1174,23 @@ const ListPaymentReceived = () => {
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
+      },
+      didParseCell: (data) => {
+        if (data.section !== "body") return;
+        if (data.column.index === 2) {
+          data.cell.styles.fillColor = [239, 246, 255];
+          data.cell.styles.textColor = [30, 64, 175];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (data.column.index === 3) {
+          data.cell.styles.fillColor = [236, 253, 245];
+          data.cell.styles.textColor = [4, 120, 87];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (String(data.row.raw?.content || "").startsWith("DIFFERENCE FOR SAUDA")) {
+          data.cell.styles.fillColor = [254, 249, 195];
+          data.cell.styles.fontStyle = "bold";
+        }
       },
       columnStyles: {
         0: { halign: "center", cellWidth: 22 },
