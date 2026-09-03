@@ -39,7 +39,6 @@ const AIAgent = () => {
 
   const { trackInteraction, getDynamicSuggestions, checkSafety } = useAIAgentLearning();
 
-  // API Hook
   const apiMethods = useAIAgentAPI(
     setIsLoadingData,
     setThinkingPath,
@@ -48,7 +47,6 @@ const AIAgent = () => {
       getDynamicSuggestions(contextSuggestions, responseText, currentPath, pageHistory)
   );
 
-  // Commands Hook
   const { handleSend } = useAIAgentCommands({
     input,
     setInput,

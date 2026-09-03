@@ -13,13 +13,12 @@ export const useAIAgentCore = (userName) => {
   const abortControllerRef = useRef(null);
   const scrollRef = useRef(null);
 
-  // Track page history
   useEffect(() => {
     const currentPath = location.pathname;
     setPageHistory((prev) => {
       const newHistory = prev.filter((p) => p.path !== currentPath);
       newHistory.unshift({ path: currentPath, timestamp: Date.now() });
-      return newHistory.slice(0, 10); // Keep last 10 pages
+      return newHistory.slice(0, 10);
     });
   }, [location.pathname]);
 

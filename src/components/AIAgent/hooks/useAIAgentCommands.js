@@ -477,7 +477,7 @@ export const useAIAgentCommands = ({
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
 
     const dateMatch =
-      cleanCmd.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/) ||
+      cleanCmd.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/) ||
       cleanCmd.match(
         /(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{0,4})/i,
       );

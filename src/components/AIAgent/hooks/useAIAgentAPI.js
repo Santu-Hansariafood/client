@@ -675,7 +675,7 @@ export const useAIAgentAPI = (
         const cleanStr = str.toLowerCase().trim();
 
         if (cleanStr.includes("/") || cleanStr.includes("-")) {
-          const parts = cleanStr.split(/[\/-]/);
+          const parts = cleanStr.split(/[/-]/);
           let d = parts[0],
             m = parts[1],
             y = parts[2] || new Date().getFullYear();

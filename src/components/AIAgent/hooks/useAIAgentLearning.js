@@ -19,28 +19,24 @@ export const useAIAgentLearning = () => {
           intentPatterns: {},
           entityMemory: { saudaNo: null, partner: null, commodity: null, lorryNo: null, companyName: null },
           workflowScores: { sauda: 0, loading: 0, payment: 0, bid: 0, company: 0 },
-          userFeedback: [], // New field for user feedback on responses
-          customIntents: [], // New field for user-trained intents
+          userFeedback: [],
+          customIntents: [],
         };
   });
 
-  // Ref to hold latest learningData for debounced save
   const latestLearningDataRef = useRef(learningData);
   useEffect(() => {
     latestLearningDataRef.current = learningData;
   }, [learningData]);
 
-  // Debounced save to localStorage
   const debouncedSaveToLocalStorage = useRef(
     debounce(() => {
       localStorage.setItem("saria_ai_learning_v3", JSON.stringify(latestLearningDataRef.current));
     }, 500)
   ).current;
 
-  // Save to localStorage whenever learningData changes (debounced)
   useEffect(() => {
     debouncedSaveToLocalStorage();
-    // Cleanup debounce on unmount
     return () => {
       debouncedSaveToLocalStorage.cancel?.();
     };
@@ -101,7 +97,6 @@ export const useAIAgentLearning = () => {
     return HARMFUL_CONTENT_LIST.some(harm => lowerText.includes(harm));
   }, []);
 
-  // New function: Extract entities from query
   const extractEntities = useCallback((query) => {
     const lowerQuery = query.toLowerCase();
     const entities = {
@@ -111,11 +106,9 @@ export const useAIAgentLearning = () => {
       companyName: null,
     };
 
-    // Extract sauda numbers (3-5 digits)
     const saudaMatch = query.match(/\b(\d{3,5})\b/);
     if (saudaMatch) entities.saudaNo = saudaMatch[1];
 
-    // Extract lorry numbers (basic pattern like HR26AB1234)
     const lorryMatch = query.match(/\b([A-Z]{2}\s?\d{1,2}\s?[A-Z]{1,2}\s?\d{3,4})\b/i);
     if (lorryMatch) entities.lorryNo = lorryMatch[1].toUpperCase();
 
@@ -132,7 +125,7 @@ export const useAIAgentLearning = () => {
       const newRecent = [
         text,
         ...prev.recentQueries.filter((q) => q !== text),
-      ].slice(0, 15); // Increased to 15
+      ].slice(0, 15);
 
       const newEntityMemory = { ...prev.entityMemory };
       if (entities.saudaNo) newEntityMemory.saudaNo = entities.saudaNo;
@@ -179,7 +172,6 @@ export const useAIAgentLearning = () => {
     });
   }, [extractEntities]);
 
-  // New function: Record user feedback
   const recordFeedback = useCallback((query, response, isHelpful, correction = "") => {
     setLearningData((prev) => {
       const newFeedback = [
@@ -191,7 +183,7 @@ export const useAIAgentLearning = () => {
           timestamp: new Date().toISOString(),
         },
         ...prev.userFeedback,
-      ].slice(0, 100); // Keep last 100 feedbacks
+      ].slice(0, 100);
 
       const newState = {
         ...prev,
@@ -202,7 +194,6 @@ export const useAIAgentLearning = () => {
     });
   }, []);
 
-  // New function: Train custom intent
   const trainCustomIntent = useCallback((query, expectedAction) => {
     setLearningData((prev) => {
       const newCustomIntents = [
@@ -223,7 +214,6 @@ export const useAIAgentLearning = () => {
     });
   }, []);
 
-  // New function: Clear all learning data
   const clearLearningData = useCallback(() => {
     setLearningData({
       recentQueries: [],
@@ -247,7 +237,6 @@ export const useAIAgentLearning = () => {
     const { entityMemory, workflowScores, intentPatterns, recentQueries } =
       learningData;
 
-    // Add context-aware suggestions based on current page
     if (currentPath) {
       const pageSuggestions = getPageSpecificSuggestions(currentPath);
       pageSuggestions.forEach(s => {
@@ -255,7 +244,6 @@ export const useAIAgentLearning = () => {
       });
     }
 
-    // Add page history suggestions (recent pages)
     if (pageHistory && pageHistory.length > 0) {
       const recentPageLinks = pageHistory.slice(1, 4).map(page => {
         const action = findActionByPath(page.path);
@@ -357,7 +345,6 @@ export const useAIAgentLearning = () => {
       }
     });
 
-    // Also add suggestions from custom intents if applicable
     if (learningData.customIntents.length > 0) {
       learningData.customIntents.slice(0, 2).forEach(intent => {
         if (!suggestions.includes(intent.expectedAction)) {
@@ -369,18 +356,15 @@ export const useAIAgentLearning = () => {
     return [...new Set(suggestions)].slice(0, 5);
   }, [learningData]);
 
-  // Helper function to get page-specific suggestions
   const getPageSpecificSuggestions = (path) => {
     const suggestions = [];
     
-    // Dashboard
     if (path.includes("/dashboard")) {
       suggestions.push("Show recent saudas");
       suggestions.push("Check loading entries");
       suggestions.push("View payment status");
     }
     
-    // Loading Entry pages
     if (path.includes("/Loading-Entry/")) {
       if (path.includes("add")) {
         suggestions.push("View recent loadings");
@@ -390,7 +374,6 @@ export const useAIAgentLearning = () => {
       suggestions.push("Check pending saudas");
     }
     
-    // Payments pages
     if (path.includes("/payments/")) {
       if (path.includes("received")) {
         suggestions.push("View payment ledger");
@@ -398,7 +381,6 @@ export const useAIAgentLearning = () => {
       suggestions.push("Check due payments");
     }
     
-    // Buyer/Seller pages
     if (path.includes("/buyer/")) {
       suggestions.push("Add a new buyer");
     }
@@ -409,10 +391,7 @@ export const useAIAgentLearning = () => {
     return suggestions;
   };
 
-  // Helper function to find action by path
   const findActionByPath = (path) => {
-    // Import dashboard data here or pass it in
-    // For now, we'll create a simple mapping
     const pathMap = {
       "/dashboard": { name: "Dashboard" },
       "/buyer/list": { name: "Buyer List" },
