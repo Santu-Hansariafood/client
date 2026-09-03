@@ -1,7 +1,4 @@
-import {
-  formatLedgerAmount,
-  getLedgerRowClaimAmount,
-} from "../utils/paymentLedgerUtils";
+import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 import { useState } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { FaEnvelope, FaFilePdf, FaEdit, FaTrash } from "react-icons/fa";
@@ -134,32 +131,8 @@ const TallyLedgerBook = ({
     );
   }
 
-  const renderAmountCells = (r, dispClaim) => (
+  const renderAmountCells = (r) => (
     <>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.grossAmount > 0 ? formatLedgerAmount(r.grossAmount) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.gstAmount > 0 ? formatLedgerAmount(r.gstAmount) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {dispClaim > 0 ? formatLedgerAmount(dispClaim) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.cdAmount > 0 ? formatLedgerAmount(r.cdAmount) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.bankCharges > 0 ? formatLedgerAmount(r.bankCharges) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.secondClaim > 0 ? formatLedgerAmount(r.secondClaim) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.otherCharges > 0 ? formatLedgerAmount(r.otherCharges) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-slate-900 border-r border-slate-200 tabular-nums">
-        {r.tds > 0 ? formatLedgerAmount(r.tds) : ""}
-      </td>
       <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
         {r.credit > 0 ? formatLedgerAmount(r.credit) : ""}
       </td>
@@ -256,14 +229,14 @@ const TallyLedgerBook = ({
     </>
   );
 
-  const renderEmptyAmountCells = (count = 10) =>
+  const renderEmptyAmountCells = (count = 2) =>
     Array.from({ length: count }).map((_, i) => (
       <td key={`e-${i}`} className="px-3 py-1 border-r border-slate-200"></td>
     ));
 
   return (
     <div className="overflow-x-auto border border-slate-300 bg-[#fffef8] shadow-inner">
-      <table className="w-full min-w-[1700px] border-collapse text-left">
+      <table className="w-full min-w-[1250px] border-collapse text-left">
         <thead>
           <tr className="bg-[#1e3a5f] text-white">
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px]">
@@ -287,27 +260,6 @@ const TallyLedgerBook = ({
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
               Due Amount
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              GST
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Claims
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              CD
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Bank Charges
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              2nd Claim
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Other Charges
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              TDS
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
               Credit
@@ -334,7 +286,6 @@ const TallyLedgerBook = ({
         </thead>
         <tbody>
           {rows.map((row, idx) => {
-            const displayedClaimAmount = getLedgerRowClaimAmount(row);
             const breakdown = row.breakdown || [];
             const paymentAllocations = row.paymentAllocations || [];
             const hasBreakdown = breakdown.length > 0;
@@ -362,7 +313,6 @@ const TallyLedgerBook = ({
 
             const subRowBg = idx % 2 === 0 ? "bg-amber-50/20" : "bg-slate-50/30";
             const displayDate = row.unloadingDate || row.date;
-            const companySpacer = showCompanyColumns ? 2 : 0;
 
             return (
               <>
@@ -418,23 +368,12 @@ const TallyLedgerBook = ({
                   <td className="px-3 py-2 text-[9px] font-black text-slate-500 uppercase border-r border-slate-200">
                     {row.vchType}
                   </td>
-                  {renderAmountCells(row, displayedClaimAmount)}
+                  {renderAmountCells(row)}
                   {renderActionCells(row, buyerCompany, sellerCompany)}
                 </tr>
 
                 {hasBreakdown &&
                   breakdown.map((item, bIdx) => {
-                    const catCols = {
-                      gross: { col: 0, cls: "text-slate-800", sign: "" },
-                      gst: { col: 1, cls: "text-pink-700", sign: "+" },
-                      qualityClaim: { col: 2, cls: "text-red-700", sign: "−" },
-                      cd: { col: 3, cls: "text-yellow-700", sign: "−" },
-                      bankCharges: { col: 4, cls: "text-orange-700", sign: "−" },
-                      secondClaim: { col: 5, cls: "text-purple-700", sign: "−" },
-                      otherCharges: { col: 6, cls: "text-teal-700", sign: "−" },
-                      tds: { col: 7, cls: "text-red-800", sign: "−" },
-                    };
-                    const conf = catCols[item.category];
                     return (
                       <tr
                         key={`b-${row.id}-${bIdx}`}
@@ -466,35 +405,16 @@ const TallyLedgerBook = ({
                         <td className="px-3 py-1 border-r border-slate-200 text-[9px] font-bold text-slate-400 uppercase text-right">
                           BRK
                         </td>
-                        {conf ? (
-                          <>
-                            {renderEmptyAmountCells(conf.col)}
-                            <td
-                              className={[
-                                "px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200",
-                                conf.cls,
-                              ].join(" ")}
-                            >
-                              {conf.sign} {formatLedgerAmount(item.amount)}
-                            </td>
-                            {renderEmptyAmountCells(9 - conf.col)}
-                          </>
-                        ) : (
-                          <>
-                            <td
-                              className={[
-                                "px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200",
-                                item.type === "add"
-                                  ? "text-emerald-700"
-                                  : "text-rose-700",
-                              ].join(" ")}
-                              colSpan={10}
-                            >
-                              {item.type === "add" ? "+" : "−"}{" "}
-                              {formatLedgerAmount(item.amount)}
-                            </td>
-                          </>
-                        )}
+                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-rose-700">
+                          {item.type === "deduct"
+                            ? `− ${formatLedgerAmount(item.amount)}`
+                            : ""}
+                        </td>
+                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-emerald-700">
+                          {item.type === "add"
+                            ? `+ ${formatLedgerAmount(item.amount)}`
+                            : ""}
+                        </td>
                         <td className="px-3 py-1"></td>
                         <td className="px-3 py-1"></td>
                         <td className="px-3 py-1"></td>
@@ -539,13 +459,11 @@ const TallyLedgerBook = ({
                       <td className="px-3 py-1 border-r border-slate-200 text-[9px] font-bold text-emerald-500 uppercase text-right">
                         CR
                       </td>
-                      {renderEmptyAmountCells(7)}
+                      {renderEmptyAmountCells(1)}
                       <td className="px-3 py-1 text-right font-black text-emerald-700 border-r border-slate-200 tabular-nums">
                         {formatLedgerAmount(alloc.allocatedAmount)}
                       </td>
                       <td className="px-3 py-1 border-r border-slate-200"></td>
-                      <td className="px-3 py-1"></td>
-                      <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
@@ -570,7 +488,7 @@ const TallyLedgerBook = ({
                       </>
                     )}
                     <td className="px-3 py-1 border-r border-slate-200"></td>
-                    {renderEmptyAmountCells(8)}
+                    {renderEmptyAmountCells(1)}
                     <td className="px-3 py-1 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums bg-white/60">
                       = {formatLedgerAmount(row.debit)}
                     </td>

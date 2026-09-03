@@ -44,8 +44,7 @@ const MisVoucherLedger = ({
                 Tally Payment Voucher Register
               </h4>
               <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">
-                Gross Amount · GST · Claims · CD · Bank Charges · Credit ·
-                Balance
+                Due Amount · Credit · Balance
               </p>
             </div>
           </div>
