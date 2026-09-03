@@ -1134,7 +1134,7 @@ const ListPaymentReceived = () => {
             ? `Rs. ${saudaDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
             : saudaDifference < 0
               ? `Rs. ${Math.abs(saudaDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
-              : "NIL";
+              : "Rs. 0.00";
         tableData.push([
           {
             content: `DIFFERENCE FOR SAUDA ${saudaKey}`,
@@ -1259,28 +1259,8 @@ const ListPaymentReceived = () => {
       },
     });
 
-    let grandTotalCd = 0;
-    let grandTotalGst = 0;
-    let grandTotalQualityClaims = 0;
-    let grandTotalBankCharges = 0;
     let totalGross = ledgerDebitTotal;
     let totalCredit = ledgerCreditTotal;
-
-    reportRows.forEach((row) => {
-      if (!row.isOpening) {
-        if (row.raw?.uiType === "entry") {
-          const grossAmount = row.grossAmount || 0;
-
-          const rowData = extractRowData(row);
-          grandTotalCd += row.cdAmount || 0;
-          grandTotalGst += row.gstAmount || 0;
-          grandTotalQualityClaims +=
-            row.totalClaims ||
-            rowData.totalQualityClaims + rowData.paymentClaimAmount;
-          grandTotalBankCharges += row.bankCharges || 0;
-        }
-      }
-    });
 
     const totalGrossNum = Number(totalGross.toFixed(2));
     const totalCreditNum = Number(totalCredit.toFixed(2));
@@ -1305,39 +1285,15 @@ const ListPaymentReceived = () => {
     doc.setDrawColor(226, 232, 240);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
     doc.line(
-      margin + (pageWidth - 2 * margin) / 7,
+      margin + (pageWidth - 2 * margin) / 3,
       summaryY,
-      margin + (pageWidth - 2 * margin) / 7,
+      margin + (pageWidth - 2 * margin) / 3,
       summaryY + boxHeight,
     );
     doc.line(
-      margin + (2 * (pageWidth - 2 * margin)) / 7,
+      margin + (2 * (pageWidth - 2 * margin)) / 3,
       summaryY,
-      margin + (2 * (pageWidth - 2 * margin)) / 7,
-      summaryY + boxHeight,
-    );
-    doc.line(
-      margin + (3 * (pageWidth - 2 * margin)) / 7,
-      summaryY,
-      margin + (3 * (pageWidth - 2 * margin)) / 7,
-      summaryY + boxHeight,
-    );
-    doc.line(
-      margin + (4 * (pageWidth - 2 * margin)) / 7,
-      summaryY,
-      margin + (4 * (pageWidth - 2 * margin)) / 7,
-      summaryY + boxHeight,
-    );
-    doc.line(
-      margin + (5 * (pageWidth - 2 * margin)) / 7,
-      summaryY,
-      margin + (5 * (pageWidth - 2 * margin)) / 7,
-      summaryY + boxHeight,
-    );
-    doc.line(
-      margin + (6 * (pageWidth - 2 * margin)) / 7,
-      summaryY,
-      margin + (6 * (pageWidth - 2 * margin)) / 7,
+      margin + (2 * (pageWidth - 2 * margin)) / 3,
       summaryY + boxHeight,
     );
     doc.line(
@@ -1354,7 +1310,7 @@ const ListPaymentReceived = () => {
     const formattedTotalGross = Number(totalGross.toFixed(2));
     doc.text(
       "TOTAL DEBIT",
-      margin + (pageWidth - 2 * margin) / 14,
+      margin + (pageWidth - 2 * margin) / 6,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1364,7 +1320,7 @@ const ListPaymentReceived = () => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
-      margin + (pageWidth - 2 * margin) / 14,
+      margin + (pageWidth - 2 * margin) / 6,
       summaryY + 19,
       { align: "center" },
     );
@@ -1373,7 +1329,7 @@ const ListPaymentReceived = () => {
     const formattedTotalCredit = Number(totalCredit.toFixed(2));
     doc.text(
       "TOTAL CREDIT",
-      margin + (3 * (pageWidth - 2 * margin)) / 14,
+      margin + (pageWidth - 2 * margin) / 2,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1383,83 +1339,7 @@ const ListPaymentReceived = () => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
-      margin + (3 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 19,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "bold");
-
-    const formattedTotalCd = Number(grandTotalCd.toFixed(2));
-    doc.text(
-      "TOTAL CD",
-      margin + (5 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 8.5,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      formattedTotalCd.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      margin + (5 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 19,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "bold");
-
-    const formattedTotalGst = Number(grandTotalGst.toFixed(2));
-    doc.text(
-      "TOTAL GST",
-      margin + (7 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 8.5,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      formattedTotalGst.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      margin + (7 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 19,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "bold");
-
-    const formattedTotalClaims = Number(grandTotalQualityClaims.toFixed(2));
-    doc.text(
-      "TOTAL CLAIMS",
-      margin + (9 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 8.5,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      formattedTotalClaims.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      margin + (9 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 19,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "bold");
-
-    const formattedTotalBankCharges = Number(grandTotalBankCharges.toFixed(2));
-    doc.text(
-      "TOTAL BANK CHGS",
-      margin + (11 * (pageWidth - 2 * margin)) / 14,
-      summaryY + 8.5,
-      { align: "center" },
-    );
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      formattedTotalBankCharges.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      margin + (11 * (pageWidth - 2 * margin)) / 14,
+      margin + (pageWidth - 2 * margin) / 2,
       summaryY + 19,
       { align: "center" },
     );
@@ -1469,15 +1349,15 @@ const ListPaymentReceived = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFillColor(26, 58, 95);
     doc.rect(
-      margin + (6 * (pageWidth - 2 * margin)) / 7,
+      margin + (2 * (pageWidth - 2 * margin)) / 3,
       summaryY,
-      (pageWidth - 2 * margin) / 7,
+      (pageWidth - 2 * margin) / 3,
       boxHeight,
       "F",
     );
     doc.text(
       "DIFFERENCE",
-      margin + (13 * (pageWidth - 2 * margin)) / 14,
+      margin + (5 * (pageWidth - 2 * margin)) / 6,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1487,10 +1367,10 @@ const ListPaymentReceived = () => {
         ? `${formattedDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
         : formattedDifference < 0
           ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
-          : "NIL";
+          : "Rs. 0.00";
     doc.text(
       differenceText,
-      margin + (13 * (pageWidth - 2 * margin)) / 14,
+      margin + (5 * (pageWidth - 2 * margin)) / 6,
       summaryY + 18,
       { align: "center" },
     );
@@ -1604,7 +1484,11 @@ const ListPaymentReceived = () => {
     doc.setFont("helvetica", "normal");
     const formulaLine1 = `Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Debit) - Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Credit)`;
     const formulaLine2 = "Difference is calculated by adding every Sauda difference";
-    const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? "Dr" : difference < 0 ? "Cr" : "NIL"})`;
+    const formulaDifference = Math.abs(difference).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const formulaLine3 = ` = Rs. ${formulaDifference} (${difference > 0 ? "Dr" : difference < 0 ? "Cr" : "0"})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
     doc.text(formulaLine2, margin + 10, finalSectionY + 25);
     doc.text(formulaLine3, margin + 10, finalSectionY + 35);
