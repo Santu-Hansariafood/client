@@ -353,8 +353,8 @@ export const buildTallyVoucherRows = (
   sorted.forEach((item) => {
     if (item.uiType === "entry") {
       if (item.isRejected) {
-        const particulars = `Rejected: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
-        const vchType = "Rejected";
+        const particulars = `Bill: ${item.saudaNo} | Lorry: ${item.lorryNumber}${item.billNumber ? ` | Inv: ${item.billNumber}` : ""}`;
+        const vchType = "Bill";
         const buyerCompany = item.buyerCompany || "";
         const supplierCompany = item.supplierCompany || "";
         const date = item.unloadingDate || item.loadingDate;

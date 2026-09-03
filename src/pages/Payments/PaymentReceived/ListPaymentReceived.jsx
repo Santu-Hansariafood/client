@@ -1087,9 +1087,8 @@ const ListPaymentReceived = () => {
             .filter(Boolean)
             .join(" | ");
 
-          const statusText = row.raw?.isRejected
-            ? "REJECTED"
-            : Number(row.raw?.unloadingWeight || row.raw?.loadingWeight || 0) === 0
+          const statusText =
+            Number(row.raw?.unloadingWeight || row.raw?.loadingWeight || 0) === 0
               ? "UNLOADING 0"
               : "";
 
