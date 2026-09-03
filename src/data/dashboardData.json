@@ -347,13 +347,31 @@
           "name": "Buyer Report",
           "link": "/reports/buyer",
           "icon": "FaPlus",
-          "roles": ["Admin"]
+          "roles": ["Admin", "Employee"]
         },
         {
           "name": "Seller Report",
           "link": "/reports/seller",
           "icon": "FaList",
-          "roles": ["Admin"]
+          "roles": ["Admin", "Employee"]
+        }
+      ]
+    },
+    {
+      "section": "Finance",
+      "icon": "FaUniversity",
+      "actions": [
+        {
+          "name": "Add Financer",
+          "link": "/finance/add",
+          "icon": "FaUserTie",
+          "roles": ["Admin", "Employee"]
+        },
+        {
+          "name": "Finance Report",
+          "link": "/finance/report",
+          "icon": "FaFileInvoiceDollar",
+          "roles": ["Admin", "Employee"]
         }
       ]
     },
