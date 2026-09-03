@@ -955,6 +955,7 @@ const ListPaymentReceived = () => {
     const saudaTotals = {};
     let ledgerDebitTotal = 0;
     let ledgerCreditTotal = 0;
+    let totalSaudaDifference = 0;
 
     Object.values(groupedByCompanySauda).forEach(
       ({ buyerCompany, supplierCompany, saudaKey, rows: group }) => {
@@ -969,7 +970,7 @@ const ListPaymentReceived = () => {
         tableData.push([
           {
             content: `BUYER: ${buyerCompany} | SAUDA NO: ${saudaKey}`,
-            colSpan: 5,
+            colSpan: 6,
             styles: {
               fillColor: [200, 200, 200],
               fontStyle: "bold",
@@ -1127,6 +1128,7 @@ const ListPaymentReceived = () => {
         const saudaDifference = Number(
           (saudaDebitTotal - saudaCreditTotal).toFixed(2),
         );
+        totalSaudaDifference += saudaDifference;
         const saudaDifferenceText =
           saudaDifference > 0
             ? `Rs. ${saudaDifference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Dr`
@@ -1226,8 +1228,17 @@ const ListPaymentReceived = () => {
         4: { halign: "right", cellWidth: 38 },
         5: { halign: "right", fontStyle: "bold", cellWidth: 38 },
       },
-      margin: { left: 8, right: 8, top: 7, bottom: 15 },
+      margin: { left: 8, right: 8, top: 14, bottom: 15 },
       tableWidth: "wrap",
+      willDrawPage: () => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(26, 58, 95);
+        doc.text("HANSARIA FOOD PRIVATE LIMITED | PARTY LEDGER", margin, 7);
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(0.2);
+        doc.line(margin, 10, pageWidth - margin, 10);
+      },
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
 
@@ -1273,12 +1284,17 @@ const ListPaymentReceived = () => {
 
     const totalGrossNum = Number(totalGross.toFixed(2));
     const totalCreditNum = Number(totalCredit.toFixed(2));
-    const difference = Number(
-      (Number(openingBalance || 0) + totalGrossNum - totalCreditNum).toFixed(2),
-    );
+    const difference = Number(totalSaudaDifference.toFixed(2));
 
     const finalY = doc.lastAutoTable?.finalY || 70;
     doc.addPage();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(26, 58, 95);
+    doc.text("HANSARIA FOOD PRIVATE LIMITED | PARTY LEDGER", margin, 7);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.2);
+    doc.line(margin, 10, pageWidth - margin, 10);
     let summaryY = 12;
 
     const boxHeight = 26;
@@ -1579,15 +1595,15 @@ const ListPaymentReceived = () => {
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(
-      "OPENING BALANCE + TOTAL DEBIT - TOTAL CREDIT = DIFFERENCE",
+      "TOTAL OF ALL SAUDA DIFFERENCES",
       margin + 10,
       finalSectionY + 5,
     );
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    const formulaLine1 = `Rs. ${Number(openingBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Opening) + Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Debit)`;
-    const formulaLine2 = ` - Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Credit)`;
+    const formulaLine1 = `Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Debit) - Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Credit)`;
+    const formulaLine2 = "Difference is calculated by adding every Sauda difference";
     const formulaLine3 = ` = Rs. ${difference.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${difference > 0 ? "Dr" : difference < 0 ? "Cr" : "NIL"})`;
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
     doc.text(formulaLine2, margin + 10, finalSectionY + 25);
