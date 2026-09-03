@@ -779,6 +779,7 @@ const ListPaymentReceived = () => {
       );
 
       return {
+        grossAmount,
         netAmount,
         dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)),
         cdAmount,
@@ -977,7 +978,16 @@ const ListPaymentReceived = () => {
           },
         ]);
 
-        group.forEach(({ row, rowData }) => {
+        group
+          .sort((a, b) => {
+            const billA = String(a.rowData.billNo || "");
+            const billB = String(b.rowData.billNo || "");
+            return (
+              billA.localeCompare(billB, undefined, { numeric: true }) ||
+              new Date(a.row.date || 0) - new Date(b.row.date || 0)
+            );
+          })
+          .forEach(({ row, rowData }) => {
 
           const credit = Number(row.credit) || 0;
           const isEntryRow = row.raw?.uiType === "entry";
@@ -1012,9 +1022,12 @@ const ListPaymentReceived = () => {
             saudaBankChargesTotal += bankCharges;
           }
 
-          const grossDebit = isEntryRow
-            ? (Number(row.raw?.unloadingWeight) || 0) *
-              (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+          const grossAmount = isEntryRow
+            ? (Number(row.raw?.unloadingWeight) || 0) > 0
+              ? (Number(row.raw?.unloadingWeight) || 0) *
+                (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+              : (Number(row.raw?.loadingWeight) || 0) *
+                (Number(row.raw?.actualRate || row.raw?.rate) || 0)
             : Math.max(0, Number(row.debit) || 0);
           const deductionTotal =
             claims +
@@ -1024,8 +1037,8 @@ const ListPaymentReceived = () => {
             (Number(rowData.otherCharges) || 0) +
             (Number(rowData.paymentTdsAmount) || 0);
           const rowDebit = isEntryRow
-            ? Math.max(0, grossDebit - deductionTotal)
-            : grossDebit;
+            ? Math.max(0, grossAmount - deductionTotal)
+            : grossAmount;
           const rowCredit = isEntryRow ? Math.max(0, Number(gst) || 0) : displayCredit;
           saudaDebitTotal += rowDebit;
           saudaCreditTotal += rowCredit;
@@ -1046,31 +1059,29 @@ const ListPaymentReceived = () => {
             ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
             : "";
           const adjustmentParts = [
-            gst > 0 ? `GST CREDIT +${gst.toFixed(2)}` : "",
-            cd > 0 ? `CD -${cd.toFixed(2)}` : "",
-            claims > 0 ? `CLAIM -${claims.toFixed(2)}` : "",
-            bankCharges > 0 ? `BANK CHARGES -${bankCharges.toFixed(2)}` : "",
-            rowData.secondClaim > 0
+            gst > 0 ? `GST +${Number(gst).toFixed(2)}` : "",
+            claims > 0 ? `CLAIM -${Number(claims).toFixed(2)}` : "",
+            cd > 0 ? `CD -${Number(cd).toFixed(2)}` : "",
+            bankCharges > 0 ? `BANK -${Number(bankCharges).toFixed(2)}` : "",
+            Number(rowData.secondClaim) > 0
               ? `2ND CLAIM -${Number(rowData.secondClaim).toFixed(2)}`
               : "",
-            rowData.otherCharges > 0
-              ? `OTHER CHARGES -${Number(rowData.otherCharges).toFixed(2)}`
+            Number(rowData.otherCharges) > 0
+              ? `OTHER -${Number(rowData.otherCharges).toFixed(2)}`
               : "",
-            rowData.paymentTdsAmount > 0
+            Number(rowData.paymentTdsAmount) > 0
               ? `TDS -${Number(rowData.paymentTdsAmount).toFixed(2)}`
               : "",
           ].filter(Boolean);
           const particulars = [
-            `BUYER: ${(row.buyerCompany || buyerCompany || "-").toUpperCase()}`,
             rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
             mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
             !mappedLorries && rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
             isEntryRow
-              ? `LOAD DATE: ${formatReportDate(loadingDate)} | UNLOAD DATE: ${formatReportDate(unloadingDate)}`
+              ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
               : "",
-            isEntryRow ? "BILL ENTRY" : "PAYMENT ENTRY",
-            adjustmentParts.length > 0 ? `DEDUCTIONS: ${adjustmentParts.join(" | ")}` : "",
-            !isEntryRow && rowData.remarks !== "-" ? rowData.remarks : "",
+            isEntryRow ? "BILL" : "PAYMENT",
+            adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
           ]
             .filter(Boolean)
             .join(" | ");
