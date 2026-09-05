@@ -34,6 +34,9 @@ import SudokuGame from "../../../components/SudokuGame/SudokuGame";
 
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
+const formatBidRate = (rate) =>
+  rate === null || rate === undefined ? "Not disclosed" : `₹${rate}`;
+
 const SupplierBidList = () => {
   const navigate = useNavigate();
   const { mobile: authMobile } = useAuth();
@@ -550,7 +553,7 @@ const SupplierBidList = () => {
                   Rate
                 </p>
                 <p className="text-sm sm:text-base font-bold text-slate-700">
-                  ₹{bid.rate}
+                  {formatBidRate(bid.rate)}
                 </p>
               </div>
             )}
@@ -1044,7 +1047,9 @@ const SupplierBidList = () => {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Bid Rate
                   </p>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">₹{selectedBid.rate}</p>
+                  <p className="text-sm font-bold text-slate-800 mt-0.5">
+                    {formatBidRate(selectedBid.rate)}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">

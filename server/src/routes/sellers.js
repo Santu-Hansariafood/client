@@ -1,5 +1,6 @@
 import { Router } from "express";
 import Seller from "../models/Seller.js";
+import { invalidate } from "../middleware/cache.js";
 
 const router = Router();
 
@@ -127,6 +128,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const seller = await Seller.create(req.body);
+    invalidate("/api/bids");
 
     res.status(201).json(seller);
   } catch (error) {
@@ -145,6 +147,7 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "Seller not found" });
     }
 
+    invalidate("/api/bids");
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -159,6 +162,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Seller not found" });
     }
 
+    invalidate("/api/bids");
     res.json({ message: "Seller deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

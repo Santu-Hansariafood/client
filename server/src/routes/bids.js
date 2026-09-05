@@ -13,6 +13,22 @@ import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const router = Router();
 
+const normalizeGroupName = (value) => String(value || "").trim().toLowerCase();
+
+const hideRatesForSellerGroups = (bids, sellerGroups) => {
+  const hiddenGroups = new Set(
+    (Array.isArray(sellerGroups) ? sellerGroups : [])
+      .map((group) => normalizeGroupName(group?.name || group?.groupName || group))
+      .filter(Boolean),
+  );
+
+  return bids.map((bid) =>
+    hiddenGroups.has(normalizeGroupName(bid.group))
+      ? { ...bid, rate: null }
+      : bid,
+  );
+};
+
 const closeExpiredBids = async () => {
   try {
     const now = new Date();
@@ -227,7 +243,9 @@ router.get("/supplier-today", async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const bidIds = bids.map((b) => b._id);
+    const sellerVisibleBids = hideRatesForSellerGroups(bids, seller.groups);
+
+    const bidIds = sellerVisibleBids.map((b) => b._id);
 
     const myParticipations = myParticipationsAll.filter((p) =>
       bidIds.some((bidId) => String(bidId) === String(p.bidId)),
@@ -252,7 +270,7 @@ router.get("/supplier-today", async (req, res) => {
       .lean();
 
     res.json({
-      bids,
+      bids: sellerVisibleBids,
       myParticipations,
       participantCounts,
       bidLocations,
