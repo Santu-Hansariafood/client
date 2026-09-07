@@ -17,6 +17,7 @@ const AddFinancer = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [buyers, setBuyers] = useState([]);
+  const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
   const [financers, setFinancers] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -104,8 +105,33 @@ const AddFinancer = () => {
 
   const handleGroupChange = (group) => {
     setSelectedGroup(group);
+    setSelectedBuyerCompany(null);
     setPage(1);
   };
+
+  const buyerCompanyOptions = useMemo(
+    () =>
+      buyers.flatMap((buyer) =>
+        (buyer.companies || []).map((company) => ({
+          value: `${buyer._id}:${company._id}`,
+          label: `${buyer.name || "Unnamed buyer"} - ${company.companyName || "Unnamed company"}`,
+          buyerId: buyer._id,
+          companyId: company._id,
+        })),
+      ),
+    [buyers],
+  );
+
+  const selectedBuyerCompanyData = useMemo(() => {
+    if (!selectedBuyerCompany) return null;
+    const buyer = buyers.find(
+      (item) => String(item._id) === String(selectedBuyerCompany.buyerId),
+    );
+    const company = buyer?.companies?.find(
+      (item) => String(item._id) === String(selectedBuyerCompany.companyId),
+    );
+    return buyer && company ? { buyer, company } : null;
+  }, [buyers, selectedBuyerCompany]);
 
   const handleFinancerChange = async (buyer, company, checked) => {
     if (!selectedGroup?.value) return;
@@ -178,26 +204,44 @@ const AddFinancer = () => {
     }
   };
 
-  const selectionRows = buyers.flatMap((buyer) =>
-    (buyer.companies || []).map((company) => {
-      const key = getFinancerKey(buyer._id, company._id);
-      const checked = Boolean(company.financerId);
-      return [
-        buyer.name || "-",
-        company.companyName || "-",
-        <label key={key} className="inline-flex items-center gap-2 font-semibold text-emerald-700">
+  const selectionRows = selectedBuyerCompanyData
+    ? [[
+        selectedBuyerCompanyData.buyer.name || "-",
+        selectedBuyerCompanyData.company.companyName || "-",
+        <label
+          key={getFinancerKey(
+            selectedBuyerCompanyData.buyer._id,
+            selectedBuyerCompanyData.company._id,
+          )}
+          className="inline-flex items-center gap-2 font-semibold text-emerald-700"
+        >
           <input
             type="checkbox"
-            checked={checked}
-            disabled={pendingKey === key}
-            onChange={(event) => handleFinancerChange(buyer, company, event.target.checked)}
+            checked={Boolean(selectedBuyerCompanyData.company.financerId)}
+            disabled={
+              pendingKey ===
+              getFinancerKey(
+                selectedBuyerCompanyData.buyer._id,
+                selectedBuyerCompanyData.company._id,
+              )
+            }
+            onChange={(event) =>
+              handleFinancerChange(
+                selectedBuyerCompanyData.buyer,
+                selectedBuyerCompanyData.company,
+                event.target.checked,
+              )
+            }
             className="h-4 w-4 accent-emerald-600"
           />
-          <span>{checked ? "Added" : "Add Financer"}</span>
+          <span>
+            {selectedBuyerCompanyData.company.financerId
+              ? "Added"
+              : "Add Financer"}
+          </span>
         </label>,
-      ];
-    }),
-  );
+      ]]
+    : [];
 
   const financerRows = financers.map((item, index) => [
     (page - 1) * itemsPerPage + index + 1,
@@ -238,14 +282,25 @@ const AddFinancer = () => {
             </div>
 
             {selectedGroup && (
-              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <span className="font-bold text-slate-800">Selected group:</span>{" "}
-                {selectedGroup.label}
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <span className="font-bold text-slate-800">Selected group:</span>{" "}
+                  {selectedGroup.label}
+                </div>
+                <DataDropdown
+                  label="Select Buyer Company"
+                  options={buyerCompanyOptions}
+                  selectedOptions={selectedBuyerCompany}
+                  onChange={setSelectedBuyerCompany}
+                  placeholder={loadingOptions ? "Loading buyer companies..." : "Select a buyer company"}
+                  isDisabled={loadingOptions || buyerCompanyOptions.length === 0}
+                  required
+                />
               </div>
             )}
           </section>
 
-          {selectedGroup && (
+          {selectedGroup && selectedBuyerCompany && (
             <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
               <div className="mb-4 flex items-center gap-2">
                 <FaCheckCircle className="text-emerald-600" />
