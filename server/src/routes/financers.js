@@ -1,7 +1,8 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import Financer from "../models/Financer.js";
-import SellerCompany from "../models/SellerCompany.js";
+import Buyer from "../models/Buyer.js";
+import Company from "../models/Company.js";
 
 const router = Router();
 
@@ -12,7 +13,8 @@ const toObjectId = (value) =>
 
 const populatePaths = [
   { path: "groupId", select: "groupName" },
-  { path: "sellerCompanyId", select: "companyName email mobileNo" },
+  { path: "buyerId", select: "name mobile" },
+  { path: "companyId", select: "companyName companyEmail groupId" },
 ];
 
 router.get("/options", async (req, res) => {
@@ -22,25 +24,50 @@ router.get("/options", async (req, res) => {
       return res.status(400).json({ message: "A valid groupId is required" });
     }
 
-    const sellerCompanies = await SellerCompany.find()
-      .select("companyName email mobileNo")
-      .sort({ companyName: 1, _id: 1 })
+    const groupedCompanies = await Company.find({ groupId })
+      .select("_id")
+      .lean();
+    const groupedCompanyIds = groupedCompanies.map((company) => company._id);
+    const buyers = await Buyer.find({
+      $or: [
+        { groupId },
+        ...(groupedCompanyIds.length
+          ? [{ companyIds: { $in: groupedCompanyIds } }]
+          : []),
+      ],
+    })
+      .select("name mobile groupId companyIds")
+      .populate({ path: "companyIds", select: "companyName companyEmail groupId" })
+      .sort({ name: 1, _id: 1 })
       .lean();
     const savedFinancers = await Financer.find({ groupId })
-      .select("_id sellerCompanyId")
+      .select("_id buyerId companyId")
       .lean();
     const savedByCompany = new Map(
-      savedFinancers.map((item) => [String(item.sellerCompanyId), String(item._id)]),
+      savedFinancers.map((item) => [
+        `${item.buyerId}:${item.companyId}`,
+        String(item._id),
+      ]),
     );
 
     res.json(
-      sellerCompanies.map((company) => ({
-        _id: company._id,
-        companyName: company.companyName,
-        email: company.email || "",
-        mobileNo: company.mobileNo || "",
-        financerId: savedByCompany.get(String(company._id)) || null,
-      })),
+      buyers.flatMap((buyer) =>
+        (buyer.companyIds || [])
+          .filter(
+            (company) =>
+              String(buyer.groupId || "") === String(groupId) ||
+              groupedCompanyIds.some((id) => String(id) === String(company._id)),
+          )
+          .map((company) => ({
+            buyerId: buyer._id,
+            buyerName: buyer.name,
+            companyId: company._id,
+            companyName: company.companyName,
+            companyEmail: company.companyEmail || "",
+            financerId:
+              savedByCompany.get(`${buyer._id}:${company._id}`) || null,
+          })),
+      ),
     );
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -78,26 +105,39 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const groupId = toObjectId(req.body?.groupId);
-    const sellerCompanyId = toObjectId(req.body?.sellerCompanyId);
+    const buyerId = toObjectId(req.body?.buyerId);
+    const companyId = toObjectId(req.body?.companyId);
 
-    if (!groupId || !sellerCompanyId) {
+    if (!groupId || !buyerId || !companyId) {
       return res.status(400).json({
-        message: "groupId and sellerCompanyId are required",
+        message: "groupId, buyerId and companyId are required",
       });
     }
 
-    const sellerCompany = await SellerCompany.findById(sellerCompanyId)
+    const groupedCompany = await Company.findOne({ _id: companyId, groupId })
       .select("_id")
       .lean();
-    if (!sellerCompany) {
+    const buyer = await Buyer.findOne({
+      _id: buyerId,
+      $or: [{ groupId }, { companyIds: companyId }],
+    })
+      .select("_id groupId companyIds")
+      .lean();
+    if (
+      !buyer ||
+      !(
+        groupedCompany ||
+        buyer.companyIds?.some((id) => String(id) === String(companyId))
+      )
+    ) {
       return res.status(400).json({
-        message: "Selected seller company was not found",
+        message: "Selected buyer company is not linked to this group",
       });
     }
 
     const financer = await Financer.findOneAndUpdate(
-      { groupId, sellerCompanyId },
-      { $setOnInsert: { groupId, sellerCompanyId } },
+      { groupId, buyerId, companyId },
+      { $setOnInsert: { groupId, buyerId, companyId } },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     ).populate(populatePaths);
 
