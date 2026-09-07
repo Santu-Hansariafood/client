@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { FaCheckCircle, FaUniversity } from "react-icons/fa";
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { FaCheckCircle, FaTrash, FaUniversity } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
+import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 
@@ -18,6 +19,9 @@ const AddFinancer = () => {
   const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [financers, setFinancers] = useState([]);
+  const [loadingFinancers, setLoadingFinancers] = useState(true);
+  const [removingId, setRemovingId] = useState("");
   const [pendingKey, setPendingKey] = useState("");
 
   const groupOptions = useMemo(
@@ -28,6 +32,23 @@ const AddFinancer = () => {
       })),
     [groups],
   );
+
+  const loadFinancers = useCallback(async () => {
+    try {
+      setLoadingFinancers(true);
+      const response = await api.get("/financers", { params: { page: 1, limit: 100 } });
+      setFinancers(response.data?.data || []);
+    } catch (error) {
+      setFinancers([]);
+      toast.error(error.response?.data?.message || "Failed to load financers");
+    } finally {
+      setLoadingFinancers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFinancers();
+  }, [loadFinancers]);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -123,10 +144,25 @@ const AddFinancer = () => {
         toast.success("Financer removed successfully");
       }
       clearApiCache();
+      await loadFinancers();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update financer");
     } finally {
       setPendingKey("");
+    }
+  };
+
+  const handleRemove = async (item) => {
+    try {
+      setRemovingId(item._id);
+      await api.delete(`/financers/${item._id}`);
+      clearApiCache();
+      await loadFinancers();
+      toast.success("Financer removed successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to remove financer");
+    } finally {
+      setRemovingId("");
     }
   };
 
@@ -164,6 +200,22 @@ const AddFinancer = () => {
         </label>,
       ]]
     : [];
+
+  const financerRows = financers.map((item, index) => [
+    index + 1,
+    item.groupId?.groupName || "-",
+    item.buyerId?.name || "-",
+    item.companyId?.companyName || "-",
+    <Buttons
+      key={item._id}
+      label={removingId === item._id ? "Removing..." : "Remove"}
+      onClick={() => handleRemove(item)}
+      disabled={removingId === item._id}
+      variant="danger"
+      size="sm"
+      icon={<FaTrash />}
+    />,
+  ]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -224,6 +276,28 @@ const AddFinancer = () => {
               )}
             </section>
           )}
+
+          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Added Financers</h2>
+                <p className="text-sm text-slate-500">All saved financer mappings</p>
+              </div>
+              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                {financers.length} Added
+              </span>
+            </div>
+            {loadingFinancers ? (
+              <Loading />
+            ) : (
+              <div className="overflow-x-auto">
+                <Tables
+                  headers={["Sl No", "Group", "Buyer", "Buyer Company", "Actions"]}
+                  rows={financerRows}
+                />
+              </div>
+            )}
+          </section>
 
         </div>
       </AdminPageShell>
