@@ -1832,11 +1832,9 @@ const ListPaymentReceived = () => {
       setSendingEmail(true);
 
       const sellerCompanyName =
-        filters.ledgerType === "Buyer"
+        filters.ledgerType
           ? selectedOpposingCompany?.label
-          : filters.ledgerType === "Seller"
-            ? selectedCompany?.label
-            : filters.supplierCompany;
+          : filters.supplierCompany;
 
       if (!sellerCompanyName) {
         toast.error("Please select a seller company");
@@ -1846,12 +1844,11 @@ const ListPaymentReceived = () => {
       const sellerCompanyData = sellerCompanies.find(
         (c) =>
           c.companyName === sellerCompanyName ||
-          (selectedOpposingCompany &&
-            c._id === selectedOpposingCompany.value) ||
-          (selectedCompany && c._id === selectedCompany.value),
+          (selectedOpposingCompany && c._id === selectedOpposingCompany.value),
       );
 
-      if (!sellerCompanyData?.email) {
+      const recipientEmail = sellerCompanyData?.email?.trim();
+      if (!recipientEmail) {
         toast.error("No email found for the selected seller company");
         return;
       }
@@ -1867,7 +1864,7 @@ const ListPaymentReceived = () => {
 
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
-        recipientEmail: sellerCompanyData.email,
+        recipientEmail,
         reportType: reportType === "MIS" ? "MIS" : "PaymentAdvice",
         startDate: filters.startDate,
         endDate: filters.endDate,

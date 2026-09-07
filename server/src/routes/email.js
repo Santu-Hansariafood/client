@@ -64,7 +64,9 @@ router.post("/send-receiving-report", async (req, res) => {
     sentByName 
   } = req.body;
 
-  if (!pdf || !sellerEmail || !saudaNo) {
+  const recipientEmail = typeof sellerEmail === "string" ? sellerEmail.trim() : "";
+
+  if (!pdf || !recipientEmail || !saudaNo) {
     return res.status(400).send("Missing required fields: pdf, sellerEmail, saudaNo");
   }
 
@@ -97,7 +99,7 @@ router.post("/send-receiving-report", async (req, res) => {
 
     const mailOptions = {
       from: process.env.CLAIMS_EMAIL,
-      to: sellerEmail,
+      to: recipientEmail,
       subject: `Receiving Report - Sauda No. ${saudaNo}${billNo ? ` | Bill No. ${billNo}` : ""}`,
 
       text: `Dear Sir/Madam,
@@ -132,8 +134,9 @@ Contact: +91-8336924066 | +91-9330433535`,
 
 router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
+  const paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
 
-  if (!pdf || !recipientEmail || !reportType) {
+  if (!pdf || !paymentRecipientEmail || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
   }
 
@@ -192,7 +195,7 @@ Email: payment@hansariafood.com`;
 
     const mailOptions = {
       from: process.env.PAYMENTS_EMAIL,
-      to: recipientEmail,
+      to: paymentRecipientEmail,
       subject: subject,
       text: body,
       attachments: [
