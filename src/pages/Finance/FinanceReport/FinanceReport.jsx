@@ -25,6 +25,7 @@ const FinanceReport = () => {
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [financers, setFinancers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [page, setPage] = useState(1);
@@ -60,11 +61,13 @@ const FinanceReport = () => {
         },
       });
       setOrders(response.data?.data || []);
+      setFinancers(response.data?.financers || []);
       setTotal(Number(response.data?.total) || 0);
       setGroups(response.data?.groups || []);
       setCompanies(response.data?.companies || []);
     } catch (error) {
       setOrders([]);
+      setFinancers([]);
       setTotal(0);
       toast.error(error.response?.data?.message || "Failed to load finance report");
     } finally {
@@ -152,6 +155,13 @@ const FinanceReport = () => {
     order.paymentTerms || "-",
   ]);
 
+  const financerRows = financers.map((item, index) => [
+    index + 1,
+    item.groupId?.groupName || "-",
+    item.buyerId?.name || "-",
+    item.companyId?.companyName || "-",
+  ]);
+
   const saudaLookupRows = saudaRows.map((row) => [
     <input
       key={`input-${row.id}`}
@@ -233,6 +243,24 @@ const FinanceReport = () => {
                   }}
                 />
               </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Added Financers</h2>
+                <p className="text-sm text-slate-500">Saved buyer-company financer mappings</p>
+              </div>
+              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                {financers.length} Added
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <Tables
+                headers={["Sl No", "Group", "Buyer", "Buyer Company"]}
+                rows={financerRows}
+              />
             </div>
           </section>
 

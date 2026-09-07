@@ -96,7 +96,10 @@ router.get("/report", async (req, res) => {
       return res.status(400).json({ message: "Invalid companyId" });
     }
 
-    const financerQuery = groupId ? { groupId } : {};
+    const financerQuery = {
+      ...(groupId ? { groupId } : {}),
+      ...(companyId ? { companyId } : {}),
+    };
     const financerRecords = await Financer.find(financerQuery)
       .select("groupId buyerId companyId")
       .populate([
@@ -215,6 +218,7 @@ router.get("/report", async (req, res) => {
       total,
       page,
       limit,
+      financers: financerRecords,
       groups: financedGroups,
       companies,
       financerCount: financerRecords.length,

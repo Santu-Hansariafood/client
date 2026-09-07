@@ -1,15 +1,13 @@
-import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { FaCheckCircle, FaTrash, FaUniversity } from "react-icons/fa";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { FaCheckCircle, FaUniversity } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
 const getFinancerKey = (buyerId, companyId) => `${buyerId}:${companyId}`;
 
@@ -18,15 +16,9 @@ const AddFinancer = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [buyerCompanies, setBuyerCompanies] = useState([]);
   const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
-  const [financers, setFinancers] = useState([]);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const [loadingList, setLoadingList] = useState(false);
   const [pendingKey, setPendingKey] = useState("");
-  const [removingId, setRemovingId] = useState("");
-  const itemsPerPage = 10;
 
   const groupOptions = useMemo(
     () =>
@@ -36,25 +28,6 @@ const AddFinancer = () => {
       })),
     [groups],
   );
-
-  const loadFinancers = useCallback(async () => {
-    try {
-      setLoadingList(true);
-      const response = await api.get("/financers", {
-        params: {
-          groupId: selectedGroup?.value || undefined,
-          page,
-          limit: itemsPerPage,
-        },
-      });
-      setFinancers(response.data?.data || []);
-      setTotal(Number(response.data?.total) || 0);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to load financers");
-    } finally {
-      setLoadingList(false);
-    }
-  }, [page, selectedGroup]);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -93,14 +66,9 @@ const AddFinancer = () => {
     loadOptions();
   }, [selectedGroup]);
 
-  useEffect(() => {
-    loadFinancers();
-  }, [loadFinancers]);
-
   const handleGroupChange = (group) => {
     setSelectedGroup(group);
     setSelectedBuyerCompany(null);
-    setPage(1);
   };
 
   const buyerCompanyOptions = useMemo(
@@ -144,11 +112,7 @@ const AddFinancer = () => {
         );
         toast.success("Financer added successfully");
       } else {
-        const existing = financers.find(
-          (entry) => getFinancerKey(entry.buyerId?._id, entry.companyId?._id) === key,
-        );
         if (item.financerId) await api.delete(`/financers/${item.financerId}`);
-        else if (existing?._id) await api.delete(`/financers/${existing._id}`);
         setBuyerCompanies((previous) =>
           previous.map((item) =>
             getFinancerKey(item.buyerId, item.companyId) === key
@@ -159,25 +123,10 @@ const AddFinancer = () => {
         toast.success("Financer removed successfully");
       }
       clearApiCache();
-      await loadFinancers();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update financer");
     } finally {
       setPendingKey("");
-    }
-  };
-
-  const handleRemove = async (item) => {
-    try {
-      setRemovingId(item._id);
-      await api.delete(`/financers/${item._id}`);
-      clearApiCache();
-      toast.success("Financer removed successfully");
-      await loadFinancers();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to remove financer");
-    } finally {
-      setRemovingId("");
     }
   };
 
@@ -215,22 +164,6 @@ const AddFinancer = () => {
         </label>,
       ]]
     : [];
-
-  const financerRows = financers.map((item, index) => [
-    (page - 1) * itemsPerPage + index + 1,
-    item.groupId?.groupName || selectedGroup?.label || "-",
-    item.buyerId?.name || "-",
-    item.companyId?.companyName || "-",
-    <Buttons
-      key={item._id}
-      label={removingId === item._id ? "Removing..." : "Remove"}
-      onClick={() => handleRemove(item)}
-      disabled={removingId === item._id}
-      variant="danger"
-      size="sm"
-      icon={<FaTrash />}
-    />,
-  ]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -292,31 +225,6 @@ const AddFinancer = () => {
             </section>
           )}
 
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">Added Financers</h2>
-                <p className="text-sm text-slate-500">Saved buyer-company financer mappings</p>
-              </div>
-              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                {total} Added
-              </span>
-            </div>
-            {loadingList ? (
-              <Loading />
-            ) : (
-              <Tables
-                headers={["Sl No", "Group", "Buyer", "Buyer Company", "Actions"]}
-                rows={financerRows}
-              />
-            )}
-            <Pagination
-              currentPage={page}
-              totalItems={total}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setPage}
-            />
-          </section>
         </div>
       </AdminPageShell>
     </Suspense>
