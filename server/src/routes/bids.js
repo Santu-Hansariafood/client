@@ -15,17 +15,15 @@ const router = Router();
 
 const normalizeGroupName = (value) => String(value || "").trim().toLowerCase();
 
-const hideRatesForSellerGroups = (bids, sellerGroups) => {
+const hideBidsForSellerGroups = (bids, sellerGroups) => {
   const hiddenGroups = new Set(
     (Array.isArray(sellerGroups) ? sellerGroups : [])
       .map((group) => normalizeGroupName(group?.name || group?.groupName || group))
       .filter(Boolean),
   );
 
-  return bids.map((bid) =>
-    hiddenGroups.has(normalizeGroupName(bid.group))
-      ? { ...bid, rate: null }
-      : bid,
+  return bids.filter(
+    (bid) => !hiddenGroups.has(normalizeGroupName(bid.group)),
   );
 };
 
@@ -243,7 +241,7 @@ router.get("/supplier-today", async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const sellerVisibleBids = hideRatesForSellerGroups(bids, seller.groups);
+    const sellerVisibleBids = hideBidsForSellerGroups(bids, seller.groups);
 
     const bidIds = sellerVisibleBids.map((b) => b._id);
 

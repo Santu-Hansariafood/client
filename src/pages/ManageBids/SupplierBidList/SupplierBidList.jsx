@@ -173,7 +173,9 @@ const SupplierBidList = () => {
       setFinanceRequired(existingParticipation.financeRequired || "no");
       setSellerCompany(existingParticipation.sellerCompany || "");
     } else {
-      setRate(bid.rate || "");
+      setRate(
+        bid.rate !== null && bid.rate !== undefined ? bid.rate || "" : "",
+      );
       setQuantity(bid.quantity || "");
       setLoadingFrom("");
       setRemarks("");
@@ -546,7 +548,7 @@ const SupplierBidList = () => {
                 <span className="text-[10px] sm:text-xs font-normal">Tons</span>
               </p>
             </div>
-            {!isClosed && (
+            {!isClosed && bid.rate !== null && bid.rate !== undefined && (
               <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
                 <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
                   <FaGavel className="text-sky-600" />
@@ -1043,14 +1045,16 @@ const SupplierBidList = () => {
           >
             <div className="space-y-5 p-1">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Bid Rate
-                  </p>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">
-                    {formatBidRate(selectedBid.rate)}
-                  </p>
-                </div>
+                {selectedBid.rate !== null && selectedBid.rate !== undefined && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                      Bid Rate
+                    </p>
+                    <p className="text-sm font-bold text-slate-800 mt-0.5">
+                      {formatBidRate(selectedBid.rate)}
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Bid Quantity
