@@ -225,6 +225,7 @@ const AddFinancer = () => {
   const financerRows = financers.map((item, index) => [
     (page - 1) * itemsPerPage + index + 1,
     item.groupId?.groupName || selectedGroup?.label || "-",
+    item.buyerId?.name || "-",
     item.companyId?.companyName || "-",
     <Buttons
       key={item._id}
