@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { useCallback, useEffect, useState, lazy, Suspense } from "react";
 import { FaPlus, FaTrash, FaUniversity } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
-import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
 import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -20,51 +18,28 @@ const formatNumber = (value) =>
   });
 
 const FinanceReport = () => {
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [companies, setCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState(null);
   const [orders, setOrders] = useState([]);
   const [financers, setFinancers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingGroups, setLoadingGroups] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [saudaRows, setSaudaRows] = useState([
     { id: Date.now(), saudaNo: "", pendingQuantity: null, status: "" },
   ]);
   const itemsPerPage = 10;
 
-  const groupOptions = useMemo(
-    () => groups.map((group) => ({ value: String(group._id), label: group.groupName })),
-    [groups],
-  );
-  const companyOptions = useMemo(
-    () => companies.map((company) => ({ value: String(company._id), label: company.companyName })),
-    [companies],
-  );
-
   const loadReport = useCallback(async () => {
     try {
       setLoading(true);
-      setLoadingGroups(true);
       const [response, financerResponse] = await Promise.all([
         api.get("/financers/report", {
           params: {
-            groupId: selectedGroup?.value || undefined,
-            companyId: selectedCompany?.value || undefined,
-            startDate: startDate || undefined,
-            endDate: endDate || undefined,
             page,
             limit: itemsPerPage,
           },
         }),
         api.get("/financers", {
           params: {
-            groupId: selectedGroup?.value || undefined,
-            companyId: selectedCompany?.value || undefined,
             page: 1,
             limit: 100,
           },
@@ -73,8 +48,6 @@ const FinanceReport = () => {
       setOrders(response.data?.data || []);
       setFinancers(financerResponse.data?.data || []);
       setTotal(Number(response.data?.total) || 0);
-      setGroups(response.data?.groups || []);
-      setCompanies(response.data?.companies || []);
     } catch (error) {
       setOrders([]);
       setFinancers([]);
@@ -82,19 +55,12 @@ const FinanceReport = () => {
       toast.error(error.response?.data?.message || "Failed to load finance report");
     } finally {
       setLoading(false);
-      setLoadingGroups(false);
     }
-  }, [endDate, page, selectedCompany, selectedGroup, startDate]);
+  }, [page]);
 
   useEffect(() => {
     loadReport();
   }, [loadReport]);
-
-  const handleGroupChange = (group) => {
-    setSelectedGroup(group);
-    setSelectedCompany(null);
-    setPage(1);
-  };
 
   const lookupSauda = async (rowId, saudaNo) => {
     const value = String(saudaNo || "").trim();
@@ -102,8 +68,6 @@ const FinanceReport = () => {
     try {
       const response = await api.get("/financers/report", {
         params: {
-          groupId: selectedGroup?.value || undefined,
-          companyId: selectedCompany?.value || undefined,
           saudaNos: value,
           page: 1,
           limit: 100,
@@ -210,52 +174,6 @@ const FinanceReport = () => {
         noContentCard
       >
         <div className="space-y-6">
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-              <DataDropdown
-                label="Group"
-                options={groupOptions}
-                selectedOptions={selectedGroup}
-                onChange={handleGroupChange}
-                placeholder={loadingGroups ? "Loading groups..." : "All financed groups"}
-                isDisabled={loadingGroups}
-              />
-              <DataDropdown
-                label="Buyer Company"
-                options={companyOptions}
-                selectedOptions={selectedCompany}
-                onChange={(company) => {
-                  setSelectedCompany(company);
-                  setPage(1);
-                }}
-                placeholder="All financed buyer companies"
-                isDisabled={!selectedGroup || companies.length === 0}
-              />
-              <div className="lg:col-span-2">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">
-                  Order Date
-                </label>
-                <DateRangeSelector
-                  startDate={startDate}
-                  endDate={endDate}
-                  onStartDateChange={(value) => {
-                    setStartDate(value);
-                    setPage(1);
-                  }}
-                  onEndDateChange={(value) => {
-                    setEndDate(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setStartDate("");
-                    setEndDate("");
-                    setPage(1);
-                  }}
-                />
-              </div>
-            </div>
-          </section>
-
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
