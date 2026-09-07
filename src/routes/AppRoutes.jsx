@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Routes,
   Route,
@@ -412,6 +412,11 @@ const privateRoutes = [
     path: "payments/payment-release/list",
     component: LazyPages.ListPaymentRelease,
     roles: ["Admin", "Employee", "Seller"],
+  },
+  {
+    path: "finance/add",
+    component: LazyPages.AddFinancer,
+    roles: ["Admin", "Employee"],
   },
   {
     path: "/payment-release",
