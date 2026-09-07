@@ -1884,7 +1884,11 @@ const ListPaymentReceived = () => {
       if (error.message === "No records found") {
         toast.warning(error.message);
       } else {
-        toast.error("Failed to send email");
+        const serverMsg = error?.response?.data || error?.message || "";
+        const errorText = typeof serverMsg === "string" && serverMsg.trim()
+          ? serverMsg
+          : "Failed to send email. Please check credentials or try again.";
+        toast.error(errorText);
       }
     } finally {
       setSendingEmail(false);
@@ -1994,7 +1998,11 @@ const ListPaymentReceived = () => {
       toast.success("Email sent successfully!");
     } catch (error) {
       console.error("Send Individual Email Error:", error);
-      toast.error("Failed to send email");
+      const serverMsg = error?.response?.data || error?.message || "";
+      const errorText = typeof serverMsg === "string" && serverMsg.trim()
+        ? serverMsg
+        : "Failed to send email. Please check credentials or try again.";
+      toast.error(errorText);
     } finally {
       setSendingEmailIds((prev) => {
         const newSet = new Set(prev);

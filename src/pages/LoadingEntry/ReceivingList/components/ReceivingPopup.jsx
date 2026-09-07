@@ -312,12 +312,17 @@ const ReceivingPopup = ({
         toast.error("Error updating sent status");
       }
     } catch (error) {
-      toast.error("Error sending email");
+      console.error("Send Report Email Error:", error);
+      const serverMsg = error?.response?.data || error?.message || "";
+      const errorText = typeof serverMsg === "string" && serverMsg.trim()
+        ? serverMsg
+        : "Failed to send report. Please check credentials or try again.";
+      toast.error(errorText);
       toast.update(toastId, {
-        render: "Failed to send report",
+        render: errorText,
         type: "error",
         isLoading: false,
-        autoClose: 3000,
+        autoClose: 5000,
       });
     } finally {
       setSendingEmail(false);

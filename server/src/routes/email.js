@@ -4,6 +4,23 @@ import PaymentReceived from "../models/PaymentReceived.js";
 
 const router = express.Router();
 
+const getEmailServiceConfig = () => ({
+  service: process.env.EMAIL_SERVICE || "gmail",
+  host: process.env.EMAIL_SERVICE === "gmail" ? "smtp.gmail.com" : undefined,
+  port: process.env.EMAIL_SERVICE === "gmail" ? 465 : undefined,
+  secure: process.env.EMAIL_SERVICE === "gmail" ? true : undefined,
+});
+
+const verifySmtpConnection = async (transporter) => {
+  try {
+    await transporter.verify();
+    return true;
+  } catch (verifyError) {
+    console.error("[SMTP] Connection verification failed:", verifyError.message);
+    return false;
+  }
+};
+
 router.post("/send-pdf", async (req, res) => {
   const { pdf, email, saudaNo } = req.body;
 
@@ -11,14 +28,24 @@ router.post("/send-pdf", async (req, res) => {
     return res.status(400).send("Missing required fields: pdf, email, saudaNo");
   }
 
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error("[EMAIL] Missing EMAIL_USER or EMAIL_PASS environment variables");
+    return res.status(500).send("Email service not configured. Please contact admin.");
+  }
+
   try {
     const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE,
+      ...getEmailServiceConfig(),
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
+
+    const isVerified = await verifySmtpConnection(transporter);
+    if (!isVerified) {
+      return res.status(500).send("Email service authentication failed. Please check credentials.");
+    }
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -70,14 +97,24 @@ router.post("/send-receiving-report", async (req, res) => {
     return res.status(400).send("Missing required fields: pdf, sellerEmail, saudaNo");
   }
 
+  if (!process.env.CLAIMS_EMAIL || !process.env.CLAIMS_PASS) {
+    console.error("[EMAIL] Missing CLAIMS_EMAIL or CLAIMS_PASS environment variables");
+    return res.status(500).send("Claims email service not configured. Please contact admin.");
+  }
+
   try {
     const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE,
+      ...getEmailServiceConfig(),
       auth: {
         user: process.env.CLAIMS_EMAIL,
         pass: process.env.CLAIMS_PASS,
       },
     });
+
+    const isVerified = await verifySmtpConnection(transporter);
+    if (!isVerified) {
+      return res.status(500).send("Claims email authentication failed. Please check credentials.");
+    }
 
     // Prepare claim parameters text (filter out claims with 0 amount)
     let claimText = "";
@@ -140,14 +177,24 @@ router.post("/send-payment-received", async (req, res) => {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
   }
 
+  if (!process.env.PAYMENTS_EMAIL || !process.env.PAYMENTS_PASS) {
+    console.error("[EMAIL] Missing PAYMENTS_EMAIL or PAYMENTS_PASS environment variables");
+    return res.status(500).send("Payments email service not configured. Please contact admin.");
+  }
+
   try {
     const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE,
+      ...getEmailServiceConfig(),
       auth: {
         user: process.env.PAYMENTS_EMAIL,
         pass: process.env.PAYMENTS_PASS,
       },
     });
+
+    const isVerified = await verifySmtpConnection(transporter);
+    if (!isVerified) {
+      return res.status(500).send("Payments email authentication failed. Please check credentials.");
+    }
 
     let subject = "";
     let filename = "";
