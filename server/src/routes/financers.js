@@ -2,6 +2,7 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import Financer from "../models/Financer.js";
 import Buyer from "../models/Buyer.js";
+import Company from "../models/Company.js";
 
 const router = Router();
 
@@ -23,7 +24,19 @@ router.get("/options", async (req, res) => {
       return res.status(400).json({ message: "A valid groupId is required" });
     }
 
-    const buyers = await Buyer.find({ groupId })
+    const groupedCompanies = await Company.find({ groupId })
+      .select("_id")
+      .lean();
+    const groupedCompanyIds = groupedCompanies.map((company) => company._id);
+
+    const buyers = await Buyer.find({
+      $or: [
+        { groupId },
+        ...(groupedCompanyIds.length
+          ? [{ companyIds: { $in: groupedCompanyIds } }]
+          : []),
+      ],
+    })
       .select("name mobile companyIds groupId")
       .populate({ path: "companyIds", select: "companyName companyEmail" })
       .sort({ name: 1, _id: 1 })
@@ -43,12 +56,18 @@ router.get("/options", async (req, res) => {
         _id: buyer._id,
         name: buyer.name,
         mobile: buyer.mobile || [],
-        companies: (buyer.companyIds || []).map((company) => ({
+        companies: (buyer.companyIds || [])
+          .filter(
+            (company) =>
+              String(buyer.groupId || "") === String(groupId) ||
+              groupedCompanyIds.some((id) => String(id) === String(company._id)),
+          )
+          .map((company) => ({
           _id: company._id,
           companyName: company.companyName,
           companyEmail: company.companyEmail || "",
           financerId: savedByCompany.get(`${buyer._id}:${company._id}`) || null,
-        })),
+          })),
       })),
     );
   } catch (error) {
@@ -96,10 +115,20 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const buyer = await Buyer.findOne({ _id: buyerId, groupId })
-      .select("companyIds")
+    const buyer = await Buyer.findOne({
+      _id: buyerId,
+      $or: [{ groupId }, { companyIds: companyId }],
+    })
+      .select("groupId companyIds")
+      .populate({ path: "companyIds", select: "_id groupId" })
       .lean();
-    if (!buyer || !(buyer.companyIds || []).some((id) => String(id) === String(companyId))) {
+    const selectedCompany = (buyer?.companyIds || []).find(
+      (company) => String(company._id || company) === String(companyId),
+    );
+    const isGroupLinked =
+      String(buyer?.groupId || "") === String(groupId) ||
+      String(selectedCompany?.groupId || "") === String(groupId);
+    if (!buyer || !selectedCompany || !isGroupLinked) {
       return res.status(400).json({
         message: "The selected company is not linked to this buyer group",
       });
