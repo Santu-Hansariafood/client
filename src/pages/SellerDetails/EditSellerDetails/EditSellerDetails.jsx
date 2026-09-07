@@ -23,6 +23,9 @@ const statusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
+const normalizeAssociationName = (value) =>
+  String(value ?? "").trim().toLowerCase();
+
 const EditSellerDetails = ({
   sellerId: propSellerId,
   onClose,
@@ -138,22 +141,27 @@ const EditSellerDetails = ({
           ),
         );
 
-        const selectedCompNames = (sellerData.companies || []).map(
-          (c) => c.companyName || c.name || c,
+        const selectedCompNames = new Set(
+          (sellerData.companies || []).map((c) =>
+            normalizeAssociationName(c.companyName || c.name || c),
+          ),
         );
-        const selectedCompaniesObjs = compOpts.filter(opt => selectedCompNames.includes(opt.value));
+        const selectedCompaniesObjs = compOpts.filter((opt) =>
+          selectedCompNames.has(normalizeAssociationName(opt.value)),
+        );
         setSelectedCompany(selectedCompaniesObjs);
 
-        const selectedGroupIds = (sellerData.groups || [])
-          .map((g) => {
-            const gName = g.name || g.groupName || g;
-            const match = grpOpts.find(
-              (opt) => opt.label === gName || opt.value === (g._id || g),
+        const selectedGroupsObjs = (sellerData.groups || [])
+          .map((group) => {
+            const groupName = group.name || group.groupName || group;
+            return grpOpts.find(
+              (opt) =>
+                opt.value === (group._id || group) ||
+                normalizeAssociationName(opt.label) ===
+                  normalizeAssociationName(groupName),
             );
-            return match ? match.value : null;
           })
           .filter(Boolean);
-        const selectedGroupsObjs = grpOpts.filter(opt => selectedGroupIds.includes(opt.value));
         setSelectedGroups(selectedGroupsObjs);
 
         const statusObj = statusOptions.find(opt => opt.value === (sellerData.status || "active"));

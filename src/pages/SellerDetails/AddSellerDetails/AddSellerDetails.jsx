@@ -134,7 +134,7 @@ const AddSellerDetails = () => {
   };
 
   const handleCompanyChange = (selected) => {
-    setSelectedCompany(selected ? selected.map((s) => s.value) : []);
+    setSelectedCompany(selected || []);
   };
 
   const handleSubmit = async () => {
@@ -173,15 +173,12 @@ const AddSellerDetails = () => {
         name: commodityName,
         brokerage: brokerageAmounts[commodityName] || 0,
       })),
-      companies: selectedCompany,
+      companies: selectedCompany.map((company) => company.value),
       status:
         typeof selectedStatus === "string"
           ? selectedStatus
           : selectedStatus?.value,
-      groups: selectedGroups.map((groupId) => {
-        const group = groupOptions.find((g) => g.value === groupId);
-        return { name: group?.label || groupId };
-      }),
+      groups: selectedGroups.map((group) => ({ name: group.label })),
     };
 
     try {
@@ -420,9 +417,7 @@ const AddSellerDetails = () => {
                   isMulti
                   placeholder="Select group associations"
                   onChange={(selected) =>
-                    setSelectedGroups(
-                      selected ? selected.map((s) => s.value) : [],
-                    )
+                    setSelectedGroups(selected || [])
                   }
                 />
                 <DataDropdown
