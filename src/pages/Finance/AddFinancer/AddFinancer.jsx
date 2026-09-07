@@ -38,17 +38,11 @@ const AddFinancer = () => {
   );
 
   const loadFinancers = useCallback(async () => {
-    if (!selectedGroup?.value) {
-      setFinancers([]);
-      setTotal(0);
-      return;
-    }
-
     try {
       setLoadingList(true);
       const response = await api.get("/financers", {
         params: {
-          groupId: selectedGroup.value,
+          groupId: selectedGroup?.value || undefined,
           page,
           limit: itemsPerPage,
         },

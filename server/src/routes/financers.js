@@ -112,6 +112,14 @@ router.get("/report", async (req, res) => {
           .filter(Boolean),
       ),
     ];
+    const financedCompanies = await Company.find({
+      _id: { $in: financedCompanyIds },
+    })
+      .select("_id companyName")
+      .lean();
+    const financedCompanyNames = financedCompanies
+      .map((company) => company.companyName)
+      .filter(Boolean);
     const financedGroups = [
       ...new Map(
         financerRecords
@@ -139,10 +147,19 @@ router.get("/report", async (req, res) => {
       });
     }
 
+    const scopedCompanyIds = (companyId ? [companyId] : financedCompanyIds).filter(Boolean);
+    const scopedCompanyNames = companyId
+      ? financedCompanies
+          .filter((company) => String(company._id) === String(companyId))
+          .map((company) => company.companyName)
+      : financedCompanyNames;
     const orderQuery = {
-      companyId: {
-        $in: (companyId ? [companyId] : financedCompanyIds).filter(Boolean),
-      },
+      $or: [
+        { companyId: { $in: scopedCompanyIds } },
+        ...(scopedCompanyNames.length
+          ? [{ buyerCompany: { $in: scopedCompanyNames } }]
+          : []),
+      ],
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
     if (startDate || endDate) {
