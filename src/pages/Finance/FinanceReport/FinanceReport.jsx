@@ -50,18 +50,28 @@ const FinanceReport = () => {
     try {
       setLoading(true);
       setLoadingGroups(true);
-      const response = await api.get("/financers/report", {
-        params: {
-          groupId: selectedGroup?.value || undefined,
-          companyId: selectedCompany?.value || undefined,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          page,
-          limit: itemsPerPage,
-        },
-      });
+      const [response, financerResponse] = await Promise.all([
+        api.get("/financers/report", {
+          params: {
+            groupId: selectedGroup?.value || undefined,
+            companyId: selectedCompany?.value || undefined,
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+            page,
+            limit: itemsPerPage,
+          },
+        }),
+        api.get("/financers", {
+          params: {
+            groupId: selectedGroup?.value || undefined,
+            companyId: selectedCompany?.value || undefined,
+            page: 1,
+            limit: 100,
+          },
+        }),
+      ]);
       setOrders(response.data?.data || []);
-      setFinancers(response.data?.financers || []);
+      setFinancers(financerResponse.data?.data || []);
       setTotal(Number(response.data?.total) || 0);
       setGroups(response.data?.groups || []);
       setCompanies(response.data?.companies || []);

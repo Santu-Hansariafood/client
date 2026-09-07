@@ -236,11 +236,16 @@ router.get("/", async (req, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || "10", 10)));
     const query = {};
     const groupId = toObjectId(req.query.groupId);
+    const companyId = toObjectId(req.query.companyId);
 
     if (req.query.groupId && !groupId) {
       return res.status(400).json({ message: "Invalid groupId" });
     }
+    if (req.query.companyId && !companyId) {
+      return res.status(400).json({ message: "Invalid companyId" });
+    }
     if (groupId) query.groupId = groupId;
+    if (companyId) query.companyId = companyId;
 
     const [data, total] = await Promise.all([
       Financer.find(query)
