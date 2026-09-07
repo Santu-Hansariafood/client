@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react
 import { FaPlus, FaTrash, FaUniversity } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
-import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
@@ -27,7 +26,7 @@ const FinanceReport = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [startDate, setStartDate] = useState("");
@@ -46,23 +45,10 @@ const FinanceReport = () => {
     [companies],
   );
 
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        setLoadingGroups(true);
-        setGroups(await fetchAllPages("/groups"));
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to load groups");
-      } finally {
-        setLoadingGroups(false);
-      }
-    };
-    loadGroups();
-  }, []);
-
   const loadReport = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadingGroups(true);
       const response = await api.get("/financers/report", {
         params: {
           groupId: selectedGroup?.value || undefined,
@@ -75,6 +61,7 @@ const FinanceReport = () => {
       });
       setOrders(response.data?.data || []);
       setTotal(Number(response.data?.total) || 0);
+      setGroups(response.data?.groups || []);
       setCompanies(response.data?.companies || []);
     } catch (error) {
       setOrders([]);
@@ -82,6 +69,7 @@ const FinanceReport = () => {
       toast.error(error.response?.data?.message || "Failed to load finance report");
     } finally {
       setLoading(false);
+      setLoadingGroups(false);
     }
   }, [endDate, page, selectedCompany, selectedGroup, startDate]);
 

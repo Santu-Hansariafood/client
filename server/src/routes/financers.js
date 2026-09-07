@@ -112,9 +112,31 @@ router.get("/report", async (req, res) => {
           .filter(Boolean),
       ),
     ];
+    const financedGroups = [
+      ...new Map(
+        financerRecords
+          .filter((item) => item.groupId?._id)
+          .map((item) => [
+            String(item.groupId._id),
+            {
+              _id: item.groupId._id,
+              groupName: item.groupId.groupName,
+            },
+          ]),
+      ).values(),
+    ].sort((first, second) =>
+      String(first.groupName || "").localeCompare(String(second.groupName || "")),
+    );
 
     if (companyId && !financedCompanyIds.includes(String(companyId))) {
-      return res.json({ data: [], total: 0, page, limit, companies: [] });
+      return res.json({
+        data: [],
+        total: 0,
+        page,
+        limit,
+        groups: financedGroups,
+        companies: [],
+      });
     }
 
     const orderQuery = {
@@ -176,6 +198,7 @@ router.get("/report", async (req, res) => {
       total,
       page,
       limit,
+      groups: financedGroups,
       companies,
       financerCount: financerRecords.length,
     });
