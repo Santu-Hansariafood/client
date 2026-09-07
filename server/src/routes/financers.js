@@ -145,8 +145,10 @@ router.get("/report", async (req, res) => {
         total: 0,
         page,
         limit,
+        financers: financerRecords,
         groups: financedGroups,
         companies: [],
+        financerCount: financerRecords.length,
       });
     }
 
