@@ -1,8 +1,9 @@
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 import { useState } from "react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
 import { FaEnvelope, FaFilePdf, FaEdit, FaTrash } from "react-icons/fa";
 import QRCode from "qrcode";
+import { toast } from "react-toastify";
 import PaymentVoucherPDF from "./PaymentVoucherPDF";
 import Loading from "../../../../common/Loading/Loading";
 
@@ -21,7 +22,14 @@ const TallyLedgerBook = ({
 }) => {
   const [qrCache, setQrCache] = useState({});
   const [qrLoading, setQrLoading] = useState({});
-  const [voucherCounter, setVoucherCounter] = useState({});
+
+  const normalizeValue = (value) => String(value || "").trim().toLowerCase();
+
+  const resolveVoucherNumber = (row) =>
+    row.raw?.voucherNumber || row.raw?.voucherNo || row.voucherNo || row.id || "-";
+
+  const buildVoucherFileName = (row) =>
+    `Payment_Voucher_${(row.buyerCompany || "Buyer").replace(/[^a-zA-Z0-9]/g, "_")}_${(row.supplierCompany || "Seller").replace(/[^a-zA-Z0-9]/g, "_")}_${row.date ? new Date(row.date).toISOString().split("T")[0] : "undated"}.pdf`;
 
   const generateQRCode = async (row, voucherNumber) => {
     const getValue = (...candidates) => {
@@ -84,38 +92,44 @@ const TallyLedgerBook = ({
     return qrDataUrl;
   };
 
-  const handleDownloadClick = async (row) => {
-    let currentVoucherNumber = voucherCounter[row.id];
-    if (!currentVoucherNumber) {
-      const nonOpeningRows = rows.filter((r) => !r.isOpening);
-      const currentIndex = nonOpeningRows.findIndex((r) => r.id === row.id);
-
-      if (currentIndex >= 0) {
-        const usedNumbers = new Set();
-        Object.values(voucherCounter).forEach((num) => usedNumbers.add(num));
-
-        let nextNumber = 1;
-        while (usedNumbers.has(nextNumber)) {
-          nextNumber++;
-        }
-        currentVoucherNumber = nextNumber;
-        setVoucherCounter((prev) => ({
-          ...prev,
-          [row.id]: nextNumber,
-        }));
-      }
+  const handleDownloadClick = async (row, buyerCompany, sellerCompany) => {
+    if (qrLoading[row.id]) {
+      return;
     }
 
-    if (!qrCache[row.id] && !qrLoading[row.id]) {
-      setQrLoading((prev) => ({ ...prev, [row.id]: true }));
-      try {
-        const qrUrl = await generateQRCode(row, currentVoucherNumber);
+    setQrLoading((prev) => ({ ...prev, [row.id]: true }));
+    try {
+      const voucherNumber = resolveVoucherNumber(row);
+      let qrUrl = qrCache[row.id];
+
+      if (!qrUrl) {
+        qrUrl = await generateQRCode(row, voucherNumber);
         setQrCache((prev) => ({ ...prev, [row.id]: qrUrl }));
-      } catch (error) {
-        console.error("Error generating QR code:", error);
-      } finally {
-        setQrLoading((prev) => ({ ...prev, [row.id]: false }));
       }
+
+      const blob = await pdf(
+        <PaymentVoucherPDF
+          row={row}
+          buyerCompany={buyerCompany}
+          sellerCompany={sellerCompany}
+          qrCodeUrl={qrUrl}
+          voucherNumber={voucherNumber}
+        />,
+      ).toBlob();
+
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = buildVoucherFileName(row);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Error downloading voucher PDF:", error);
+      toast.error("Failed to download voucher PDF");
+    } finally {
+      setQrLoading((prev) => ({ ...prev, [row.id]: false }));
     }
   };
 
@@ -148,44 +162,13 @@ const TallyLedgerBook = ({
     <>
       <td className="px-3 py-2 text-center">
         {!row.isOpening && (
-          <>
-            {(!qrCache[row.id] || qrLoading[row.id]) && (
-              <button
-                onClick={() => handleDownloadClick(row)}
-                className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow"
-              >
-                {qrLoading[row.id] ? "Preparing..." : <FaFilePdf size={14} />}
-              </button>
-            )}
-            {qrCache[row.id] && !qrLoading[row.id] && (
-              <PDFDownloadLink
-                document={
-                  <PaymentVoucherPDF
-                    row={row}
-                    buyerCompany={buyerCompany}
-                    sellerCompany={sellerCompany}
-                    qrCodeUrl={qrCache[row.id]}
-                    voucherNumber={voucherCounter[row.id]}
-                  />
-                }
-                fileName={`Payment_Voucher_${(
-                  row.buyerCompany || "Buyer"
-                ).replace(/[^a-zA-Z0-9]/g, "_")}_${(
-                  row.supplierCompany || "Seller"
-                ).replace(/[^a-zA-Z0-9]/g, "_")}_${
-                  row.date
-                    ? new Date(row.date).toISOString().split("T")[0]
-                    : ""
-                }.pdf`}
-              >
-                {({ loading: pdfLoading }) => (
-                  <button className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow">
-                    {pdfLoading ? <Loading /> : <FaFilePdf size={14} />}
-                  </button>
-                )}
-              </PDFDownloadLink>
-            )}
-          </>
+          <button
+            onClick={() => handleDownloadClick(row, buyerCompany, sellerCompany)}
+            disabled={qrLoading[row.id]}
+            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {qrLoading[row.id] ? "Preparing..." : <FaFilePdf size={14} />}
+          </button>
         )}
       </td>
       <td className="px-3 py-2 text-center text-xs text-slate-600">
@@ -293,13 +276,13 @@ const TallyLedgerBook = ({
 
             const buyerCompany = buyerCompanies.find(
               (c) =>
-                c.companyName?.toLowerCase() ===
-                (row.buyerCompany || "").toLowerCase(),
+                normalizeValue(c.companyName) ===
+                normalizeValue(row.buyerCompany),
             );
             const sellerCompany = sellerCompanies.find(
               (c) =>
-                c.companyName?.toLowerCase() ===
-                (row.supplierCompany || "").toLowerCase(),
+                normalizeValue(c.companyName) ===
+                normalizeValue(row.supplierCompany),
             );
 
             const baseRowClass = [

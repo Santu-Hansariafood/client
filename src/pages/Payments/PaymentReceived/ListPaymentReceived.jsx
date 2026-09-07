@@ -1832,9 +1832,10 @@ const ListPaymentReceived = () => {
       setSendingEmail(true);
 
       const sellerCompanyName =
-        filters.ledgerType
-          ? selectedOpposingCompany?.label
-          : filters.supplierCompany;
+        filters.supplierCompany ||
+        selectedOpposingCompany?.label ||
+        (filters.ledgerType === "Buyer" ? selectedOpposingCompany?.label : "") ||
+        (filters.ledgerType === "Seller" ? selectedCompany?.label : "");
 
       if (!sellerCompanyName) {
         toast.error("Please select a seller company");
@@ -1843,7 +1844,8 @@ const ListPaymentReceived = () => {
 
       const sellerCompanyData = sellerCompanies.find(
         (c) =>
-          c.companyName === sellerCompanyName ||
+          c.companyName?.trim().toLowerCase() ===
+            sellerCompanyName.trim().toLowerCase() ||
           (selectedOpposingCompany && c._id === selectedOpposingCompany.value),
       );
 
@@ -1868,8 +1870,12 @@ const ListPaymentReceived = () => {
         reportType: reportType === "MIS" ? "MIS" : "PaymentAdvice",
         startDate: filters.startDate,
         endDate: filters.endDate,
-        buyerCompany: filters.buyerCompany,
-        supplierCompany: filters.supplierCompany,
+        buyerCompany:
+          filters.buyerCompany || selectedCompany?.label || listCompanyPair.buyerCompany,
+        supplierCompany:
+          filters.supplierCompany ||
+          selectedOpposingCompany?.label ||
+          listCompanyPair.supplierCompany,
       });
 
       toast.success("Email sent successfully!");
@@ -1980,7 +1986,7 @@ const ListPaymentReceived = () => {
 
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
-        recipientEmail: sellerCompany.email,
+        recipientEmail: sellerCompany.email.trim(),
         reportType: "IndividualVoucher",
         individualPaymentId: row.raw?._id || row.id,
       });
