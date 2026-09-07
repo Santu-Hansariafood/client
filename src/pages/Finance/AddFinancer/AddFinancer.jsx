@@ -11,13 +11,13 @@ import Buttons from "../../../common/Buttons/Buttons";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
-const getFinancerKey = (buyerId, companyId) => `${buyerId}:${companyId}`;
+const getFinancerKey = (sellerCompanyId) => String(sellerCompanyId);
 
 const AddFinancer = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [buyers, setBuyers] = useState([]);
-  const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
   const [financers, setFinancers] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -80,7 +80,7 @@ const AddFinancer = () => {
   useEffect(() => {
     const loadOptions = async () => {
       if (!selectedGroup?.value) {
-        setBuyers([]);
+        setSellerCompanies([]);
         return;
       }
       try {
@@ -88,9 +88,9 @@ const AddFinancer = () => {
         const response = await api.get("/financers/options", {
           params: { groupId: selectedGroup.value },
         });
-        setBuyers(response.data || []);
+        setSellerCompanies(response.data || []);
       } catch (error) {
-        setBuyers([]);
+        setSellerCompanies([]);
         toast.error(error.response?.data?.message || "Failed to load buyer companies");
       } finally {
         setLoadingOptions(false);
@@ -105,78 +105,54 @@ const AddFinancer = () => {
 
   const handleGroupChange = (group) => {
     setSelectedGroup(group);
-    setSelectedBuyerCompany(null);
+    setSelectedSellerCompany(null);
     setPage(1);
   };
 
-  const buyerCompanyOptions = useMemo(
+  const sellerCompanyOptions = useMemo(
     () =>
-      buyers.flatMap((buyer) =>
-        (buyer.companies || []).map((company) => ({
-          value: `${buyer._id}:${company._id}`,
-          label: `${buyer.name || "Unnamed buyer"} - ${company.companyName || "Unnamed company"}`,
-          buyerId: buyer._id,
-          companyId: company._id,
-        })),
-      ),
-    [buyers],
+      sellerCompanies.map((company) => ({
+        value: String(company._id),
+        label: company.companyName || "Unnamed seller company",
+      })),
+    [sellerCompanies],
   );
 
-  const selectedBuyerCompanyData = useMemo(() => {
-    if (!selectedBuyerCompany) return null;
-    const buyer = buyers.find(
-      (item) => String(item._id) === String(selectedBuyerCompany.buyerId),
-    );
-    const company = buyer?.companies?.find(
-      (item) => String(item._id) === String(selectedBuyerCompany.companyId),
-    );
-    return buyer && company ? { buyer, company } : null;
-  }, [buyers, selectedBuyerCompany]);
+  const selectedSellerCompanyData = useMemo(
+    () =>
+      sellerCompanies.find(
+        (company) => String(company._id) === String(selectedSellerCompany?.value),
+      ) || null,
+    [sellerCompanies, selectedSellerCompany],
+  );
 
-  const handleFinancerChange = async (buyer, company, checked) => {
+  const handleFinancerChange = async (company, checked) => {
     if (!selectedGroup?.value) return;
-    const key = getFinancerKey(buyer._id, company._id);
+    const key = getFinancerKey(company._id);
     setPendingKey(key);
     try {
       if (checked) {
         const response = await api.post("/financers", {
           groupId: selectedGroup.value,
-          buyerId: buyer._id,
-          companyId: company._id,
+          sellerCompanyId: company._id,
         });
-        setBuyers((previous) =>
+        setSellerCompanies((previous) =>
           previous.map((item) =>
-            item._id !== buyer._id
-              ? item
-              : {
-                  ...item,
-                  companies: item.companies.map((entry) =>
-                    entry._id === company._id
-                      ? { ...entry, financerId: response.data?._id || null }
-                      : entry,
-                  ),
-                },
+            item._id === company._id
+              ? { ...item, financerId: response.data?._id || null }
+              : item,
           ),
         );
         toast.success("Financer added successfully");
       } else {
         const existing = financers.find(
-          (item) => getFinancerKey(item.buyerId?._id, item.companyId?._id) === key,
+          (item) => getFinancerKey(item.sellerCompanyId?._id) === key,
         );
         if (company.financerId) await api.delete(`/financers/${company.financerId}`);
         else if (existing?._id) await api.delete(`/financers/${existing._id}`);
-        setBuyers((previous) =>
+        setSellerCompanies((previous) =>
           previous.map((item) =>
-            item._id !== buyer._id
-              ? item
-              : {
-                  ...item,
-                  companies: item.companies.map((entry) =>
-                    entry._id === company._id
-                      ? { ...entry, financerId: null }
-                      : entry,
-                  ),
-                },
+            item._id === company._id ? { ...item, financerId: null } : item,
           ),
         );
         toast.success("Financer removed successfully");
@@ -204,38 +180,32 @@ const AddFinancer = () => {
     }
   };
 
-  const selectionRows = selectedBuyerCompanyData
+  const selectionRows = selectedSellerCompanyData
     ? [[
-        selectedBuyerCompanyData.buyer.name || "-",
-        selectedBuyerCompanyData.company.companyName || "-",
+        selectedSellerCompanyData.companyName || "-",
+        selectedSellerCompanyData.email || "-",
         <label
           key={getFinancerKey(
-            selectedBuyerCompanyData.buyer._id,
-            selectedBuyerCompanyData.company._id,
+            selectedSellerCompanyData._id,
           )}
           className="inline-flex items-center gap-2 font-semibold text-emerald-700"
         >
           <input
             type="checkbox"
-            checked={Boolean(selectedBuyerCompanyData.company.financerId)}
+            checked={Boolean(selectedSellerCompanyData.financerId)}
             disabled={
               pendingKey ===
               getFinancerKey(
-                selectedBuyerCompanyData.buyer._id,
-                selectedBuyerCompanyData.company._id,
+                selectedSellerCompanyData._id,
               )
             }
             onChange={(event) =>
-              handleFinancerChange(
-                selectedBuyerCompanyData.buyer,
-                selectedBuyerCompanyData.company,
-                event.target.checked,
-              )
+              handleFinancerChange(selectedSellerCompanyData, event.target.checked)
             }
             className="h-4 w-4 accent-emerald-600"
           />
           <span>
-            {selectedBuyerCompanyData.company.financerId
+            {selectedSellerCompanyData.financerId
               ? "Added"
               : "Add Financer"}
           </span>
@@ -246,8 +216,7 @@ const AddFinancer = () => {
   const financerRows = financers.map((item, index) => [
     (page - 1) * itemsPerPage + index + 1,
     item.groupId?.groupName || selectedGroup?.label || "-",
-    item.buyerId?.name || "-",
-    item.companyId?.companyName || "-",
+    item.sellerCompanyId?.companyName || "-",
     <Buttons
       key={item._id}
       label={removingId === item._id ? "Removing..." : "Remove"}
@@ -288,19 +257,19 @@ const AddFinancer = () => {
                   {selectedGroup.label}
                 </div>
                 <DataDropdown
-                  label="Select Buyer Company"
-                  options={buyerCompanyOptions}
-                  selectedOptions={selectedBuyerCompany}
-                  onChange={setSelectedBuyerCompany}
-                  placeholder={loadingOptions ? "Loading buyer companies..." : "Select a buyer company"}
-                  isDisabled={loadingOptions || buyerCompanyOptions.length === 0}
+                  label="Select Seller Company"
+                  options={sellerCompanyOptions}
+                  selectedOptions={selectedSellerCompany}
+                  onChange={setSelectedSellerCompany}
+                  placeholder={loadingOptions ? "Loading seller companies..." : "Select a seller company"}
+                  isDisabled={loadingOptions || sellerCompanyOptions.length === 0}
                   required
                 />
               </div>
             )}
           </section>
 
-          {selectedGroup && selectedBuyerCompany && (
+          {selectedGroup && selectedSellerCompany && (
             <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
               <div className="mb-4 flex items-center gap-2">
                 <FaCheckCircle className="text-emerald-600" />
@@ -311,7 +280,7 @@ const AddFinancer = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <Tables
-                    headers={["Buyer", "Buyer Company", "Financer"]}
+                    headers={["Seller Company", "Email", "Financer"]}
                     rows={selectionRows}
                   />
                 </div>
@@ -333,7 +302,7 @@ const AddFinancer = () => {
               <Loading />
             ) : (
               <Tables
-                headers={["Sl No", "Group", "Buyer", "Buyer Company", "Actions"]}
+                headers={["Sl No", "Group", "Seller Company", "Actions"]}
                 rows={financerRows}
               />
             )}
