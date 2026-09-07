@@ -119,6 +119,7 @@ const loaders = {
   ListPaymentRelease: () =>
     import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
   AddFinancer: () => import("../../pages/Finance/AddFinancer/AddFinancer"),
+  FinanceReport: () => import("../../pages/Finance/FinanceReport/FinanceReport"),
   BuyerReports: () =>
     import("../../pages/SaudaReports/BuyerReports/BuyerReports"),
   SellerReports: () =>
@@ -200,6 +201,7 @@ const pathToKey = {
   "/payments/payment-release/add": "AddPaymentRelease",
   "/payments/payment-release/list": "ListPaymentRelease",
   "/finance/add": "AddFinancer",
+  "/finance/report": "FinanceReport",
   "/reports/buyer": "BuyerReports",
   "/reports/seller": "SellerReports",
 };
@@ -309,6 +311,7 @@ const LazyPages = {
   AddPaymentRelease: lazy(loaders.AddPaymentRelease),
   ListPaymentRelease: lazy(loaders.ListPaymentRelease),
   AddFinancer: lazy(loaders.AddFinancer),
+  FinanceReport: lazy(loaders.FinanceReport),
   SellerReports: lazy(loaders.SellerReports),
   BuyerReports: lazy(loaders.BuyerReports),
   NotFound: lazy(loaders.NotFound),
