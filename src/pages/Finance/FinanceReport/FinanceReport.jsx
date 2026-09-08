@@ -146,6 +146,7 @@ const FinanceReport = () => {
 
   const financerRows = financers.map((item, index) => [
     index + 1,
+    item._id || "-",
     item.groupId?.groupName || "-",
     item.buyerId?.name || "-",
     item.companyId?.companyName || "-",
@@ -163,6 +164,7 @@ const FinanceReport = () => {
     ) : (
       "-"
     ),
+    item.saudas?.length || 0,
   ]);
 
   const saudaLookupRows = saudaRows.map((row) => [
@@ -227,7 +229,15 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Sl No", "Group", "Buyer", "Buyer Company", "Sauda Nos"]}
+                headers={[
+                  "Sl No",
+                  "Financer ID",
+                  "Group",
+                  "Buyer",
+                  "Buyer Company",
+                  "Sauda Nos",
+                  "Sauda Count",
+                ]}
                 rows={financerRows}
               />
             </div>
