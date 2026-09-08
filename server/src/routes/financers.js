@@ -176,13 +176,21 @@ router.get("/report", async (req, res) => {
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
     if (startDate || endDate) {
-      orderQuery.poDate = {};
+      const dateFilter = {};
       if (startDate && !Number.isNaN(startDate.getTime())) {
-        orderQuery.poDate.$gte = startDate;
+        dateFilter.$gte = startDate;
       }
       if (endDate && !Number.isNaN(endDate.getTime())) {
-        endDate.setHours(23, 59, 59, 999);
-        orderQuery.poDate.$lte = endDate;
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        dateFilter.$lte = endOfDay;
+      }
+      if (Object.keys(dateFilter).length) {
+        orderQuery.$and = [
+          {
+            $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
+          },
+        ];
       }
     }
 
