@@ -45,24 +45,16 @@ const FinanceReport = () => {
   const loadReport = useCallback(async () => {
     try {
       setLoading(true);
-      const [response, financerResponse] = await Promise.all([
-        api.get("/financers/report", {
-          params: {
-            page,
-            limit: itemsPerPage,
-            startDate: formatDateParam(selectedDate),
-            endDate: formatDateParam(selectedDate),
-          },
-        }),
-        api.get("/financers", {
-          params: {
-            page: 1,
-            limit: 100,
-          },
-        }),
-      ]);
+      const response = await api.get("/financers/report", {
+        params: {
+          page,
+          limit: itemsPerPage,
+          startDate: formatDateParam(selectedDate),
+          endDate: formatDateParam(selectedDate),
+        },
+      });
       setOrders(response.data?.data || []);
-      setFinancers(financerResponse.data?.data || []);
+      setFinancers(response.data?.financers || []);
       setTotal(Number(response.data?.total) || 0);
     } catch (error) {
       setOrders([]);
