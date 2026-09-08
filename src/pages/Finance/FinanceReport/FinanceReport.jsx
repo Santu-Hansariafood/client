@@ -8,6 +8,9 @@ import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
@@ -17,10 +20,21 @@ const formatNumber = (value) =>
     maximumFractionDigits: 2,
   });
 
+const formatDateParam = (value) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const FinanceReport = () => {
   const [orders, setOrders] = useState([]);
   const [financers, setFinancers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [saudaRows, setSaudaRows] = useState([
@@ -36,6 +50,8 @@ const FinanceReport = () => {
           params: {
             page,
             limit: itemsPerPage,
+            startDate: formatDateParam(selectedDate),
+            endDate: formatDateParam(selectedDate),
           },
         }),
         api.get("/financers", {
@@ -56,7 +72,7 @@ const FinanceReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, selectedDate]);
 
   useEffect(() => {
     loadReport();
@@ -71,6 +87,8 @@ const FinanceReport = () => {
           saudaNos: value,
           page: 1,
           limit: 100,
+          startDate: formatDateParam(selectedDate),
+          endDate: formatDateParam(selectedDate),
         },
       });
       const match = (response.data?.data || []).find(
@@ -114,6 +132,11 @@ const FinanceReport = () => {
         ? [{ id: Date.now(), saudaNo: "", pendingQuantity: null, status: "" }]
         : rows.filter((row) => row.id !== id),
     );
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setPage(1);
   };
 
   const orderRows = orders.map((order, index) => [
@@ -174,6 +197,18 @@ const FinanceReport = () => {
         noContentCard
       >
         <div className="space-y-6">
+          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Sauda Report Date</h2>
+                <p className="text-sm text-slate-500">View financed Saudas for a selected date</p>
+              </div>
+              <div className="w-full sm:w-72">
+                <DateSelector selectedDate={selectedDate} onChange={handleDateChange} />
+              </div>
+            </div>
+          </section>
+
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
