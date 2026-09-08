@@ -158,12 +158,20 @@ router.get("/report", async (req, res) => {
           .filter((company) => String(company._id) === String(companyId))
           .map((company) => company.companyName)
       : financedCompanyNames;
+    const legacyCompanyNameQuery = scopedCompanyNames.length
+      ? {
+          $and: [
+            {
+              $or: [{ companyId: { $exists: false } }, { companyId: null }],
+            },
+            { buyerCompany: { $in: scopedCompanyNames } },
+          ],
+        }
+      : null;
     const orderQuery = {
       $or: [
         { companyId: { $in: scopedCompanyIds } },
-        ...(scopedCompanyNames.length
-          ? [{ buyerCompany: { $in: scopedCompanyNames } }]
-          : []),
+        ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
       ],
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
