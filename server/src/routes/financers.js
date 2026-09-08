@@ -186,7 +186,7 @@ router.get("/report", async (req, res) => {
       }
     }
 
-    const [orders, total, companies] = await Promise.all([
+    const [orders, total, companies, financerOrders] = await Promise.all([
       SelfOrder.find(orderQuery)
         .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate deliveryDate paymentTerms companyId")
         .sort({ poDate: -1, saudaNo: -1 })
@@ -198,7 +198,29 @@ router.get("/report", async (req, res) => {
         .select("_id companyName")
         .sort({ companyName: 1 })
         .lean(),
+      SelfOrder.find(orderQuery)
+        .select("saudaNo poDate buyerCompany companyId")
+        .sort({ poDate: -1, saudaNo: -1 })
+        .lean(),
     ]);
+
+    const financerData = financerRecords.map((financer) => {
+      const financerCompanyId = String(financer.companyId?._id || financer.companyId || "");
+      const financerCompanyName = financer.companyId?.companyName || "";
+      const saudas = financerOrders
+        .filter(
+          (order) =>
+            (order.companyId && String(order.companyId) === financerCompanyId) ||
+            (!order.companyId && order.buyerCompany === financerCompanyName),
+        )
+        .map((order) => ({
+          id: order._id,
+          saudaNo: order.saudaNo,
+          poDate: order.poDate,
+        }));
+
+      return { ...financer, saudas };
+    });
 
     const saudaNos = orders.map((order) => order.saudaNo).filter(Boolean);
     const loadedBySauda = await LoadingEntry.aggregate([
@@ -228,7 +250,7 @@ router.get("/report", async (req, res) => {
       total,
       page,
       limit,
-      financers: financerRecords,
+      financers: financerData,
       groups: financedGroups,
       companies,
       financerCount: financerRecords.length,

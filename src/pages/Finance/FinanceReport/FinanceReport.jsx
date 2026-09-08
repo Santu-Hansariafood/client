@@ -34,7 +34,7 @@ const FinanceReport = () => {
   const [orders, setOrders] = useState([]);
   const [financers, setFinancers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [saudaRows, setSaudaRows] = useState([
@@ -149,6 +149,20 @@ const FinanceReport = () => {
     item.groupId?.groupName || "-",
     item.buyerId?.name || "-",
     item.companyId?.companyName || "-",
+    item.saudas?.length ? (
+      <div key={`saudas-${item._id}`} className="flex flex-wrap gap-1">
+        {item.saudas.map((sauda) => (
+          <span
+            key={sauda.id}
+            className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
+          >
+            {sauda.saudaNo || "-"}
+          </span>
+        ))}
+      </div>
+    ) : (
+      "-"
+    ),
   ]);
 
   const saudaLookupRows = saudaRows.map((row) => [
@@ -213,7 +227,7 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Sl No", "Group", "Buyer", "Buyer Company"]}
+                headers={["Sl No", "Group", "Buyer", "Buyer Company", "Sauda Nos"]}
                 rows={financerRows}
               />
             </div>
