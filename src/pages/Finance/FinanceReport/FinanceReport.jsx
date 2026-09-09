@@ -250,7 +250,7 @@ const FinanceReport = () => {
             ) : (
               <div className="overflow-x-auto">
                 <Tables
-                  headers={["Sl No", "Date", "Sauda No", "Seller Company", "Buyer Company", "Consignee", "Sell Quantity", "Rate", "CD", "GST", "Delivery Date", "Payment Terms"]}
+                  headers={["Sl No", "Date", "Sauda No", "Seller Company", "Buyer Company", "Consignee", "Purchase Quantity", "Rate", "CD", "GST", "Delivery Date", "Payment Terms"]}
                   rows={orderRows}
                 />
               </div>

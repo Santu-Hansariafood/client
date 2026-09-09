@@ -11,12 +11,17 @@ import Buttons from "../../../common/Buttons/Buttons";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 
 const getFinancerKey = (buyerId, companyId) => `${buyerId}:${companyId}`;
+const getSellerFinancerKey = (sellerId, sellerCompany) => `${sellerId}:${sellerCompany}`;
 
 const AddFinancer = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [buyerCompanies, setBuyerCompanies] = useState([]);
   const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
+  const [sellers, setSellers] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [selectedSeller, setSelectedSeller] = useState(null);
+  const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [financers, setFinancers] = useState([]);
@@ -87,9 +92,59 @@ const AddFinancer = () => {
     loadOptions();
   }, [selectedGroup]);
 
+  useEffect(() => {
+    const loadSellerOptions = async () => {
+      try {
+        const response = await api.get("/financers/seller-options");
+        setSellers(response.data?.sellers || []);
+        setSellerCompanies(response.data?.sellerCompanies || []);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to load sellers");
+      }
+    };
+    loadSellerOptions();
+  }, []);
+
   const handleGroupChange = (group) => {
     setSelectedGroup(group);
     setSelectedBuyerCompany(null);
+  };
+
+  const sellerCompanyOptions = useMemo(
+    () => sellerCompanies.map((company) => ({ value: company, label: company })),
+    [sellerCompanies],
+  );
+
+  const handleSellerFinancerChange = async (checked) => {
+    if (!selectedGroup?.value || !selectedSeller?.value || !selectedSellerCompany?.value) return;
+    const key = getSellerFinancerKey(selectedSeller.value, selectedSellerCompany.value);
+    setPendingKey(key);
+    try {
+      const existing = financers.find(
+        (item) =>
+          item.financerType === "Seller" &&
+          String(item.sellerId?._id || item.sellerId) === String(selectedSeller.value) &&
+          item.sellerCompany === selectedSellerCompany.value,
+      );
+      if (checked) {
+        await api.post("/financers", {
+          groupId: selectedGroup.value,
+          financerType: "Seller",
+          sellerId: selectedSeller.value,
+          sellerCompany: selectedSellerCompany.value,
+        });
+        toast.success("Seller financer added successfully");
+      } else if (existing?._id) {
+        await api.delete(`/financers/${existing._id}`);
+        toast.success("Seller financer removed successfully");
+      }
+      clearApiCache();
+      await loadFinancers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update seller financer");
+    } finally {
+      setPendingKey("");
+    }
   };
 
   const buyerCompanyOptions = useMemo(
@@ -204,8 +259,8 @@ const AddFinancer = () => {
   const financerRows = financers.map((item, index) => [
     index + 1,
     item.groupId?.groupName || "-",
-    item.buyerId?.name || "-",
-    item.companyId?.companyName || "-",
+    item.financerType === "Seller" ? item.sellerId?.sellerName || "-" : item.buyerId?.name || "-",
+    item.financerType === "Seller" ? item.sellerCompany || "-" : item.companyId?.companyName || "-",
     <Buttons
       key={item._id}
       label={removingId === item._id ? "Removing..." : "Remove"}
@@ -258,6 +313,63 @@ const AddFinancer = () => {
             )}
           </section>
 
+          {selectedGroup && (
+            <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
+              <div className="mb-4 flex items-center gap-2">
+                <FaCheckCircle className="text-emerald-600" />
+                <h2 className="text-lg font-bold text-slate-800">Add Financer Seller</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DataDropdown
+                  label="Select Seller"
+                  options={sellers}
+                  selectedOptions={selectedSeller}
+                  onChange={(seller) => {
+                    setSelectedSeller(seller);
+                    setSelectedSellerCompany(null);
+                  }}
+                  placeholder="Select a seller"
+                  isClearable
+                />
+                <DataDropdown
+                  label="Select Seller Company"
+                  options={sellerCompanyOptions}
+                  selectedOptions={selectedSellerCompany}
+                  onChange={setSelectedSellerCompany}
+                  placeholder="Select a seller company"
+                  isDisabled={!selectedSeller || sellerCompanyOptions.length === 0}
+                  isClearable
+                />
+              </div>
+              {selectedSeller && selectedSellerCompany && (
+                <div className="mt-2 overflow-x-auto">
+                  <Tables
+                    headers={["Seller", "Seller Company", "Financer"]}
+                    rows={[[
+                      selectedSeller.label || "-",
+                      selectedSellerCompany.label || "-",
+                      <label key={getSellerFinancerKey(selectedSeller.value, selectedSellerCompany.value)} className="inline-flex items-center gap-2 font-semibold text-emerald-700">
+                        <input
+                          type="checkbox"
+                          checked={financers.some(
+                            (item) =>
+                              item.financerType === "Seller" &&
+                              String(item.sellerId?._id || item.sellerId) === String(selectedSeller.value) &&
+                              item.sellerCompany === selectedSellerCompany.value,
+                          )}
+                          disabled={pendingKey === getSellerFinancerKey(selectedSeller.value, selectedSellerCompany.value)}
+                          onChange={(event) => handleSellerFinancerChange(event.target.checked)}
+                          className="h-4 w-4 accent-emerald-600"
+                        />
+                        <span> {financers.some((item) => item.financerType === "Seller" && String(item.sellerId?._id || item.sellerId) === String(selectedSeller.value) && item.sellerCompany === selectedSellerCompany.value) ? "Added" : "Add Financer"}</span>
+                      </label>,
+                    ]]}
+                  />
+                </div>
+              )}
+            </section>
+          )}
+
           {selectedGroup && selectedBuyerCompany && (
             <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
               <div className="mb-4 flex items-center gap-2">
@@ -280,7 +392,7 @@ const AddFinancer = () => {
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Added Financers</h2>
+                <h2 className="text-lg font-bold text-slate-800">Added Financers(Buyer Companies)</h2>
                 <p className="text-sm text-slate-500">All saved financer mappings</p>
               </div>
               <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Financer from "../models/Financer.js";
 import Buyer from "../models/Buyer.js";
 import Company from "../models/Company.js";
+import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import LoadingEntry from "../models/LoadingEntry.js";
 
@@ -17,6 +18,7 @@ const populatePaths = [
   { path: "groupId", select: "groupName" },
   { path: "buyerId", select: "name mobile" },
   { path: "companyId", select: "companyName companyEmail groupId" },
+  { path: "sellerId", select: "sellerName phoneNumbers companies" },
 ];
 
 router.get("/options", async (req, res) => {
@@ -71,6 +73,24 @@ router.get("/options", async (req, res) => {
           })),
       ),
     );
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/seller-options", async (_req, res) => {
+  try {
+    const [sellers, sellerCompanies] = await Promise.all([
+      Seller.find({ status: "active" }).select("sellerName companies").sort({ sellerName: 1 }).lean(),
+      SelfOrder.distinct("supplierCompany", { supplierCompany: { $exists: true, $ne: "" } }),
+    ]);
+    res.json({
+      sellers: sellers.map((seller) => ({
+        value: String(seller._id),
+        label: seller.sellerName,
+      })),
+      sellerCompanies: sellerCompanies.filter(Boolean).sort((a, b) => String(a).localeCompare(String(b))),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -322,6 +342,25 @@ router.post("/", async (req, res) => {
     const groupId = toObjectId(req.body?.groupId);
     const buyerId = toObjectId(req.body?.buyerId);
     const companyId = toObjectId(req.body?.companyId);
+    const financerType = req.body?.financerType || "Buyer";
+
+    if (financerType === "Seller") {
+      const sellerId = toObjectId(req.body?.sellerId);
+      const sellerCompany = String(req.body?.sellerCompany || "").trim();
+      if (!groupId || !sellerId || !sellerCompany) {
+        return res.status(400).json({
+          message: "groupId, sellerId and sellerCompany are required",
+        });
+      }
+      const seller = await Seller.findById(sellerId).select("_id").lean();
+      if (!seller) return res.status(400).json({ message: "Invalid seller" });
+      const financer = await Financer.findOneAndUpdate(
+        { groupId, sellerId, sellerCompany, financerType: "Seller" },
+        { $setOnInsert: { groupId, sellerId, sellerCompany, financerType: "Seller" } },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      ).populate(populatePaths);
+      return res.status(201).json(financer);
+    }
 
     if (!groupId || !buyerId || !companyId) {
       return res.status(400).json({
