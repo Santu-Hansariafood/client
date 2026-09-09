@@ -327,7 +327,9 @@ export const buildTallyVoucherRows = (
 ) => {
   const allItems = [
     ...payments.map((p) => ({ ...p, uiType: "payment" })),
-    ...entries.map((e) => ({ ...e, uiType: "entry" })),
+    ...entries
+      .filter((entry) => !entry.isRejected)
+      .map((e) => ({ ...e, uiType: "entry" })),
   ];
 
   const sorted = allItems.sort((a, b) => {
