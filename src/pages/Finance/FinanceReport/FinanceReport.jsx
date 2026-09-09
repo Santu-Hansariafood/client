@@ -36,7 +36,10 @@ const formatDateParam = (value) => {
 const FinanceReport = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  const [consignees, setConsignees] = useState([]);
+  const [selectedConsignee, setSelectedConsignee] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [saudaRows, setSaudaRows] = useState([
@@ -51,8 +54,9 @@ const FinanceReport = () => {
         params: {
           page,
           limit: itemsPerPage,
-          startDate: formatDateParam(selectedDate),
-          endDate: formatDateParam(selectedDate),
+          startDate: formatDateParam(fromDate),
+          endDate: formatDateParam(toDate),
+          consignee: selectedConsignee || undefined,
         },
       });
       setOrders(response.data?.data || []);
@@ -64,7 +68,20 @@ const FinanceReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedDate]);
+  }, [page, fromDate, toDate, selectedConsignee]);
+
+  useEffect(() => {
+    const loadConsignees = async () => {
+      try {
+        const response = await api.get("/consignees", { params: { limit: 0 } });
+        const data = response.data?.data || response.data || [];
+        setConsignees(Array.isArray(data) ? data : []);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to load consignees");
+      }
+    };
+    loadConsignees();
+  }, []);
 
   useEffect(() => {
     loadReport();
@@ -79,8 +96,9 @@ const FinanceReport = () => {
           saudaNos: value,
           page: 1,
           limit: 100,
-          startDate: formatDateParam(selectedDate),
-          endDate: formatDateParam(selectedDate),
+          startDate: formatDateParam(fromDate),
+          endDate: formatDateParam(toDate),
+          consignee: selectedConsignee || undefined,
         },
       });
       const match = (response.data?.data || []).find(
@@ -126,8 +144,8 @@ const FinanceReport = () => {
     );
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  const handleDateChange = (setter) => (date) => {
+    setter(date);
     setPage(1);
   };
 
@@ -187,11 +205,42 @@ const FinanceReport = () => {
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Sauda Report Date</h2>
-                <p className="text-sm text-slate-500">View financed Saudas for a selected date</p>
+                <h2 className="text-lg font-bold text-slate-800">Sauda Report Filters</h2>
+                <p className="text-sm text-slate-500">View financed Saudas by date range and consignee</p>
               </div>
-              <div className="w-full sm:w-72">
-                <DateSelector selectedDate={selectedDate} onChange={handleDateChange} />
+              <div className="grid w-full gap-3 sm:grid-cols-3 sm:items-end">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-600">From Date</label>
+                  <DateSelector selectedDate={fromDate} onChange={handleDateChange(setFromDate)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-600">To Date</label>
+                  <DateSelector selectedDate={toDate} onChange={handleDateChange(setToDate)} />
+                </div>
+                <div>
+                  <label htmlFor="finance-consignee" className="mb-1 block text-xs font-bold text-slate-600">
+                    Consignee
+                  </label>
+                  <select
+                    id="finance-consignee"
+                    value={selectedConsignee}
+                    onChange={(event) => {
+                      setSelectedConsignee(event.target.value);
+                      setPage(1);
+                    }}
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">All Consignees</option>
+                    {consignees.map((consignee) => {
+                      const value = consignee.name || consignee.consignee || consignee.companyName || "";
+                      return value ? (
+                        <option key={consignee._id || value} value={value}>
+                          {value}
+                        </option>
+                      ) : null;
+                    })}
+                  </select>
+                </div>
               </div>
             </div>
           </section>

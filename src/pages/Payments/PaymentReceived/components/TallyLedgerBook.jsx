@@ -292,8 +292,8 @@ const TallyLedgerBook = ({
                 : row.raw?.uiType === "entry" && row.raw?.isRejected
                   ? "bg-red-50 text-red-700"
                 : "hover:bg-sky-50/50",
-              idx % 2 === 0 && !row.isOpening ? "bg-white" : "",
-              idx % 2 === 1 && !row.isOpening ? "bg-slate-50/40" : "",
+              !row.isOpening && !row.raw?.isRejected && idx % 2 === 0 ? "bg-white" : "",
+              !row.isOpening && !row.raw?.isRejected && idx % 2 === 1 ? "bg-slate-50/40" : "",
             ].join(" ");
 
             const subRowBg = idx % 2 === 0 ? "bg-amber-50/20" : "bg-slate-50/30";
@@ -322,7 +322,7 @@ const TallyLedgerBook = ({
                       className={`font-semibold uppercase text-[10px] ${row.raw?.uiType === "entry" && row.raw?.isRejected ? "text-red-700" : "text-slate-800"}`}
                     >
                       {row.particulars}
-                      {row.raw?.uiType === "entry" && row.raw?.isRejected && " (REJECTED)"}
+                      {row.raw?.uiType === "entry" && row.raw?.isRejected ? " (REJECTED LORRY)" : ""}
                     </div>
                     {row.isPaymentRow && row.voucherNo && (
                       <div className="text-[9px] font-bold text-indigo-600 mt-0.5">

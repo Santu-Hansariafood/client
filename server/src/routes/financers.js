@@ -84,6 +84,7 @@ router.get("/report", async (req, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || "10", 10)));
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
+    const consignee = String(req.query.consignee || "").trim();
     const rawSaudaNos = String(req.query.saudaNos || "")
       .split(",")
       .map((value) => value.trim())
@@ -175,6 +176,9 @@ router.get("/report", async (req, res) => {
       ],
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
+    if (consignee) {
+      orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
+    }
     if (startDate || endDate) {
       const dateFilter = {};
       if (startDate && !Number.isNaN(startDate.getTime())) {
