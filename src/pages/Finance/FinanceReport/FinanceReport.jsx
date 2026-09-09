@@ -8,6 +8,7 @@ import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
 const DateSelector = lazy(
   () => import("../../../common/DateSelector/DateSelector"),
 );
@@ -159,6 +160,11 @@ const FinanceReport = () => {
     order.paymentTerms || "-",
   ]);
 
+  const consigneeOptions = consignees.map((consignee) => ({
+    value: consignee,
+    label: consignee,
+  }));
+
   const saudaLookupRows = saudaRows.map((row) => [
     <input
       key={`input-${row.id}`}
@@ -213,27 +219,17 @@ const FinanceReport = () => {
                   <DateSelector selectedDate={toDate} onChange={handleDateChange(setToDate)} />
                 </div>
                 <div>
-                  <label htmlFor="finance-consignee" className="mb-1 block text-xs font-bold text-slate-600">
-                    Consignee
-                  </label>
-                  <select
-                    id="finance-consignee"
-                    value={selectedConsignee}
-                    onChange={(event) => {
-                      setSelectedConsignee(event.target.value);
+                  <DataDropdown
+                    label="Consignee"
+                    options={consigneeOptions}
+                    selectedOptions={selectedConsignee}
+                    onChange={(option) => {
+                      setSelectedConsignee(option?.value || "");
                       setPage(1);
                     }}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                  >
-                    <option value="">All Consignees</option>
-                    {consignees.map((consignee) => {
-                      return (
-                        <option key={consignee} value={consignee}>
-                          {consignee}
-                        </option>
-                      );
-                    })}
-                  </select>
+                    placeholder="All Consignees"
+                    isClearable
+                  />
                 </div>
               </div>
             </div>
