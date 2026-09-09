@@ -40,6 +40,7 @@ const ListPaymentReceived = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [sendingEmailIds, setSendingEmailIds] = useState(new Set());
   const [payments, setPayments] = useState([]);
+  const [loadingEntries, setLoadingEntries] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [openingBalance, setOpeningBalance] = useState(0);
@@ -271,15 +272,35 @@ const ListPaymentReceived = () => {
     try {
       setLoading(true);
 
-      const response = await api.get("/payment-received", {
-        params: {
-          ...filters,
-          page,
-          limit,
-        },
-      });
+      const entryParams = {
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        buyerCompany: filters.buyerCompany || undefined,
+        supplierCompany: filters.supplierCompany || undefined,
+        buyerId:
+          filters.ledgerType === "Buyer"
+            ? filters.ledgerId || undefined
+            : undefined,
+        supplier:
+          filters.ledgerType === "Seller"
+            ? filters.ledgerId || undefined
+            : undefined,
+        saudaNo: filters.saudaNo || undefined,
+        limit: 5000,
+      };
+      const [response, entriesResponse] = await Promise.all([
+        api.get("/payment-received", {
+          params: {
+            ...filters,
+            page,
+            limit,
+          },
+        }),
+        api.get("/loading-entries", { params: entryParams }),
+      ]);
 
       setPayments(response.data.data || []);
+      setLoadingEntries(entriesResponse.data.data || []);
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
@@ -298,9 +319,9 @@ const ListPaymentReceived = () => {
     return buildTallyVoucherRows(
       payments,
       openingBalance,
-      [],
+      loadingEntries,
     );
-  }, [payments, openingBalance]);
+  }, [payments, openingBalance, loadingEntries]);
 
   const stats = useMemo(() => {
     const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);

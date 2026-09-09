@@ -576,6 +576,11 @@ export const buildTallyVoucherRows = (
               `Lorry ${lorryNum}`,
               billNum ? `Bill ${billNum}` : "",
               payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+              payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
+              payment.remarks ? `Purpose: ${payment.remarks}` : "",
+              payment.entries?.length
+                ? `Purpose: ${payment.entries.map((entry) => entry.description).filter(Boolean).join(", ")}`
+                : "",
             ]
               .filter(Boolean)
               .join(" | "),
@@ -607,7 +612,12 @@ export const buildTallyVoucherRows = (
             allocatedAmount: allocatedAmt,
             debitNote: mapping.debitNote || "",
             creditNote: mapping.creditNote || "",
-            generalRemarks: mapping.remarks || mapping.generalRemarks || "",
+            generalRemarks:
+              mapping.remarks ||
+              mapping.generalRemarks ||
+              payment.remarks ||
+              payment.entries?.map((entry) => entry.description).filter(Boolean).join(", ") ||
+              "",
             breakdown: mapParts,
             paymentAllocations: [],
           });
@@ -639,6 +649,7 @@ export const buildTallyVoucherRows = (
           particulars: [
             "On Account",
             payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+            payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
             payment.remarks ? payment.remarks : "",
           ]
             .filter(Boolean)

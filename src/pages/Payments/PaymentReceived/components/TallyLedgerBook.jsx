@@ -289,6 +289,8 @@ const TallyLedgerBook = ({
               "border-b border-slate-200 text-[11px]",
               row.isOpening
                 ? "bg-green-50/80 font-bold"
+                : row.raw?.uiType === "entry" && row.raw?.isRejected
+                  ? "bg-red-50 text-red-700"
                 : "hover:bg-sky-50/50",
               idx % 2 === 0 && !row.isOpening ? "bg-white" : "",
               idx % 2 === 1 && !row.isOpening ? "bg-slate-50/40" : "",
@@ -315,9 +317,12 @@ const TallyLedgerBook = ({
                         </div>
                       )}
                   </td>
-                  <td className="px-3 py-2 text-slate-800 border-r border-slate-200 leading-snug max-w-md">
-                    <div className="font-semibold uppercase text-[10px]">
+                  <td className="px-3 py-2 border-r border-slate-200 leading-snug max-w-md">
+                    <div
+                      className={`font-semibold uppercase text-[10px] ${row.raw?.uiType === "entry" && row.raw?.isRejected ? "text-red-700" : "text-slate-800"}`}
+                    >
                       {row.particulars}
+                      {row.raw?.uiType === "entry" && row.raw?.isRejected && " (REJECTED)"}
                     </div>
                     {row.isPaymentRow && row.voucherNo && (
                       <div className="text-[9px] font-bold text-indigo-600 mt-0.5">
