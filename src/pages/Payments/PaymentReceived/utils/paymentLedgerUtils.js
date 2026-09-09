@@ -103,6 +103,21 @@ export const getLedgerRowClaimAmount = (row = {}) =>
       0,
   ) || 0;
 
+const getPaymentReference = (payment = {}, mapping = {}, loadingEntry = {}) => {
+  const paymentMode = String(payment.paymentMode || "").toLowerCase();
+  if (paymentMode === "claim") return "Claim";
+  if (paymentMode === "tds") return "TDS";
+  if (paymentMode === "gst") return "GST";
+  if (paymentMode === "adjustment") return "Adjustment";
+  if (Number(mapping.otherCharges) > 0) return "Other";
+  if (Number(mapping.bankCharges) > 0) return "Bank Charges";
+  if (Number(mapping.tds) > 0 || Number(payment.tds) > 0) return "TDS";
+  if (Number(loadingEntry.cd) > 0) return "CD";
+  if (Number(loadingEntry.gst) > 0) return "GST";
+  if (Number(payment.claim) > 0) return "Claim";
+  return "";
+};
+
 const calculateOutstandingAmount = (entry) => {
   if (!entry || entry.isRejected) return 0;
   const weight =
@@ -577,6 +592,9 @@ export const buildTallyVoucherRows = (
               billNum ? `Bill ${billNum}` : "",
               payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
               payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
+              getPaymentReference(payment, mapping, loadingEntry)
+                ? `Reference: ${getPaymentReference(payment, mapping, loadingEntry)}`
+                : "",
               payment.remarks ? `Purpose: ${payment.remarks}` : "",
               payment.entries?.length
                 ? `Purpose: ${payment.entries.map((entry) => entry.description).filter(Boolean).join(", ")}`
@@ -606,6 +624,7 @@ export const buildTallyVoucherRows = (
             mappingIndex: mIdx,
             voucherNo: payment.voucherNumber,
             paymentMode: payment.paymentMode,
+            reference: getPaymentReference(payment, mapping, loadingEntry),
             saudaNo: mapping.saudaNo || loadingEntry.saudaNo || "",
             lorryNumber: lorryNum,
             billNumber: billNum,
@@ -650,6 +669,7 @@ export const buildTallyVoucherRows = (
             "On Account",
             payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
             payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
+            getPaymentReference(payment) ? `Reference: ${getPaymentReference(payment)}` : "",
             payment.remarks ? payment.remarks : "",
           ]
             .filter(Boolean)
@@ -673,6 +693,7 @@ export const buildTallyVoucherRows = (
           isOnAccount: true,
           voucherNo: payment.voucherNumber,
           paymentMode: payment.paymentMode,
+          reference: getPaymentReference(payment),
           claim: Number(payment.claim) || 0,
           breakdown: entriesPart.map((e) => ({
             type: "add",

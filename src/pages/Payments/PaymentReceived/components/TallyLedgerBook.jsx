@@ -149,6 +149,11 @@ const TallyLedgerBook = ({
     <>
       <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
         {r.credit > 0 ? formatLedgerAmount(r.credit) : ""}
+        {r.balance !== 0 && (
+          <div className="mt-1 border-t border-emerald-100 pt-1 text-[9px] font-semibold text-slate-500">
+            Balance: {formatLedgerAmount(Math.abs(r.balance))}
+          </div>
+        )}
       </td>
       <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
         {formatLedgerAmount(
@@ -324,6 +329,11 @@ const TallyLedgerBook = ({
                       {row.particulars}
                       {row.raw?.uiType === "entry" && row.raw?.isRejected ? " (REJECTED LORRY)" : ""}
                     </div>
+                    {row.reference && (
+                      <div className="text-[9px] font-bold text-amber-700 mt-0.5">
+                        Reference: {row.reference}
+                      </div>
+                    )}
                     {row.isPaymentRow && row.voucherNo && (
                       <div className="text-[9px] font-bold text-indigo-600 mt-0.5">
                         Vch #{row.voucherNo} · {row.paymentMode || ""}

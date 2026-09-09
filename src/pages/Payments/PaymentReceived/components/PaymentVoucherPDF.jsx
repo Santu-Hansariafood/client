@@ -580,6 +580,7 @@ const PaymentVoucherPDF = ({
   const firstEntry = allEntries[0];
   const loadingEntry = firstEntry?.loadingEntry;
   const firstMapping = firstEntry?.mapping;
+  const reference = row.reference || (row.raw?.isRejected ? "Rejected" : "");
 
   const billNo = getValue(
     loadingEntry?.billNumber,
@@ -651,7 +652,7 @@ const PaymentVoucherPDF = ({
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Ref. No</Text>
-            <Text style={styles.metaValue}>{voucherNumber || "-"}</Text>
+            <Text style={styles.metaValue}>{reference || voucherNumber || "-"}</Text>
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Bill No</Text>
@@ -709,6 +710,12 @@ const PaymentVoucherPDF = ({
                       {formatAmount(breakdown.grossAmount)}
                     </Text>
                   </View>
+                  {entry.loadingEntry?.isRejected && (
+                    <View style={[styles.claimsTableRow, { backgroundColor: "#fee2e2" }]}>
+                      <Text style={[styles.col1, { color: "#b91c1c", fontWeight: "bold" }]}>REJECTED LORRY</Text>
+                      <Text style={[styles.col4, { color: "#b91c1c", fontWeight: "bold" }]}>-</Text>
+                    </View>
+                  )}
                   {breakdown.cdAmount > 0 && (
                     <View style={styles.claimsTableRow}>
                       <Text style={styles.col1}>
@@ -878,6 +885,12 @@ const PaymentVoucherPDF = ({
             <View style={styles.summaryRow}>
               <Text style={styles.metaLabel}>Payment Mode:</Text>
               <Text style={styles.metaValue}>{paymentMode}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.metaLabel}>Balance:</Text>
+              <Text style={styles.metaValue}>
+                {formatAmount(Math.max(Number(row.balance || 0), 0))}
+              </Text>
             </View>
             <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>Total:</Text>
