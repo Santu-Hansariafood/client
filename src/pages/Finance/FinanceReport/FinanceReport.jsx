@@ -60,6 +60,7 @@ const FinanceReport = () => {
         },
       });
       setOrders(response.data?.data || []);
+      setConsignees(response.data?.consigneeOptions || []);
       setTotal(Number(response.data?.total) || 0);
     } catch (error) {
       setOrders([]);
@@ -71,21 +72,15 @@ const FinanceReport = () => {
   }, [page, fromDate, toDate, selectedConsignee]);
 
   useEffect(() => {
-    const loadConsignees = async () => {
-      try {
-        const response = await api.get("/consignees", { params: { limit: 0 } });
-        const data = response.data?.data || response.data || [];
-        setConsignees(Array.isArray(data) ? data : []);
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to load consignees");
-      }
-    };
-    loadConsignees();
-  }, []);
-
-  useEffect(() => {
     loadReport();
   }, [loadReport]);
+
+  useEffect(() => {
+    if (selectedConsignee && !consignees.includes(selectedConsignee)) {
+      setSelectedConsignee("");
+      setPage(1);
+    }
+  }, [consignees, selectedConsignee]);
 
   const lookupSauda = async (rowId, saudaNo) => {
     const value = String(saudaNo || "").trim();
@@ -232,12 +227,11 @@ const FinanceReport = () => {
                   >
                     <option value="">All Consignees</option>
                     {consignees.map((consignee) => {
-                      const value = consignee.name || consignee.consignee || consignee.companyName || "";
-                      return value ? (
-                        <option key={consignee._id || value} value={value}>
-                          {value}
+                      return (
+                        <option key={consignee} value={consignee}>
+                          {consignee}
                         </option>
-                      ) : null;
+                      );
                     })}
                   </select>
                 </div>

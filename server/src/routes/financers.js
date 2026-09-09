@@ -176,9 +176,6 @@ router.get("/report", async (req, res) => {
       ],
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
-    if (consignee) {
-      orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
-    }
     if (startDate || endDate) {
       const dateFilter = {};
       if (startDate && !Number.isNaN(startDate.getTime())) {
@@ -197,8 +194,12 @@ router.get("/report", async (req, res) => {
         ];
       }
     }
+    const consigneeQuery = { ...orderQuery };
+    if (consignee) {
+      orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
+    }
 
-    const [orders, total, companies, financerOrders] = await Promise.all([
+    const [orders, total, companies, financerOrders, consigneeOptions] = await Promise.all([
       SelfOrder.find(orderQuery)
         .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate cd gst deliveryDate paymentTerms companyId")
         .sort({ poDate: -1, saudaNo: -1 })
@@ -214,6 +215,7 @@ router.get("/report", async (req, res) => {
         .select("saudaNo poDate buyerCompany companyId")
         .sort({ poDate: -1, saudaNo: -1 })
         .lean(),
+      SelfOrder.distinct("consignee", consigneeQuery),
     ]);
 
     const financerData = financerRecords.map((financer) => {
@@ -265,6 +267,11 @@ router.get("/report", async (req, res) => {
       financers: financerData,
       groups: financedGroups,
       companies,
+      consigneeOptions: consigneeOptions
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+        .filter(Boolean)
+        .sort((first, second) => first.localeCompare(second)),
       financerCount: financerRecords.length,
     });
   } catch (error) {
