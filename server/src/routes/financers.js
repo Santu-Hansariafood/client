@@ -194,7 +194,12 @@ router.get("/report", async (req, res) => {
         ];
       }
     }
-    const consigneeQuery = { ...orderQuery };
+    const consigneeQuery = {
+      $or: [
+        { companyId: { $in: scopedCompanyIds } },
+        ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
+      ],
+    };
     if (consignee) {
       orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
     }
