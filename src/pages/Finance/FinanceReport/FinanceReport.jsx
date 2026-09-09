@@ -20,6 +20,9 @@ const formatNumber = (value) =>
     maximumFractionDigits: 2,
   });
 
+const formatOptionalNumber = (value) =>
+  value === undefined || value === null || value === "" ? "-" : formatNumber(value);
+
 const formatDateParam = (value) => {
   if (!value) return undefined;
   const date = new Date(value);
@@ -32,7 +35,6 @@ const formatDateParam = (value) => {
 
 const FinanceReport = () => {
   const [orders, setOrders] = useState([]);
-  const [financers, setFinancers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [page, setPage] = useState(1);
@@ -54,11 +56,9 @@ const FinanceReport = () => {
         },
       });
       setOrders(response.data?.data || []);
-      setFinancers(response.data?.financers || []);
       setTotal(Number(response.data?.total) || 0);
     } catch (error) {
       setOrders([]);
-      setFinancers([]);
       setTotal(0);
       toast.error(error.response?.data?.message || "Failed to load finance report");
     } finally {
@@ -140,31 +140,10 @@ const FinanceReport = () => {
     order.consignee || "-",
     formatNumber(order.quantity),
     formatNumber(order.rate),
+    formatOptionalNumber(order.cd),
+    formatOptionalNumber(order.gst),
     formatDate(order.deliveryDate),
     order.paymentTerms || "-",
-  ]);
-
-  const financerRows = financers.map((item, index) => [
-    index + 1,
-    item._id || "-",
-    item.groupId?.groupName || "-",
-    item.buyerId?.name || "-",
-    item.companyId?.companyName || "-",
-    item.saudas?.length ? (
-      <div key={`saudas-${item._id}`} className="flex flex-wrap gap-1">
-        {item.saudas.map((sauda) => (
-          <span
-            key={sauda.id}
-            className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
-          >
-            {sauda.saudaNo || "-"}
-          </span>
-        ))}
-      </div>
-    ) : (
-      "-"
-    ),
-    item.saudas?.length || 0,
   ]);
 
   const saudaLookupRows = saudaRows.map((row) => [
@@ -220,33 +199,7 @@ const FinanceReport = () => {
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Added Financers</h2>
-                <p className="text-sm text-slate-500">Saved buyer-company financer mappings</p>
-              </div>
-              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                {financers.length} Added
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <Tables
-                headers={[
-                  "Sl No",
-                  "Financer ID",
-                  "Group",
-                  "Buyer",
-                  "Buyer Company",
-                  "Sauda Nos",
-                  "Sauda Count",
-                ]}
-                rows={financerRows}
-              />
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">Sales Orders</h2>
+                <h2 className="text-lg font-bold text-slate-800">Purchase Orders</h2>
                 <p className="text-sm text-slate-500">Company-wise financed Sauda list</p>
               </div>
               <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
@@ -258,7 +211,7 @@ const FinanceReport = () => {
             ) : (
               <div className="overflow-x-auto">
                 <Tables
-                  headers={["Sl No", "Date", "Sauda No", "Seller Company", "Buyer Company", "Consignee", "Sell Quantity", "Rate", "Delivery Date", "Payment Terms"]}
+                  headers={["Sl No", "Date", "Sauda No", "Seller Company", "Buyer Company", "Consignee", "Sell Quantity", "Rate", "CD", "GST", "Delivery Date", "Payment Terms"]}
                   rows={orderRows}
                 />
               </div>

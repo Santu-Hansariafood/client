@@ -196,7 +196,7 @@ router.get("/report", async (req, res) => {
 
     const [orders, total, companies, financerOrders] = await Promise.all([
       SelfOrder.find(orderQuery)
-        .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate deliveryDate paymentTerms companyId")
+        .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate cd gst deliveryDate paymentTerms companyId")
         .sort({ poDate: -1, saudaNo: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
