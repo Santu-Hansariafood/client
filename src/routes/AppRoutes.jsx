@@ -45,7 +45,10 @@ const RoleBasedRoute = ({ children, allowedRoles, path }) => {
       const normalizedP = p.startsWith("/") ? p : `/${p}`;
       return (
         normalizedPath === normalizedP ||
-        normalizedPath.startsWith(`${normalizedP}/`)
+        normalizedPath.startsWith(`${normalizedP}/`) ||
+        (normalizedPath.includes("/edit/") &&
+          normalizedP.endsWith("/list") &&
+          normalizedPath.startsWith(normalizedP.replace(/\/list$/, "")))
       );
     });
 
@@ -366,12 +369,12 @@ const privateRoutes = [
   {
     path: "reports/buyer",
     component: LazyPages.BuyerReports,
-    roles: ["Admin"],
+    roles: ["Admin", "Employee"],
   },
   {
     path: "reports/seller",
     component: LazyPages.SellerReports,
-    roles: ["Admin"],
+    roles: ["Admin", "Employee"],
   },
   {
     path: "data-safety",

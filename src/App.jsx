@@ -6,34 +6,13 @@ import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
 import RouteSEO from "./common/SEO/RouteSEO";
 import AppRoutes from "./routes/AppRoutes";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
-import { prefetchRoute } from "./utils/LazyPages/LazyPages";
 import "./App.css";
 import StartupAd from "./components/Ads/StartupAd";
 
 const App = () => {
   const hydrated = CacheHandler();
-
-  useEffect(() => {
-    const scheduleIdlePrefetch =
-      window.requestIdleCallback || ((cb) => setTimeout(cb, 150));
-
-    scheduleIdlePrefetch(() => {
-      [
-        "/dashboard",
-        "/employee/dashboard",
-        "/buyer/dashboard",
-        "/seller/dashboard",
-        "/transporter/dashboard",
-        "/buyer/list",
-        "/seller-details/list",
-        "/commodity/list",
-        "/Loading-Entry/list-loading-entry",
-        "/manage-order/list-self-order",
-      ].forEach((route) => prefetchRoute(route));
-    });
-  }, []);
 
   return (
     <AuthProvider>

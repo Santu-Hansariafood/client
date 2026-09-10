@@ -104,9 +104,23 @@ const parseDateValue = (value, endOfDay = false) => {
   return parsed;
 };
 
-const requireAdmin = (req, res) => {
-  if (req.user?.role !== "Admin") {
-    res.status(403).json({ message: "Only admin can access these reports" });
+const requireAdmin = (req, res, partyType = "buyer") => {
+  if (req.user?.role === "Admin") return true;
+
+  const permissions = req.authUser?.allowedPermissions || [];
+  const permission = `/reports/${partyType === "seller" ? "seller" : "buyer"}`;
+  const hasPermission =
+    req.user?.role === "Employee" &&
+    (permissions.length === 0 ||
+      permissions.some((item) => {
+        const normalized = String(item).startsWith("/")
+          ? String(item)
+          : `/${item}`;
+        return permission === normalized || permission.startsWith(`${normalized}/`);
+      }));
+
+  if (!hasPermission) {
+    res.status(403).json({ message: "You do not have permission to access this report" });
     return false;
   }
   return true;
@@ -578,9 +592,9 @@ const getPartyDisplayLabel = (partyType) =>
 
 router.get("/filters", async (req, res) => {
   try {
-    if (!requireAdmin(req, res)) return;
-
     const partyType = normalizePartyType(req.query.partyType);
+    if (!requireAdmin(req, res, partyType)) return;
+
     const parties = await getPartyOptions(partyType);
     res.json({ parties });
   } catch (error) {
@@ -591,9 +605,9 @@ router.get("/filters", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    if (!requireAdmin(req, res)) return;
-
     const partyType = normalizePartyType(req.query.partyType);
+    if (!requireAdmin(req, res, partyType)) return;
+
     const reportType = normalizeReportType(req.query.reportType);
     const { partyValue, startDate, endDate } = req.query;
     const validationError = validateReportFilters(
@@ -630,9 +644,9 @@ router.get("/", async (req, res) => {
 
 router.get("/excel", async (req, res) => {
   try {
-    if (!requireAdmin(req, res)) return;
-
     const partyType = normalizePartyType(req.query.partyType);
+    if (!requireAdmin(req, res, partyType)) return;
+
     const reportType = normalizeReportType(req.query.reportType);
     const { partyValue, startDate, endDate } = req.query;
     const validationError = validateReportFilters(
@@ -705,9 +719,9 @@ router.get("/excel", async (req, res) => {
 
 router.get("/pdf", async (req, res) => {
   try {
-    if (!requireAdmin(req, res)) return;
-
     const partyType = normalizePartyType(req.query.partyType);
+    if (!requireAdmin(req, res, partyType)) return;
+
     const reportType = normalizeReportType(req.query.reportType);
     const { partyValue, partyLabel, startDate, endDate } = req.query;
     const validationError = validateReportFilters(
