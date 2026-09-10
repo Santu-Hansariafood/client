@@ -173,17 +173,16 @@ router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
   const paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
   const paymentAuthEmail = process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER;
-  const paymentSenderEmail =
-    process.env.PAYMENTS_FROM || paymentAuthEmail;
+  const paymentSenderEmail = process.env.PAYMENTS_FROM;
   const paymentSenderPassword = process.env.PAYMENTS_PASS || process.env.EMAIL_PASS;
 
   if (!pdf || !paymentRecipientEmail || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
   }
 
-  if (!paymentSenderEmail || !paymentSenderPassword) {
-    console.error("[EMAIL] Missing payment sender credentials");
-    return res.status(500).send("Payments email service not configured. Please contact admin.");
+  if (!paymentAuthEmail || !paymentSenderPassword || !paymentSenderEmail) {
+    console.error("[EMAIL] Missing PAYMENTS_EMAIL, PAYMENTS_PASS, or PAYMENTS_FROM");
+    return res.status(500).send("Payment email sender is not configured. Please contact admin.");
   }
 
   try {
