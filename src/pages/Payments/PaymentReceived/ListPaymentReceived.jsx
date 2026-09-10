@@ -286,7 +286,7 @@ const ListPaymentReceived = () => {
             ? filters.ledgerId || undefined
             : undefined,
         saudaNo: filters.saudaNo || undefined,
-        limit: 5000,
+        limit: 1000,
       };
       const [response, entriesResponse] = await Promise.all([
         api.get("/payment-received", {

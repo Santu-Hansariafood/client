@@ -43,6 +43,9 @@ const AllocationLedger = ({
   ledgerTopSummary = {},
   isEditMode = false,
   editingPaymentMappings = [],
+  multiAdjustmentMode = false,
+  setMultiAdjustmentMode,
+  selectedAllocationKeys = new Set(),
 }) => {
   const {
     creditEntryTotal = 0,
@@ -91,6 +94,18 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={multiAdjustmentMode}
+                onChange={(event) => setMultiAdjustmentMode?.(event.target.checked)}
+                className="h-4 w-4 accent-blue-600"
+              />
+              Multi adjustment
+              {multiAdjustmentMode && (
+                <span className="text-blue-600">({selectedAllocationKeys.size} selected)</span>
+              )}
+            </label>
             <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
               <div className="flex flex-col">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">

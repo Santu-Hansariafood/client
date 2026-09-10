@@ -924,6 +924,25 @@ router.get("/summary", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid payment id" });
+    }
+
+    const payment = await PaymentReceived.findById(id);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.json(payment);
+  } catch (error) {
+    console.error("Error fetching payment:", error);
+    res.status(500).json({ message: "Failed to fetch payment" });
+  }
+});
+
 const calculateLoadingEntryNetAmount = async (entry) => {
   const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
   if (!selfOrder) return 0;

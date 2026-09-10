@@ -85,6 +85,10 @@ const AddPaymentReceived = () => {
   });
   const [activeTab, setActiveTab] = useState("payment_list");
   const [allocationSource, setAllocationSource] = useState("fresh");
+  const [multiAdjustmentMode, setMultiAdjustmentMode] = useState(false);
+  const [selectedAllocationKeys, setSelectedAllocationKeys] = useState(
+    () => new Set(),
+  );
 
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editingPayment, setEditingPayment] = useState(null);
@@ -115,15 +119,8 @@ const AddPaymentReceived = () => {
       const fetchPaymentForEdit = async () => {
         try {
           setFetchingEditingPayment(true);
-          const listRes = await api.get("/payment-received", {
-            params: { limit: 0 },
-          });
-          const match = (listRes.data.data || []).find((p) => p._id === id);
-          if (match) {
-            setEditingPayment(match);
-          } else {
-            toast.error("Payment not found for editing");
-          }
+          const paymentRes = await api.get(`/payment-received/${id}`);
+          setEditingPayment(paymentRes.data);
         } catch (err) {
           console.error("Error loading payment for edit:", err);
           toast.error("Could not load payment for editing");
@@ -679,6 +676,10 @@ const AddPaymentReceived = () => {
 
   const fetchEntries = useCallback(
     async (page = 1) => {
+      if (activeTab !== "allocation") {
+        return;
+      }
+
       if (formData.paymentType !== "Sauda-wise") {
         setEntries([]);
         setEntriesTotal(0);
@@ -767,6 +768,7 @@ const AddPaymentReceived = () => {
             generalRemarks: item.generalRemarks || "",
           })),
         );
+        setSelectedAllocationKeys(new Set());
         setEntriesTotal(
           useWideFetch
             ? sortedItems.length
@@ -792,6 +794,7 @@ const AddPaymentReceived = () => {
       fullCompanyMapping,
       hasCompanyTableScope,
       tableSearch,
+      activeTab,
     ],
   );
 
@@ -1166,7 +1169,10 @@ const AddPaymentReceived = () => {
   }, [fetchDateTotal]);
 
   const handleSaveAllAllocations = async () => {
-    const allocations = entries.filter((e) => {
+    const sourceEntries = multiAdjustmentMode
+      ? entries.filter((entry) => selectedAllocationKeys.has(entry.uiKey))
+      : entries;
+    const allocations = sourceEntries.filter((e) => {
       if (e.isSaved && !editingPaymentId) return false;
       if (parseFloat(e.allocatedAmount) <= 0.01) return false;
 
@@ -1184,7 +1190,9 @@ const AddPaymentReceived = () => {
 
     if (allocations.length === 0 && !editingPaymentId) {
       toast.error(
-        "No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)",
+        multiAdjustmentMode
+          ? "Select at least one lorry and enter an adjustment amount"
+          : "No valid allocations to save (Lorry Balance equals Credit Amount for selected entries)",
       );
       return;
     }
@@ -1304,6 +1312,7 @@ const AddPaymentReceived = () => {
           return saved ? { ...e, isSaved: true } : e;
         }),
       );
+      setSelectedAllocationKeys(new Set());
 
       if (!editingPaymentId) {
         setFormData({
@@ -1551,6 +1560,20 @@ const AddPaymentReceived = () => {
 
   const handleRemoveRow = (uiKey) => {
     setEntries((prev) => prev.filter((entry) => entry.uiKey !== uiKey));
+    setSelectedAllocationKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(uiKey);
+      return next;
+    });
+  };
+
+  const toggleAllocationSelection = (uiKey) => {
+    setSelectedAllocationKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(uiKey)) next.delete(uiKey);
+      else next.add(uiKey);
+      return next;
+    });
   };
 
   const handleSaveRow = async (entry) => {
@@ -2078,6 +2101,19 @@ const AddPaymentReceived = () => {
   };
 
   const columns = [
+    {
+      header: "SELECT",
+      accessor: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedAllocationKeys.has(row.uiKey)}
+          onChange={() => toggleAllocationSelection(row.uiKey)}
+          disabled={!multiAdjustmentMode || (row.isSaved && user?.role !== "Admin")}
+          className="h-4 w-4 accent-blue-600"
+          aria-label={`Select ${row.lorryNumber} for adjustment`}
+        />
+      ),
+    },
     {
       header: "DATE & SAUDA",
       accessor: (row) => (
@@ -3095,6 +3131,13 @@ const AddPaymentReceived = () => {
               onSelectCreditPair={handleSelectCreditPair}
               onSaveAll={handleSaveAllAllocations}
               loading={loading}
+              multiAdjustmentMode={multiAdjustmentMode}
+              setMultiAdjustmentMode={(enabled) => {
+                setMultiAdjustmentMode(enabled);
+                if (!enabled) setSelectedAllocationKeys(new Set());
+              }}
+              selectedAllocationKeys={selectedAllocationKeys}
+              onToggleAllocation={toggleAllocationSelection}
               ledgerTopSummary={ledgerTopSummary}
               isEditMode={!!editingPaymentId}
               editingPaymentMappings={editingPayment?.mappings || []}

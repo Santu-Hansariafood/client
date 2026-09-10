@@ -172,13 +172,17 @@ Contact: +91-8336924066 | +91-9330433535`,
 router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
   const paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
+  const paymentAuthEmail = process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER;
+  const paymentSenderEmail =
+    process.env.PAYMENTS_FROM || paymentAuthEmail;
+  const paymentSenderPassword = process.env.PAYMENTS_PASS || process.env.EMAIL_PASS;
 
   if (!pdf || !paymentRecipientEmail || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
   }
 
-  if (!process.env.PAYMENTS_EMAIL || !process.env.PAYMENTS_PASS) {
-    console.error("[EMAIL] Missing PAYMENTS_EMAIL or PAYMENTS_PASS environment variables");
+  if (!paymentSenderEmail || !paymentSenderPassword) {
+    console.error("[EMAIL] Missing payment sender credentials");
     return res.status(500).send("Payments email service not configured. Please contact admin.");
   }
 
@@ -186,8 +190,8 @@ router.post("/send-payment-received", async (req, res) => {
     const transporter = nodemailer.createTransport({
       ...getEmailServiceConfig(),
       auth: {
-        user: process.env.PAYMENTS_EMAIL,
-        pass: process.env.PAYMENTS_PASS,
+        user: paymentAuthEmail,
+        pass: paymentSenderPassword,
       },
     });
 
@@ -212,7 +216,7 @@ Thank you for your business.
 Best Regards,
 Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535
-Email: payment@hansariafood.com`;
+Email: payments@hansariafood.com`;
     } else {
       const dateRangeText = startDate && endDate 
         ? `${new Date(startDate).toLocaleDateString("en-GB")} to ${new Date(endDate).toLocaleDateString("en-GB")}`
@@ -237,11 +241,11 @@ Thank you for your business.
 Best Regards,
 Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535
-Email: payment@hansariafood.com`;
+Email: payments@hansariafood.com`;
     }
 
     const mailOptions = {
-      from: process.env.PAYMENTS_EMAIL,
+      from: paymentSenderEmail,
       to: paymentRecipientEmail,
       subject: subject,
       text: body,
