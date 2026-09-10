@@ -94,6 +94,7 @@ const AddPaymentReceived = () => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [fetchingEditingPayment, setFetchingEditingPayment] = useState(false);
   const [breakdownEntry, setBreakdownEntry] = useState(null);
+  const [breakdownPosition, setBreakdownPosition] = useState(null);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -321,6 +322,18 @@ const AddPaymentReceived = () => {
       ),
     );
     setBreakdownEntry((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const openBreakdown = (event, row) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const popupWidth = Math.min(768, window.innerWidth - 24);
+    const left = Math.min(
+      Math.max(12, rect.left),
+      Math.max(12, window.innerWidth - popupWidth - 12),
+    );
+
+    setBreakdownPosition({ top: Math.max(12, rect.top), left });
+    setBreakdownEntry(row);
   };
 
   const resolveLedgerForCompany = useCallback(
@@ -2293,7 +2306,7 @@ const AddPaymentReceived = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setBreakdownEntry(row)}
+                onClick={(event) => openBreakdown(event, row)}
                 disabled={isLocked}
                 className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-[#1e3a5f] bg-[#1e3a5f] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-white transition hover:bg-[#152b47] disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -2621,13 +2634,23 @@ const AddPaymentReceived = () => {
             </div>
             {breakdownEntry?.uiKey === row.uiKey && (
               <div
-                className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-y-auto bg-slate-900/60 p-3 backdrop-blur-sm sm:p-6"
+                className="fixed inset-0 z-[9999] min-h-screen overflow-y-auto bg-slate-900/60 p-3 backdrop-blur-sm sm:p-6"
                 onClick={(event) => {
                   if (event.target === event.currentTarget)
                     setBreakdownEntry(null);
                 }}
               >
-                <div className="my-auto flex max-h-[calc(100vh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl normal-case sm:max-h-[calc(100vh-3rem)]">
+                <div
+                  className="fixed flex max-h-[calc(100vh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-3xl flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl normal-case sm:max-h-[calc(100vh-3rem)] sm:w-[calc(100vw-3rem)]"
+                  style={
+                    breakdownPosition
+                      ? {
+                          top: breakdownPosition.top,
+                          left: breakdownPosition.left,
+                        }
+                      : { top: 12, left: 12 }
+                  }
+                >
                   <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
                     <div>
                       <h3 className="text-base font-black text-slate-900">
