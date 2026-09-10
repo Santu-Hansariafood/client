@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import html2canvas from "html2canvas";
 import { toast } from "react-toastify";
 import {
   Bar,
@@ -15,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { FaBrain, FaChartPie, FaFilter, FaSyncAlt } from "react-icons/fa";
+import { FaBrain, FaChartPie, FaDownload, FaFilter, FaSyncAlt } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
@@ -32,6 +33,8 @@ const AdminAnalysisSection = () => {
   const [filters, setFilters] = useState({ sellerCompany: "", buyerCompany: "", startDate: "", endDate: "" });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef(null);
 
   const loadCompanies = async () => {
     try {
@@ -40,7 +43,11 @@ const AdminAnalysisSection = () => {
         api.get("/companies", { params: { limit: 0 } }),
       ]);
       setSellerCompanies(sellers.data?.data || []);
-      setBuyerCompanies(buyers.data?.data || []);
+      setBuyerCompanies(
+        Array.isArray(buyers.data)
+          ? buyers.data
+          : buyers.data?.data || [],
+      );
     } catch {
       toast.error("Failed to load company filters");
     }
@@ -80,8 +87,33 @@ const AdminAnalysisSection = () => {
   const setFilter = (name, value) => setFilters((current) => ({ ...current, [name]: value || "" }));
   const clearFilters = () => setFilters({ sellerCompany: "", buyerCompany: "", startDate: "", endDate: "" });
 
+  const downloadReportImage = async () => {
+    if (!reportRef.current || loading || exporting) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        backgroundColor: "#f8fafc",
+        scale: Math.min(window.devicePixelRatio * 2, 3),
+        useCORS: true,
+        logging: false,
+        ignoreElements: (element) => element.dataset.exportControl === "true",
+      });
+      const link = document.createElement("a");
+      const dateLabel = new Date().toISOString().slice(0, 10);
+      link.download = `admin-analysis-report-${dateLabel}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      toast.success("Report image downloaded");
+    } catch (error) {
+      console.error("Report image export error:", error);
+      toast.error("Unable to download report image");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-8">
+    <section ref={reportRef} className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-8">
       <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
       <div className="relative z-10">
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
@@ -90,7 +122,10 @@ const AdminAnalysisSection = () => {
             <h2 className="text-2xl font-black tracking-tight sm:text-3xl">Sauda, loading & payment analysis</h2>
             <p className="mt-2 max-w-2xl text-sm text-slate-600">Compare companies, follow monthly value, and understand commodity movement from one filtered report.</p>
           </div>
-          <button type="button" onClick={loadReport} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"><FaSyncAlt /> Refresh report</button>
+          <div data-export-control="true" className="flex flex-wrap gap-2">
+            <button type="button" onClick={downloadReportImage} disabled={loading || exporting} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"><FaDownload /> {exporting ? "Preparing image..." : "Download image"}</button>
+            <button type="button" onClick={loadReport} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"><FaSyncAlt /> Refresh report</button>
+          </div>
         </div>
 
         <div className="mb-7 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
