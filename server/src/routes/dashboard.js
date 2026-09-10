@@ -44,7 +44,7 @@ router.get("/admin-analysis", authJwt, adminOnly, async (req, res) => {
       $dateToString: { format: "%Y-%m", date: `$${field}` },
     });
 
-    const [saudaByMonth, commodityStats, loadingByMonth, paymentByMonth, totals] = await Promise.all([
+    const [saudaByMonth, commodityStats, loadingByMonth, paymentByMonth, totals, totalWorks] = await Promise.all([
       SelfOrder.aggregate([
         { $match: saudaMatch },
         { $group: { _id: monthGroup("createdAt"), quantity: { $sum: { $ifNull: ["$quantity", 0] } }, value: { $sum: { $multiply: [{ $ifNull: ["$quantity", 0] }, { $ifNull: ["$rate", 0] }] } } } },
@@ -57,7 +57,7 @@ router.get("/admin-analysis", authJwt, adminOnly, async (req, res) => {
       ]),
       LoadingEntry.aggregate([
         { $match: loadingMatch },
-        { $group: { _id: monthGroup("loadingDate"), weight: { $sum: { $ifNull: ["$loadingWeight", 0] } }, entries: { $sum: 1 }, paid: { $sum: { $cond: [{ $eq: ["$paymentStatus", "done"] }, 1, 0] } } } },
+        { $group: { _id: monthGroup("loadingDate"), weight: { $sum: { $ifNull: ["$loadingWeight", 0] } }, unloadingWeight: { $sum: { $ifNull: ["$unloadingWeight", 0] } }, entries: { $sum: 1 }, rejectedLorries: { $sum: { $cond: [{ $eq: ["$isRejected", true] }, 1, 0] } }, paid: { $sum: { $cond: [{ $eq: ["$paymentStatus", "done"] }, 1, 0] } } } },
         { $sort: { _id: 1 } },
       ]),
       PaymentReceived.aggregate([
@@ -69,16 +69,17 @@ router.get("/admin-analysis", authJwt, adminOnly, async (req, res) => {
         { $match: saudaMatch },
         { $group: { _id: null, saudas: { $sum: 1 }, quantity: { $sum: { $ifNull: ["$quantity", 0] } }, value: { $sum: { $multiply: [{ $ifNull: ["$quantity", 0] }, { $ifNull: ["$rate", 0] }] } } } },
       ]),
+      EmployeeWork.countDocuments(dateRange("createdAt")),
     ]);
 
     const summary = totals[0] || { saudas: 0, quantity: 0, value: 0 };
     const topCommodity = commodityStats[0];
     res.json({
       filters: { sellerCompany, buyerCompany, startDate: req.query.startDate || "", endDate: req.query.endDate || "" },
-      summary: { ...summary, loadingEntries: loadingByMonth.reduce((sum, item) => sum + item.entries, 0), loadedWeight: loadingByMonth.reduce((sum, item) => sum + item.weight, 0), payments: paymentByMonth.reduce((sum, item) => sum + item.amount, 0) },
+      summary: { ...summary, totalWorks, loadingEntries: loadingByMonth.reduce((sum, item) => sum + item.entries, 0), loadedWeight: loadingByMonth.reduce((sum, item) => sum + item.weight, 0), unloadingWeight: loadingByMonth.reduce((sum, item) => sum + item.unloadingWeight, 0), rejectedLorries: loadingByMonth.reduce((sum, item) => sum + item.rejectedLorries, 0), payments: paymentByMonth.reduce((sum, item) => sum + item.amount, 0) },
       saudaByMonth: saudaByMonth.map((item) => ({ month: item._id, quantity: item.quantity, value: item.value })),
       commodityStats: commodityStats.map((item) => ({ commodity: item._id || "Unknown", quantity: item.quantity, value: item.value, saudas: item.saudas })),
-      loadingByMonth: loadingByMonth.map((item) => ({ month: item._id, weight: item.weight, entries: item.entries, paid: item.paid })),
+      loadingByMonth: loadingByMonth.map((item) => ({ month: item._id, weight: item.weight, unloadingWeight: item.unloadingWeight, entries: item.entries, rejectedLorries: item.rejectedLorries, paid: item.paid })),
       paymentByMonth: paymentByMonth.map((item) => ({ month: item._id, amount: item.amount, vouchers: item.vouchers })),
       insights: topCommodity ? `Highest sauda value is ${topCommodity._id || "Unknown"} at ${Math.round(topCommodity.value || 0).toLocaleString()} across ${topCommodity.saudas} saudas.` : "No matching sauda data is available for this selection.",
     });
