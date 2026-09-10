@@ -15,6 +15,7 @@ import DataDropdown from "../../common/DataDropdown/DataDropdown";
 import ScrollToTop from "../../common/ScrollToTop/ScrollToTop";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
+const AdminAnalysisSection = lazy(() => import("./AdminAnalysisSection/AdminAnalysisSection"));
 
 const Dashboard = () => {
   const [counts, setCounts] = useState({
@@ -210,6 +211,10 @@ const Dashboard = () => {
                   employeeWiseWorks={employeeWiseWorks}
                 />
               </div>
+            </div>
+
+            <div className="animate-fade-in-up delay-300">
+              <AdminAnalysisSection />
             </div>
 
             <div className="group relative">
