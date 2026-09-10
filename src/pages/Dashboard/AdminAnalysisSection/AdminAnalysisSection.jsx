@@ -92,11 +92,21 @@ const AdminAnalysisSection = () => {
     setExporting(true);
     try {
       const canvas = await html2canvas(reportRef.current, {
-        backgroundColor: "#f8fafc",
-        scale: Math.min(window.devicePixelRatio * 2, 3),
+        backgroundColor: "#ffffff",
+        scale: Math.min(Math.max(window.devicePixelRatio * 3, 3), 4),
+        imageTimeout: 0,
+        removeContainer: true,
         useCORS: true,
         logging: false,
         ignoreElements: (element) => element.dataset.exportControl === "true",
+        onclone: (documentClone) => {
+          const reportClone = documentClone.querySelector("[data-admin-analysis-report]");
+          if (reportClone) {
+            reportClone.style.background = "linear-gradient(135deg, #ffffff 0%, #f8fafc 52%, #ecfdf5 100%)";
+            reportClone.style.boxShadow = "0 24px 70px rgba(15, 23, 42, 0.14)";
+            reportClone.style.borderColor = "#dbe4ee";
+          }
+        },
       });
       const link = document.createElement("a");
       const dateLabel = new Date().toISOString().slice(0, 10);
@@ -113,7 +123,7 @@ const AdminAnalysisSection = () => {
   };
 
   return (
-    <section ref={reportRef} className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-8">
+    <section data-admin-analysis-report ref={reportRef} className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-8">
       <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
       <div className="relative z-10">
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
