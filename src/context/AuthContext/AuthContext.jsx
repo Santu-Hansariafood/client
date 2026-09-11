@@ -84,14 +84,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       const stored = JSON.parse(readPersistedValue("isAuthenticated", "false"));
-      const token = readPersistedValue("token", "");
-      if (stored && !isTokenExpired(token)) {
-        return true;
-      }
-      if (stored) {
-        ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => removePersistedValue(key));
-      }
-      return false;
+      return Boolean(stored);
     } catch {
       return false;
     }
@@ -108,8 +101,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const stored = readPersistedValue("user", "");
-      const token = readPersistedValue("token", "");
-      if (stored && !isTokenExpired(token)) {
+      if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.role === "Employee" && !parsed.allowedPermissions) {
           parsed.allowedPermissions = [];
@@ -124,9 +116,6 @@ export const AuthProvider = ({ children }) => {
 
   const [token, setToken] = useState(() => {
     const stored = readPersistedValue("token", "");
-    if (isTokenExpired(stored)) {
-      return "";
-    }
     return stored || "";
   });
 

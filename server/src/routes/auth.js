@@ -32,7 +32,17 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 
   res.cookie("refreshToken", refreshToken, {
     ...baseOptions,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
+const markUserSessionState = async (Model, userId, isLoggedIn) => {
+  if (!Model || !userId) return;
+
+  await Model.findByIdAndUpdate(userId, {
+    isLoggedIn,
+    lastActiveAt: new Date(),
+    ...(isLoggedIn ? { lastLoginAt: new Date() } : {}),
   });
 };
 
@@ -300,7 +310,13 @@ router.post("/refresh-token", async (req, res) => {
       { expiresIn: "7d" },
     );
 
-    setAuthCookies(res, newAccessToken, refreshToken);
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
     return res.json({
       token: newAccessToken,
@@ -313,10 +329,30 @@ router.post("/refresh-token", async (req, res) => {
   }
 });
 
-router.post("/logout", (req, res) => {
-  res.clearCookie("accessToken", { path: "/" });
-  res.clearCookie("refreshToken", { path: "/" });
-  return res.json({ message: "Logged out successfully" });
+router.post("/logout", async (req, res) => {
+  try {
+    const token = req.cookies?.accessToken || req.header("authorization")?.replace(/^Bearer\s+/i, "");
+    if (token) {
+      const decoded = jwt.decode(token);
+      if (decoded?.role && decoded?.sub) {
+        const Model = getModelByRole(decoded.role);
+        if (Model) {
+          await Model.findByIdAndUpdate(decoded.sub, {
+            isLoggedIn: false,
+            lastActiveAt: new Date(),
+          });
+        }
+      }
+    }
+
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
+    return res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
+    return res.json({ message: "Logged out successfully" });
+  }
 });
 
 router.post("/admin/login", async (req, res) => {
@@ -374,8 +410,15 @@ router.post("/admin/login", async (req, res) => {
         name: user.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" },
+      { expiresIn: "7d" },
     );
+
+    await User.findByIdAndUpdate(user._id, {
+      lastActiveAt: new Date(),
+      isLoggedIn: true,
+      lastLoginAt: new Date(),
+      $inc: { loginCount: 1 },
+    });
 
     setAuthCookies(res, token, refreshToken);
 
@@ -454,8 +497,15 @@ router.post("/employees/login", async (req, res) => {
         name: employee.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" },
+      { expiresIn: "7d" },
     );
+
+    await Employee.findByIdAndUpdate(employee._id, {
+      lastActiveAt: new Date(),
+      isLoggedIn: true,
+      lastLoginAt: new Date(),
+      $inc: { loginCount: 1 },
+    });
 
     setAuthCookies(res, token, refreshToken);
 
@@ -539,8 +589,15 @@ router.post("/transporters/login", async (req, res) => {
         name: transporter.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" },
+      { expiresIn: "7d" },
     );
+
+    await Transporter.findByIdAndUpdate(transporter._id, {
+      lastActiveAt: new Date(),
+      isLoggedIn: true,
+      lastLoginAt: new Date(),
+      $inc: { loginCount: 1 },
+    });
 
     setAuthCookies(res, token, refreshToken);
 
@@ -625,6 +682,26 @@ router.post("/buyers/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const refreshToken = jwt.sign(
+      {
+        sub: buyer._id.toString(),
+        role: "Buyer",
+        mobile: normalizedMobile,
+        name: buyer.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    await Buyer.findByIdAndUpdate(buyer._id, {
+      lastActiveAt: new Date(),
+      lastLoginAt: new Date(),
+      isLoggedIn: true,
+      $inc: { loginCount: 1 },
+    });
+
+    setAuthCookies(res, token, refreshToken);
+
     res.json({
       role: "Buyer",
       mobile: normalizedMobile,
@@ -640,6 +717,7 @@ router.post("/buyers/login", async (req, res) => {
         companyNames: (buyer.companyIds || []).map((c) => c.companyName || ""),
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -704,6 +782,26 @@ router.post("/sellers/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const refreshToken = jwt.sign(
+      {
+        sub: seller._id.toString(),
+        role: "Seller",
+        mobile: normalizedPhone,
+        name: seller.sellerName,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    await Seller.findByIdAndUpdate(seller._id, {
+      lastActiveAt: new Date(),
+      lastLoginAt: new Date(),
+      isLoggedIn: true,
+      $inc: { loginCount: 1 },
+    });
+
+    setAuthCookies(res, token, refreshToken);
+
     res.json({
       role: "Seller",
       mobile: normalizedPhone,
@@ -717,6 +815,7 @@ router.post("/sellers/login", async (req, res) => {
         status: seller.status || "active",
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

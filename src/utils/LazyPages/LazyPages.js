@@ -124,6 +124,7 @@ const loaders = {
     import("../../pages/SaudaReports/BuyerReports/BuyerReports"),
   SellerReports: () =>
     import("../../pages/SaudaReports/SellerReports/SellerReports"),
+  AuditReports: () => import("../../pages/AdminAuditReports/AdminAuditReports"),
   NotFound: () => import("../../pages/NotFound/NotFound"),
 };
 
@@ -204,6 +205,7 @@ const pathToKey = {
   "/finance/report": "FinanceReport",
   "/reports/buyer": "BuyerReports",
   "/reports/seller": "SellerReports",
+  "/admin/audit-reports": "AuditReports",
 };
 
 const prefetched = new Set();

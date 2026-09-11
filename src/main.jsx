@@ -64,10 +64,49 @@ const handleLogout = () => {
   window.location.href = "/login";
 };
 
+const authExemptPaths = [
+  "/admin/login",
+  "/employees/login",
+  "/transporters/login",
+  "/buyers/login",
+  "/sellers/login",
+  "/auth/refresh-token",
+  "/auth/logout",
+];
+
+let refreshPromise = null;
+
+const refreshSession = () => {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post("auth/refresh-token", null, { skipAuthRefresh: true })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+};
+
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const requestConfig = error.config;
+    const requestUrl = String(requestConfig?.url || "");
+    const isAuthenticated = sessionStorage.getItem("isAuthenticated") === "true" || localStorage.getItem("isAuthenticated") === "true";
+    const isAuthRequest = authExemptPaths.some((path) => requestUrl.includes(path));
+
+    if (error.response?.status === 401 && isAuthenticated && !isAuthRequest && !requestConfig?.skipAuthRefresh) {
+      if (!requestConfig?._authRetry) {
+        requestConfig._authRetry = true;
+        return refreshSession()
+          .then(() => axios(requestConfig))
+          .catch((refreshError) => {
+            handleLogout();
+            return Promise.reject(refreshError);
+          });
+      }
+
       handleLogout();
     }
     return Promise.reject(error);

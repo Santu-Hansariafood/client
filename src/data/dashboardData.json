@@ -354,6 +354,12 @@
           "link": "/reports/seller",
           "icon": "FaList",
           "roles": ["Admin", "Employee"]
+        },
+        {
+          "name": "Buyer & Seller Audit",
+          "link": "/admin/audit-reports",
+          "icon": "FaShieldAlt",
+          "roles": ["Admin"]
         }
       ]
     },

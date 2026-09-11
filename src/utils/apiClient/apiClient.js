@@ -16,7 +16,11 @@ const AUTH_EXEMPT_PATHS = [
   "/verify-otp",
   "/change-password-otp",
   "/reset-password",
+  "/auth/refresh-token",
+  "/auth/logout",
 ];
+
+let refreshPromise = null;
 
 const clearStoredAuth = () => {
   ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => {
@@ -38,20 +42,32 @@ const shouldHandleUnauthorized = (error) => {
     return false;
   }
 
-  const storedToken = (() => {
+  const isAuthenticated = (() => {
     try {
-      return sessionStorage.getItem("token") || localStorage.getItem("token") || "";
+      return sessionStorage.getItem("isAuthenticated") === "true" || localStorage.getItem("isAuthenticated") === "true";
     } catch {
-      return localStorage.getItem("token") || "";
+      return false;
     }
   })();
 
-  if (!storedToken) {
+  if (!isAuthenticated) {
     return false;
   }
 
   const requestUrl = String(error.config?.url || "");
   return !AUTH_EXEMPT_PATHS.some((path) => requestUrl.includes(path));
+};
+
+const refreshSession = () => {
+  if (!refreshPromise) {
+    refreshPromise = instance
+      .post("/auth/refresh-token", null, { skipAuthRefresh: true })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
 };
 
 const createPendingRequest = () => {
@@ -171,7 +187,22 @@ instance.interceptors.response.use(
       }
     }
 
-    if (shouldHandleUnauthorized(error)) {
+    if (shouldHandleUnauthorized(error) && !error.config?.skipAuthRefresh) {
+      const requestConfig = error.config;
+
+      if (!requestConfig?._authRetry) {
+        requestConfig._authRetry = true;
+        return refreshSession()
+          .then(() => instance(requestConfig))
+          .catch((refreshError) => {
+            clearStoredAuth();
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
+            }
+            return Promise.reject(refreshError);
+          });
+      }
+
       clearStoredAuth();
       if (typeof window !== "undefined") {
         window.location.href = "/login";

@@ -377,6 +377,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "admin/audit-reports",
+    component: LazyPages.AuditReports,
+    roles: ["Admin"],
+  },
+  {
     path: "data-safety",
     component: LazyPages.DataSafety,
     roles: ["Admin", "Employee", "Buyer", "Seller"],
