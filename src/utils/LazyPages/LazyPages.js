@@ -316,6 +316,7 @@ const LazyPages = {
   FinanceReport: lazy(loaders.FinanceReport),
   SellerReports: lazy(loaders.SellerReports),
   BuyerReports: lazy(loaders.BuyerReports),
+  AuditReports: lazy(loaders.AuditReports),
   NotFound: lazy(loaders.NotFound),
 };
 
