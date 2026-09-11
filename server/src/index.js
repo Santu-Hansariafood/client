@@ -5,26 +5,11 @@ import dotenv from "dotenv";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "../../.env");
-const dotenvResult = dotenv.config({ path: envPath });
-
-console.log("====================================");
-console.log("[ENV] Loading .env from:", envPath);
-if (dotenvResult.error) {
-  console.warn("[ENV] dotenv parse/read error:", dotenvResult.error.message || dotenvResult.error);
-} else {
-  console.log("[ENV] .env loaded OK. Keys found:", Object.keys(dotenvResult.parsed || {}).length);
-}
-const pk = process.env.IMAGEKIT_PUBLIC_KEY || "";
-const sk = process.env.IMAGEKIT_PRIVATE_KEY || "";
-const ep = process.env.IMAGEKIT_URL_ENDPOINT || "";
-console.log("[ENV] IMAGEKIT vars (raw, before clean):");
-console.log("  IMAGEKIT_PUBLIC_KEY  length=", pk.length, ' sample="', pk.slice(0, 12), '…"');
-console.log("  IMAGEKIT_PRIVATE_KEY length=", sk.length, ' sample="', sk.slice(0, 12), '…"');
-console.log("  IMAGEKIT_URL_ENDPOINT      =", JSON.stringify(ep));
-console.log("====================================");
+dotenv.config({ path: envPath });
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
@@ -111,10 +96,6 @@ const corsOrigins =
 
 const corsOptions = {
   origin: (origin, callback) => {
-    console.log("CORS Check:", {
-      origin,
-      corsOrigins,
-    });
     if (corsOrigins === "*") {
       return callback(null, true);
     }
@@ -143,6 +124,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));

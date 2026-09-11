@@ -18,14 +18,19 @@ const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 axios.defaults.baseURL = apiBaseURL;
 axios.defaults.timeout = 30000;
+axios.defaults.withCredentials = true;
 axios.interceptors.request.use((config) => {
   const apiKey = import.meta.env.VITE_API_KEY;
   if (apiKey) {
     config.headers["x-api-key"] = apiKey;
   }
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+
+  if (config.headers && config.withCredentials !== false) {
+    config.withCredentials = true;
+  }
+
+  if (config.headers && config.headers.Authorization) {
+    delete config.headers.Authorization;
   }
 
   if (
@@ -44,12 +49,18 @@ axios.interceptors.request.use((config) => {
 });
 
 const handleLogout = () => {
-  localStorage.removeItem("isAuthenticated");
-  localStorage.removeItem("mobile");
-  localStorage.removeItem("userRole");
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("loginDate");
+  ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      // ignore storage issues
+    }
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore storage issues
+    }
+  });
   window.location.href = "/login";
 };
 

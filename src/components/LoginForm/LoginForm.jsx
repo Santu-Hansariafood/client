@@ -29,8 +29,22 @@ const LoginForm = () => {
   );
 
   const handleLogin = async () => {
-    if (!phoneNumber || !password) {
+    const trimmedPhone = String(phoneNumber || "").trim();
+    const trimmedPassword = String(password || "").trim();
+
+    if (!trimmedPhone || !trimmedPassword) {
       toast.error("Please enter valid credentials.");
+      return;
+    }
+
+    const phoneRegex = /^(?:\+91|0)?[6-9]\d{9}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      toast.error("Please enter a valid mobile number.");
+      return;
+    }
+
+    if (trimmedPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
 
@@ -57,13 +71,13 @@ const LoginForm = () => {
 
     try {
       const response = await api.post(apiUrl, {
-        [phoneKey]: phoneNumber,
-        password,
+        [phoneKey]: trimmedPhone,
+        password: trimmedPassword,
       });
 
       const success = login({
         ...response.data,
-        mobile: phoneNumber,
+        mobile: trimmedPhone,
         role: userRole,
         token: response.data.token,
       });

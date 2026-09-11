@@ -2,6 +2,69 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import "react-toastify/dist/ReactToastify.css";
 
+const getSafeStorage = () => {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+};
+
+const readPersistedValue = (key, fallback = null) => {
+  const storage = getSafeStorage();
+  const sessionValue = storage?.getItem(key);
+  if (sessionValue !== null) return sessionValue;
+
+  try {
+    const legacyValue = localStorage.getItem(key);
+    if (legacyValue !== null) return legacyValue;
+  } catch {
+    // ignore legacy storage issues
+  }
+
+  return fallback;
+};
+
+const writePersistedValue = (key, value) => {
+  if (key === "token") return;
+
+  const storage = getSafeStorage();
+  try {
+    if (storage) {
+      storage.setItem(key, value);
+    }
+  } catch {
+    // ignore storage issues
+  }
+
+  try {
+    if (value === null || value === undefined) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  } catch {
+    // ignore legacy storage issues
+  }
+};
+
+const removePersistedValue = (key) => {
+  const storage = getSafeStorage();
+  try {
+    if (storage) {
+      storage.removeItem(key);
+    }
+  } catch {
+    // ignore storage issues
+  }
+
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore legacy storage issues
+  }
+};
+
 const isTokenExpired = (token) => {
   if (!token) return true;
   try {
@@ -20,18 +83,13 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem("isAuthenticated"));
-      const token = localStorage.getItem("token");
+      const stored = JSON.parse(readPersistedValue("isAuthenticated", "false"));
+      const token = readPersistedValue("token", "");
       if (stored && !isTokenExpired(token)) {
         return true;
       }
       if (stored) {
-        localStorage.removeItem("isAuthenticated");
-        localStorage.removeItem("mobile");
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("loginDate");
+        ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => removePersistedValue(key));
       }
       return false;
     } catch {
@@ -40,17 +98,17 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [mobile, setMobile] = useState(() => {
-    return localStorage.getItem("mobile") || "";
+    return readPersistedValue("mobile", "") || "";
   });
 
   const [userRole, setUserRole] = useState(() => {
-    return localStorage.getItem("userRole") || "";
+    return readPersistedValue("userRole", "") || "";
   });
 
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
+      const stored = readPersistedValue("user", "");
+      const token = readPersistedValue("token", "");
       if (stored && !isTokenExpired(token)) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.role === "Employee" && !parsed.allowedPermissions) {
@@ -65,7 +123,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [token, setToken] = useState(() => {
-    const stored = localStorage.getItem("token");
+    const stored = readPersistedValue("token", "");
     if (isTokenExpired(stored)) {
       return "";
     }
@@ -87,13 +145,10 @@ export const AuthProvider = ({ children }) => {
       setToken(tokenValue);
     }
 
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("mobile", mobileValue);
-    localStorage.setItem("userRole", role);
-    localStorage.setItem("user", JSON.stringify({ ...userValue, allowedPermissions }));
-    if (tokenValue) {
-      localStorage.setItem("token", tokenValue);
-    }
+    writePersistedValue("isAuthenticated", "true");
+    writePersistedValue("mobile", mobileValue);
+    writePersistedValue("userRole", role);
+    writePersistedValue("user", JSON.stringify({ ...userValue, allowedPermissions }));
 
     return true;
   };
@@ -105,12 +160,7 @@ export const AuthProvider = ({ children }) => {
     setToken("");
     setUser(null);
 
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("mobile");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("loginDate");
+    ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => removePersistedValue(key));
   };
 
   const synchronizeAuthState = (event) => {

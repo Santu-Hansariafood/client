@@ -9,7 +9,10 @@ export default async function authJwt(req, res, next) {
     return next();
   }
 
-  const auth = req.header("authorization") || req.header("Authorization");
+  const authHeader = req.header("authorization") || req.header("Authorization");
+  const cookieToken = req.cookies?.accessToken;
+
+  const auth = authHeader || (cookieToken ? `Bearer ${cookieToken}` : undefined);
   if (!auth || !auth.toLowerCase().startsWith("bearer ")) {
     return res.status(401).json({ message: "Missing token" });
   }

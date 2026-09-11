@@ -16,6 +16,26 @@ import { getModelByRole } from "../utils/authSession.js";
 
 const router = Router();
 
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  const secure = process.env.NODE_ENV === "production";
+  const baseOptions = {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+  };
+
+  res.cookie("accessToken", accessToken, {
+    ...baseOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    ...baseOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+};
+
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE,
   auth: {
@@ -247,6 +267,58 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
+router.post("/refresh-token", async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Session expired" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const Model = getModelByRole(decoded.role);
+    if (!Model) {
+      return res.status(401).json({ message: "Invalid session" });
+    }
+
+    const user = await Model.findById(decoded.sub).select("_id passwordChangedAt");
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.passwordChangedAt && decoded.iat && Math.floor(new Date(user.passwordChangedAt).getTime() / 1000) > decoded.iat) {
+      return res.status(401).json({ message: "Session expired. Please login again." });
+    }
+
+    const newAccessToken = jwt.sign(
+      {
+        sub: user._id.toString(),
+        role: decoded.role,
+        mobile: decoded.mobile,
+        name: decoded.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    setAuthCookies(res, newAccessToken, refreshToken);
+
+    return res.json({
+      token: newAccessToken,
+      role: decoded.role,
+      mobile: decoded.mobile,
+      name: decoded.name,
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+});
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("accessToken", { path: "/" });
+  res.clearCookie("refreshToken", { path: "/" });
+  return res.json({ message: "Logged out successfully" });
+});
+
 router.post("/admin/login", async (req, res) => {
   try {
     const { mobile, password } = req.body;
@@ -294,6 +366,19 @@ router.post("/admin/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const refreshToken = jwt.sign(
+      {
+        sub: user._id.toString(),
+        role: "Admin",
+        mobile: normalizedMobile,
+        name: user.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+
+    setAuthCookies(res, token, refreshToken);
+
     res.json({
       role: "Admin",
       mobile: normalizedMobile,
@@ -305,6 +390,7 @@ router.post("/admin/login", async (req, res) => {
         mobile: normalizedMobile,
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -360,6 +446,19 @@ router.post("/employees/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const refreshToken = jwt.sign(
+      {
+        sub: employee._id.toString(),
+        role: "Employee",
+        mobile: normalizedMobile,
+        name: employee.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+
+    setAuthCookies(res, token, refreshToken);
+
     res.json({
       role: "Employee",
       mobile: normalizedMobile,
@@ -376,6 +475,7 @@ router.post("/employees/login", async (req, res) => {
         allowedPermissions: employee.allowedPermissions || [],
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -431,6 +531,19 @@ router.post("/transporters/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const refreshToken = jwt.sign(
+      {
+        sub: transporter._id.toString(),
+        role: "Transporter",
+        mobile: normalizedMobile,
+        name: transporter.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+
+    setAuthCookies(res, token, refreshToken);
+
     res.json({
       role: "Transporter",
       mobile: normalizedMobile,
@@ -445,6 +558,7 @@ router.post("/transporters/login", async (req, res) => {
         status: transporter.status || "Active",
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

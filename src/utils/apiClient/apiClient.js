@@ -19,12 +19,18 @@ const AUTH_EXEMPT_PATHS = [
 ];
 
 const clearStoredAuth = () => {
-  localStorage.removeItem("isAuthenticated");
-  localStorage.removeItem("mobile");
-  localStorage.removeItem("userRole");
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("loginDate");
+  ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      // ignore storage issues
+    }
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore storage issues
+    }
+  });
 };
 
 const shouldHandleUnauthorized = (error) => {
@@ -32,7 +38,15 @@ const shouldHandleUnauthorized = (error) => {
     return false;
   }
 
-  if (!localStorage.getItem("token")) {
+  const storedToken = (() => {
+    try {
+      return sessionStorage.getItem("token") || localStorage.getItem("token") || "";
+    } catch {
+      return localStorage.getItem("token") || "";
+    }
+  })();
+
+  if (!storedToken) {
     return false;
   }
 
@@ -64,6 +78,7 @@ const getRequestKey = (config) => {
 const instance = axios.create({
   baseURL: apiBaseURL,
   timeout: 30000,
+  withCredentials: true,
 });
 
 instance.interceptors.request.use((config) => {
@@ -71,9 +86,10 @@ instance.interceptors.request.use((config) => {
   if (apiKey) {
     config.headers["x-api-key"] = apiKey;
   }
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+
+  config.withCredentials = true;
+  if (config.headers && config.headers.Authorization) {
+    delete config.headers.Authorization;
   }
 
   if (
