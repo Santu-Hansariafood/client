@@ -44,19 +44,19 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
         ...searchQuery,
         ...statusFilter,
       })
-        .select("name mobile email companyIds status loginCount lastLoginAt lastActiveAt isLoggedIn createdAt")
+        .select(
+          "name mobile email companyIds status loginCount lastLoginAt lastActiveAt lastLoginIp isLoggedIn createdAt",
+        )
         .sort({ lastActiveAt: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize)
         .lean(),
       Seller.find({
         ...searchQuery,
         ...statusFilter,
       })
-        .select("sellerName phoneNumbers emails companies status loginCount lastLoginAt lastActiveAt isLoggedIn createdAt")
+        .select(
+          "sellerName phoneNumbers emails companies status loginCount lastLoginAt lastActiveAt lastLoginIp isLoggedIn createdAt",
+        )
         .sort({ lastActiveAt: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize)
         .lean(),
       Buyer.countDocuments({ ...searchQuery, ...statusFilter }),
       Seller.countDocuments({ ...searchQuery, ...statusFilter }),
@@ -66,12 +66,19 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
       _id: buyer._id,
       type: "Buyer",
       name: buyer.name,
-      contact: Array.isArray(buyer.mobile) && buyer.mobile.length ? buyer.mobile.join(", ") : "N/A",
-      email: Array.isArray(buyer.email) && buyer.email.length ? buyer.email.join(", ") : "N/A",
+      contact:
+        Array.isArray(buyer.mobile) && buyer.mobile.length
+          ? buyer.mobile.join(", ")
+          : "N/A",
+      email:
+        Array.isArray(buyer.email) && buyer.email.length
+          ? buyer.email.join(", ")
+          : "N/A",
       status: buyer.status || "Active",
       loginCount: buyer.loginCount || 0,
       lastLoginAt: buyer.lastLoginAt || null,
       lastActiveAt: buyer.lastActiveAt || null,
+      lastLoginIp: buyer.lastLoginIp || "N/A",
       isLoggedIn: !!buyer.isLoggedIn,
       createdAt: buyer.createdAt || null,
     }));
@@ -80,16 +87,19 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
       _id: seller._id,
       type: "Seller",
       name: seller.sellerName,
-      contact: Array.isArray(seller.phoneNumbers) && seller.phoneNumbers.length
-        ? seller.phoneNumbers.map((item) => item?.value || "").join(", ")
-        : "N/A",
-      email: Array.isArray(seller.emails) && seller.emails.length
-        ? seller.emails.map((item) => item?.value || "").join(", ")
-        : "N/A",
+      contact:
+        Array.isArray(seller.phoneNumbers) && seller.phoneNumbers.length
+          ? seller.phoneNumbers.map((item) => item?.value || "").join(", ")
+          : "N/A",
+      email:
+        Array.isArray(seller.emails) && seller.emails.length
+          ? seller.emails.map((item) => item?.value || "").join(", ")
+          : "N/A",
       status: seller.status || "active",
       loginCount: seller.loginCount || 0,
       lastLoginAt: seller.lastLoginAt || null,
       lastActiveAt: seller.lastActiveAt || null,
+      lastLoginIp: seller.lastLoginIp || "N/A",
       isLoggedIn: !!seller.isLoggedIn,
       createdAt: seller.createdAt || null,
     }));
@@ -116,7 +126,12 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch audit report", details: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Failed to fetch audit report",
+        details: error.message,
+      });
   }
 });
 
@@ -129,7 +144,9 @@ router.get("/login-summary", authJwt, adminOnly, async (req, res) => {
             _id: null,
             totalUsers: { $sum: 1 },
             totalLogins: { $sum: { $ifNull: ["$loginCount", 0] } },
-            onlineNow: { $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] } },
+            onlineNow: {
+              $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] },
+            },
             lastLoginAt: { $max: "$lastLoginAt" },
           },
         },
@@ -140,7 +157,9 @@ router.get("/login-summary", authJwt, adminOnly, async (req, res) => {
             _id: null,
             totalUsers: { $sum: 1 },
             totalLogins: { $sum: { $ifNull: ["$loginCount", 0] } },
-            onlineNow: { $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] } },
+            onlineNow: {
+              $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] },
+            },
             lastLoginAt: { $max: "$lastLoginAt" },
           },
         },
@@ -153,7 +172,9 @@ router.get("/login-summary", authJwt, adminOnly, async (req, res) => {
           $group: {
             _id: null,
             totalAdmins: { $sum: 1 },
-            onlineNow: { $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] } },
+            onlineNow: {
+              $sum: { $cond: [{ $eq: ["$isLoggedIn", true] }, 1, 0] },
+            },
             lastLoginAt: { $max: "$lastLoginAt" },
           },
         },
@@ -162,11 +183,20 @@ router.get("/login-summary", authJwt, adminOnly, async (req, res) => {
 
     res.json({
       buyers: buyerStats[0] || { totalUsers: 0, totalLogins: 0, onlineNow: 0 },
-      sellers: sellerStats[0] || { totalUsers: 0, totalLogins: 0, onlineNow: 0 },
+      sellers: sellerStats[0] || {
+        totalUsers: 0,
+        totalLogins: 0,
+        onlineNow: 0,
+      },
       admins: adminStats[0] || { totalAdmins: 0, onlineNow: 0 },
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to generate login summary", details: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Failed to generate login summary",
+        details: error.message,
+      });
   }
 });
 

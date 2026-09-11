@@ -16,6 +16,16 @@ import { getModelByRole } from "../utils/authSession.js";
 
 const router = Router();
 
+const getClientIp = (req) => {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const forwardedIp = Array.isArray(forwardedFor)
+    ? forwardedFor[0]
+    : String(forwardedFor || "")
+        .split(",")[0]
+        .trim();
+  return forwardedIp || req.ip || req.socket?.remoteAddress || null;
+};
+
 const setAuthCookies = (res, accessToken, refreshToken) => {
   const secure = process.env.NODE_ENV === "production";
   const baseOptions = {
@@ -290,13 +300,22 @@ router.post("/refresh-token", async (req, res) => {
       return res.status(401).json({ message: "Invalid session" });
     }
 
-    const user = await Model.findById(decoded.sub).select("_id passwordChangedAt");
+    const user = await Model.findById(decoded.sub).select(
+      "_id passwordChangedAt",
+    );
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    if (user.passwordChangedAt && decoded.iat && Math.floor(new Date(user.passwordChangedAt).getTime() / 1000) > decoded.iat) {
-      return res.status(401).json({ message: "Session expired. Please login again." });
+    if (
+      user.passwordChangedAt &&
+      decoded.iat &&
+      Math.floor(new Date(user.passwordChangedAt).getTime() / 1000) >
+        decoded.iat
+    ) {
+      return res
+        .status(401)
+        .json({ message: "Session expired. Please login again." });
     }
 
     const newAccessToken = jwt.sign(
@@ -325,13 +344,17 @@ router.post("/refresh-token", async (req, res) => {
       name: decoded.name,
     });
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired refresh token" });
+    return res
+      .status(401)
+      .json({ message: "Invalid or expired refresh token" });
   }
 });
 
 router.post("/logout", async (req, res) => {
   try {
-    const token = req.cookies?.accessToken || req.header("authorization")?.replace(/^Bearer\s+/i, "");
+    const token =
+      req.cookies?.accessToken ||
+      req.header("authorization")?.replace(/^Bearer\s+/i, "");
     if (token) {
       const decoded = jwt.decode(token);
       if (decoded?.role && decoded?.sub) {
@@ -696,6 +719,7 @@ router.post("/buyers/login", async (req, res) => {
     await Buyer.findByIdAndUpdate(buyer._id, {
       lastActiveAt: new Date(),
       lastLoginAt: new Date(),
+      lastLoginIp: getClientIp(req),
       isLoggedIn: true,
       $inc: { loginCount: 1 },
     });
@@ -796,6 +820,7 @@ router.post("/sellers/login", async (req, res) => {
     await Seller.findByIdAndUpdate(seller._id, {
       lastActiveAt: new Date(),
       lastLoginAt: new Date(),
+      lastLoginIp: getClientIp(req),
       isLoggedIn: true,
       $inc: { loginCount: 1 },
     });

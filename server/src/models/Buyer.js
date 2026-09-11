@@ -33,6 +33,7 @@ const buyerSchema = new mongoose.Schema(
     loginCount: { type: Number, default: 0 },
     lastLoginAt: { type: Date, default: null },
     lastActiveAt: { type: Date, default: null },
+    lastLoginIp: { type: String, default: null },
     isLoggedIn: { type: Boolean, default: false },
     otp: { type: String },
     otpExpires: { type: Date },
