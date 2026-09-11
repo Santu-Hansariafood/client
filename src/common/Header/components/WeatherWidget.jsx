@@ -222,7 +222,10 @@ const WeatherWidget = () => {
                 : "bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-700"
             }`}
           >
-            <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+            <div
+              className="absolute inset-0 overflow-hidden pointer-events-none"
+              aria-hidden
+            >
               <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/15 blur-3xl" />
               <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-sky-400/20 blur-3xl" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_50%)]" />
@@ -317,7 +320,9 @@ const WeatherStat = ({ icon: Icon, label, value, unit }) => (
     <span className="text-xs sm:text-sm font-black tabular-nums leading-tight">
       {value}
       {unit && (
-        <span className="text-[9px] font-bold text-white/50 ml-0.5">{unit}</span>
+        <span className="text-[9px] font-bold text-white/50 ml-0.5">
+          {unit}
+        </span>
       )}
     </span>
   </div>

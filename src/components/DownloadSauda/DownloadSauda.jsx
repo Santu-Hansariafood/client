@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { pdf } from "@react-pdf/renderer";
 import { downloadFile } from "../../utils/fileDownloader";
 import SaudaPDF from "./SaudaPDF/SaudaPDF";
+import Loading from "../../common/Loading/Loading"
 import { FaDownload, FaEnvelope } from "react-icons/fa";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
@@ -306,12 +307,7 @@ const DownloadSauda = ({
   return (
     <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2 gap-2">
       {loading ? (
-        <button
-          className="bg-gray-300 cursor-not-allowed text-gray-600 py-2 px-4 rounded-lg"
-          disabled
-        >
-          Loading Data...
-        </button>
+        <Loading />
       ) : (
         <>
           {button ? (

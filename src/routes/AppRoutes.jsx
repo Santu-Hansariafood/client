@@ -477,7 +477,6 @@ const AppRoutes = ({ hydrated }) => {
   }, [isAuthenticated, loading, userRole]);
 
   useEffect(() => {
-    // Force redirect to dashboard on initial app load if authenticated
     if (hydrated && isAuthenticated) {
       const isInitialLoad = !sessionStorage.getItem("appInitialized");
 
@@ -492,10 +491,8 @@ const AppRoutes = ({ hydrated }) => {
 
         const targetDashboard = roleDashboards[userRole] || "/dashboard";
 
-        // Mark as initialized for this session
         sessionStorage.setItem("appInitialized", "true");
 
-        // Redirect to dashboard if not already there
         if (location.pathname !== targetDashboard) {
           navigate(targetDashboard, { replace: true });
         }

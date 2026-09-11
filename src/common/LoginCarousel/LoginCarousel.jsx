@@ -39,35 +39,39 @@ const carouselSlides = [
 const LoginCarousel = () => {
   const settings = {
     dots: true,
+    arrows: false,
     infinite: true,
-    speed: 600,
+    speed: 900,
     slidesToShow: 1,
     slidesToScroll: 1,
     fade: true,
     autoplay: true,
-    autoplaySpeed: 3000,
+    autoplaySpeed: 4500,
     pauseOnHover: true,
-    cssEase: "ease-in-out",
+    cssEase: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+    swipeToSlide: true,
+    waitForAnimate: false,
+    draggable: true,
   };
 
   return (
-    <div className="h-screen relative">
-      <Slider {...settings} className="h-full">
+    <div className="h-screen relative overflow-hidden">
+      <Slider {...settings} className="h-full [&_.slick-list]:h-full [&_.slick-track]:h-full [&_.slick-slide]:h-full [&_.slick-slide>div]:h-full [&_.slick-dots]:bottom-8 [&_.slick-dots_li]:mx-1 [&_.slick-dots_button]:before:text-lg [&_.slick-dots_button]:before:text-white/80 [&_.slick-dots .slick-active button:before]:text-white">
         {carouselSlides.map((slide, index) => (
           <div key={index} className="relative h-screen">
             <LazyImage
               src={slide.image}
               alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover scale-[1.02] transition-transform duration-[1200ms] ease-out"
             />
 
-            <div className="absolute inset-0 bg-black/40"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/50" />
 
-            <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-6 text-white">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
+              <h1 className="mb-6 text-4xl font-bold drop-shadow-lg md:text-6xl animate-[fadeInUp_0.9s_ease-out]">
                 {slide.title}
               </h1>
-              <p className="text-lg md:text-2xl italic max-w-2xl leading-relaxed">
+              <p className="max-w-2xl text-lg italic leading-relaxed md:text-2xl animate-[fadeInUp_1.1s_ease-out]">
                 “{slide.quote}”
               </p>
             </div>
