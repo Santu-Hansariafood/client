@@ -22,6 +22,9 @@ const BidList = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
+  const [selectedConsignee, setSelectedConsignee] = useState("");
+  const [consigneeSellers, setConsigneeSellers] = useState([]);
+  const [consigneeSellersLoading, setConsigneeSellersLoading] = useState(false);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -229,6 +232,27 @@ const BidList = () => {
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-GB");
 
+  const openConsigneeSellers = async (consignee) => {
+    if (userRole !== "Admin" || !consignee || consignee === "N/A") return;
+
+    setSelectedConsignee(consignee);
+    setConsigneeSellers([]);
+    setConsigneeSellersLoading(true);
+    try {
+      const response = await api.get("/bids/consignee-sellers", {
+        params: { consignee },
+      });
+      setConsigneeSellers(response.data?.data || []);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to load consignee sellers.",
+      );
+      setSelectedConsignee("");
+    } finally {
+      setConsigneeSellersLoading(false);
+    }
+  };
+
   const handleEdit = async () => {
     if (!editableRateQuantity) return;
     try {
@@ -421,7 +445,18 @@ const BidList = () => {
     index + 1,
     bid.group,
     bid.company || "N/A",
-    bid.consignee,
+    userRole === "Admin" ? (
+      <button
+        type="button"
+        className="font-semibold text-left text-emerald-700 underline decoration-dotted underline-offset-4 hover:text-emerald-900"
+        onClick={() => openConsigneeSellers(bid.consignee)}
+        title="View top sellers for this consignee"
+      >
+        {bid.consignee}
+      </button>
+    ) : (
+      bid.consignee
+    ),
     bid.origin,
     bid.commodity,
     bid.quantity,
@@ -824,6 +859,53 @@ const BidList = () => {
               </div>
             </PopupBox>
           )}
+
+          <PopupBox
+            isOpen={Boolean(selectedConsignee)}
+            onClose={() => setSelectedConsignee("")}
+            title={`Top sellers for ${selectedConsignee}`}
+            width="w-[96vw] max-w-6xl"
+            height="h-auto max-h-[90vh]"
+          >
+            {consigneeSellersLoading ? (
+              <Loading />
+            ) : (
+              <Tables
+                headers={[
+                  "Rank",
+                  "Seller Name",
+                  "Company",
+                  "Phone Number",
+                  "Participations",
+                  "Total Quantity",
+                  "Last Participation",
+                ]}
+                rows={consigneeSellers.map((seller, index) => [
+                  index + 1,
+                  seller.sellerName || "Unknown",
+                  [
+                    ...(seller.participatedCompanies || []),
+                    ...(seller.sellerCompanies || []).filter(
+                      (company) =>
+                        !(seller.participatedCompanies || []).includes(company),
+                    ),
+                  ].filter(Boolean).join(", ") || "N/A",
+                  (seller.phoneNumbers || [])
+                    .map((phone) => phone?.value)
+                    .filter(Boolean)
+                    .join(", ") || seller.mobile || "N/A",
+                  seller.participationCount || 0,
+                  `${seller.totalQuantity || 0} T`,
+                  seller.lastParticipationAt
+                    ? new Date(seller.lastParticipationAt).toLocaleString(
+                        "en-IN",
+                        { dateStyle: "medium", timeStyle: "short" },
+                      )
+                    : "N/A",
+                ])}
+              />
+            )}
+          </PopupBox>
 
           {selectedBid && (
             <ViewBid
