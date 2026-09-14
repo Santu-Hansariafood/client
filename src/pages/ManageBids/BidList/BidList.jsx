@@ -876,28 +876,26 @@ const BidList = () => {
                   "Seller Name",
                   "Company",
                   "Phone Number",
-                  "Participations",
-                  "Selling Quantity",
-                  "Last Participation",
+                  "Sauda Quantity",
+                  "Last Sauda",
                 ]}
                 rows={consigneeSellers.map((seller, index) => [
                   index + 1,
                   seller.sellerName || "Unknown",
                   [
-                    ...(seller.participatedCompanies || []),
+                    ...(seller.saudaCompanies || []),
                     ...(seller.sellerCompanies || []).filter(
                       (company) =>
-                        !(seller.participatedCompanies || []).includes(company),
+                        !(seller.saudaCompanies || []).includes(company),
                     ),
                   ].filter(Boolean).join(", ") || "N/A",
                   (seller.phoneNumbers || [])
                     .map((phone) => phone?.value)
                     .filter(Boolean)
                     .join(", ") || seller.mobile || "N/A",
-                  seller.participationCount || 0,
-                  `${seller.totalSellingQuantity || 0} T`,
-                  seller.lastParticipationAt
-                    ? new Date(seller.lastParticipationAt).toLocaleString(
+                  `${seller.totalSaudaQuantity || 0} T`,
+                  seller.lastSaudaAt
+                    ? new Date(seller.lastSaudaAt).toLocaleString(
                         "en-IN",
                         { dateStyle: "medium", timeStyle: "short" },
                       )

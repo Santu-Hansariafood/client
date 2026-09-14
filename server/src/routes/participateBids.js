@@ -3,6 +3,7 @@ import ParticipateBid from "../models/ParticipateBid.js";
 import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
 import Seller from "../models/Seller.js";
+import SelfOrder from "../models/SelfOrder.js";
 import { invalidate } from "../middleware/cache.js";
 import { adminOnly } from "../middleware/roleMiddleware.js";
 
@@ -19,48 +20,29 @@ router.get("/consignee-sellers", adminOnly, async (req, res) => {
     }
 
     const consigneePattern = new RegExp(`^${escapeRegex(consignee)}$`, "i");
-    const sellers = await ParticipateBid.aggregate([
-      {
-        $lookup: {
-          from: "bids",
-          localField: "bidId",
-          foreignField: "_id",
-          as: "bid",
-        },
-      },
-      { $unwind: "$bid" },
-      { $match: { "bid.consignee": consigneePattern } },
+    const sellers = await SelfOrder.aggregate([
+      { $match: { consignee: consigneePattern } },
       {
         $group: {
-          _id: "$mobile",
-          participationCount: { $sum: 1 },
-          totalSellingQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
-          lastParticipationAt: { $max: "$createdAt" },
-          companies: { $addToSet: "$sellerCompany" },
+          _id: "$supplier",
+          sellerMobile: { $first: "$sellerMobile" },
+          saudaCompanies: { $addToSet: "$supplierCompany" },
+          totalSaudaQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
+          lastSaudaAt: { $max: "$createdAt" },
         },
       },
       {
         $sort: {
-          totalSellingQuantity: -1,
-          participationCount: -1,
-          lastParticipationAt: -1,
+          totalSaudaQuantity: -1,
+          lastSaudaAt: -1,
         },
       },
       { $limit: 10 },
       {
         $lookup: {
           from: "sellers",
-          let: { mobile: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $in: ["$$mobile", "$phoneNumbers.value"],
-                },
-              },
-            },
-            { $project: { sellerName: 1, phoneNumbers: 1, companies: 1 } },
-          ],
+          localField: "_id",
+          foreignField: "_id",
           as: "seller",
         },
       },
@@ -68,20 +50,19 @@ router.get("/consignee-sellers", adminOnly, async (req, res) => {
       {
         $project: {
           _id: 0,
-          mobile: "$_id",
+          mobile: { $ifNull: ["$sellerMobile", ""] },
           sellerName: { $ifNull: ["$seller.sellerName", "Unknown"] },
           phoneNumbers: { $ifNull: ["$seller.phoneNumbers", []] },
           sellerCompanies: { $ifNull: ["$seller.companies", []] },
-          participatedCompanies: {
+          saudaCompanies: {
             $filter: {
-              input: "$companies",
+              input: "$saudaCompanies",
               as: "company",
               cond: { $ne: [{ $trim: { input: "$$company" } }, ""] },
             },
           },
-          participationCount: 1,
-          totalSellingQuantity: 1,
-          lastParticipationAt: 1,
+          totalSaudaQuantity: 1,
+          lastSaudaAt: 1,
         },
       },
     ]);
