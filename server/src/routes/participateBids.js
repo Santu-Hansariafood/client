@@ -4,8 +4,90 @@ import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
 import Seller from "../models/Seller.js";
 import { invalidate } from "../middleware/cache.js";
+import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = Router();
+
+const escapeRegex = (value) =>
+  String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+router.get("/consignee-sellers", adminOnly, async (req, res) => {
+  try {
+    const consignee = String(req.query.consignee || "").trim();
+    if (!consignee) {
+      return res.status(400).json({ message: "Consignee is required." });
+    }
+
+    const consigneePattern = new RegExp(`^${escapeRegex(consignee)}$`, "i");
+    const sellers = await ParticipateBid.aggregate([
+      {
+        $lookup: {
+          from: "bids",
+          localField: "bidId",
+          foreignField: "_id",
+          as: "bid",
+        },
+      },
+      { $unwind: "$bid" },
+      { $match: { "bid.consignee": consigneePattern } },
+      {
+        $group: {
+          _id: "$mobile",
+          participationCount: { $sum: 1 },
+          totalQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
+          lastParticipationAt: { $max: "$createdAt" },
+          companies: { $addToSet: "$sellerCompany" },
+        },
+      },
+      { $sort: { participationCount: -1, lastParticipationAt: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "sellers",
+          let: { mobile: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$$mobile", "$phoneNumbers.value"],
+                },
+              },
+            },
+            { $project: { sellerName: 1, phoneNumbers: 1, companies: 1 } },
+          ],
+          as: "seller",
+        },
+      },
+      { $unwind: { path: "$seller", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 0,
+          mobile: "$_id",
+          sellerName: { $ifNull: ["$seller.sellerName", "Unknown"] },
+          phoneNumbers: { $ifNull: ["$seller.phoneNumbers", []] },
+          sellerCompanies: { $ifNull: ["$seller.companies", []] },
+          participatedCompanies: {
+            $filter: {
+              input: "$companies",
+              as: "company",
+              cond: { $ne: [{ $trim: { input: "$$company" } }, ""] },
+            },
+          },
+          participationCount: 1,
+          totalQuantity: 1,
+          lastParticipationAt: 1,
+        },
+      },
+    ]);
+
+    return res.json({ consignee, data: sellers });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to load consignee sellers.",
+      details: error.message,
+    });
+  }
+});
 
 router.get("/", async (req, res) => {
   const { mobile, bidId, date } = req.query;

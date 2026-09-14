@@ -35,6 +35,7 @@ const DateSelector = lazy(
 const InteractionsPopup = lazy(
   () => import("../InteractionsPopup/InteractionsPopup"),
 );
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const ITEMS_PER_PAGE = 10;
 
@@ -53,6 +54,9 @@ const ParticipateBidAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedBidId, setSelectedBidId] = useState(null);
+  const [selectedConsignee, setSelectedConsignee] = useState("");
+  const [consigneeSellers, setConsigneeSellers] = useState([]);
+  const [consigneeSellersLoading, setConsigneeSellersLoading] = useState(false);
 
   const [buyerGroups, setBuyerGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(initialGroup);
@@ -306,6 +310,25 @@ const ParticipateBidAdmin = () => {
     setCurrentPage(1);
   }, []);
 
+  const openConsigneeSellers = useCallback(async (consignee) => {
+    if (!consignee || consignee === "N/A") return;
+
+    setSelectedConsignee(consignee);
+    setConsigneeSellers([]);
+    setConsigneeSellersLoading(true);
+    try {
+      const response = await api.get("/participatebids/consignee-sellers", {
+        params: { consignee },
+      });
+      setConsigneeSellers(response.data?.data || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load consignee sellers.");
+      setSelectedConsignee("");
+    } finally {
+      setConsigneeSellersLoading(false);
+    }
+  }, []);
+
   const stats = useMemo(() => {
     const targetDate = new Date(selectedDate);
 
@@ -379,9 +402,21 @@ const ParticipateBidAdmin = () => {
       >
         {bid.group}
       </span>,
-      <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">
-        {bid.consignee}
-      </span>,
+      userRole === "Admin" ? (
+        <button
+          key={`consignee-${bid.bidId}`}
+          type="button"
+          onClick={() => openConsigneeSellers(bid.consignee)}
+          className="font-bold text-left text-emerald-700 underline decoration-dotted underline-offset-4 hover:text-emerald-900"
+          title="View top sellers for this consignee"
+        >
+          {bid.consignee}
+        </button>
+      ) : (
+        <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">
+          {bid.consignee}
+        </span>
+      ),
       bid.origin,
       <span key={`commodity-${bid.bidId}`} className="font-bold text-slate-600">
         {bid.commodity}
@@ -439,7 +474,7 @@ const ParticipateBidAdmin = () => {
         </span>
       </button>,
     ]);
-  }, [currentPage, paginatedData]);
+  }, [currentPage, openConsigneeSellers, paginatedData, userRole]);
 
   const consigneeItems = useMemo(() => {
     return [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort(
@@ -596,6 +631,53 @@ const ParticipateBidAdmin = () => {
               canInteract={canInteract}
             />
           )}
+
+          <PopupBox
+            isOpen={Boolean(selectedConsignee)}
+            onClose={() => setSelectedConsignee("")}
+            title={`Top sellers for ${selectedConsignee}`}
+            width="w-[96vw] max-w-6xl"
+            height="h-auto max-h-[90vh]"
+          >
+            {consigneeSellersLoading ? (
+              <Loading />
+            ) : (
+              <Tables
+                headers={[
+                  "Rank",
+                  "Seller Name",
+                  "Company",
+                  "Phone Number",
+                  "Participations",
+                  "Total Quantity",
+                  "Last Participation",
+                ]}
+                rows={consigneeSellers.map((seller, index) => [
+                  index + 1,
+                  seller.sellerName || "Unknown",
+                  [
+                    ...(seller.participatedCompanies || []),
+                    ...(seller.sellerCompanies || []).filter(
+                      (company) =>
+                        !(seller.participatedCompanies || []).includes(company),
+                    ),
+                  ].filter(Boolean).join(", ") || "N/A",
+                  (seller.phoneNumbers || [])
+                    .map((phone) => phone?.value)
+                    .filter(Boolean)
+                    .join(", ") || seller.mobile || "N/A",
+                  seller.participationCount || 0,
+                  `${seller.totalQuantity || 0} T`,
+                  seller.lastParticipationAt
+                    ? new Date(seller.lastParticipationAt).toLocaleString(
+                        "en-IN",
+                        { dateStyle: "medium", timeStyle: "short" },
+                      )
+                    : "N/A",
+                ])}
+              />
+            )}
+          </PopupBox>
 
           {loading ? (
             <Loading />
