@@ -258,9 +258,14 @@ const AddFinancer = () => {
 
   const financerRows = financers.map((item, index) => [
     index + 1,
+    item.financerType || "Buyer",
     item.groupId?.groupName || "-",
-    item.financerType === "Seller" ? item.sellerId?.sellerName || "-" : item.buyerId?.name || "-",
-    item.financerType === "Seller" ? item.sellerCompany || "-" : item.companyId?.companyName || "-",
+    item.financerType === "Seller"
+      ? item.sellerId?.sellerName || "Seller name unavailable"
+      : item.buyerId?.name || "Buyer name unavailable",
+    item.financerType === "Seller"
+      ? item.sellerCompany || "Seller company unavailable"
+      : item.companyId?.companyName || "Buyer company unavailable",
     <Buttons
       key={item._id}
       label={removingId === item._id ? "Removing..." : "Remove"}
@@ -392,8 +397,8 @@ const AddFinancer = () => {
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Added Financers(Buyer Companies)</h2>
-                <p className="text-sm text-slate-500">All saved financer mappings</p>
+                <h2 className="text-lg font-bold text-slate-800">Added Financers (Buyer & Seller Companies)</h2>
+                <p className="text-sm text-slate-500">All saved buyer and seller financer mappings</p>
               </div>
               <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                 {financers.length} Added
@@ -404,7 +409,7 @@ const AddFinancer = () => {
             ) : (
               <div className="overflow-x-auto">
                 <Tables
-                  headers={["Sl No", "Group", "Buyer", "Buyer Company", "Actions"]}
+                  headers={["Sl No", "Type", "Group", "Buyer / Seller", "Company", "Actions"]}
                   rows={financerRows}
                 />
               </div>
