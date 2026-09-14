@@ -51,6 +51,9 @@ const FinanceReport = () => {
       sellerCompany: "",
       saudaOptions: [],
       manualAdjustment: "",
+      purchaseQuantity: null,
+      loadedQuantity: null,
+      consignee: "",
       pendingQuantity: null,
       status: "",
     },
@@ -143,6 +146,9 @@ const FinanceReport = () => {
               ? {
                   ...row,
                   sellerCompany: company,
+                  purchaseQuantity: match.quantity,
+                  loadedQuantity: match.loadedQuantity,
+                  consignee: match.consignee || "",
                   pendingQuantity: match.pendingQuantity,
                   status: "Found",
                 }
@@ -161,7 +167,15 @@ const FinanceReport = () => {
     setSaudaRows((rows) =>
       rows.map((row) =>
         row.id === id
-          ? { ...row, saudaNo: value, pendingQuantity: null, status: "" }
+          ? {
+              ...row,
+              saudaNo: value,
+              purchaseQuantity: null,
+              loadedQuantity: null,
+              consignee: "",
+              pendingQuantity: null,
+              status: "",
+            }
           : row,
       ),
     );
@@ -180,6 +194,9 @@ const FinanceReport = () => {
                 ...row,
                 saudaOptions: response.data?.saudaNumbers || [],
                 saudaNo: "",
+                purchaseQuantity: null,
+                loadedQuantity: null,
+                consignee: "",
                 pendingQuantity: null,
                 status: "",
               }
@@ -200,6 +217,9 @@ const FinanceReport = () => {
         sellerCompany: "",
         saudaOptions: [],
         manualAdjustment: "",
+        purchaseQuantity: null,
+        loadedQuantity: null,
+        consignee: "",
         pendingQuantity: null,
         status: "",
       },
@@ -209,7 +229,7 @@ const FinanceReport = () => {
   const removeSaudaRow = (id) => {
     setSaudaRows((rows) =>
       rows.length === 1
-        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", pendingQuantity: null, status: "" }]
+        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", purchaseQuantity: null, loadedQuantity: null, consignee: "", pendingQuantity: null, status: "" }]
         : rows.filter((row) => row.id !== id),
     );
   };
@@ -248,7 +268,13 @@ const FinanceReport = () => {
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
       <select
         value={row.saudaNo}
-        onChange={(event) => updateSaudaRow(row.id, event.target.value)}
+        onChange={(event) => {
+          const saudaNo = event.target.value;
+          updateSaudaRow(row.id, saudaNo);
+          if (saudaNo && row.sellerCompany) {
+            lookupSauda(row.id, saudaNo, row.sellerCompany, row.manualAdjustment);
+          }
+        }}
         disabled={!row.sellerCompany || row.saudaOptions.length === 0}
         className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
       >
@@ -269,6 +295,9 @@ const FinanceReport = () => {
                     sellerCompany: company,
                     saudaNo: "",
                     saudaOptions: [],
+                    purchaseQuantity: null,
+                    loadedQuantity: null,
+                    consignee: "",
                     pendingQuantity: null,
                     status: "",
                   }
@@ -309,6 +338,13 @@ const FinanceReport = () => {
         Check pending quantity
       </button>
     </div>,
+    <div key={`details-${row.id}`} className="min-w-[210px] space-y-1 text-xs">
+      <div><span className="font-bold text-slate-500">Company:</span> {row.sellerCompany || "-"}</div>
+      <div><span className="font-bold text-slate-500">Consignee:</span> {row.consignee || "-"}</div>
+    </div>,
+    row.purchaseQuantity === null ? "-" : `${formatNumber(row.purchaseQuantity)} Tons`,
+    row.loadedQuantity === null ? "-" : `${formatNumber(row.loadedQuantity)} Tons`,
+    row.manualAdjustment ? `${formatNumber(row.manualAdjustment)} Tons` : "0 Tons",
     row.pendingQuantity === null ? "-" : `${formatNumber(row.pendingQuantity)} Tons`,
     <span
       key={`status-${row.id}`}
@@ -406,7 +442,7 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Seller Sauda No / Seller Company / Manual Deduction", "Pending Quantity", "Status", "Actions"]}
+                headers={["Seller Sauda No", "Seller Company / Consignee", "Purchase Quantity", "Loaded Quantity", "Manual Deduction", "Pending Quantity", "Status", "Actions"]}
                 rows={saudaLookupRows}
               />
             </div>
