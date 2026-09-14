@@ -49,6 +49,7 @@ const FinanceReport = () => {
       id: Date.now(),
       saudaNo: "",
       sellerCompany: "",
+      saudaOptions: [],
       manualAdjustment: "",
       pendingQuantity: null,
       status: "",
@@ -70,7 +71,6 @@ const FinanceReport = () => {
       });
       setOrders(response.data?.data || []);
       setConsignees(response.data?.consigneeOptions || []);
-      setSellerCompanies(response.data?.sellerCompanyOptions || []);
       setTotal(Number(response.data?.total) || 0);
     } catch (error) {
       setOrders([]);
@@ -84,6 +84,19 @@ const FinanceReport = () => {
   useEffect(() => {
     loadReport();
   }, [loadReport]);
+
+  useEffect(() => {
+    const loadSellerFinancerCompanies = async () => {
+      try {
+        const response = await api.get("/financers/pending-options");
+        setSellerCompanies(response.data?.sellerCompanies || []);
+      } catch (error) {
+        setSellerCompanies([]);
+        toast.error(error.response?.data?.message || "Failed to load financer seller companies");
+      }
+    };
+    loadSellerFinancerCompanies();
+  }, []);
 
   useEffect(() => {
     if (selectedConsignee && !consignees.includes(selectedConsignee)) {
@@ -154,6 +167,30 @@ const FinanceReport = () => {
     );
   };
 
+  const loadSaudaOptions = async (rowId, sellerCompany) => {
+    if (!sellerCompany) return;
+    try {
+      const response = await api.get("/financers/pending-options", {
+        params: { sellerCompany },
+      });
+      setSaudaRows((rows) =>
+        rows.map((row) =>
+          row.id === rowId
+            ? {
+                ...row,
+                saudaOptions: response.data?.saudaNumbers || [],
+                saudaNo: "",
+                pendingQuantity: null,
+                status: "",
+              }
+            : row,
+        ),
+      );
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load Sauda numbers");
+    }
+  };
+
   const addSaudaRow = () => {
     setSaudaRows((rows) => [
       ...rows,
@@ -161,6 +198,7 @@ const FinanceReport = () => {
         id: Date.now() + rows.length,
         saudaNo: "",
         sellerCompany: "",
+        saudaOptions: [],
         manualAdjustment: "",
         pendingQuantity: null,
         status: "",
@@ -171,7 +209,7 @@ const FinanceReport = () => {
   const removeSaudaRow = (id) => {
     setSaudaRows((rows) =>
       rows.length === 1
-        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", manualAdjustment: "", pendingQuantity: null, status: "" }]
+        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", pendingQuantity: null, status: "" }]
         : rows.filter((row) => row.id !== id),
     );
   };
@@ -208,33 +246,37 @@ const FinanceReport = () => {
 
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
-      <input
+      <select
         value={row.saudaNo}
         onChange={(event) => updateSaudaRow(row.id, event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            lookupSauda(
-              row.id,
-              row.saudaNo,
-              row.sellerCompany,
-              row.manualAdjustment,
-            );
-          }
-        }}
-        placeholder="Seller Sauda No"
-        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-      />
+        disabled={!row.sellerCompany || row.saudaOptions.length === 0}
+        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
+      >
+        <option value="">Select Sauda number</option>
+        {(row.saudaOptions || []).map((saudaNo) => (
+          <option key={saudaNo} value={saudaNo}>{saudaNo}</option>
+        ))}
+      </select>
       <select
         value={row.sellerCompany}
-        onChange={(event) =>
+        onChange={(event) => {
+          const company = event.target.value;
           setSaudaRows((rows) =>
             rows.map((item) =>
               item.id === row.id
-                ? { ...item, sellerCompany: event.target.value, pendingQuantity: null, status: "" }
+                ? {
+                    ...item,
+                    sellerCompany: company,
+                    saudaNo: "",
+                    saudaOptions: [],
+                    pendingQuantity: null,
+                    status: "",
+                  }
                 : item,
             ),
-          )
-        }
+          );
+          loadSaudaOptions(row.id, company);
+        }}
         className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
       >
         <option value="">Select seller company</option>

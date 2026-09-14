@@ -96,6 +96,40 @@ router.get("/seller-options", async (_req, res) => {
   }
 });
 
+router.get("/pending-options", async (req, res) => {
+  try {
+    const selectedCompany = String(req.query.sellerCompany || "").trim();
+    const sellerCompanies = (await Financer.distinct("sellerCompany", {
+      financerType: "Seller",
+      sellerCompany: { $exists: true, $ne: "" },
+    }))
+      .filter(Boolean)
+      .map((value) => String(value).trim())
+      .filter(Boolean)
+      .sort((first, second) => first.localeCompare(second));
+
+    if (!selectedCompany) {
+      return res.json({ sellerCompanies, saudaNumbers: [] });
+    }
+
+    const companyRegex = new RegExp(
+      `^${selectedCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      "i",
+    );
+    const saudaNumbers = await SelfOrder.find({ supplierCompany: companyRegex })
+      .select("saudaNo")
+      .sort({ poDate: -1, saudaNo: -1 })
+      .lean();
+
+    return res.json({
+      sellerCompanies,
+      saudaNumbers: [...new Set(saudaNumbers.map((item) => item.saudaNo).filter(Boolean))],
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/report", async (req, res) => {
   try {
     const groupId = req.query.groupId ? toObjectId(req.query.groupId) : null;
