@@ -105,6 +105,8 @@ router.get("/report", async (req, res) => {
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
     const consignee = String(req.query.consignee || "").trim();
+    const sellerCompany = String(req.query.sellerCompany || "").trim();
+    const manualAdjustment = Math.max(0, Number(req.query.manualAdjustment || 0));
     const rawSaudaNos = String(req.query.saudaNos || "")
       .split(",")
       .map((value) => value.trim())
@@ -169,6 +171,7 @@ router.get("/report", async (req, res) => {
         financers: financerRecords,
         groups: financedGroups,
         companies: [],
+        sellerCompanyOptions: [],
         financerCount: financerRecords.length,
       });
     }
@@ -196,6 +199,12 @@ router.get("/report", async (req, res) => {
       ],
     };
     if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
+    if (sellerCompany) {
+      orderQuery.supplierCompany = {
+        $regex: `^${sellerCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        $options: "i",
+      };
+    }
     if (startDate || endDate) {
       const dateFilter = {};
       if (startDate && !Number.isNaN(startDate.getTime())) {
@@ -224,7 +233,7 @@ router.get("/report", async (req, res) => {
       orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
     }
 
-    const [orders, total, companies, financerOrders, consigneeOptions] = await Promise.all([
+    const [orders, total, companies, financerOrders, consigneeOptions, sellerCompanyOptions] = await Promise.all([
       SelfOrder.find(orderQuery)
         .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate cd gst deliveryDate paymentTerms companyId")
         .sort({ poDate: -1, saudaNo: -1 })
@@ -241,6 +250,12 @@ router.get("/report", async (req, res) => {
         .sort({ poDate: -1, saudaNo: -1 })
         .lean(),
       SelfOrder.distinct("consignee", consigneeQuery),
+      SelfOrder.distinct("supplierCompany", {
+        $or: [
+          { companyId: { $in: scopedCompanyIds } },
+          ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
+        ],
+      }),
     ]);
 
     const financerData = financerRecords.map((financer) => {
@@ -279,7 +294,9 @@ router.get("/report", async (req, res) => {
       ...order,
       pendingQuantity: Math.max(
         0,
-        Number(order.quantity || 0) - (loadedMap.get(String(order.saudaNo)) || 0),
+        Number(order.quantity || 0) -
+          (loadedMap.get(String(order.saudaNo)) || 0) -
+          (rawSaudaNos.length ? manualAdjustment : 0),
       ),
       loadedQuantity: loadedMap.get(String(order.saudaNo)) || 0,
     }));
@@ -293,6 +310,11 @@ router.get("/report", async (req, res) => {
       groups: financedGroups,
       companies,
       consigneeOptions: consigneeOptions
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+        .filter(Boolean)
+        .sort((first, second) => first.localeCompare(second)),
+      sellerCompanyOptions: sellerCompanyOptions
         .filter(Boolean)
         .map((value) => String(value).trim())
         .filter(Boolean)

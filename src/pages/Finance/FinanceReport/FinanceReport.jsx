@@ -40,11 +40,19 @@ const FinanceReport = () => {
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [consignees, setConsignees] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [saudaRows, setSaudaRows] = useState([
-    { id: Date.now(), saudaNo: "", pendingQuantity: null, status: "" },
+    {
+      id: Date.now(),
+      saudaNo: "",
+      sellerCompany: "",
+      manualAdjustment: "",
+      pendingQuantity: null,
+      status: "",
+    },
   ]);
   const itemsPerPage = 10;
 
@@ -62,6 +70,7 @@ const FinanceReport = () => {
       });
       setOrders(response.data?.data || []);
       setConsignees(response.data?.consigneeOptions || []);
+      setSellerCompanies(response.data?.sellerCompanyOptions || []);
       setTotal(Number(response.data?.total) || 0);
     } catch (error) {
       setOrders([]);
@@ -83,13 +92,26 @@ const FinanceReport = () => {
     }
   }, [consignees, selectedConsignee]);
 
-  const lookupSauda = async (rowId, saudaNo) => {
+  const lookupSauda = async (rowId, saudaNo, sellerCompany, manualAdjustment) => {
     const value = String(saudaNo || "").trim();
-    if (!value) return;
+    const company = String(sellerCompany || "").trim();
+    const adjustment = Math.max(0, Number(manualAdjustment || 0));
+    if (!value || !company) {
+      setSaudaRows((rows) =>
+        rows.map((row) =>
+          row.id === rowId
+            ? { ...row, status: !value ? "Enter Sauda No" : "Select seller company" }
+            : row,
+        ),
+      );
+      return;
+    }
     try {
       const response = await api.get("/financers/report", {
         params: {
           saudaNos: value,
+          sellerCompany: company,
+          manualAdjustment: adjustment,
           page: 1,
           limit: 100,
           startDate: formatDateParam(fromDate),
@@ -105,7 +127,12 @@ const FinanceReport = () => {
           row.id !== rowId
             ? row
             : match
-              ? { ...row, pendingQuantity: match.pendingQuantity, status: "Found" }
+              ? {
+                  ...row,
+                  sellerCompany: company,
+                  pendingQuantity: match.pendingQuantity,
+                  status: "Found",
+                }
               : { ...row, pendingQuantity: null, status: "Not found" },
         ),
       );
@@ -120,7 +147,9 @@ const FinanceReport = () => {
   const updateSaudaRow = (id, value) => {
     setSaudaRows((rows) =>
       rows.map((row) =>
-        row.id === id ? { ...row, saudaNo: value, pendingQuantity: null, status: "" } : row,
+        row.id === id
+          ? { ...row, saudaNo: value, pendingQuantity: null, status: "" }
+          : row,
       ),
     );
   };
@@ -128,14 +157,21 @@ const FinanceReport = () => {
   const addSaudaRow = () => {
     setSaudaRows((rows) => [
       ...rows,
-      { id: Date.now() + rows.length, saudaNo: "", pendingQuantity: null, status: "" },
+      {
+        id: Date.now() + rows.length,
+        saudaNo: "",
+        sellerCompany: "",
+        manualAdjustment: "",
+        pendingQuantity: null,
+        status: "",
+      },
     ]);
   };
 
   const removeSaudaRow = (id) => {
     setSaudaRows((rows) =>
       rows.length === 1
-        ? [{ id: Date.now(), saudaNo: "", pendingQuantity: null, status: "" }]
+        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", manualAdjustment: "", pendingQuantity: null, status: "" }]
         : rows.filter((row) => row.id !== id),
     );
   };
@@ -165,17 +201,72 @@ const FinanceReport = () => {
     label: consignee,
   }));
 
+  const sellerCompanyOptions = sellerCompanies.map((company) => ({
+    value: company,
+    label: company,
+  }));
+
   const saudaLookupRows = saudaRows.map((row) => [
-    <input
-      key={`input-${row.id}`}
-      value={row.saudaNo}
-      onChange={(event) => updateSaudaRow(row.id, event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") lookupSauda(row.id, row.saudaNo);
-      }}
-      placeholder="Seller Sauda No"
-      className="h-10 w-full min-w-[150px] rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-    />,
+    <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
+      <input
+        value={row.saudaNo}
+        onChange={(event) => updateSaudaRow(row.id, event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            lookupSauda(
+              row.id,
+              row.saudaNo,
+              row.sellerCompany,
+              row.manualAdjustment,
+            );
+          }
+        }}
+        placeholder="Seller Sauda No"
+        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+      />
+      <select
+        value={row.sellerCompany}
+        onChange={(event) =>
+          setSaudaRows((rows) =>
+            rows.map((item) =>
+              item.id === row.id
+                ? { ...item, sellerCompany: event.target.value, pendingQuantity: null, status: "" }
+                : item,
+            ),
+          )
+        }
+        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+      >
+        <option value="">Select seller company</option>
+        {sellerCompanyOptions.map((option) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        value={row.manualAdjustment}
+        onChange={(event) =>
+          setSaudaRows((rows) =>
+            rows.map((item) =>
+              item.id === row.id
+                ? { ...item, manualAdjustment: event.target.value, pendingQuantity: null, status: "" }
+                : item,
+            ),
+          )
+        }
+        placeholder="Manual deduction (Tons)"
+        className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+      />
+      <button
+        type="button"
+        onClick={() => lookupSauda(row.id, row.saudaNo, row.sellerCompany, row.manualAdjustment)}
+        className="h-9 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+      >
+        Check pending quantity
+      </button>
+    </div>,
     row.pendingQuantity === null ? "-" : `${formatNumber(row.pendingQuantity)} Tons`,
     <span
       key={`status-${row.id}`}
@@ -273,7 +364,7 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Seller Sauda No", "Pending Quantity", "Status", "Actions"]}
+                headers={["Seller Sauda No / Seller Company / Manual Deduction", "Pending Quantity", "Status", "Actions"]}
                 rows={saudaLookupRows}
               />
             </div>
