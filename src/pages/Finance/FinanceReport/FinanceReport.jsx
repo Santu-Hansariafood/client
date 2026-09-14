@@ -325,7 +325,30 @@ const FinanceReport = () => {
           setSaudaRows((rows) =>
             rows.map((item) =>
               item.id === row.id
-                ? { ...item, manualAdjustment: event.target.value, pendingQuantity: null, status: "" }
+                ? (() => {
+                    const manualAdjustment = Math.max(
+                      0,
+                      Number(event.target.value || 0),
+                    );
+                    const purchaseQuantity = Number(item.purchaseQuantity || 0);
+                    const loadedQuantity = Number(item.loadedQuantity || 0);
+
+                    return {
+                      ...item,
+                      manualAdjustment: event.target.value,
+                      pendingQuantity:
+                        item.purchaseQuantity === null
+                          ? null
+                          : Math.max(
+                              0,
+                              purchaseQuantity -
+                                loadedQuantity -
+                                manualAdjustment,
+                            ),
+                      status:
+                        item.purchaseQuantity === null ? "" : "Adjusted",
+                    };
+                  })()
                 : item,
             ),
           )
@@ -351,7 +374,11 @@ const FinanceReport = () => {
     row.pendingQuantity === null ? "-" : `${formatNumber(row.pendingQuantity)} Tons`,
     <span
       key={`status-${row.id}`}
-      className={row.status === "Found" ? "font-bold text-emerald-600" : "text-slate-500"}
+      className={
+        row.status === "Found" || row.status === "Adjusted"
+          ? "font-bold text-emerald-600"
+          : "text-slate-500"
+      }
     >
       {row.status || "Enter Sauda No"}
     </span>,
