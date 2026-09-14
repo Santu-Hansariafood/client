@@ -877,7 +877,7 @@ const BidList = () => {
                   "Company",
                   "Phone Number",
                   "Participations",
-                  "Total Quantity",
+                  "Selling Quantity",
                   "Last Participation",
                 ]}
                 rows={consigneeSellers.map((seller, index) => [
@@ -895,7 +895,7 @@ const BidList = () => {
                     .filter(Boolean)
                     .join(", ") || seller.mobile || "N/A",
                   seller.participationCount || 0,
-                  `${seller.totalQuantity || 0} T`,
+                  `${seller.totalSellingQuantity || 0} T`,
                   seller.lastParticipationAt
                     ? new Date(seller.lastParticipationAt).toLocaleString(
                         "en-IN",

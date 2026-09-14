@@ -34,12 +34,18 @@ router.get("/consignee-sellers", adminOnly, async (req, res) => {
         $group: {
           _id: "$mobile",
           participationCount: { $sum: 1 },
-          totalQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
+          totalSellingQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
           lastParticipationAt: { $max: "$createdAt" },
           companies: { $addToSet: "$sellerCompany" },
         },
       },
-      { $sort: { participationCount: -1, lastParticipationAt: -1 } },
+      {
+        $sort: {
+          totalSellingQuantity: -1,
+          participationCount: -1,
+          lastParticipationAt: -1,
+        },
+      },
       { $limit: 10 },
       {
         $lookup: {
@@ -74,7 +80,7 @@ router.get("/consignee-sellers", adminOnly, async (req, res) => {
             },
           },
           participationCount: 1,
-          totalQuantity: 1,
+          totalSellingQuantity: 1,
           lastParticipationAt: 1,
         },
       },
