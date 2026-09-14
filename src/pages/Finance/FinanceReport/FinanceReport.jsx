@@ -130,9 +130,6 @@ const FinanceReport = () => {
           manualAdjustment: adjustment,
           page: 1,
           limit: 100,
-          startDate: formatDateParam(fromDate),
-          endDate: formatDateParam(toDate),
-          consignee: selectedConsignee || undefined,
         },
       });
       const match = (response.data?.data || []).find(
@@ -146,11 +143,16 @@ const FinanceReport = () => {
               ? {
                   ...row,
                   sellerCompany: company,
-                  purchaseQuantity: match.quantity,
-                  loadedQuantity: match.loadedQuantity,
+                  purchaseQuantity: Number(match.quantity || 0),
+                  loadedQuantity: Number(match.loadedQuantity || 0),
                   consignee: match.consignee || "",
-                  manualAdjustment: String(match.quantity || 0),
-                  pendingQuantity: match.pendingQuantity,
+                  manualAdjustment: String(Math.max(0, Number(match.quantity || 0))),
+                  pendingQuantity: Math.max(
+                    0,
+                    Number(match.quantity || 0) -
+                      Number(match.loadedQuantity || 0) -
+                      Math.max(0, Number(match.quantity || 0)),
+                  ),
                   status: "Found",
                 }
               : { ...row, pendingQuantity: null, status: "Not found" },

@@ -226,16 +226,31 @@ router.get("/report", async (req, res) => {
           ],
         }
       : null;
-    const orderQuery = {
+    let orderQuery = {
       $or: [
         { companyId: { $in: scopedCompanyIds } },
         ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
       ],
     };
-    if (rawSaudaNos.length) orderQuery.saudaNo = { $in: rawSaudaNos };
+    const escapedSellerCompany = sellerCompany.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    );
+
+    if (rawSaudaNos.length && sellerCompany) {
+      orderQuery = {
+        saudaNo: { $in: rawSaudaNos },
+        supplierCompany: {
+          $regex: `^${escapedSellerCompany}$`,
+          $options: "i",
+        },
+      };
+    } else if (rawSaudaNos.length) {
+      orderQuery.saudaNo = { $in: rawSaudaNos };
+    }
     if (sellerCompany) {
-      orderQuery.supplierCompany = {
-        $regex: `^${sellerCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      orderQuery.supplierCompany ||= {
+        $regex: `^${escapedSellerCompany}$`,
         $options: "i",
       };
     }
