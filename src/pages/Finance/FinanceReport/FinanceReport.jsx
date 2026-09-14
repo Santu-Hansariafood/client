@@ -149,6 +149,7 @@ const FinanceReport = () => {
                   purchaseQuantity: match.quantity,
                   loadedQuantity: match.loadedQuantity,
                   consignee: match.consignee || "",
+                  manualAdjustment: String(match.quantity || 0),
                   pendingQuantity: match.pendingQuantity,
                   status: "Found",
                 }
