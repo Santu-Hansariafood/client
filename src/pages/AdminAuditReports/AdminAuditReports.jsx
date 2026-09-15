@@ -55,6 +55,10 @@ const AdminAuditReports = () => {
     setSearch(query);
   }, []);
 
+  const handlePageChange = useCallback((nextPage) => {
+    setPage(Number(nextPage) || 1);
+  }, []);
+
   const fetchAuditData = useCallback(async () => {
     setLoading(true);
     try {
@@ -237,7 +241,18 @@ const AdminAuditReports = () => {
         {loading ? (
           <Loading />
         ) : (
-          <Tables headers={tableHeaders} rows={tableRows} />
+          <>
+            <Tables headers={tableHeaders} rows={tableRows} />
+
+            {total > 0 && (
+              <Pagination
+                currentPage={page}
+                totalItems={total}
+                itemsPerPage={limit}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
 
         {selectedRecord && (
@@ -286,13 +301,6 @@ const AdminAuditReports = () => {
             </div>
           </div>
         )}
-
-        <Pagination
-          currentPage={page}
-          totalItems={total}
-          itemsPerPage={limit}
-          onPageChange={(nextPage) => setPage(Number(nextPage) || 1)}
-        />
       </div>
     </AdminPageShell>
   );
