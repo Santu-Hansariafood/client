@@ -211,7 +211,7 @@ app.use("/api/transporters", cache(60), authJwt, transporterRoutes);
 app.use("/api/notifications", cache(5), authJwt, notificationRoutes);
 app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 app.use("/api/sauda-reports", cache(5), authJwt, saudaReportRoutes);
-app.use("/api/audit-reports", cache(5), authJwt, auditReportRoutes);
+app.use("/api/audit-reports", authJwt, auditReportRoutes);
 app.use("/api/payments", cache(5), authJwt, paymentRoutes);
 app.use("/api/payment-received", authJwt, paymentReceivedRoutes);
 app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);

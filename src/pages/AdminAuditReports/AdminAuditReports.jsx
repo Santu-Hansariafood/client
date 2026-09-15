@@ -59,6 +59,7 @@ const AdminAuditReports = () => {
     setLoading(true);
     try {
       const response = await api.get("/audit-reports/buyer-seller-activity", {
+        skipCache: true,
         params: {
           search,
           status,
@@ -290,7 +291,7 @@ const AdminAuditReports = () => {
           currentPage={page}
           totalItems={total}
           itemsPerPage={limit}
-          onPageChange={setPage}
+          onPageChange={(nextPage) => setPage(Number(nextPage) || 1)}
         />
       </div>
     </AdminPageShell>

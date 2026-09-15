@@ -120,7 +120,7 @@ instance.interceptors.request.use((config) => {
     }
   }
 
-  if (config.method?.toUpperCase() === "GET") {
+  if (config.method?.toUpperCase() === "GET" && !config.skipCache) {
     const key = getCacheKey(config);
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
