@@ -6,6 +6,7 @@ import Company from "../models/Company.js";
 import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import LoadingEntry from "../models/LoadingEntry.js";
+import FinanceAdjustment from "../models/FinanceAdjustment.js";
 
 const router = Router();
 
@@ -339,6 +340,95 @@ router.get("/report", async (req, res) => {
       loadedBySauda.map((item) => [String(item._id), Number(item.loadedQuantity || 0)]),
     );
 
+    const adjustmentDateFilter = {};
+    if (startDate && !Number.isNaN(startDate.getTime())) adjustmentDateFilter.$gte = startDate;
+    if (endDate && !Number.isNaN(endDate.getTime())) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      adjustmentDateFilter.$lte = endOfDay;
+    }
+    const adjustmentQuery = {
+      ...(rawSaudaNos.length
+        ? { saudaNo: { $in: rawSaudaNos }, sellerCompany: { $regex: `^${escapedSellerCompany}$`, $options: "i" } }
+        : {}),
+      ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
+    };
+    const [adjustments, dateWiseSaudas] = await Promise.all([
+      FinanceAdjustment.find(adjustmentQuery).sort({ adjustmentDate: -1, createdAt: -1 }).lean(),
+      SelfOrder.aggregate([
+        { $match: orderQuery },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: { $ifNull: ["$poDate", "$createdAt"] } } },
+            saudaCount: { $sum: 1 },
+            saudaQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
+            saudaNos: { $push: "$saudaNo" },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+    const totalsSaudaNos = dateWiseSaudas.flatMap((item) => item.saudaNos || []).filter(Boolean);
+    const totalsLoadedBySauda = await LoadingEntry.aggregate([
+      { $match: { saudaNo: { $in: totalsSaudaNos } } },
+      {
+        $group: {
+          _id: "$saudaNo",
+          loadedQuantity: { $sum: { $ifNull: ["$loadingWeight", 0] } },
+        },
+      },
+    ]);
+    const totalsLoadedMap = new Map(
+      totalsLoadedBySauda.map((item) => [String(item._id), Number(item.loadedQuantity || 0)]),
+    );
+    const dateTotals = new Map(
+      dateWiseSaudas.map((item) => [
+        item._id,
+        {
+          date: item._id,
+          saudaCount: Number(item.saudaCount || 0),
+          saudaQuantity: Number(item.saudaQuantity || 0),
+          loadedQuantity: (item.saudaNos || []).reduce(
+            (totalQuantity, saudaNo) => totalQuantity + (totalsLoadedMap.get(String(saudaNo)) || 0),
+            0,
+          ),
+          adjustmentQuantity: 0,
+          pendingQuantity: 0,
+        },
+      ]),
+    );
+    adjustments.forEach((adjustment) => {
+      const date = new Date(adjustment.adjustmentDate).toISOString().slice(0, 10);
+      const current = dateTotals.get(date) || {
+        date,
+        saudaCount: 0,
+        saudaQuantity: 0,
+        loadedQuantity: 0,
+        adjustmentQuantity: 0,
+        pendingQuantity: 0,
+      };
+      current.adjustmentQuantity += Number(adjustment.adjustmentQuantity || 0);
+      dateTotals.set(date, current);
+    });
+    dateTotals.forEach((item) => {
+      item.pendingQuantity = Math.max(
+        0,
+        item.saudaQuantity - item.loadedQuantity - item.adjustmentQuantity,
+      );
+    });
+
+    const adjustmentSaudaNos = [...new Set(adjustments.map((item) => item.saudaNo).filter(Boolean))];
+    const adjustmentSaudas = await SelfOrder.find({ saudaNo: { $in: adjustmentSaudaNos } })
+      .select("saudaNo poDate")
+      .lean();
+    const adjustmentSaudaDateMap = new Map(
+      adjustmentSaudas.map((item) => [String(item.saudaNo).toLowerCase(), item.poDate]),
+    );
+    const enrichedAdjustments = adjustments.map((adjustment) => ({
+      ...adjustment,
+      saudaDate: adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
+    }));
+
     const data = orders.map((order) => ({
       ...order,
       pendingQuantity: Math.max(
@@ -369,9 +459,70 @@ router.get("/report", async (req, res) => {
         .filter(Boolean)
         .sort((first, second) => first.localeCompare(second)),
       financerCount: financerRecords.length,
+      adjustments: enrichedAdjustments,
+      dateWiseTotals: [...dateTotals.values()].sort((first, second) => first.date.localeCompare(second.date)),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/adjustments", async (req, res) => {
+  try {
+    const adjustmentQuantity = Math.max(0, Number(req.body.adjustmentQuantity || 0));
+    if (!String(req.body.saudaNo || "").trim() || !String(req.body.sellerCompany || "").trim()) {
+      return res.status(400).json({ message: "Sauda number and seller company are required" });
+    }
+    if (!adjustmentQuantity) {
+      return res.status(400).json({ message: "Adjustment quantity must be greater than zero" });
+    }
+    const adjustment = await FinanceAdjustment.create({
+      saudaNo: String(req.body.saudaNo).trim(),
+      sellerCompany: String(req.body.sellerCompany).trim(),
+      consignee: String(req.body.consignee || "").trim(),
+      purchaseQuantity: Math.max(0, Number(req.body.purchaseQuantity || 0)),
+      loadedQuantity: Math.max(0, Number(req.body.loadedQuantity || 0)),
+      pendingQuantity: Math.max(0, Number(req.body.pendingQuantity || 0)),
+      adjustmentQuantity,
+      adjustmentDate: req.body.adjustmentDate ? new Date(req.body.adjustmentDate) : new Date(),
+    });
+    return res.status(201).json(adjustment);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.put("/adjustments/:id", async (req, res) => {
+  try {
+    const adjustmentQuantity = Math.max(0, Number(req.body.adjustmentQuantity || 0));
+    if (!adjustmentQuantity) {
+      return res.status(400).json({ message: "Adjustment quantity must be greater than zero" });
+    }
+    const adjustment = await FinanceAdjustment.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          adjustmentQuantity,
+          pendingQuantity: Math.max(0, Number(req.body.pendingQuantity || 0)),
+          adjustmentDate: req.body.adjustmentDate ? new Date(req.body.adjustmentDate) : new Date(),
+        },
+      },
+      { new: true, runValidators: true },
+    );
+    if (!adjustment) return res.status(404).json({ message: "Adjustment not found" });
+    return res.json(adjustment);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/adjustments/:id", async (req, res) => {
+  try {
+    const adjustment = await FinanceAdjustment.findByIdAndDelete(req.params.id);
+    if (!adjustment) return res.status(404).json({ message: "Adjustment not found" });
+    return res.json({ message: "Adjustment deleted" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 

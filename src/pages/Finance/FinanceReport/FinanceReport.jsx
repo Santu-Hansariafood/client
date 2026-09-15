@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, lazy, Suspense } from "react";
-import { FaPlus, FaTrash, FaUniversity } from "react-icons/fa";
+import { FaPlus, FaTrash, FaUniversity, FaSave, FaEdit } from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -44,6 +44,8 @@ const FinanceReport = () => {
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [dateWiseTotals, setDateWiseTotals] = useState([]);
+  const [adjustmentRows, setAdjustmentRows] = useState([]);
   const [saudaRows, setSaudaRows] = useState([
     {
       id: Date.now(),
@@ -75,6 +77,8 @@ const FinanceReport = () => {
       setOrders(response.data?.data || []);
       setConsignees(response.data?.consigneeOptions || []);
       setTotal(Number(response.data?.total) || 0);
+      setDateWiseTotals(response.data?.dateWiseTotals || []);
+      setAdjustmentRows(response.data?.adjustments || []);
     } catch (error) {
       setOrders([]);
       setTotal(0);
@@ -143,17 +147,46 @@ const FinanceReport = () => {
               ? {
                   ...row,
                   sellerCompany: company,
+                  saudaDate: match.poDate || null,
                   purchaseQuantity: Number(match.quantity || 0),
                   loadedQuantity: Number(match.loadedQuantity || 0),
                   consignee: match.consignee || "",
-                  manualAdjustment: String(Math.max(0, Number(match.quantity || 0))),
+                  adjustmentId: response.data?.adjustments?.find(
+                    (adjustment) =>
+                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                  )?._id || "",
+                  adjustmentDate: response.data?.adjustments?.find(
+                    (adjustment) =>
+                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                  )?.adjustmentDate || "",
+                  manualAdjustment: String(
+                    response.data?.adjustments?.find(
+                      (adjustment) =>
+                        String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                        String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                    )?.adjustmentQuantity || 0,
+                  ),
                   pendingQuantity: Math.max(
                     0,
                     Number(match.quantity || 0) -
                       Number(match.loadedQuantity || 0) -
-                      Math.max(0, Number(match.quantity || 0)),
+                      Number(
+                        response.data?.adjustments?.find(
+                          (adjustment) =>
+                            String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                            String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                        )?.adjustmentQuantity || 0,
+                      ),
                   ),
-                  status: "Found",
+                  status: response.data?.adjustments?.some(
+                    (adjustment) =>
+                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                  )
+                    ? "Adjusted"
+                    : "Found",
                 }
               : { ...row, pendingQuantity: null, status: "Not found" },
         ),
@@ -173,6 +206,7 @@ const FinanceReport = () => {
           ? {
               ...row,
               saudaNo: value,
+              adjustmentId: "",
               purchaseQuantity: null,
               loadedQuantity: null,
               consignee: "",
@@ -197,6 +231,7 @@ const FinanceReport = () => {
                 ...row,
                 saudaOptions: response.data?.saudaNumbers || [],
                 saudaNo: "",
+                adjustmentId: "",
                 purchaseQuantity: null,
                 loadedQuantity: null,
                 consignee: "",
@@ -227,6 +262,66 @@ const FinanceReport = () => {
         status: "",
       },
     ]);
+  };
+
+  const saveAdjustment = async (row) => {
+    const adjustmentQuantity = Math.max(0, Number(row.manualAdjustment || 0));
+    if (!row.saudaNo || !row.sellerCompany || !row.purchaseQuantity || !adjustmentQuantity) {
+      toast.error("Lookup a Sauda and enter an adjustment quantity first");
+      return;
+    }
+    try {
+      const payload = {
+        saudaNo: row.saudaNo,
+        sellerCompany: row.sellerCompany,
+        consignee: row.consignee,
+        purchaseQuantity: row.purchaseQuantity,
+        loadedQuantity: row.loadedQuantity,
+        pendingQuantity: row.pendingQuantity,
+        adjustmentQuantity,
+      };
+      const response = row.adjustmentId
+        ? await api.put(`/financers/adjustments/${row.adjustmentId}`, payload)
+        : await api.post("/financers/adjustments", payload);
+      setSaudaRows((rows) =>
+        rows.map((item) =>
+          item.id === row.id
+            ? { ...item, adjustmentId: response.data?._id || row.adjustmentId, status: "Adjusted" }
+            : item,
+        ),
+      );
+      toast.success("Adjustment saved");
+      loadReport();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to save adjustment");
+    }
+  };
+
+  const deleteAdjustment = async (row) => {
+    if (!row.adjustmentId) return;
+    try {
+      await api.delete(`/financers/adjustments/${row.adjustmentId}`);
+      setSaudaRows((rows) =>
+        rows.map((item) =>
+          item.id === row.id
+            ? {
+                ...item,
+                adjustmentId: "",
+                manualAdjustment: "",
+                pendingQuantity: Math.max(
+                  0,
+                  Number(item.purchaseQuantity || 0) - Number(item.loadedQuantity || 0),
+                ),
+                status: "Found",
+              }
+            : item,
+        ),
+      );
+      toast.success("Adjustment deleted");
+      loadReport();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete adjustment");
+    }
   };
 
   const removeSaudaRow = (id) => {
@@ -297,6 +392,7 @@ const FinanceReport = () => {
                     ...item,
                     sellerCompany: company,
                     saudaNo: "",
+                    adjustmentId: "",
                     saudaOptions: [],
                     purchaseQuantity: null,
                     loadedQuantity: null,
@@ -368,6 +464,8 @@ const FinanceReport = () => {
       <div><span className="font-bold text-slate-500">Company:</span> {row.sellerCompany || "-"}</div>
       <div><span className="font-bold text-slate-500">Consignee:</span> {row.consignee || "-"}</div>
     </div>,
+    formatDate(row.saudaDate),
+    formatDate(row.adjustmentDate),
     row.purchaseQuantity === null ? "-" : `${formatNumber(row.purchaseQuantity)} Tons`,
     row.loadedQuantity === null ? "-" : `${formatNumber(row.loadedQuantity)} Tons`,
     row.manualAdjustment ? `${formatNumber(row.manualAdjustment)} Tons` : "0 Tons",
@@ -383,14 +481,34 @@ const FinanceReport = () => {
       {row.status || "Enter Sauda No"}
     </span>,
     <button
-      key={`remove-${row.id}`}
+      key={`actions-${row.id}`}
       type="button"
-      onClick={() => removeSaudaRow(row.id)}
-      title="Remove Sauda row"
-      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50"
+      onClick={() => saveAdjustment(row)}
+      title={row.adjustmentId ? "Update adjustment" : "Save adjustment"}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-emerald-600 hover:bg-emerald-50"
     >
-      <FaTrash size={12} />
+      {row.adjustmentId ? <FaEdit size={12} /> : <FaSave size={12} />}
     </button>,
+    <div key={`remove-${row.id}`} className="flex gap-1">
+      {row.adjustmentId && (
+        <button
+          type="button"
+          onClick={() => deleteAdjustment(row)}
+          title="Delete adjustment"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50"
+        >
+          <FaTrash size={12} />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => removeSaudaRow(row.id)}
+        title="Remove Sauda row"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+      >
+        <FaTrash size={12} />
+      </button>
+    </div>,
   ]);
 
   return (
@@ -472,8 +590,43 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Seller Sauda No", "Seller Company / Consignee", "Purchase Quantity", "Loaded Quantity", "Manual Deduction", "Pending Quantity", "Status", "Actions"]}
+                headers={["Seller Sauda No", "Seller Company / Consignee", "Sauda Date", "Adjustment Date", "Purchase Quantity", "Loaded Quantity", "Adjustment Quantity", "Pending Quantity", "Status", "Actions"]}
                 rows={saudaLookupRows}
+              />
+            </div>
+            {adjustmentRows.length > 0 && (
+              <div className="mt-6 overflow-x-auto">
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Saved Adjustments</h3>
+                <Tables
+                  headers={["Sauda No", "Sauda Date", "Adjustment Date", "Adjustment Quantity", "Pending Quantity"]}
+                  rows={adjustmentRows.map((adjustment) => [
+                    adjustment.saudaNo || "-",
+                    formatDate(adjustment.saudaDate),
+                    formatDate(adjustment.adjustmentDate),
+                    `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
+                    `${formatNumber(adjustment.pendingQuantity)} Tons`,
+                  ])}
+                />
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-slate-800">Date-wise Totals</h2>
+              <p className="text-sm text-slate-500">Sauda quantity and saved adjustment totals for the selected period</p>
+            </div>
+            <div className="overflow-x-auto">
+              <Tables
+                headers={["Date", "Total Saudas", "Sauda Quantity", "Loaded Quantity", "Total Adjustment", "Pending Quantity"]}
+                rows={dateWiseTotals.map((item) => [
+                  formatDate(item.date),
+                  formatNumber(item.saudaCount),
+                  `${formatNumber(item.saudaQuantity)} Tons`,
+                  `${formatNumber(item.loadedQuantity)} Tons`,
+                  `${formatNumber(item.adjustmentQuantity)} Tons`,
+                  `${formatNumber(item.pendingQuantity)} Tons`,
+                ])}
               />
             </div>
           </section>
