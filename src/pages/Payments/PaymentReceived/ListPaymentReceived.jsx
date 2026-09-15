@@ -1858,19 +1858,24 @@ const ListPaymentReceived = () => {
         (filters.ledgerType === "Buyer" ? selectedOpposingCompany?.label : "") ||
         (filters.ledgerType === "Seller" ? selectedCompany?.label : "");
 
-      if (!sellerCompanyName) {
-        toast.error("Please select a seller company");
-        return;
-      }
-
       const sellerCompanyData = sellerCompanies.find(
-        (c) =>
-          c.companyName?.trim().toLowerCase() ===
-            sellerCompanyName.trim().toLowerCase() ||
-          (selectedOpposingCompany && c._id === selectedOpposingCompany.value),
+        (c) => sellerCompanyName && (
+          c.companyName?.trim().toLowerCase() === sellerCompanyName.trim().toLowerCase() ||
+          (selectedOpposingCompany && c._id === selectedOpposingCompany.value)
+        ),
       );
 
-      const recipientEmail = sellerCompanyData?.email?.trim() || "";
+      const recipientEmail = sellerCompanyData?.email?.trim() ||
+        sellerCompanies
+          .map((company) => company.email?.trim())
+          .filter(Boolean)
+          .filter((email, index, emails) => emails.indexOf(email) === index)
+          .join(",");
+
+      if (!recipientEmail) {
+        toast.error("No seller email IDs found. Please configure seller company emails.");
+        return;
+      }
 
       let doc;
       if (reportType === "MIS") {
@@ -1892,7 +1897,8 @@ const ListPaymentReceived = () => {
         supplierCompany:
           filters.supplierCompany ||
           selectedOpposingCompany?.label ||
-          listCompanyPair.supplierCompany,
+          listCompanyPair.supplierCompany ||
+          (sellerCompanyData?.companyName || "All Sellers"),
       });
 
       toast.success("Email sent successfully!");
