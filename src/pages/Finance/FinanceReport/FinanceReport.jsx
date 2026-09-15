@@ -46,6 +46,7 @@ const FinanceReport = () => {
   const [total, setTotal] = useState(0);
   const [dateWiseTotals, setDateWiseTotals] = useState([]);
   const [adjustmentRows, setAdjustmentRows] = useState([]);
+  const [selectedTotalDate, setSelectedTotalDate] = useState(null);
   const [saudaRows, setSaudaRows] = useState([
     {
       id: Date.now(),
@@ -286,7 +287,12 @@ const FinanceReport = () => {
       setSaudaRows((rows) =>
         rows.map((item) =>
           item.id === row.id
-            ? { ...item, adjustmentId: response.data?._id || row.adjustmentId, status: "Adjusted" }
+            ? {
+                ...item,
+                adjustmentId: response.data?._id || row.adjustmentId,
+                adjustmentDate: response.data?.adjustmentDate || new Date().toISOString(),
+                status: "Adjusted",
+              }
             : item,
         ),
       );
@@ -361,6 +367,12 @@ const FinanceReport = () => {
     value: company,
     label: company,
   }));
+
+  const selectedDateTotals = selectedTotalDate
+    ? dateWiseTotals.filter(
+        (item) => formatDateParam(selectedTotalDate) === item.date,
+      )
+    : dateWiseTotals;
 
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
@@ -612,14 +624,23 @@ const FinanceReport = () => {
           </section>
 
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-bold text-slate-800">Date-wise Totals</h2>
-              <p className="text-sm text-slate-500">Sauda quantity and saved adjustment totals for the selected period</p>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Date-wise Totals</h2>
+                <p className="text-sm text-slate-500">Sauda, adjustment, loaded, and pending quantities for a selected date</p>
+              </div>
+              <div className="w-full sm:w-56">
+                <label className="mb-1 block text-xs font-bold text-slate-600">Select Date</label>
+                <DateSelector
+                  selectedDate={selectedTotalDate}
+                  onChange={setSelectedTotalDate}
+                />
+              </div>
             </div>
             <div className="overflow-x-auto">
               <Tables
                 headers={["Date", "Total Saudas", "Sauda Quantity", "Loaded Quantity", "Total Adjustment", "Pending Quantity"]}
-                rows={dateWiseTotals.map((item) => [
+                rows={selectedDateTotals.map((item) => [
                   formatDate(item.date),
                   formatNumber(item.saudaCount),
                   `${formatNumber(item.saudaQuantity)} Tons`,
