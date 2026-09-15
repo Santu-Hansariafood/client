@@ -1,6 +1,6 @@
 import { lazy, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { FaUsers, FaUserCheck, FaHistory } from "react-icons/fa";
+import { FaUsers, FaUserCheck, FaHistory, FaEye, FaTimes } from "react-icons/fa";
 import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 const AdminPageShell = lazy(
@@ -33,6 +33,7 @@ const AdminAuditReports = () => {
   const [limit] = useState(10);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -96,6 +97,7 @@ const AdminAuditReports = () => {
     "Last Active",
     "Login IP",
     "Online",
+    "Actions",
   ];
 
   const tableRows = records.map((record) => [
@@ -125,6 +127,16 @@ const AdminAuditReports = () => {
     >
       {record.isLoggedIn ? "Online" : "Offline"}
     </span>,
+    <button
+      key="view"
+      type="button"
+      onClick={() => setSelectedRecord(record)}
+      title={`View ${record.type.toLowerCase()} usage`}
+      className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100"
+    >
+      <FaEye size={12} />
+      View
+    </button>,
   ]);
 
   return (
@@ -225,6 +237,53 @@ const AdminAuditReports = () => {
           <Loading />
         ) : (
           <Tables headers={tableHeaders} rows={tableRows} />
+        )}
+
+        {selectedRecord && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+                  Account usage details
+                </p>
+                <h2 className="mt-1 text-xl font-black text-slate-900">
+                  {selectedRecord.name}
+                </h2>
+                <p className="text-sm text-slate-600">
+                  {selectedRecord.type} account
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRecord(null)}
+                title="Close details"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-800"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["Login count", selectedRecord.loginCount || 0],
+                ["Last login", formatDate(selectedRecord.lastLoginAt)],
+                ["Last active", formatDate(selectedRecord.lastActiveAt)],
+                ["Current status", selectedRecord.isLoggedIn ? "Online" : "Offline"],
+                ["Contact", selectedRecord.contact],
+                ["Email", selectedRecord.email],
+                ["Login IP", selectedRecord.lastLoginIp],
+                ["Account status", selectedRecord.status],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl border border-white bg-white p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    {label}
+                  </p>
+                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <Pagination

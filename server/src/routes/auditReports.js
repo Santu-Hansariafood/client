@@ -107,7 +107,8 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
     const allRecords = [...mappedBuyers, ...mappedSellers].sort((a, b) => {
       const aTime = toDateValue(a.lastActiveAt)?.getTime?.() || 0;
       const bTime = toDateValue(b.lastActiveAt)?.getTime?.() || 0;
-      return bTime - aTime;
+      if (bTime !== aTime) return bTime - aTime;
+      return String(a._id).localeCompare(String(b._id));
     });
 
     const total = totalBuyers + totalSellers;
