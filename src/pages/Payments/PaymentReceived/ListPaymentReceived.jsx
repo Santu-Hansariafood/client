@@ -1870,11 +1870,7 @@ const ListPaymentReceived = () => {
           (selectedOpposingCompany && c._id === selectedOpposingCompany.value),
       );
 
-      const recipientEmail = sellerCompanyData?.email?.trim();
-      if (!recipientEmail) {
-        toast.error("No email found for the selected seller company");
-        return;
-      }
+      const recipientEmail = sellerCompanyData?.email?.trim() || "";
 
       let doc;
       if (reportType === "MIS") {

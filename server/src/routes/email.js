@@ -1,6 +1,7 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import PaymentReceived from "../models/PaymentReceived.js";
+import SellerCompany from "../models/SellerCompany.js";
 
 const router = express.Router();
 
@@ -171,17 +172,30 @@ Contact: +91-8336924066 | +91-9330433535`,
 
 router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
-  const paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
+  let paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
   const paymentAuthEmail = process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER;
-  const paymentSenderEmail = process.env.PAYMENTS_FROM;
+  const paymentSenderEmail = process.env.PAYMENTS_FROM || paymentAuthEmail;
   const paymentSenderPassword = process.env.PAYMENTS_PASS || process.env.EMAIL_PASS;
 
-  if (!pdf || !paymentRecipientEmail || !reportType) {
+  if (!pdf || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
   }
 
-  if (!paymentAuthEmail || !paymentSenderPassword || !paymentSenderEmail) {
-    console.error("[EMAIL] Missing PAYMENTS_EMAIL, PAYMENTS_PASS, or PAYMENTS_FROM");
+  if (!paymentRecipientEmail && supplierCompany) {
+    const company = await SellerCompany.findOne({
+      companyName: { $regex: `^${String(supplierCompany).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+    })
+      .select("email")
+      .lean();
+    paymentRecipientEmail = String(company?.email || "").trim();
+  }
+
+  if (!paymentRecipientEmail) {
+    return res.status(400).send("No seller email found for the selected supplier company");
+  }
+
+  if (!paymentAuthEmail || !paymentSenderPassword) {
+    console.error("[EMAIL] Missing PAYMENTS_EMAIL or PAYMENTS_PASS");
     return res.status(500).send("Payment email sender is not configured. Please contact admin.");
   }
 
