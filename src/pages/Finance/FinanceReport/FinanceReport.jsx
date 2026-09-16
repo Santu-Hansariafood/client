@@ -16,10 +16,11 @@ const DateSelector = lazy(
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
 
-const getAdjustmentStatus = (pendingQuantity) =>
-  pendingQuantity !== null && Number(pendingQuantity || 0) <= 0
-    ? "Adjusted"
-    : "Not Adjusted";
+const getAdjustmentStatus = (buyingQuantity, sellingQuantity) =>
+  buyingQuantity !== null &&
+  Math.abs(Number(buyingQuantity || 0) - Number(sellingQuantity || 0)) < 0.01
+    ? "Equal"
+    : "Not Equal";
 
 const formatNumber = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -60,7 +61,6 @@ const FinanceReport = () => {
       saudaOptions: [],
       manualAdjustment: "",
       purchaseQuantity: null,
-      loadedQuantity: null,
       consignee: "",
       pendingQuantity: null,
       status: "",
@@ -76,7 +76,6 @@ const FinanceReport = () => {
           page,
           limit: itemsPerPage,
           startDate: formatDateParam(fromDate),
-          endDate: formatDateParam(toDate),
           consignee: selectedConsignee || undefined,
         },
       });
@@ -153,7 +152,6 @@ const FinanceReport = () => {
                   sellerCompany: company,
                   saudaDate: match.poDate || null,
                   purchaseQuantity: Number(match.quantity || 0),
-                  loadedQuantity: Number(match.loadedQuantity || 0),
                   consignee: match.consignee || "",
                   adjustmentId: response.data?.adjustments?.find(
                     (adjustment) =>
@@ -172,10 +170,8 @@ const FinanceReport = () => {
                         String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
                     )?.adjustmentQuantity || 0,
                   ),
-                  pendingQuantity: Math.max(
-                    0,
+                  pendingQuantity: Math.abs(
                     Number(match.quantity || 0) -
-                      Number(match.loadedQuantity || 0) -
                       Number(
                         response.data?.adjustments?.find(
                           (adjustment) =>
@@ -185,17 +181,13 @@ const FinanceReport = () => {
                       ),
                   ),
                   status: getAdjustmentStatus(
-                    Math.max(
-                      0,
-                      Number(match.quantity || 0) -
-                        Number(match.loadedQuantity || 0) -
-                        Number(
-                          response.data?.adjustments?.find(
-                            (adjustment) =>
-                              String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                              String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                          )?.adjustmentQuantity || 0,
-                        ),
+                    Number(match.quantity || 0),
+                    Number(
+                      response.data?.adjustments?.find(
+                        (adjustment) =>
+                          String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                          String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                      )?.adjustmentQuantity || 0,
                     ),
                   ),
                 }
@@ -219,7 +211,6 @@ const FinanceReport = () => {
               saudaNo: value,
               adjustmentId: "",
               purchaseQuantity: null,
-              loadedQuantity: null,
               consignee: "",
               pendingQuantity: null,
               status: "",
@@ -244,7 +235,6 @@ const FinanceReport = () => {
                 saudaNo: "",
                 adjustmentId: "",
                 purchaseQuantity: null,
-                loadedQuantity: null,
                 consignee: "",
                 pendingQuantity: null,
                 status: "",
@@ -276,7 +266,6 @@ const FinanceReport = () => {
         saudaOptions: [],
         manualAdjustment: "",
         purchaseQuantity: null,
-        loadedQuantity: null,
         consignee: "",
         pendingQuantity: null,
         status: "",
@@ -296,7 +285,6 @@ const FinanceReport = () => {
         sellerCompany: row.sellerCompany,
         consignee: row.consignee,
         purchaseQuantity: row.purchaseQuantity,
-        loadedQuantity: row.loadedQuantity,
         pendingQuantity: row.pendingQuantity,
         adjustmentQuantity,
       };
@@ -310,7 +298,7 @@ const FinanceReport = () => {
                 ...item,
                 adjustmentId: response.data?._id || row.adjustmentId,
                 adjustmentDate: response.data?.adjustmentDate || new Date().toISOString(),
-                status: getAdjustmentStatus(item.pendingQuantity),
+                status: getAdjustmentStatus(item.purchaseQuantity, item.manualAdjustment),
               }
             : item,
         ),
@@ -333,11 +321,8 @@ const FinanceReport = () => {
                 ...item,
                 adjustmentId: "",
                 manualAdjustment: "",
-                pendingQuantity: Math.max(
-                  0,
-                  Number(item.purchaseQuantity || 0) - Number(item.loadedQuantity || 0),
-                ),
-                status: "Found",
+                    pendingQuantity: Number(item.purchaseQuantity || 0),
+                    status: getAdjustmentStatus(item.purchaseQuantity, 0),
               }
             : item,
         ),
@@ -352,7 +337,7 @@ const FinanceReport = () => {
   const removeSaudaRow = (id) => {
     setSaudaRows((rows) =>
       rows.length === 1
-        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", purchaseQuantity: null, loadedQuantity: null, consignee: "", pendingQuantity: null, status: "" }]
+        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", purchaseQuantity: null, consignee: "", pendingQuantity: null, status: "" }]
         : rows.filter((row) => row.id !== id),
     );
   };
@@ -432,7 +417,6 @@ const FinanceReport = () => {
                     adjustmentId: "",
                     saudaOptions: [],
                     purchaseQuantity: null,
-                    loadedQuantity: null,
                     consignee: "",
                     pendingQuantity: null,
                     status: "",
@@ -464,36 +448,24 @@ const FinanceReport = () => {
                       Number(event.target.value || 0),
                     );
                     const purchaseQuantity = Number(item.purchaseQuantity || 0);
-                    const loadedQuantity = Number(item.loadedQuantity || 0);
-
                     return {
                       ...item,
                       manualAdjustment: event.target.value,
                       pendingQuantity:
                         item.purchaseQuantity === null
                           ? null
-                          : Math.max(
-                              0,
-                              purchaseQuantity -
-                                loadedQuantity -
-                                manualAdjustment,
-                            ),
+                          : Math.abs(purchaseQuantity - manualAdjustment),
                       status:
                         item.purchaseQuantity === null
                           ? ""
-                          : getAdjustmentStatus(
-                              Math.max(
-                                0,
-                                purchaseQuantity - loadedQuantity - manualAdjustment,
-                              ),
-                            ),
+                          : getAdjustmentStatus(purchaseQuantity, manualAdjustment),
                     };
                   })()
                 : item,
             ),
           )
         }
-        placeholder="Manual deduction (Tons)"
+        placeholder="Selling / adjusted quantity (Tons)"
         className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
       <div className="flex gap-2">
@@ -522,15 +494,14 @@ const FinanceReport = () => {
     formatDate(row.saudaDate),
     formatDate(row.adjustmentDate),
     row.purchaseQuantity === null ? "-" : `${formatNumber(row.purchaseQuantity)} Tons`,
-    row.loadedQuantity === null ? "-" : `${formatNumber(row.loadedQuantity)} Tons`,
     row.manualAdjustment ? `${formatNumber(row.manualAdjustment)} Tons` : "0 Tons",
     row.pendingQuantity === null ? "-" : `${formatNumber(row.pendingQuantity)} Tons`,
     <span
       key={`status-${row.id}`}
       className={
-        row.status === "Adjusted"
+        row.status === "Equal"
           ? "font-bold text-emerald-600"
-          : row.status === "Not Adjusted"
+          : row.status === "Not Equal"
             ? "font-bold text-amber-600"
           : "text-slate-500"
       }
@@ -631,8 +602,8 @@ const FinanceReport = () => {
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Pending Quantity Lookup</h2>
-                <p className="text-sm text-slate-500">Newest Saudas first, filtered by the selected consignee</p>
+                <h2 className="text-lg font-bold text-slate-800">Buying vs Selling Adjustment Lookup</h2>
+                <p className="text-sm text-slate-500">Compare buying and selling quantities for the selected Sauda</p>
                 <p className="mt-1 text-xs font-semibold text-emerald-700">
                   Consignee: {selectedConsignee || "All consignees"}
                 </p>
@@ -641,21 +612,27 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Seller Sauda No", "Seller Company / Consignee", "Sauda Date", "Adjustment Date", "Purchase Quantity", "Loaded Quantity", "Adjustment Quantity", "Pending Quantity", "Status", "Actions"]}
+                headers={["Seller Sauda No", "Seller Company / Consignee", "Sauda Date", "Adjustment Date", "Buying Quantity", "Selling / Adjusted Quantity", "Difference", "Adjustment Status", "Actions"]}
                 rows={saudaLookupRows}
               />
             </div>
             {adjustmentRows.length > 0 && (
               <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">Saved Adjustments</h3>
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Adjustment Equality Report</h3>
                 <Tables
-                  headers={["Sauda No", "Sauda Date", "Adjustment Date", "Adjustment Quantity", "Pending Quantity"]}
+                  headers={["Sauda No", "Sauda Date", "Adjustment Date", "Seller Company", "Consignee", "Buying Quantity", "Selling / Adjusted Quantity", "Difference", "Status"]}
                   rows={adjustmentRows.map((adjustment) => [
                     adjustment.saudaNo || "-",
                     formatDate(adjustment.saudaDate),
                     formatDate(adjustment.adjustmentDate),
+                    adjustment.sellerCompany || "-",
+                    adjustment.consignee || "-",
+                    `${formatNumber(adjustment.purchaseQuantity)} Tons`,
                     `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
-                    `${formatNumber(adjustment.pendingQuantity)} Tons`,
+                    `${formatNumber(Math.abs(Number(adjustment.purchaseQuantity || 0) - Number(adjustment.adjustmentQuantity || 0)))} Tons`,
+                    <span key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`} className={getAdjustmentStatus(adjustment.purchaseQuantity, adjustment.adjustmentQuantity) === "Equal" ? "font-bold text-emerald-600" : "font-bold text-amber-600"}>
+                      {getAdjustmentStatus(adjustment.purchaseQuantity, adjustment.adjustmentQuantity)}
+                    </span>,
                   ])}
                 />
               </div>
