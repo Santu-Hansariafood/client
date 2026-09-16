@@ -382,11 +382,36 @@ router.get("/report", async (req, res) => {
       SelfOrder.aggregate([
         { $match: orderQuery },
         {
+          $lookup: {
+            from: "sellers",
+            localField: "supplier",
+            foreignField: "_id",
+            as: "sellerDetails",
+          },
+        },
+        { $unwind: { path: "$sellerDetails", preserveNullAndEmptyArrays: true } },
+        {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: { $ifNull: ["$poDate", "$createdAt"] } } },
             saudaCount: { $sum: 1 },
             saudaQuantity: { $sum: { $ifNull: ["$quantity", 0] } },
             saudaNos: { $push: "$saudaNo" },
+            saudaDetails: {
+              $push: {
+                saudaNo: "$saudaNo",
+                saudaDate: { $ifNull: ["$poDate", "$createdAt"] },
+                buyer: "$buyer",
+                buyerCompany: "$buyerCompany",
+                sellerName: "$sellerDetails.sellerName",
+                sellerCompany: "$supplierCompany",
+                consignee: "$consignee",
+                commodity: "$commodity",
+                quantity: { $ifNull: ["$quantity", 0] },
+                rate: { $ifNull: ["$rate", 0] },
+                paymentTerms: "$paymentTerms",
+                deliveryDate: "$deliveryDate",
+              },
+            },
           },
         },
         { $sort: { _id: 1 } },
@@ -418,6 +443,22 @@ router.get("/report", async (req, res) => {
           ),
           adjustmentQuantity: 0,
           pendingQuantity: 0,
+          saudaDetails: (item.saudaDetails || []).map((sauda) => {
+            const loadedQuantity = totalsLoadedMap.get(String(sauda.saudaNo)) || 0;
+            const adjustmentQuantity = adjustments
+              .filter(
+                (adjustment) =>
+                  String(adjustment.saudaNo).toLowerCase() === String(sauda.saudaNo).toLowerCase() &&
+                  String(adjustment.sellerCompany).toLowerCase() === String(sauda.sellerCompany || "").toLowerCase(),
+              )
+              .reduce((totalAdjustment, adjustment) => totalAdjustment + Number(adjustment.adjustmentQuantity || 0), 0);
+            return {
+              ...sauda,
+              loadedQuantity,
+              adjustmentQuantity,
+              pendingQuantity: Math.max(0, Number(sauda.quantity || 0) - loadedQuantity - adjustmentQuantity),
+            };
+          }),
         },
       ]),
     );

@@ -393,6 +393,10 @@ const FinanceReport = () => {
       )
     : dateWiseTotals;
 
+  const selectedSaudaDetails = selectedDateTotals.flatMap(
+    (item) => item.saudaDetails || [],
+  );
+
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
       <select
@@ -685,6 +689,31 @@ const FinanceReport = () => {
                 ])}
               />
             </div>
+            {selectedSaudaDetails.length > 0 && (
+              <div className="mt-6 overflow-x-auto">
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Sauda Details</h3>
+                <Tables
+                  headers={["Sauda Date", "Sauda No", "Buyer", "Buyer Company", "Seller Name", "Seller Company", "Consignee", "Commodity", "Quantity", "Loaded", "Adjusted", "Pending", "Rate", "Delivery Date", "Payment Terms"]}
+                  rows={selectedSaudaDetails.map((sauda) => [
+                    formatDate(sauda.saudaDate),
+                    sauda.saudaNo || "-",
+                    sauda.buyer || "-",
+                    sauda.buyerCompany || "-",
+                    sauda.sellerName || "-",
+                    sauda.sellerCompany || "-",
+                    sauda.consignee || "-",
+                    sauda.commodity || "-",
+                    `${formatNumber(sauda.quantity)} Tons`,
+                    `${formatNumber(sauda.loadedQuantity)} Tons`,
+                    `${formatNumber(sauda.adjustmentQuantity)} Tons`,
+                    `${formatNumber(sauda.pendingQuantity)} Tons`,
+                    formatNumber(sauda.rate),
+                    formatDate(sauda.deliveryDate),
+                    sauda.paymentTerms || "-",
+                  ])}
+                />
+              </div>
+            )}
           </section>
         </div>
       </AdminPageShell>
