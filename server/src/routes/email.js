@@ -5,12 +5,27 @@ import SellerCompany from "../models/SellerCompany.js";
 
 const router = express.Router();
 
-const getEmailServiceConfig = () => ({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  host: process.env.EMAIL_SERVICE === "gmail" ? "smtp.gmail.com" : undefined,
-  port: process.env.EMAIL_SERVICE === "gmail" ? 465 : undefined,
-  secure: process.env.EMAIL_SERVICE === "gmail" ? true : undefined,
-});
+const getEmailServiceConfig = (overrides = {}) => {
+  const service = overrides.service || process.env.EMAIL_SERVICE || "gmail";
+  const host = overrides.host || process.env.EMAIL_HOST || process.env.SMTP_HOST;
+  const port = overrides.port || process.env.EMAIL_PORT || process.env.SMTP_PORT;
+  const secure = overrides.secure ?? (process.env.EMAIL_SECURE !== undefined ? process.env.EMAIL_SECURE === "true" : undefined);
+
+  if (host) {
+    return {
+      host,
+      port: Number(port || 587),
+      secure: secure ?? Number(port || 587) === 465,
+    };
+  }
+
+  return {
+    service,
+    host: service === "gmail" ? "smtp.gmail.com" : undefined,
+    port: service === "gmail" ? 465 : undefined,
+    secure: service === "gmail" ? true : undefined,
+  };
+};
 
 const verifySmtpConnection = async (transporter) => {
   try {
@@ -173,9 +188,9 @@ Contact: +91-8336924066 | +91-9330433535`,
 router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
   let paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
-  const paymentAuthEmail = process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER;
-  const paymentSenderEmail = process.env.PAYMENTS_FROM || paymentAuthEmail;
-  const paymentSenderPassword = process.env.PAYMENTS_PASS || process.env.EMAIL_PASS;
+  const paymentAuthEmail = (process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER || "").trim();
+  const paymentSenderEmail = (process.env.PAYMENTS_FROM || paymentAuthEmail || "").trim();
+  const paymentSenderPassword = (process.env.PAYMENTS_PASS || process.env.EMAIL_PASS || "").trim();
 
   if (!pdf || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
@@ -200,8 +215,19 @@ router.post("/send-payment-received", async (req, res) => {
   }
 
   try {
+    const paymentConfig = getEmailServiceConfig({
+      service: process.env.PAYMENTS_EMAIL_SERVICE || process.env.EMAIL_SERVICE,
+      host: process.env.PAYMENTS_SMTP_HOST || process.env.EMAIL_HOST || process.env.SMTP_HOST,
+      port: process.env.PAYMENTS_SMTP_PORT || process.env.EMAIL_PORT || process.env.SMTP_PORT,
+      secure: process.env.PAYMENTS_SMTP_SECURE !== undefined
+        ? process.env.PAYMENTS_SMTP_SECURE === "true"
+        : process.env.EMAIL_SECURE !== undefined
+          ? process.env.EMAIL_SECURE === "true"
+          : undefined,
+    });
+
     const transporter = nodemailer.createTransport({
-      ...getEmailServiceConfig(),
+      ...paymentConfig,
       auth: {
         user: paymentAuthEmail,
         pass: paymentSenderPassword,
