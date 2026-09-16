@@ -186,7 +186,7 @@ Contact: +91-8336924066 | +91-9330433535`,
 });
 
 router.post("/send-payment-received", async (req, res) => {
-  const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
+  const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId, voucherNumber } = req.body;
   let paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
 
   let senderAuthEmail = "";
@@ -255,11 +255,43 @@ router.post("/send-payment-received", async (req, res) => {
     let body = "";
 
     if (reportType === "IndividualVoucher") {
-      subject = `Payment Voucher`;
-      filename = `Payment_Voucher.pdf`;
+      let actualVoucherNo = voucherNumber || "";
+      if (!actualVoucherNo && individualPaymentId) {
+        try {
+          const payRec = await PaymentReceived.findById(individualPaymentId)
+            .select("voucherNumber voucherNo date supplierCompany buyerCompany")
+            .lean();
+          if (payRec) {
+            actualVoucherNo = payRec.voucherNumber || payRec.voucherNo || individualPaymentId;
+            if (!supplierCompany) supplierCompany = payRec.supplierCompany || "";
+            if (!buyerCompany) buyerCompany = payRec.buyerCompany || "";
+          }
+        } catch (lookupErr) {
+          console.warn("[EMAIL] Failed to lookup payment voucher details:", lookupErr.message);
+        }
+      }
+
+      const vchDisplay = actualVoucherNo ? ` #${String(actualVoucherNo)}` : "";
+      const companyParts = [];
+      if (buyerCompany) companyParts.push(String(buyerCompany));
+      if (supplierCompany) companyParts.push(String(supplierCompany));
+      const companyText = companyParts.length > 0
+        ? ` · ${companyParts.join(" → ")}`
+        : "";
+
+      const safeName = (str) => String(str || "").replace(/[^a-zA-Z0-9]/g, "_");
+      const fileNameParts = [
+        "Payment_Voucher",
+        safeName(buyerCompany),
+        safeName(supplierCompany),
+        safeName(actualVoucherNo),
+      ].filter(Boolean);
+      filename = fileNameParts.join("_") + ".pdf";
+
+      subject = `Payment Voucher${vchDisplay}${companyText}`;
       body = `Dear Sir/Madam,
 
-Please find attached the payment voucher.
+Please find attached the Payment Voucher${vchDisplay}.${buyerCompany ? `\nBuyer Company: ${buyerCompany}` : ""}${supplierCompany ? `\nSupplier Company: ${supplierCompany}` : ""}
 
 Thank you for your business.
 

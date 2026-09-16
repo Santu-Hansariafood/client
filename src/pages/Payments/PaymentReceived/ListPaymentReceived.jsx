@@ -1959,13 +1959,13 @@ const ListPaymentReceived = () => {
     const qrText = [
       "HANSARIA FOOD PRIVATE LIMITED",
       `Date: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-"}`,
-      `Voucher No: ${row.raw?.voucherNo || row.id || "-"}`,
+      `Voucher No: ${row.raw?.voucherNo || row.raw?.voucherNumber || row.voucherNo || row.id || "-"}`,
       `Buyer: ${row.buyerCompany || "-"}`,
       `Seller: ${row.supplierCompany || "-"}`,
       `Sauda No: ${saudaNo}`,
       `Lorry No: ${lorryNo}`,
       `Bill No: ${billNo}`,
-      `Amount: Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Amount: ₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
     ].join("\n");
 
     return await QRCode.toDataURL(qrText, {
@@ -1982,11 +1982,18 @@ const ListPaymentReceived = () => {
     row,
     buyerCompany,
     sellerCompany,
+    voucherNumber,
   }) => {
     try {
       setSendingEmailIds((prev) => new Set([...prev, row.id]));
 
       const qrCodeUrl = await generateIndividualQRCode(row);
+      const actualVoucherNumber = voucherNumber
+        || row.raw?.voucherNumber
+        || row.raw?.voucherNo
+        || row.voucherNo
+        || row.id
+        || "-";
 
       const blob = await pdf(
         <PaymentVoucherPDF
@@ -1994,26 +2001,40 @@ const ListPaymentReceived = () => {
           buyerCompany={buyerCompany}
           sellerCompany={sellerCompany}
           qrCodeUrl={qrCodeUrl}
-          voucherNumber={1}
+          voucherNumber={actualVoucherNumber}
         />,
       ).toBlob();
 
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      const pdfBase64 = await new Promise((resolve) => {
+      const pdfBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => {
+          reader.abort();
+          reject(new Error("Failed to read PDF file"));
+        };
         reader.onloadend = () => {
           resolve(reader.result.split(",")[1]);
         };
+        reader.readAsDataURL(blob);
       });
+
+      const recipientEmail = sellerCompany?.email?.trim() || "";
+      const supplierCompanyName =
+        sellerCompany?.companyName || row.supplierCompany || "";
+      const buyerCompanyName =
+        buyerCompany?.companyName || row.buyerCompany || "";
+
+      if (!recipientEmail && !supplierCompanyName) {
+        throw new Error("No recipient email or supplier company found");
+      }
 
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
-        recipientEmail: sellerCompany?.email?.trim() || "",
+        recipientEmail: recipientEmail,
         reportType: "IndividualVoucher",
-        supplierCompany:
-          sellerCompany?.companyName || row.supplierCompany || "",
-        buyerCompany: buyerCompany?.companyName || row.buyerCompany || "",
+        supplierCompany: supplierCompanyName,
+        buyerCompany: buyerCompanyName,
         individualPaymentId: row.raw?._id || row.id,
+        voucherNumber: actualVoucherNumber,
       });
 
       toast.success("Email sent successfully!");
