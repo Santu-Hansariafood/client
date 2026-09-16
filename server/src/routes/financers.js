@@ -100,6 +100,7 @@ router.get("/seller-options", async (_req, res) => {
 router.get("/pending-options", async (req, res) => {
   try {
     const selectedCompany = String(req.query.sellerCompany || "").trim();
+    const selectedConsignee = String(req.query.consignee || "").trim();
     const sellerCompanies = (await Financer.distinct("sellerCompany", {
       financerType: "Seller",
       sellerCompany: { $exists: true, $ne: "" },
@@ -117,14 +118,37 @@ router.get("/pending-options", async (req, res) => {
       `^${selectedCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
       "i",
     );
-    const saudaNumbers = await SelfOrder.find({ supplierCompany: companyRegex })
-      .select("saudaNo")
+    const consigneeRegex = selectedConsignee
+      ? new RegExp(
+          `^${selectedConsignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i",
+        )
+      : null;
+    const saudaNumbers = await SelfOrder.find({
+      supplierCompany: companyRegex,
+      ...(consigneeRegex ? { consignee: consigneeRegex } : {}),
+    })
+      .select("saudaNo poDate consignee")
       .sort({ poDate: -1, saudaNo: -1 })
       .lean();
 
+    const uniqueSaudaNumbers = [];
+    const seenSaudaNumbers = new Set();
+    saudaNumbers.forEach((item) => {
+      const key = String(item.saudaNo || "").toLowerCase();
+      if (key && !seenSaudaNumbers.has(key)) {
+        seenSaudaNumbers.add(key);
+        uniqueSaudaNumbers.push({
+          saudaNo: item.saudaNo,
+          poDate: item.poDate,
+          consignee: item.consignee || "",
+        });
+      }
+    });
+
     return res.json({
       sellerCompanies,
-      saudaNumbers: [...new Set(saudaNumbers.map((item) => item.saudaNo).filter(Boolean))],
+      saudaNumbers: uniqueSaudaNumbers,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

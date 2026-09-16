@@ -16,6 +16,11 @@ const DateSelector = lazy(
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
 
+const getAdjustmentStatus = (pendingQuantity) =>
+  pendingQuantity !== null && Number(pendingQuantity || 0) <= 0
+    ? "Adjusted"
+    : "Not Adjusted";
+
 const formatNumber = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
     maximumFractionDigits: 2,
@@ -81,8 +86,6 @@ const FinanceReport = () => {
       setDateWiseTotals(response.data?.dateWiseTotals || []);
       setAdjustmentRows(response.data?.adjustments || []);
     } catch (error) {
-      setOrders([]);
-      setTotal(0);
       toast.error(error.response?.data?.message || "Failed to load finance report");
     } finally {
       setLoading(false);
@@ -181,13 +184,20 @@ const FinanceReport = () => {
                         )?.adjustmentQuantity || 0,
                       ),
                   ),
-                  status: response.data?.adjustments?.some(
-                    (adjustment) =>
-                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                  )
-                    ? "Adjusted"
-                    : "Found",
+                  status: getAdjustmentStatus(
+                    Math.max(
+                      0,
+                      Number(match.quantity || 0) -
+                        Number(match.loadedQuantity || 0) -
+                        Number(
+                          response.data?.adjustments?.find(
+                            (adjustment) =>
+                              String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
+                              String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
+                          )?.adjustmentQuantity || 0,
+                        ),
+                    ),
+                  ),
                 }
               : { ...row, pendingQuantity: null, status: "Not found" },
         ),
@@ -219,11 +229,11 @@ const FinanceReport = () => {
     );
   };
 
-  const loadSaudaOptions = async (rowId, sellerCompany) => {
+  const loadSaudaOptions = async (rowId, sellerCompany, consignee = selectedConsignee) => {
     if (!sellerCompany) return;
     try {
       const response = await api.get("/financers/pending-options", {
-        params: { sellerCompany },
+        params: { sellerCompany, consignee: consignee || undefined },
       });
       setSaudaRows((rows) =>
         rows.map((row) =>
@@ -246,6 +256,15 @@ const FinanceReport = () => {
       toast.error(error.response?.data?.message || "Failed to load Sauda numbers");
     }
   };
+
+  useEffect(() => {
+    saudaRows.forEach((row) => {
+      if (row.sellerCompany) {
+        loadSaudaOptions(row.id, row.sellerCompany, selectedConsignee);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConsignee]);
 
   const addSaudaRow = () => {
     setSaudaRows((rows) => [
@@ -291,7 +310,7 @@ const FinanceReport = () => {
                 ...item,
                 adjustmentId: response.data?._id || row.adjustmentId,
                 adjustmentDate: response.data?.adjustmentDate || new Date().toISOString(),
-                status: "Adjusted",
+                status: getAdjustmentStatus(item.pendingQuantity),
               }
             : item,
         ),
@@ -389,8 +408,10 @@ const FinanceReport = () => {
         className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
       >
         <option value="">Select Sauda number</option>
-        {(row.saudaOptions || []).map((saudaNo) => (
-          <option key={saudaNo} value={saudaNo}>{saudaNo}</option>
+        {(row.saudaOptions || []).map((option) => (
+          <option key={option.saudaNo} value={option.saudaNo}>
+            {option.saudaNo} - {formatDate(option.poDate)}
+          </option>
         ))}
       </select>
       <select
@@ -415,7 +436,7 @@ const FinanceReport = () => {
                 : item,
             ),
           );
-          loadSaudaOptions(row.id, company);
+          loadSaudaOptions(row.id, company, selectedConsignee);
         }}
         className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
       >
@@ -454,7 +475,14 @@ const FinanceReport = () => {
                                 manualAdjustment,
                             ),
                       status:
-                        item.purchaseQuantity === null ? "" : "Adjusted",
+                        item.purchaseQuantity === null
+                          ? ""
+                          : getAdjustmentStatus(
+                              Math.max(
+                                0,
+                                purchaseQuantity - loadedQuantity - manualAdjustment,
+                              ),
+                            ),
                     };
                   })()
                 : item,
@@ -464,13 +492,24 @@ const FinanceReport = () => {
         placeholder="Manual deduction (Tons)"
         className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
-      <button
-        type="button"
-        onClick={() => lookupSauda(row.id, row.saudaNo, row.sellerCompany, row.manualAdjustment)}
-        className="h-9 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
-      >
-        Check pending quantity
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => lookupSauda(row.id, row.saudaNo, row.sellerCompany, row.manualAdjustment)}
+          className="h-9 flex-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+        >
+          Check quantity
+        </button>
+        <button
+          type="button"
+          onClick={() => saveAdjustment(row)}
+          title={row.adjustmentId ? "Update adjustment" : "Save adjustment"}
+          className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={row.pendingQuantity === null || !row.manualAdjustment}
+        >
+          {row.adjustmentId ? <FaEdit size={12} /> : <FaSave size={12} />}
+        </button>
+      </div>
     </div>,
     <div key={`details-${row.id}`} className="min-w-[210px] space-y-1 text-xs">
       <div><span className="font-bold text-slate-500">Company:</span> {row.sellerCompany || "-"}</div>
@@ -485,22 +524,15 @@ const FinanceReport = () => {
     <span
       key={`status-${row.id}`}
       className={
-        row.status === "Found" || row.status === "Adjusted"
+        row.status === "Adjusted"
           ? "font-bold text-emerald-600"
+          : row.status === "Not Adjusted"
+            ? "font-bold text-amber-600"
           : "text-slate-500"
       }
     >
       {row.status || "Enter Sauda No"}
     </span>,
-    <button
-      key={`actions-${row.id}`}
-      type="button"
-      onClick={() => saveAdjustment(row)}
-      title={row.adjustmentId ? "Update adjustment" : "Save adjustment"}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-emerald-600 hover:bg-emerald-50"
-    >
-      {row.adjustmentId ? <FaEdit size={12} /> : <FaSave size={12} />}
-    </button>,
     <div key={`remove-${row.id}`} className="flex gap-1">
       {row.adjustmentId && (
         <button
@@ -596,7 +628,10 @@ const FinanceReport = () => {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Pending Quantity Lookup</h2>
-                <p className="text-sm text-slate-500">Enter seller Sauda numbers to check pending quantity</p>
+                <p className="text-sm text-slate-500">Newest Saudas first, filtered by the selected consignee</p>
+                <p className="mt-1 text-xs font-semibold text-emerald-700">
+                  Consignee: {selectedConsignee || "All consignees"}
+                </p>
               </div>
               <Buttons label="Add Sauda" onClick={addSaudaRow} size="sm" icon={<FaPlus />} />
             </div>
