@@ -244,6 +244,12 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = initSocket(server);
 
+const emailVarStatus = (user, pass, label) => {
+  const userLen = String(user || "").length;
+  const passLen = String(pass || "").length;
+  return `${label}: ${userLen ? `✓ user(${userLen})` : "✗ user(0)"} / ${passLen ? `✓ pass(${passLen})` : "✗ pass(0)"}`;
+};
+
 const start = async () => {
   await connect();
   startNotificationCleanup(12);
@@ -252,6 +258,15 @@ const start = async () => {
     console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
     console.log(
       `API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`,
+    );
+    console.log(
+      `[EMAIL] ${emailVarStatus(process.env.EMAIL_USER, process.env.EMAIL_PASS, "Default")}`,
+    );
+    console.log(
+      `[EMAIL] ${emailVarStatus(process.env.CLAIMS_EMAIL, process.env.CLAIMS_PASS, "Claims ")}`,
+    );
+    console.log(
+      `[EMAIL] ${emailVarStatus(process.env.PAYMENTS_EMAIL, process.env.PAYMENTS_PASS, "Payment")} ${process.env.PAYMENTS_FROM ? `| PAYMENTS_FROM=${process.env.PAYMENTS_FROM}` : ""}`,
     );
   });
 };

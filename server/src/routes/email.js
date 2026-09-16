@@ -188,12 +188,21 @@ Contact: +91-8336924066 | +91-9330433535`,
 router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
   let paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
-  const paymentAuthEmail = (process.env.PAYMENTS_EMAIL || process.env.EMAIL_USER || "").trim();
-  const paymentSenderEmail = (process.env.PAYMENTS_FROM || paymentAuthEmail || "").trim();
-  const paymentSenderPassword = (process.env.PAYMENTS_PASS || process.env.EMAIL_PASS || "").trim();
+
+  let senderAuthEmail = "";
+  let senderAuthPassword = "";
+  if (process.env.PAYMENTS_EMAIL && process.env.PAYMENTS_PASS) {
+    senderAuthEmail = process.env.PAYMENTS_EMAIL.trim();
+    senderAuthPassword = process.env.PAYMENTS_PASS.trim();
+  } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    senderAuthEmail = process.env.EMAIL_USER.trim();
+    senderAuthPassword = process.env.EMAIL_PASS.trim();
+  }
+
+  const paymentSenderEmail = (process.env.PAYMENTS_FROM || senderAuthEmail || "").trim();
 
   if (!pdf || !reportType) {
-    return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
+    return res.status(400).send("Missing required fields: pdf, reportType");
   }
 
   if (!paymentRecipientEmail && supplierCompany) {
@@ -209,28 +218,30 @@ router.post("/send-payment-received", async (req, res) => {
     return res.status(400).send("No seller email found for the selected supplier company");
   }
 
-  if (!paymentAuthEmail || !paymentSenderPassword) {
-    console.error("[EMAIL] Missing PAYMENTS_EMAIL or PAYMENTS_PASS");
+  if (!senderAuthEmail || !senderAuthPassword) {
+    console.error("[EMAIL] Missing PAYMENTS_EMAIL/PAYMENTS_PASS pair or EMAIL_USER/EMAIL_PASS pair");
     return res.status(500).send("Payment email sender is not configured. Please contact admin.");
   }
 
   try {
-    const paymentConfig = getEmailServiceConfig({
-      service: process.env.PAYMENTS_EMAIL_SERVICE || process.env.EMAIL_SERVICE,
-      host: process.env.PAYMENTS_SMTP_HOST || process.env.EMAIL_HOST || process.env.SMTP_HOST,
-      port: process.env.PAYMENTS_SMTP_PORT || process.env.EMAIL_PORT || process.env.SMTP_PORT,
-      secure: process.env.PAYMENTS_SMTP_SECURE !== undefined
-        ? process.env.PAYMENTS_SMTP_SECURE === "true"
-        : process.env.EMAIL_SECURE !== undefined
-          ? process.env.EMAIL_SECURE === "true"
-          : undefined,
-    });
+    const paymentServiceConfig = process.env.PAYMENTS_EMAIL_SERVICE
+      ? { service: process.env.PAYMENTS_EMAIL_SERVICE }
+      : process.env.PAYMENTS_SMTP_HOST
+        ? {
+            host: process.env.PAYMENTS_SMTP_HOST,
+            port: Number(process.env.PAYMENTS_SMTP_PORT || 587),
+            secure: process.env.PAYMENTS_SMTP_SECURE !== undefined
+              ? process.env.PAYMENTS_SMTP_SECURE === "true"
+              : Number(process.env.PAYMENTS_SMTP_PORT || 587) === 465,
+          }
+        : {};
 
     const transporter = nodemailer.createTransport({
-      ...paymentConfig,
+      ...getEmailServiceConfig(),
+      ...paymentServiceConfig,
       auth: {
-        user: paymentAuthEmail,
-        pass: paymentSenderPassword,
+        user: senderAuthEmail,
+        pass: senderAuthPassword,
       },
     });
 
