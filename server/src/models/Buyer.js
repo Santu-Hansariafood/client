@@ -69,5 +69,7 @@ buyerSchema.index({ name: 1 });
 buyerSchema.index({ companyIds: 1 });
 buyerSchema.index({ groupId: 1 });
 buyerSchema.index({ mobile: 1 });
+buyerSchema.index({ lastActiveAt: -1, createdAt: -1 });
+buyerSchema.index({ status: 1, lastActiveAt: -1, createdAt: -1 });
 
 export default mongoose.model("Buyer", buyerSchema);

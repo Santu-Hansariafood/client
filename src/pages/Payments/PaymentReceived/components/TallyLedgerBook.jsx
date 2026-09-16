@@ -180,7 +180,7 @@ const TallyLedgerBook = ({
         {sellerCompany?.email || "-"}
       </td>
       <td className="px-3 py-2 text-center">
-        {!row.isOpening && sellerCompany?.email && (
+        {!row.isOpening && (sellerCompany?.email || sellerCompany?.companyName || row.supplierCompany) && (
           <button
             onClick={() => onSendEmail({ row, buyerCompany, sellerCompany })}
             disabled={sendingEmailIds.has(row.id)}

@@ -268,7 +268,7 @@ const ListPaymentReceived = () => {
     fetchLedgers();
   }, [fetchLedgers]);
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -309,11 +309,11 @@ const ListPaymentReceived = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, limit, page]);
 
   useEffect(() => {
     fetchPayments();
-  }, [page, filters]);
+  }, [fetchPayments]);
 
   const tallyListRows = useMemo(() => {
     return buildTallyVoucherRows(
@@ -1986,11 +1986,6 @@ const ListPaymentReceived = () => {
     try {
       setSendingEmailIds((prev) => new Set([...prev, row.id]));
 
-      if (!sellerCompany?.email) {
-        toast.error("No email found for the seller company");
-        return;
-      }
-
       const qrCodeUrl = await generateIndividualQRCode(row);
 
       const blob = await pdf(
@@ -2013,8 +2008,11 @@ const ListPaymentReceived = () => {
 
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
-        recipientEmail: sellerCompany.email.trim(),
+        recipientEmail: sellerCompany?.email?.trim() || "",
         reportType: "IndividualVoucher",
+        supplierCompany:
+          sellerCompany?.companyName || row.supplierCompany || "",
+        buyerCompany: buyerCompany?.companyName || row.buyerCompany || "",
         individualPaymentId: row.raw?._id || row.id,
       });
 

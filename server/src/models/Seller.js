@@ -140,5 +140,7 @@ sellerSchema.index({ "phoneNumbers.value": 1 }, { unique: true });
 sellerSchema.index({ companies: 1 });
 sellerSchema.index({ createdAt: -1 });
 sellerSchema.index({ "emails.value": 1 });
+sellerSchema.index({ lastActiveAt: -1, createdAt: -1 });
+sellerSchema.index({ status: 1, lastActiveAt: -1, createdAt: -1 });
 
 export default mongoose.model("Seller", sellerSchema);
