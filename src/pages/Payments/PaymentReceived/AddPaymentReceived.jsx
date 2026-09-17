@@ -57,6 +57,7 @@ const AddPaymentReceived = () => {
   const [ledgers, setLedgers] = useState([]);
   const [opposingLedgers, setOpposingLedgers] = useState([]);
   const [allCompanies, setAllCompanies] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedLedger, setSelectedLedger] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
   const [fetchingEntries, setFetchingEntries] = useState(false);
@@ -94,6 +95,7 @@ const AddPaymentReceived = () => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [fetchingEditingPayment, setFetchingEditingPayment] = useState(false);
   const [breakdownEntry, setBreakdownEntry] = useState(null);
+  const [sendingEmailIds, setSendingEmailIds] = useState(() => new Set());
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -412,6 +414,12 @@ const AddPaymentReceived = () => {
         const response = await api.get("/companies", { params: { limit: 0 } });
         const data = response.data.data || response.data || [];
         setAllCompanies(data);
+        const sellerCompaniesResponse = await api.get("/seller-company", {
+          params: { limit: 0 },
+        });
+        setSellerCompanies(
+          sellerCompaniesResponse.data.data || sellerCompaniesResponse.data || [],
+        );
       } catch (error) {
         console.error("Error fetching companies:", error);
       }
@@ -1973,7 +1981,7 @@ const AddPaymentReceived = () => {
     }
   };
 
-  const printVoucher = (payment) => {
+  const printVoucher = (payment, { save = true } = {}) => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -2100,7 +2108,53 @@ const AddPaymentReceived = () => {
       align: "right",
     });
 
-    doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
+    if (save) {
+      doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
+    }
+    return doc;
+  };
+
+  const handleSendVoucherEmail = async ({ row, sellerCompany, recipientEmail }) => {
+    const email = recipientEmail?.trim() || sellerCompany?.email?.trim() || "";
+    const payment = row?.raw;
+
+    if (!email) {
+      toast.error("No recipient email found for this supplier company.");
+      return;
+    }
+
+    if (!payment?._id) {
+      toast.error("This row does not contain a payment voucher.");
+      return;
+    }
+
+    try {
+      setSendingEmailIds((previous) => new Set(previous).add(row.id));
+      const doc = printVoucher(payment, { save: false });
+      const pdfBase64 = doc.output("datauristring").split(",")[1];
+
+      await api.post("/email/send-payment-received", {
+        pdf: pdfBase64,
+        recipientEmail: email,
+        reportType: "IndividualVoucher",
+        supplierCompany: sellerCompany.companyName || row.supplierCompany,
+        buyerCompany: row.buyerCompany || payment.buyerCompany,
+        individualPaymentId: payment._id,
+        voucherNumber: payment.voucherNumber || payment.voucherNo,
+      });
+
+      toast.success(`Voucher sent to ${email}`);
+    } catch (error) {
+      toast.error(
+        error.response?.data || "Failed to send voucher email. Please try again.",
+      );
+    } finally {
+      setSendingEmailIds((previous) => {
+        const next = new Set(previous);
+        next.delete(row.id);
+        return next;
+      });
+    }
   };
 
   const columns = [
@@ -3150,6 +3204,10 @@ const AddPaymentReceived = () => {
               companyPair={companyPair}
               tallyRows={tallyHistoryRows}
               onPrintVoucher={printVoucher}
+              sellerCompanies={sellerCompanies}
+              buyerCompanies={allCompanies}
+              onSendEmail={handleSendVoucherEmail}
+              sendingEmailIds={sendingEmailIds}
             />
           )}
 

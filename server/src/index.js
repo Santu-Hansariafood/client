@@ -164,13 +164,6 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
 }));
 
 app.use((req, res, next) => {
-  const start = Date.now();
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (duration > 500) {
-      console.warn(`SLOW: ${req.method} ${req.originalUrl} - ${duration}ms`);
-    }
-  });
   next();
 });
 
@@ -244,35 +237,10 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = initSocket(server);
 
-const emailVarStatus = (user, pass, label) => {
-  const userLen = String(user || "").length;
-  const passLen = String(pass || "").length;
-  return `${label}: ${userLen ? `✓ user(${userLen})` : "✗ user(0)"} / ${passLen ? `✓ pass(${passLen})` : "✗ pass(0)"}`;
-};
-
-const paymentEmailUser = process.env.PAYMENT_EMAIL || process.env.PAYMENTS_EMAIL;
-const paymentEmailPass = process.env.PAYMENT_PASS || process.env.PAYMENTS_PASS;
-const paymentEmailFrom = process.env.PAYMENT_FROM || process.env.PAYMENTS_FROM;
-
 const start = async () => {
   await connect();
   startNotificationCleanup(12);
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
-    console.log(
-      `API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`,
-    );
-    console.log(
-      `[EMAIL] ${emailVarStatus(process.env.EMAIL_USER, process.env.EMAIL_PASS, "Default")}`,
-    );
-    console.log(
-      `[EMAIL] ${emailVarStatus(process.env.CLAIMS_EMAIL, process.env.CLAIMS_PASS, "Claims ")}`,
-    );
-    console.log(
-      `[EMAIL] ${emailVarStatus(paymentEmailUser, paymentEmailPass, "Payment")} ${paymentEmailFrom ? `| PAYMENT_FROM=${paymentEmailFrom}` : ""}`,
-    );
-  });
+  server.listen(PORT);
 };
 
 // Enable cluster mode by default in production
@@ -280,10 +248,8 @@ const isClusterMode = process.env.CLUSTER_MODE !== "0" && process.env.NODE_ENV =
 if (isClusterMode) {
   if (cluster.isPrimary) {
     const count = os.cpus().length;
-    console.log(`Starting ${count} worker processes (cluster mode)`);
     for (let i = 0; i < count; i++) cluster.fork();
     cluster.on("exit", (worker, code, signal) => {
-      console.warn(`Worker ${worker.process.pid} died. Restarting...`);
       cluster.fork();
     });
   } else {

@@ -14,6 +14,10 @@ const PaymentHistory = ({
   companyPair,
   tallyRows,
   onPrintVoucher,
+  sellerCompanies,
+  buyerCompanies,
+  onSendEmail,
+  sendingEmailIds,
 }) => {
   const totalDebit = tallyRows.reduce((s, r) => s + (r.debit || 0), 0);
   const totalCredit = tallyRows.reduce((s, r) => s + (r.credit || 0), 0);
@@ -70,6 +74,10 @@ const PaymentHistory = ({
           loading={fetchingHistory}
           emptyMessage="No payment vouchers recorded on the selected entry date."
           showCompanyColumns
+          sellerCompanies={sellerCompanies}
+          buyerCompanies={buyerCompanies}
+          onSendEmail={onSendEmail}
+          sendingEmailIds={sendingEmailIds}
         />
 
         {tallyRows.length > 0 && (

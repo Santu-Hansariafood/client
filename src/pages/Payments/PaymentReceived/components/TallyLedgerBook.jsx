@@ -165,12 +165,18 @@ const TallyLedgerBook = ({
 
   const handleSendClick = (row, buyerCompany, sellerCompany) => {
     if (onSendEmail) {
-      onSendEmail({ row, buyerCompany, sellerCompany, voucherNumber: resolveVoucherNumber(row) });
+      onSendEmail({
+        row,
+        buyerCompany,
+        sellerCompany,
+        recipientEmail: sellerCompany?.email?.trim() || "",
+        voucherNumber: resolveVoucherNumber(row),
+      });
     }
   };
 
   const renderActionCells = (row, buyerCompany, sellerCompany) => {
-    const hasEmailTarget = sellerCompany?.email || sellerCompany?.companyName || row.supplierCompany;
+    const hasEmailTarget = Boolean(sellerCompany?.email?.trim());
     const isSending = sendingEmailIds.has(row.id);
     return (
     <>

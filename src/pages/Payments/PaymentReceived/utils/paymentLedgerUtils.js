@@ -605,8 +605,8 @@ export const buildTallyVoucherRows = (
               .filter(Boolean)
               .join(" | "),
             vchType: payment.paymentMode || payment.paymentType || "—",
-            buyerCompany,
-            supplierCompany,
+            buyerCompany: loadingEntry.buyerCompany || buyerCompany,
+            supplierCompany: loadingEntry.supplierCompany || supplierCompany,
             debit: allocatedDebit,
             credit: allocatedCredit,
             balance,
