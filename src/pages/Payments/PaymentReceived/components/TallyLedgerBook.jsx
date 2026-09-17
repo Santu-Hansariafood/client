@@ -176,7 +176,9 @@ const TallyLedgerBook = ({
   };
 
   const renderActionCells = (row, buyerCompany, sellerCompany) => {
-    const hasEmailTarget = Boolean(sellerCompany?.email?.trim());
+    const recipientEmail = sellerCompany?.email?.trim() || "";
+    const hasEmailTarget = Boolean(recipientEmail && onSendEmail);
+    const isVoucherRow = row.isPaymentRow || row.raw?.uiType !== "entry";
     const isSending = sendingEmailIds.has(row.id);
     return (
     <>
@@ -196,11 +198,13 @@ const TallyLedgerBook = ({
           <span className="text-xs text-slate-600 truncate max-w-[130px]">
             {sellerCompany?.email || "-"}
           </span>
-          {!row.isOpening && row.isPaymentRow && hasEmailTarget && (
+          {!row.isOpening && isVoucherRow && hasEmailTarget && (
             <button
+              type="button"
               onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
               disabled={isSending}
-              title={`Send voucher to ${sellerCompany?.email || sellerCompany?.companyName || row.supplierCompany}`}
+              aria-label={`Send voucher to ${recipientEmail}`}
+              title={`Send voucher to ${recipientEmail}`}
               className="flex-shrink-0 px-2 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSending ? (
