@@ -196,15 +196,14 @@ router.post("/send-payment-received", async (req, res) => {
 
   let senderAuthEmail = "";
   let senderAuthPassword = "";
-  if (process.env.PAYMENTS_EMAIL && process.env.PAYMENTS_PASS) {
-    senderAuthEmail = process.env.PAYMENTS_EMAIL.trim();
-    senderAuthPassword = process.env.PAYMENTS_PASS.trim();
-  } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    senderAuthEmail = process.env.EMAIL_USER.trim();
-    senderAuthPassword = process.env.EMAIL_PASS.trim();
-  }
+  const configuredPaymentEmail = process.env.PAYMENTS_EMAIL || process.env.PAYMENT_EMAIL;
+  const configuredPaymentPassword = process.env.PAYMENTS_PASS || process.env.PAYMENT_PASS;
+  senderAuthEmail = String(configuredPaymentEmail || "").trim();
+  senderAuthPassword = String(configuredPaymentPassword || "").trim();
 
-  const paymentSenderEmail = (process.env.PAYMENTS_FROM || senderAuthEmail || "").trim();
+  const paymentSenderEmail = (
+    process.env.PAYMENTS_FROM || process.env.PAYMENT_FROM || senderAuthEmail
+  ).trim();
 
   if (!pdf || !reportType) {
     return res.status(400).send("Missing required fields: pdf, reportType");
@@ -224,8 +223,8 @@ router.post("/send-payment-received", async (req, res) => {
   }
 
   if (!senderAuthEmail || !senderAuthPassword) {
-    console.error("[EMAIL] Missing PAYMENTS_EMAIL/PAYMENTS_PASS pair or EMAIL_USER/EMAIL_PASS pair");
-    return res.status(500).send("Payment email sender is not configured. Please contact admin.");
+    console.error("[EMAIL] Missing PAYMENTS_EMAIL/PAYMENTS_PASS payment mailbox credentials");
+    return res.status(500).send("Payment mailbox is not configured. Please contact admin.");
   }
 
   try {

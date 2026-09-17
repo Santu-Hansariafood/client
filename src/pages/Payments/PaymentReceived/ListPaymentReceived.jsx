@@ -1982,6 +1982,7 @@ const ListPaymentReceived = () => {
     row,
     buyerCompany,
     sellerCompany,
+    recipientEmail,
     voucherNumber,
   }) => {
     try {
@@ -2017,19 +2018,19 @@ const ListPaymentReceived = () => {
         reader.readAsDataURL(blob);
       });
 
-      const recipientEmail = sellerCompany?.email?.trim() || "";
+      const email = recipientEmail?.trim() || sellerCompany?.email?.trim() || "";
       const supplierCompanyName =
         sellerCompany?.companyName || row.supplierCompany || "";
       const buyerCompanyName =
         buyerCompany?.companyName || row.buyerCompany || "";
 
-      if (!recipientEmail && !supplierCompanyName) {
-        throw new Error("No recipient email or supplier company found");
+      if (!email) {
+        throw new Error("No recipient email found for this voucher row");
       }
 
       await api.post("/email/send-payment-received", {
         pdf: pdfBase64,
-        recipientEmail: recipientEmail,
+        recipientEmail: email,
         reportType: "IndividualVoucher",
         supplierCompany: supplierCompanyName,
         buyerCompany: buyerCompanyName,
@@ -2037,7 +2038,7 @@ const ListPaymentReceived = () => {
         voucherNumber: actualVoucherNumber,
       });
 
-      toast.success("Email sent successfully!");
+      toast.success(`Voucher sent to ${email}`);
     } catch (error) {
       console.error("Send Individual Email Error:", error);
       const serverMsg = error?.response?.data || error?.message || "";
