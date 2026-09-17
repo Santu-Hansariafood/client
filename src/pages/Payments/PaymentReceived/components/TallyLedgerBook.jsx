@@ -1,7 +1,7 @@
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 import { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import { FaEnvelope, FaFilePdf, FaEdit, FaTrash } from "react-icons/fa";
+import { FaEnvelope, FaFilePdf, FaEdit, FaTrash, FaCheck } from "react-icons/fa";
 import QRCode from "qrcode";
 import { toast } from "react-toastify";
 import PaymentVoucherPDF from "./PaymentVoucherPDF";
@@ -17,6 +17,7 @@ const TallyLedgerBook = ({
   buyerCompanies = [],
   onSendEmail,
   sendingEmailIds = new Set(),
+  sentEmailIds = new Set(),
   onEdit,
   onDelete,
 }) => {
@@ -180,6 +181,8 @@ const TallyLedgerBook = ({
     const hasEmailTarget = Boolean(recipientEmail && onSendEmail);
     const isVoucherRow = row.isPaymentRow || row.raw?.uiType !== "entry";
     const isSending = sendingEmailIds.has(row.id);
+    const isEmailSent = row.emailSent || sentEmailIds.has(row.id);
+    const sentAtDate = row.emailSentAt;
     return (
     <>
       <td className="px-3 py-2 text-center">
@@ -194,26 +197,44 @@ const TallyLedgerBook = ({
         )}
       </td>
       <td className="px-3 py-2">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-xs text-slate-600 truncate max-w-[130px]">
+        <div className="flex flex-col items-center justify-center gap-1.5">
+          <span className="text-xs text-slate-600 truncate max-w-[160px]">
             {sellerCompany?.email || "-"}
           </span>
-          {!row.isOpening && isVoucherRow && hasEmailTarget && (
-            <button
-              type="button"
-              onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
-              disabled={isSending}
-              aria-label={`Send voucher to ${recipientEmail}`}
-              title={`Send voucher to ${recipientEmail}`}
-              className="flex-shrink-0 px-2 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSending ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+          <div className="flex items-center justify-center min-h-[28px]">
+            {!row.isOpening && isVoucherRow && hasEmailTarget && (
+              isEmailSent ? (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded text-[10px] font-black uppercase tracking-wider shadow"
+                  title={sentAtDate ? `Sent on ${new Date(sentAtDate).toLocaleString("en-GB")}` : "Email sent successfully"}
+                >
+                  <FaCheck size={10} />
+                  Sent
+                </span>
               ) : (
-                <FaEnvelope size={14} />
-              )}
-            </button>
-          )}
+                <button
+                  type="button"
+                  onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
+                  disabled={isSending}
+                  aria-label={`Send voucher to ${recipientEmail}`}
+                  title={`Send voucher to ${recipientEmail}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-[10px] font-black uppercase tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSending ? (
+                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                  ) : (
+                    <FaEnvelope size={10} />
+                  )}
+                  {isSending ? "Sending..." : "Send"}
+                </button>
+              )
+            )}
+            {!row.isOpening && isVoucherRow && !hasEmailTarget && (
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                No Email
+              </span>
+            )}
+          </div>
         </div>
       </td>
       <td className="px-3 py-2 text-center">

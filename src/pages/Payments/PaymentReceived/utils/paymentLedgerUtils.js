@@ -641,6 +641,8 @@ export const buildTallyVoucherRows = (
               "",
             breakdown: mapParts,
             paymentAllocations: [],
+            emailSent: Boolean(payment.emailSent),
+            emailSentAt: payment.emailSentAt || null,
           });
         });
       }
@@ -713,6 +715,8 @@ export const buildTallyVoucherRows = (
           })),
           paymentAllocations: [],
           partEntries: entriesPart,
+          emailSent: Boolean(payment.emailSent),
+          emailSentAt: payment.emailSentAt || null,
         });
       }
     }

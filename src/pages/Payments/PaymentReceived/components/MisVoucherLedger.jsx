@@ -27,6 +27,7 @@ const MisVoucherLedger = ({
   buyerCompanies = [],
   onSendEmail,
   sendingEmailIds = new Set(),
+  sentEmailIds = new Set(),
   onEdit,
   onDelete,
   totals,
@@ -73,6 +74,7 @@ const MisVoucherLedger = ({
             buyerCompanies={buyerCompanies}
             onSendEmail={onSendEmail}
             sendingEmailIds={sendingEmailIds}
+            sentEmailIds={sentEmailIds}
             onEdit={onEdit}
             onDelete={onDelete}
           />

@@ -39,6 +39,7 @@ const ListPaymentReceived = () => {
   const [printing, setPrinting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [sendingEmailIds, setSendingEmailIds] = useState(new Set());
+  const [sentEmailIds, setSentEmailIds] = useState(new Set());
   const [payments, setPayments] = useState([]);
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [total, setTotal] = useState(0);
@@ -2038,6 +2039,7 @@ const ListPaymentReceived = () => {
         voucherNumber: actualVoucherNumber,
       });
 
+      setSentEmailIds((prev) => new Set([...prev, row.id]));
       toast.success(`Voucher sent to ${email}`);
     } catch (error) {
       console.error("Send Individual Email Error:", error);
@@ -2251,6 +2253,7 @@ const ListPaymentReceived = () => {
                   buyerCompanies={buyerCompanies}
                   onSendEmail={handleSendIndividualEmail}
                   sendingEmailIds={sendingEmailIds}
+                  sentEmailIds={sentEmailIds}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   totals={voucherTotals}

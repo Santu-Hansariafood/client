@@ -18,6 +18,7 @@ const PaymentHistory = ({
   buyerCompanies,
   onSendEmail,
   sendingEmailIds,
+  sentEmailIds = new Set(),
 }) => {
   const totalDebit = tallyRows.reduce((s, r) => s + (r.debit || 0), 0);
   const totalCredit = tallyRows.reduce((s, r) => s + (r.credit || 0), 0);
@@ -78,6 +79,7 @@ const PaymentHistory = ({
           buyerCompanies={buyerCompanies}
           onSendEmail={onSendEmail}
           sendingEmailIds={sendingEmailIds}
+          sentEmailIds={sentEmailIds}
         />
 
         {tallyRows.length > 0 && (

@@ -96,6 +96,7 @@ const AddPaymentReceived = () => {
   const [fetchingEditingPayment, setFetchingEditingPayment] = useState(false);
   const [breakdownEntry, setBreakdownEntry] = useState(null);
   const [sendingEmailIds, setSendingEmailIds] = useState(() => new Set());
+  const [sentEmailIds, setSentEmailIds] = useState(() => new Set());
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -2143,6 +2144,7 @@ const AddPaymentReceived = () => {
         voucherNumber: payment.voucherNumber || payment.voucherNo,
       });
 
+      setSentEmailIds((previous) => new Set(previous).add(row.id));
       toast.success(`Voucher sent to ${email}`);
     } catch (error) {
       toast.error(
@@ -3208,6 +3210,7 @@ const AddPaymentReceived = () => {
               buyerCompanies={allCompanies}
               onSendEmail={handleSendVoucherEmail}
               sendingEmailIds={sendingEmailIds}
+              sentEmailIds={sentEmailIds}
             />
           )}
 
