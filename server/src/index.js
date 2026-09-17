@@ -250,6 +250,10 @@ const emailVarStatus = (user, pass, label) => {
   return `${label}: ${userLen ? `✓ user(${userLen})` : "✗ user(0)"} / ${passLen ? `✓ pass(${passLen})` : "✗ pass(0)"}`;
 };
 
+const paymentEmailUser = process.env.PAYMENT_EMAIL || process.env.PAYMENTS_EMAIL;
+const paymentEmailPass = process.env.PAYMENT_PASS || process.env.PAYMENTS_PASS;
+const paymentEmailFrom = process.env.PAYMENT_FROM || process.env.PAYMENTS_FROM;
+
 const start = async () => {
   await connect();
   startNotificationCleanup(12);
@@ -266,7 +270,7 @@ const start = async () => {
       `[EMAIL] ${emailVarStatus(process.env.CLAIMS_EMAIL, process.env.CLAIMS_PASS, "Claims ")}`,
     );
     console.log(
-      `[EMAIL] ${emailVarStatus(process.env.PAYMENTS_EMAIL, process.env.PAYMENTS_PASS, "Payment")} ${process.env.PAYMENTS_FROM ? `| PAYMENTS_FROM=${process.env.PAYMENTS_FROM}` : ""}`,
+      `[EMAIL] ${emailVarStatus(paymentEmailUser, paymentEmailPass, "Payment")} ${paymentEmailFrom ? `| PAYMENT_FROM=${paymentEmailFrom}` : ""}`,
     );
   });
 };

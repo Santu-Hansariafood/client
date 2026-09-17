@@ -27,12 +27,17 @@ const getEmailServiceConfig = (overrides = {}) => {
   };
 };
 
-const verifySmtpConnection = async (transporter) => {
+const verifySmtpConnection = async (transporter, label = "SMTP") => {
   try {
     await transporter.verify();
     return true;
   } catch (verifyError) {
-    console.error("[SMTP] Connection verification failed:", verifyError.message);
+    console.error(`[${label}] Connection verification failed:`, {
+      code: verifyError.code,
+      responseCode: verifyError.responseCode,
+      command: verifyError.command,
+      message: verifyError.message,
+    });
     return false;
   }
 };
@@ -245,7 +250,7 @@ router.post("/send-payment-received", async (req, res) => {
       },
     });
 
-    const isVerified = await verifySmtpConnection(transporter);
+    const isVerified = await verifySmtpConnection(transporter, "PAYMENT SMTP");
     if (!isVerified) {
       return res.status(500).send("Payments email authentication failed. Please check credentials.");
     }
