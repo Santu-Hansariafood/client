@@ -196,7 +196,7 @@ const TallyLedgerBook = ({
           <span className="text-xs text-slate-600 truncate max-w-[130px]">
             {sellerCompany?.email || "-"}
           </span>
-          {!row.isOpening && hasEmailTarget && (
+          {!row.isOpening && row.isPaymentRow && hasEmailTarget && (
             <button
               onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
               disabled={isSending}

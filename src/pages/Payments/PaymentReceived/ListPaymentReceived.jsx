@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { pdf } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+import PaymentVoucherPDF from "./components/PaymentVoucherPDF";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 
 import {
@@ -21,7 +22,6 @@ const MisFilterPanel = lazy(() => import("./components/MisFilterPanel"));
 const MisVoucherLedger = lazy(() => import("./components/MisVoucherLedger"));
 const MisLorryLedger = lazy(() => import("./components/MisLorryLedger"));
 const MisPageHeader = lazy(() => import("./components/MisPageHeader"));
-const PaymentVoucherPDF = lazy(() => import("./components/PaymentVoucherPDF"));
 const AdminPageShell = lazy(
   () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
