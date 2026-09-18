@@ -57,7 +57,7 @@ export const useAIAgentCommands = ({
   );
 
   const SYSTEM_DICTIONARY = [
-    "sauda", "order", "lorry", "vehicle", "truck", "bill", "invoice", "challan",
+    "sauda", "order", "lorry", "vehicle", "truck", "bill", "invoice", "challan", "call", "phone", "employee", "consignee",
     "payment", "due", "outstanding", "commodity", "commodities", "buyer", "seller",
     "bid", "bids", "participate", "active", "pending", "accepted", "today", "sidebar",
     "menu", "modules", "weather", "account", "status", "loading", "unloading", "dispatch"
@@ -96,9 +96,19 @@ export const useAIAgentCommands = ({
     // Check cache first
     if (typoCacheRef.current[text]) return typoCacheRef.current[text];
     
+    const typoAliases = {
+      saller: "seller",
+      byuer: "buyer",
+      emploee: "employee",
+      employe: "employee",
+      cosignee: "consignee",
+      phne: "phone",
+      cal: "call",
+    };
     const words = text.split(/\s+/);
     const correctedWords = words.map(word => {
       if (word.length < 3 || /^\d+$/.test(word)) return word;
+      if (typoAliases[word.toLowerCase()]) return typoAliases[word.toLowerCase()];
       
       let bestMatch = word;
       let minDistance = 2;
@@ -243,7 +253,13 @@ export const useAIAgentCommands = ({
   });
 
   const processCommand = async (cmd) => {
-    const { trackInteraction, checkSafety, learningData, trainCustomIntent } = learningMethods;
+    const {
+      trackInteraction,
+      checkSafety,
+      learningData,
+      trainCustomIntent,
+      forgetCustomIntent,
+    } = learningMethods;
 
     // Safety Check for harmful content or profanity
     if (checkSafety(cmd)) {
@@ -259,6 +275,37 @@ export const useAIAgentCommands = ({
     const rawCmd = cmd.trim().toLowerCase();
     const cleanCmd = rectifyTypo(rawCmd); // Auto-rectify typos
     let response = null;
+
+    const rememberMatch = rawCmd.match(
+      /remember\s+(?:that\s+)?when\s+(?:i\s+)?(?:say|ask)\s+["']?(.+?)["']?\s*,?\s*(?:show|do|open|run)\s+(.+)/i,
+    );
+    const forgetMatch = rawCmd.match(
+      /forget\s+(?:the\s+)?(?:command|rule)?\s*["']?(.+?)["']?$/i,
+    );
+
+    if (rememberMatch) {
+      const trigger = rememberMatch[1].trim();
+      const action = rememberMatch[2].trim();
+      trainCustomIntent(trigger, action);
+      response = {
+        role: "assistant",
+        content: `I will remember this after reloads: when you say *${trigger}*, I will *${action}*.`,
+        suggestions: [trigger, "Show learned commands", "Train AI"],
+      };
+    } else if (forgetMatch && forgetCustomIntent) {
+      forgetCustomIntent(forgetMatch[1].trim());
+      response = {
+        role: "assistant",
+        content: `I removed the learned command *${forgetMatch[1].trim()}*.`,
+        suggestions: ["Train AI", "Show learned commands"],
+      };
+    }
+
+    if (response) {
+      setMessages((prev) => [...prev, response]);
+      trackInteraction(cmd, response.content);
+      return;
+    }
 
     // Check for custom intents first!
     if (learningData && learningData.customIntents) {
@@ -491,6 +538,30 @@ export const useAIAgentCommands = ({
     const downloadLorryMatch = cleanCmd.match(
       /(?:download lorry report|generate lorry report)\s*([a-z0-9\s]+)/i,
     );
+    const financeReportMatch = cleanCmd.match(
+      /(?:finance|sauda adjustment|adjustment)\s+(?:report|summary|status)/i,
+    );
+    const paymentReportMatch = cleanCmd.match(
+      /(?:payment|due|outstanding)\s+(?:(?:status\s+)?report|list)/i,
+    );
+    const appReportMatch = cleanCmd.match(
+      /(?:generate|show|display)\s+(?:the\s+)?(?:app|system|overall)\s+report/i,
+    );
+    const reminderMatch = cleanCmd.match(
+      /(?:check|show|create|generate)?\s*(?:sauda|order)?\s*(?:reminder|follow[- ]?up)\s*(?:for)?\s*(?:sauda|order)?\s*(\d+)/i,
+    );
+    const callMatch = cleanCmd.match(
+      /(?:call|phone|dial)\s+(buyer|seller|employee)\s+(.+)/i,
+    );
+    const emailTargetMatch = cleanCmd.match(
+      /\bto\s+(buyer|seller)\s+(.+)$/i,
+    );
+    const moreTopSellersMatch = cleanCmd.match(
+      /(?:show|give|get)\s+more\s+(?:top\s+)?sellers?\s+(?:for|of)\s+(?:consignee\s+)?(.+)/i,
+    );
+    const topSellersMatch = cleanCmd.match(
+      /(?:show|give|get)?\s*(?:top|best)\s+sellers?\s+(?:for|of)\s+(?:consignee\s+)?(.+)/i,
+    );
     const bidComponentMatch = cleanCmd.match(
       /(?:analyze|break down|components of)\s+([a-z0-9\s]+)\s+bid/i,
     );
@@ -524,6 +595,43 @@ export const useAIAgentCommands = ({
 
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await apiMethods.fetchCommodities();
+    } else if (emailTargetMatch && cleanCmd.includes("send")) {
+      const targetType = emailTargetMatch[1].toLowerCase();
+      const targetName = emailTargetMatch[2].trim();
+      const reportType = cleanCmd.includes("claim")
+        ? "Claim"
+        : cleanCmd.includes("sauda")
+          ? "Sauda"
+          : "Payment";
+      const requestedSauda = cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:#]?\s*(\d+)/i)?.[1];
+      response = await apiMethods.prepareEmailReport({
+        reportType,
+        targetType,
+        targetName,
+        saudaNo: requestedSauda,
+      });
+    } else if (callMatch) {
+      response = await apiMethods.fetchContactForCall(
+        callMatch[2].trim(),
+        callMatch[1],
+      );
+    } else if (moreTopSellersMatch) {
+      response = await apiMethods.fetchTopSellersByConsignee(
+        moreTopSellersMatch[1].trim(),
+        true,
+      );
+    } else if (topSellersMatch) {
+      response = await apiMethods.fetchTopSellersByConsignee(
+        topSellersMatch[1].trim(),
+      );
+    } else if (financeReportMatch) {
+      response = await apiMethods.fetchFinanceReport();
+    } else if (paymentReportMatch) {
+      response = await apiMethods.fetchPaymentStatusReport();
+    } else if (appReportMatch || cleanCmd === "generate report") {
+      response = await apiMethods.fetchAccountStatus();
+    } else if (reminderMatch) {
+      response = await apiMethods.fetchSaudaReminderReport(reminderMatch[1]);
     } else if (
       cleanCmd.includes("current sauda") ||
       cleanCmd.includes("last sauda")

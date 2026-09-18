@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { FaArrowRight, FaSpinner, FaCopy, FaCheck } from "react-icons/fa";
+import { FaArrowRight, FaSpinner, FaCopy, FaCheck, FaPhone, FaEnvelope } from "react-icons/fa";
 import React from "react";
 
 // eslint-disable-next-line react/display-name
@@ -11,6 +11,8 @@ const AIAgentMessages = React.memo(({
   scrollRef,
 }) => {
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [emailSendingIndex, setEmailSendingIndex] = useState(null);
+  const [emailSentIndex, setEmailSentIndex] = useState(null);
 
   const handleCopy = useCallback((text, index) => {
     navigator.clipboard.writeText(text);
@@ -40,6 +42,47 @@ const AIAgentMessages = React.memo(({
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {msg.content}
             </p>
+
+            {msg.call?.phone && (
+              <a
+                href={`tel:${msg.call.phone}`}
+                aria-label={`Call ${msg.call.name}`}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+              >
+                <FaPhone size={11} />
+                Call {msg.call.name}
+              </a>
+            )}
+
+            {msg.emailAction && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {emailSentIndex === idx ? (
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700">
+                    <FaCheck size={11} /> Email sent
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={emailSendingIndex === idx}
+                    onClick={async () => {
+                      setEmailSendingIndex(idx);
+                      try {
+                        await msg.emailAction.onConfirm();
+                        setEmailSentIndex(idx);
+                      } catch (error) {
+                        console.error("AI email send failed:", error);
+                      } finally {
+                        setEmailSendingIndex(null);
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <FaEnvelope size={11} />
+                    {emailSendingIndex === idx ? "Sending..." : "Confirm & Send PDF"}
+                  </button>
+                )}
+              </div>
+            )}
 
             {msg.role === "user" ? (
               <div

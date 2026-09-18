@@ -10,10 +10,7 @@ const debounce = (func, wait) => {
 
 export const useAIAgentLearning = () => {
   const [learningData, setLearningData] = useState(() => {
-    const saved = localStorage.getItem("saria_ai_learning_v3");
-    return saved
-      ? JSON.parse(saved)
-      : {
+    const defaultLearningData = {
           recentQueries: [],
           frequentTopics: {},
           intentPatterns: {},
@@ -22,6 +19,13 @@ export const useAIAgentLearning = () => {
           userFeedback: [],
           customIntents: [],
         };
+    try {
+      const saved = localStorage.getItem("saria_ai_learning_v3");
+      return saved ? { ...defaultLearningData, ...JSON.parse(saved) } : defaultLearningData;
+    } catch {
+      localStorage.removeItem("saria_ai_learning_v3");
+      return defaultLearningData;
+    }
   });
 
   const latestLearningDataRef = useRef(learningData);
@@ -196,14 +200,16 @@ export const useAIAgentLearning = () => {
 
   const trainCustomIntent = useCallback((query, expectedAction) => {
     setLearningData((prev) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const newIntent = {
+        query: normalizedQuery,
+        expectedAction: expectedAction.trim(),
+        timestamp: new Date().toISOString(),
+      };
       const newCustomIntents = [
-        ...prev.customIntents,
-        {
-          query: query.toLowerCase(),
-          expectedAction,
-          timestamp: new Date().toISOString(),
-        }
-      ];
+        newIntent,
+        ...prev.customIntents.filter((intent) => intent.query !== normalizedQuery),
+      ].slice(0, 50);
       
       const newState = {
         ...prev,
@@ -212,6 +218,16 @@ export const useAIAgentLearning = () => {
 
       return newState;
     });
+  }, []);
+
+  const forgetCustomIntent = useCallback((query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    setLearningData((prev) => ({
+      ...prev,
+      customIntents: prev.customIntents.filter(
+        (intent) => intent.query !== normalizedQuery,
+      ),
+    }));
   }, []);
 
   const clearLearningData = useCallback(() => {
@@ -413,6 +429,7 @@ export const useAIAgentLearning = () => {
     checkSafety,
     recordFeedback,
     trainCustomIntent,
+    forgetCustomIntent,
     clearLearningData,
     extractEntities
   };

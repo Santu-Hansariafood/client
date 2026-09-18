@@ -1,6 +1,9 @@
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 
 import { useRef } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
 
 export const useAIAgentAPI = (
   setIsLoadingData,
@@ -9,6 +12,7 @@ export const useAIAgentAPI = (
   getDynamicSuggestions,
 ) => {
   const responseCacheRef = useRef({});
+  const topSellerPageRef = useRef({});
   const CACHE_TTL = 5 * 60 * 1000;
 
   const formatTons = (value, digits = 2) => {
@@ -106,6 +110,390 @@ export const useAIAgentAPI = (
         role: "assistant",
         content: "Error fetching account status.",
       };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchFinanceReport = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Generating the Finance and Sauda adjustment report...");
+    try {
+      const response = await api.get("/financers/report", {
+        params: { page: 1, limit: 100 },
+        signal: getApiSignal(),
+      });
+      const data = response.data || {};
+      const orders = data.data || [];
+      const adjustments = data.adjustments || [];
+      const totalQuantity = orders.reduce(
+        (sum, order) => sum + Number(order.quantity || 0),
+        0,
+      );
+      const totalAdjusted = adjustments.reduce(
+        (sum, adjustment) => sum + Number(adjustment.adjustmentQuantity || 0),
+        0,
+      );
+      const totalPending = Math.max(0, totalQuantity - totalAdjusted);
+
+      let content = `*Finance and Sauda Adjustment Report*\n\n`;
+      content += `• *Saudas shown:* ${orders.length}\n`;
+      content += `• *Total Sauda quantity:* ${formatTons(totalQuantity)} Tons\n`;
+      content += `• *Adjusted quantity:* ${formatTons(totalAdjusted)} Tons\n`;
+      content += `• *Estimated pending quantity:* ${formatTons(totalPending)} Tons\n`;
+      content += `• *Saved adjustments:* ${adjustments.length}\n\n`;
+
+      if (orders.length > 0) {
+        content += `*Sauda-wise details:*\n`;
+        orders.slice(0, 25).forEach((order, index) => {
+          content += `${index + 1}. *Sauda ${order.saudaNo || "N/A"}* | `;
+          content += `${order.buyerCompany || "N/A"} → ${order.supplierCompany || "N/A"} | `;
+          content += `${formatTons(order.quantity)} Tons | ${order.consignee || "N/A"}\n`;
+        });
+        if (orders.length > 25) {
+          content += `\nShowing first 25 of ${orders.length} records.\n`;
+        }
+      } else {
+        content += "No Finance Report records were found.";
+      }
+
+      return {
+        role: "assistant",
+        content,
+        suggestions: ["Payment status report", "Due list", "Total sauda today"],
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return {
+        role: "assistant",
+        content: "I could not generate the Finance and Sauda adjustment report.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchPaymentStatusReport = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Checking payment status and due amounts...");
+    try {
+      const response = await api.get("/loading-entries", {
+        params: { paymentStatus: "pending", limit: 100 },
+        signal: getApiSignal(),
+      });
+      const entries = response.data?.data || response.data || [];
+      const totalDue = entries.reduce(
+        (sum, entry) =>
+          sum + Number(entry.dueAmount ?? entry.pendingAmount ?? entry.balance ?? 0),
+        0,
+      );
+
+      let content = `*Payment Status and Due Report*\n\n`;
+      content += `• *Due records:* ${entries.length}\n`;
+      content += `• *Total due amount:* ₹${totalDue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}\n\n`;
+
+      if (entries.length > 0) {
+        content += `*Due list:*\n`;
+        entries.slice(0, 25).forEach((entry, index) => {
+          content += `${index + 1}. *Sauda ${entry.saudaNo || "N/A"}* | `;
+          content += `Bill ${entry.billNumber || "N/A"} | `;
+          content += `${entry.supplierCompany || "N/A"} | `;
+          content += `Due: ₹${Number(entry.dueAmount ?? entry.pendingAmount ?? entry.balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}\n`;
+        });
+      } else {
+        content += "No pending payment records were found.";
+      }
+
+      return {
+        role: "assistant",
+        content,
+        suggestions: ["Finance report", "Payment Sauda 1", "Due list for seller"],
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return {
+        role: "assistant",
+        content: "I could not generate the payment status report.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchTopSellersByConsignee = async (consigneeName, loadMore = false) => {
+    const consignee = String(consigneeName || "").trim();
+    const key = consignee.toLowerCase();
+    const page = loadMore ? (topSellerPageRef.current[key] || 1) + 1 : 1;
+
+    setIsLoadingData(true);
+    setThinkingPath(`${loadMore ? "Loading more" : "Finding top"} sellers for ${consignee}...`);
+    try {
+      const response = await api.get("/bids/consignee-sellers", {
+        params: { consignee, page, limit: 10 },
+        signal: getApiSignal(),
+      });
+      const sellers = response.data?.data || [];
+      topSellerPageRef.current[key] = page;
+
+      let content = `*Top Sellers for Consignee: ${consignee}*\n`;
+      content += `*Showing sellers ${((page - 1) * 10) + 1}-${(page - 1) * 10 + sellers.length}*\n\n`;
+
+      if (sellers.length === 0) {
+        content += loadMore
+          ? "No more sellers are available for this consignee."
+          : "No sellers found for this consignee.";
+      } else {
+        sellers.forEach((seller, index) => {
+          const companies = [
+            ...(seller.saudaCompanies || []),
+            ...(seller.sellerCompanies || []).filter(
+              (company) => !(seller.saudaCompanies || []).includes(company),
+            ),
+          ].filter(Boolean);
+          const phone = (seller.phoneNumbers || [])
+            .map((item) => item?.value)
+            .filter(Boolean)
+            .join(", ") || seller.mobile || "N/A";
+          const rank = (page - 1) * 10 + index + 1;
+          content += `${rank}. *${seller.sellerName || "Unknown"}*\n`;
+          content += `   • *Company:* ${companies.join(", ") || "N/A"}\n`;
+          content += `   • *Phone:* ${phone}\n`;
+          content += `   • *Sauda Quantity:* ${formatTons(seller.totalSaudaQuantity)} Tons\n`;
+          content += `   • *Last Sauda:* ${seller.lastSaudaAt ? new Date(seller.lastSaudaAt).toLocaleString("en-IN") : "N/A"}\n\n`;
+        });
+      }
+
+      const hasMore = Boolean(response.data?.hasMore);
+      if (hasMore) {
+        content += `Ask: *Show more top sellers for consignee ${consignee}*`;
+      } else if (sellers.length > 0) {
+        content += "This is the complete top seller list for this consignee.";
+      }
+
+      return {
+        role: "assistant",
+        content,
+        suggestions: hasMore
+          ? [`Show more top sellers for consignee ${consignee}`]
+          : ["Finance report", "Due list"],
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return {
+        role: "assistant",
+        content: `I could not load top sellers for consignee *${consignee}*.`,
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchContactForCall = async (name, type) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Finding ${type} contact ${name}...`);
+    try {
+      const normalizedType = type.toLowerCase();
+      let contact = null;
+
+      if (normalizedType === "employee") {
+        const response = await api.get("/employees", {
+          params: { page: 1, limit: 100 },
+          signal: getApiSignal(),
+        });
+        const employees = response.data?.data || response.data || [];
+        contact = employees.find((item) =>
+          String(item.name || "").toLowerCase().includes(name.toLowerCase()),
+        );
+      } else {
+        const endpoint = normalizedType === "buyer" ? "/buyers" : "/sellers";
+        const response = await api.get(endpoint, {
+          params: { search: name, limit: 20 },
+          signal: getApiSignal(),
+        });
+        const contacts = response.data?.data || response.data || [];
+        contact = contacts[0];
+      }
+
+      const phone = normalizedType === "buyer"
+        ? Array.isArray(contact?.mobile) ? contact.mobile[0] : contact?.mobile
+        : normalizedType === "seller"
+          ? contact?.phoneNumbers?.[0]?.value || contact?.mobile
+          : contact?.mobile;
+      const contactName = contact?.name || contact?.sellerName || name;
+
+      if (!contact || !phone) {
+        return {
+          role: "assistant",
+          content: `I could not find a phone number for ${type} *${name}*.`,
+        };
+      }
+
+      return {
+        role: "assistant",
+        content:
+          `*${type} Contact Found*\n\n` +
+          `• *Name:* ${contactName}\n` +
+          `• *Phone:* ${phone}\n\n` +
+          "Click the button below to call this contact.",
+        call: {
+          name: contactName,
+          type,
+          phone: String(phone),
+        },
+        suggestions: [`${type} ${contactName} details`],
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return {
+        role: "assistant",
+        content: `I could not find ${type} *${name}*.`,
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const resolveEmailContact = async (name, type) => {
+    const endpoint = type === "buyer" ? "/buyers" : "/sellers";
+    const response = await api.get(endpoint, {
+      params: { search: name, limit: 20 },
+      signal: getApiSignal(),
+    });
+    const contact = (response.data?.data || response.data || [])[0];
+    const email = type === "buyer"
+      ? Array.isArray(contact?.email) ? contact.email[0] : contact?.email
+      : contact?.emails?.[0]?.value || contact?.email;
+    return { contact, email: String(email || "").trim() };
+  };
+
+  const createPdfBase64 = async (doc) =>
+    doc.output("datauristring").split(",")[1];
+
+  const prepareEmailReport = async ({ reportType, targetType, targetName, saudaNo }) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Preparing ${reportType} email for ${targetName}...`);
+    try {
+      const { contact, email } = await resolveEmailContact(targetName, targetType);
+      if (!contact || !email) {
+        return {
+          role: "assistant",
+          content: `I could not find a valid email for ${targetType} *${targetName}*.`,
+        };
+      }
+
+      const displayName = contact.name || contact.sellerName || targetName;
+      const accountName = reportType === "Sauda"
+        ? "Sauda email"
+        : reportType === "Claim"
+          ? "Claims email"
+          : "Payment email";
+
+      const send = async () => {
+        if (reportType === "Sauda") {
+          if (!saudaNo) throw new Error("Sauda number is required for a Sauda PDF");
+          const response = await api.get(`/self-order?saudaNo=${encodeURIComponent(saudaNo)}`, {
+            signal: getApiSignal(),
+          });
+          const order = (response.data?.data || response.data || [])[0];
+          if (!order) throw new Error(`Sauda ${saudaNo} was not found`);
+          await sendSaudaOrderEmails({
+            ...order,
+            sendPOToBuyer: targetType === "buyer" ? "yes" : "",
+            sendPOToSupplier: targetType === "seller" ? "yes" : "",
+            buyerEmails: targetType === "buyer" ? [email] : [],
+            sellerEmails: targetType === "seller" ? [email] : [],
+          });
+          return;
+        }
+
+        if (reportType === "Claim") {
+          if (!saudaNo) throw new Error("Sauda number is required for a claim report");
+          const response = await api.get("/loading-entries", {
+            params: { saudaNo, limit: 100 },
+            signal: getApiSignal(),
+          });
+          const entries = response.data?.data || response.data || [];
+          const doc = new jsPDF();
+          doc.setFontSize(16);
+          doc.text("PAYMENT RECEIPT CLAIM REPORT", 14, 18);
+          doc.setFontSize(10);
+          doc.text(`Sauda No: ${saudaNo}`, 14, 27);
+          autoTable(doc, {
+            startY: 34,
+            head: [["Bill No", "Lorry No", "Seller", "Claim Amount", "Remarks"]],
+            body: entries.map((entry) => [
+              entry.billNumber || "N/A",
+              entry.lorryNumber || "N/A",
+              entry.supplierCompany || "N/A",
+              `Rs. ${Number(entry.claim || entry.claimAmount || 0).toLocaleString("en-IN")}`,
+              entry.claimRemarks || entry.remarks || "N/A",
+            ]),
+          });
+          const pdfBase64 = await createPdfBase64(doc);
+          await api.post("/email/send-receiving-report", {
+            pdf: pdfBase64,
+            sellerEmail: email,
+            saudaNo,
+            claimParameters: entries.flatMap((entry) => entry.qualityClaims || []),
+          });
+          return;
+        }
+
+        const response = await api.get("/payment-received", {
+          params: { search: targetName, limit: 100 },
+          signal: getApiSignal(),
+        });
+        const payments = response.data?.data || response.data || [];
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("PAYMENT LEDGER REPORT", 14, 18);
+        doc.setFontSize(10);
+        doc.text(`Recipient: ${displayName}`, 14, 27);
+        autoTable(doc, {
+          startY: 34,
+          head: [["Date", "Voucher", "Buyer", "Seller", "Amount", "Mode"]],
+          body: payments.map((payment) => [
+            payment.date ? new Date(payment.date).toLocaleDateString("en-GB") : "N/A",
+            payment.voucherNumber || payment.voucherNo || "N/A",
+            payment.buyerCompany || "N/A",
+            payment.supplierCompany || "N/A",
+            `Rs. ${Number(payment.amount || 0).toLocaleString("en-IN")}`,
+            payment.paymentMode || "N/A",
+          ]),
+        });
+        const pdfBase64 = await createPdfBase64(doc);
+        await api.post("/email/send-payment-received", {
+          pdf: pdfBase64,
+          recipientEmail: email,
+          reportType: "MIS",
+          buyerCompany: targetType === "buyer" ? displayName : "",
+          supplierCompany: targetType === "seller" ? displayName : "",
+        });
+      };
+
+      return {
+        role: "assistant",
+        content:
+          `*Email ready for confirmation*\n\n` +
+          `• *Report:* ${reportType}\n` +
+          `• *Recipient:* ${displayName}\n` +
+          `• *Email:* ${email}\n` +
+          `• *Sending account:* ${accountName}\n\n` +
+          "Review the recipient and confirm to send the PDF attachment.",
+        emailAction: {
+          recipient: email,
+          reportType,
+          onConfirm: send,
+        },
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return { role: "assistant", content: error.message || "Unable to prepare the email report." };
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -647,6 +1035,88 @@ export const useAIAgentAPI = (
         content:
           "Error in Saria AIsauda fetch. Please check if Sauda No is correct.",
       };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchSaudaReminderReport = async (saudaNo) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Preparing a professional reminder report for Sauda ${saudaNo}...`);
+    try {
+      const response = await api.get(`/self-order/details/${saudaNo}`, {
+        signal: getApiSignal(),
+      });
+      const { order: sauda, entries: loadings = [], payments = [] } = response.data || {};
+      if (!sauda) {
+        return { role: "assistant", content: `I could not find Sauda *${saudaNo}* for the reminder report.` };
+      }
+
+      const contractedQuantity = Number(sauda.quantity || 0);
+      const loadedQuantity = loadings.reduce(
+        (sum, entry) => sum + Number(entry.unloadingWeight || entry.loadingWeight || 0),
+        0,
+      );
+      const paidAmount = payments.reduce(
+        (sum, payment) => sum + (payment.mappings || [])
+          .filter((mapping) => String(mapping.saudaNo) === String(saudaNo))
+          .reduce((total, mapping) => total + Number(mapping.allocatedAmount || 0), 0),
+        0,
+      );
+      const totalClaims = loadings.reduce(
+        (sum, entry) => sum + (entry.qualityClaims || []).reduce(
+          (total, claim) => total + Number(claim.claimAmount || 0),
+          0,
+        ),
+        0,
+      );
+      const pendingQuantity = Math.max(0, contractedQuantity - loadedQuantity);
+      const estimatedBalance = Math.max(
+        0,
+        loadedQuantity * Number(sauda.rate || 0) - paidAmount - totalClaims,
+      );
+
+      let content = `*SAUDA REMINDER & FOLLOW-UP REPORT*\n━━━━━━━━━━━━━━━━━━━━\n`;
+      content += `*Sauda No.:* ${saudaNo}\n*Generated:* ${new Date().toLocaleString("en-IN")}\n\n`;
+      content += `*1. CONTRACT DETAILS*\n`;
+      content += `• Buyer Company: ${sauda.buyerCompany || sauda.buyer || "N/A"}\n`;
+      content += `• Seller Company: ${sauda.supplierCompany || "N/A"}\n`;
+      content += `• Consignee: ${sauda.consignee || "N/A"}\n`;
+      content += `• Commodity: ${sauda.commodity || "N/A"}\n`;
+      content += `• Contract Quantity: ${formatTons(contractedQuantity)} Tons\n`;
+      content += `• Rate: ₹${Number(sauda.rate || 0).toLocaleString("en-IN")}\n`;
+      content += `• Sauda Date: ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString("en-GB") : "N/A"}\n`;
+      content += `• Delivery Date: ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString("en-GB") : "N/A"}\n\n`;
+      content += `*2. LOADING & DELIVERY STATUS*\n`;
+      content += `• Loading Entries: ${loadings.length}\n• Loaded Quantity: ${formatTons(loadedQuantity)} Tons\n• Pending Quantity: ${formatTons(pendingQuantity)} Tons\n`;
+      loadings.slice(0, 10).forEach((entry, index) => {
+        content += `  ${index + 1}. Lorry ${entry.lorryNumber || "N/A"} | Bill ${entry.billNumber || "N/A"} | ${formatTons(entry.unloadingWeight || entry.loadingWeight)} Tons\n`;
+      });
+      content += "\n";
+      content += `*3. PAYMENT & CLAIM STATUS*\n`;
+      content += `• Payment Records: ${payments.length}\n• Paid/Allocated Amount: ₹${paidAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}\n• Quality Claims: ₹${totalClaims.toLocaleString("en-IN", { maximumFractionDigits: 2 })}\n• Estimated Outstanding: ₹${estimatedBalance.toLocaleString("en-IN", { maximumFractionDigits: 2 })}\n\n`;
+      payments.slice(0, 10).forEach((payment, index) => {
+        const amount = (payment.mappings || [])
+          .filter((mapping) => String(mapping.saudaNo) === String(saudaNo))
+          .reduce((total, mapping) => total + Number(mapping.allocatedAmount || 0), 0);
+        content += `  ${index + 1}. ${payment.date ? new Date(payment.date).toLocaleDateString("en-GB") : "N/A"} | ${payment.paymentMode || "N/A"} | ₹${amount.toLocaleString("en-IN")}\n`;
+      });
+      content += `\n*4. FOLLOW-UP ACTIONS*\n`;
+      if (pendingQuantity > 0) content += `• Follow up for ${formatTons(pendingQuantity)} Tons pending delivery.\n`;
+      if (estimatedBalance > 0) content += `• Follow up for outstanding payment of approximately ₹${estimatedBalance.toLocaleString("en-IN")}.\n`;
+      if (totalClaims > 0) content += `• Review and close quality claims worth ₹${totalClaims.toLocaleString("en-IN")}.\n`;
+      if (pendingQuantity <= 0 && estimatedBalance <= 0 && totalClaims <= 0) content += "• No immediate follow-up is pending.\n";
+      content += "\nPlease coordinate with the concerned buyer, seller, and logistics team.";
+
+      return {
+        role: "assistant",
+        content,
+        suggestions: [`Sauda ${saudaNo} details`, "Payment status report", "Due list"],
+      };
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return { role: "assistant", content: `I could not prepare the reminder report for Sauda *${saudaNo}*.` };
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -1696,6 +2166,11 @@ export const useAIAgentAPI = (
   return {
     fetchCommodities,
     fetchAccountStatus,
+    fetchFinanceReport,
+    fetchPaymentStatusReport,
+    fetchTopSellersByConsignee,
+    fetchContactForCall,
+    prepareEmailReport,
     fetchWeather,
     fetchFullPartnerDetails,
     fetchPendingSaudaByEntity,
@@ -1703,6 +2178,7 @@ export const useAIAgentAPI = (
     fetchSaudasByCompanyAndConsignee,
     fetchSellerSaudaStatus,
     fetchSaudaDetails,
+    fetchSaudaReminderReport,
     fetchDetailsByDate,
     fetchLastSauda,
     fetchActiveBids,
