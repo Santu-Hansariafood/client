@@ -1,4 +1,4 @@
-import { lazy, useCallback, useEffect, useState } from "react";
+import { lazy, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { FaUsers, FaUserCheck, FaHistory, FaEye, FaTimes } from "react-icons/fa";
 import api from "../../utils/apiClient/apiClient";
@@ -34,6 +34,7 @@ const AdminAuditReports = () => {
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const requestSequence = useRef(0);
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -60,6 +61,7 @@ const AdminAuditReports = () => {
   }, []);
 
   const fetchAuditData = useCallback(async () => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     try {
       const response = await api.get("/audit-reports/buyer-seller-activity", {
@@ -72,14 +74,20 @@ const AdminAuditReports = () => {
         },
       });
 
+      if (requestId !== requestSequence.current) return;
+
       setRecords(response.data?.data || []);
       setTotal(response.data?.total || 0);
+      setSelectedRecord(null);
     } catch (error) {
+      if (requestId !== requestSequence.current) return;
       toast.error(
         error?.response?.data?.message || "Failed to load audit report",
       );
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) {
+        setLoading(false);
+      }
     }
   }, [limit, page, search, status]);
 
@@ -101,6 +109,7 @@ const AdminAuditReports = () => {
     "Last Login",
     "Last Active",
     "Login IP",
+    "Login Device",
     "Online",
     "Actions",
   ];
@@ -125,6 +134,9 @@ const AdminAuditReports = () => {
     formatDate(record.lastActiveAt),
     <span key="ip" className="font-mono text-xs">
       {record.lastLoginIp}
+    </span>,
+    <span key="device" className="text-xs font-medium text-slate-700">
+      {record.lastLoginDevice}
     </span>,
     <span
       key="online"

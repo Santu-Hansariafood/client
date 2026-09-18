@@ -26,6 +26,36 @@ const getClientIp = (req) => {
   return forwardedIp || req.ip || req.socket?.remoteAddress || null;
 };
 
+const getClientDevice = (req) => {
+  const userAgent = String(req.headers["user-agent"] || "").toLowerCase();
+  const browser = userAgent.includes("edg/")
+    ? "Edge"
+    : userAgent.includes("opr/")
+      ? "Opera"
+      : userAgent.includes("firefox/")
+        ? "Firefox"
+        : userAgent.includes("chrome/")
+          ? "Chrome"
+          : userAgent.includes("safari/")
+            ? "Safari"
+            : "Unknown browser";
+  const device = userAgent.includes("iphone")
+    ? "iPhone"
+    : userAgent.includes("ipad")
+      ? "iPad"
+      : userAgent.includes("android")
+        ? "Android device"
+        : userAgent.includes("windows")
+          ? "Windows"
+          : userAgent.includes("mac os")
+            ? "Mac"
+            : userAgent.includes("linux")
+              ? "Linux"
+              : "Unknown device";
+
+  return `${browser} on ${device}`;
+};
+
 const setAuthCookies = (res, accessToken, refreshToken) => {
   const secure = process.env.NODE_ENV === "production";
   const baseOptions = {
@@ -720,6 +750,7 @@ router.post("/buyers/login", async (req, res) => {
       lastActiveAt: new Date(),
       lastLoginAt: new Date(),
       lastLoginIp: getClientIp(req),
+      lastLoginDevice: getClientDevice(req),
       isLoggedIn: true,
       $inc: { loginCount: 1 },
     });
@@ -821,6 +852,7 @@ router.post("/sellers/login", async (req, res) => {
       lastActiveAt: new Date(),
       lastLoginAt: new Date(),
       lastLoginIp: getClientIp(req),
+      lastLoginDevice: getClientDevice(req),
       isLoggedIn: true,
       $inc: { loginCount: 1 },
     });

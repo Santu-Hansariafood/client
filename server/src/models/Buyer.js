@@ -34,6 +34,7 @@ const buyerSchema = new mongoose.Schema(
     lastLoginAt: { type: Date, default: null },
     lastActiveAt: { type: Date, default: null },
     lastLoginIp: { type: String, default: null },
+    lastLoginDevice: { type: String, default: null },
     isLoggedIn: { type: Boolean, default: false },
     otp: { type: String },
     otpExpires: { type: Date },

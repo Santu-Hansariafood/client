@@ -45,7 +45,7 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
         ...statusFilter,
       })
         .select(
-          "name mobile email companyIds status loginCount lastLoginAt lastActiveAt lastLoginIp isLoggedIn createdAt",
+          "name mobile email companyIds status loginCount lastLoginAt lastActiveAt lastLoginIp lastLoginDevice isLoggedIn createdAt",
         )
         .sort({ lastActiveAt: -1, createdAt: -1 })
         .lean(),
@@ -54,7 +54,7 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
         ...statusFilter,
       })
         .select(
-          "sellerName phoneNumbers emails companies status loginCount lastLoginAt lastActiveAt lastLoginIp isLoggedIn createdAt",
+          "sellerName phoneNumbers emails companies status loginCount lastLoginAt lastActiveAt lastLoginIp lastLoginDevice isLoggedIn createdAt",
         )
         .sort({ lastActiveAt: -1, createdAt: -1 })
         .lean(),
@@ -79,6 +79,7 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
       lastLoginAt: buyer.lastLoginAt || null,
       lastActiveAt: buyer.lastActiveAt || null,
       lastLoginIp: buyer.lastLoginIp || "N/A",
+      lastLoginDevice: buyer.lastLoginDevice || "N/A",
       isLoggedIn: !!buyer.isLoggedIn,
       createdAt: buyer.createdAt || null,
     }));
@@ -100,6 +101,7 @@ router.get("/buyer-seller-activity", authJwt, adminOnly, async (req, res) => {
       lastLoginAt: seller.lastLoginAt || null,
       lastActiveAt: seller.lastActiveAt || null,
       lastLoginIp: seller.lastLoginIp || "N/A",
+      lastLoginDevice: seller.lastLoginDevice || "N/A",
       isLoggedIn: !!seller.isLoggedIn,
       createdAt: seller.createdAt || null,
     }));
