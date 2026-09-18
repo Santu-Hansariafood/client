@@ -26,6 +26,36 @@ const TallyLedgerBook = ({
 
   const normalizeValue = (value) => String(value || "").trim().toLowerCase();
 
+  const getCompanyName = (company) =>
+    company?.companyName || company?.name || "";
+
+  const getEmailValue = (value) => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => (typeof item === "string" ? item : item?.value || item?.email))
+        .filter(Boolean)
+        .join(", ");
+    }
+    return typeof value === "string" ? value.trim() : "";
+  };
+
+  const resolveRecipientEmail = (row, sellerCompany) => {
+    const raw = row.raw || {};
+    const loadingEntry = raw.mappings?.[0]?.loadingEntryId || {};
+    const emailCandidates = [
+      sellerCompany?.email,
+      sellerCompany?.companyEmail,
+      raw.supplierEmail,
+      raw.sellerEmail,
+      raw.supplierCompany?.email,
+      raw.sellerCompany?.email,
+      loadingEntry.supplierEmail,
+      loadingEntry.sellerEmail,
+    ];
+
+    return emailCandidates.map(getEmailValue).find(Boolean) || "";
+  };
+
   const resolveVoucherNumber = (row) =>
     row.raw?.voucherNumber || row.raw?.voucherNo || row.voucherNo || row.id || "-";
 
@@ -170,14 +200,14 @@ const TallyLedgerBook = ({
         row,
         buyerCompany,
         sellerCompany,
-        recipientEmail: sellerCompany?.email?.trim() || "",
+        recipientEmail: resolveRecipientEmail(row, sellerCompany),
         voucherNumber: resolveVoucherNumber(row),
       });
     }
   };
 
   const renderActionCells = (row, buyerCompany, sellerCompany) => {
-    const recipientEmail = sellerCompany?.email?.trim() || "";
+    const recipientEmail = resolveRecipientEmail(row, sellerCompany);
     const hasEmailTarget = Boolean(recipientEmail && onSendEmail);
     const isVoucherRow = row.isPaymentRow || row.raw?.uiType !== "entry";
     const isSending = sendingEmailIds.has(row.id);
@@ -199,7 +229,7 @@ const TallyLedgerBook = ({
       <td className="px-3 py-2">
         <div className="flex flex-col items-center justify-center gap-1.5">
           <span className="text-xs text-slate-600 truncate max-w-[160px]">
-            {sellerCompany?.email || "-"}
+            {recipientEmail || "-"}
           </span>
           <div className="flex items-center justify-center min-h-[28px]">
             {!row.isOpening && isVoucherRow && hasEmailTarget && (
@@ -327,7 +357,7 @@ const TallyLedgerBook = ({
             );
             const sellerCompany = sellerCompanies.find(
               (c) =>
-                normalizeValue(c.companyName) ===
+                normalizeValue(getCompanyName(c)) ===
                 normalizeValue(row.supplierCompany),
             );
 

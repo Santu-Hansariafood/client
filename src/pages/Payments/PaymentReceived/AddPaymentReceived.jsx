@@ -2138,7 +2138,7 @@ const AddPaymentReceived = () => {
         pdf: pdfBase64,
         recipientEmail: email,
         reportType: "IndividualVoucher",
-        supplierCompany: sellerCompany.companyName || row.supplierCompany,
+        supplierCompany: sellerCompany?.companyName || row.supplierCompany,
         buyerCompany: row.buyerCompany || payment.buyerCompany,
         individualPaymentId: payment._id,
         voucherNumber: payment.voucherNumber || payment.voucherNo,
