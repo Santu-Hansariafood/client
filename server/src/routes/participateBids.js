@@ -5,14 +5,14 @@ import Notification from "../models/Notification.js";
 import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import { invalidate } from "../middleware/cache.js";
-import { adminOnly } from "../middleware/roleMiddleware.js";
+import { employeeOrAdmin } from "../middleware/roleMiddleware.js";
 
 const router = Router();
 
 const escapeRegex = (value) =>
   String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-router.get("/consignee-sellers", adminOnly, async (req, res) => {
+router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
   try {
     const consignee = String(req.query.consignee || "").trim();
     if (!consignee) {

@@ -10,7 +10,7 @@ import SelfOrder from "../models/SelfOrder.js";
 import BidLocation from "../models/BidLocation.js";
 import { invalidate } from "../middleware/cache.js";
 import authJwt from "../middleware/authJwt.js";
-import { adminOnly } from "../middleware/roleMiddleware.js";
+import { employeeOrAdmin } from "../middleware/roleMiddleware.js";
 import { trackEmployeeWork } from "../utils/workTracker.js";
 
 const router = Router();
@@ -32,7 +32,7 @@ const hideBidsForSellerGroups = (bids, sellerGroups) => {
   );
 };
 
-router.get("/consignee-sellers", adminOnly, async (req, res) => {
+router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
   try {
     const consignee = String(req.query.consignee || "").trim();
     if (!consignee) {

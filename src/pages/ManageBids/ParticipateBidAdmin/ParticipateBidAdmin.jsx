@@ -402,7 +402,7 @@ const ParticipateBidAdmin = () => {
       >
         {bid.group}
       </span>,
-      userRole === "Admin" ? (
+      ["Admin", "Employee"].includes(userRole) ? (
         <button
           key={`consignee-${bid.bidId}`}
           type="button"

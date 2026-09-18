@@ -233,7 +233,13 @@ const BidList = () => {
     new Date(dateString).toLocaleDateString("en-GB");
 
   const openConsigneeSellers = async (consignee) => {
-    if (userRole !== "Admin" || !consignee || consignee === "N/A") return;
+    if (
+      !["Admin", "Employee"].includes(userRole) ||
+      !consignee ||
+      consignee === "N/A"
+    ) {
+      return;
+    }
 
     setSelectedConsignee(consignee);
     setConsigneeSellers([]);
@@ -445,7 +451,7 @@ const BidList = () => {
     index + 1,
     bid.group,
     bid.company || "N/A",
-    userRole === "Admin" ? (
+    ["Admin", "Employee"].includes(userRole) ? (
       <button
         type="button"
         className="font-semibold text-left text-emerald-700 underline decoration-dotted underline-offset-4 hover:text-emerald-900"
