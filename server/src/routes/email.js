@@ -194,12 +194,15 @@ router.post("/send-payment-received", async (req, res) => {
   const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId, voucherNumber } = req.body;
   let paymentRecipientEmail = typeof recipientEmail === "string" ? recipientEmail.trim() : "";
 
-  let senderAuthEmail = "";
-  let senderAuthPassword = "";
   const configuredPaymentEmail = process.env.PAYMENTS_EMAIL || process.env.PAYMENT_EMAIL;
   const configuredPaymentPassword = process.env.PAYMENTS_PASS || process.env.PAYMENT_PASS;
-  senderAuthEmail = String(configuredPaymentEmail || "").trim();
-  senderAuthPassword = String(configuredPaymentPassword || "").trim();
+  let senderAuthEmail = String(configuredPaymentEmail || "").trim();
+  let senderAuthPassword = String(configuredPaymentPassword || "").trim();
+
+  if (!senderAuthEmail || !senderAuthPassword) {
+    senderAuthEmail = String(process.env.EMAIL_USER || "").trim();
+    senderAuthPassword = String(process.env.EMAIL_PASS || "").trim();
+  }
 
   const paymentSenderEmail = (
     process.env.PAYMENTS_FROM || process.env.PAYMENT_FROM || senderAuthEmail
@@ -223,35 +226,58 @@ router.post("/send-payment-received", async (req, res) => {
   }
 
   if (!senderAuthEmail || !senderAuthPassword) {
-    console.error("[EMAIL] Missing PAYMENTS_EMAIL/PAYMENTS_PASS payment mailbox credentials");
+    console.error("[EMAIL] Missing payment mailbox credentials. Configure PAYMENTS_EMAIL + PAYMENTS_PASS (or EMAIL_USER + EMAIL_PASS as fallback) in .env");
     return res.status(500).send("Payment mailbox is not configured. Please contact admin.");
   }
 
   try {
-    const paymentServiceConfig = process.env.PAYMENTS_EMAIL_SERVICE
-      ? { service: process.env.PAYMENTS_EMAIL_SERVICE }
-      : process.env.PAYMENTS_SMTP_HOST
-        ? {
-            host: process.env.PAYMENTS_SMTP_HOST,
-            port: Number(process.env.PAYMENTS_SMTP_PORT || 587),
-            secure: process.env.PAYMENTS_SMTP_SECURE !== undefined
-              ? process.env.PAYMENTS_SMTP_SECURE === "true"
-              : Number(process.env.PAYMENTS_SMTP_PORT || 587) === 465,
-          }
-        : {};
+    const hasPaymentServiceOverride = Boolean(
+      process.env.PAYMENTS_EMAIL_SERVICE || process.env.PAYMENTS_SMTP_HOST
+    );
 
-    const transporter = nodemailer.createTransport({
-      ...getEmailServiceConfig(),
+    let paymentServiceConfig;
+    if (process.env.PAYMENTS_EMAIL_SERVICE) {
+      paymentServiceConfig = { service: process.env.PAYMENTS_EMAIL_SERVICE };
+    } else if (process.env.PAYMENTS_SMTP_HOST) {
+      paymentServiceConfig = {
+        host: process.env.PAYMENTS_SMTP_HOST,
+        port: Number(process.env.PAYMENTS_SMTP_PORT || 587),
+        secure: process.env.PAYMENTS_SMTP_SECURE !== undefined
+          ? process.env.PAYMENTS_SMTP_SECURE === "true"
+          : Number(process.env.PAYMENTS_SMTP_PORT || 587) === 465,
+      };
+    } else {
+      paymentServiceConfig = {};
+    }
+
+    const baseConfig = hasPaymentServiceOverride
+      ? {}
+      : getEmailServiceConfig();
+
+    const finalTransportConfig = {
+      ...baseConfig,
       ...paymentServiceConfig,
       auth: {
         user: senderAuthEmail,
         pass: senderAuthPassword,
       },
+    };
+
+    const transporter = nodemailer.createTransport(finalTransportConfig);
+
+    console.log("[PAYMENT EMAIL] Sending via sender:", {
+      sender: senderAuthEmail,
+      from: paymentSenderEmail,
+      to: paymentRecipientEmail,
+      reportType,
+      smtpService: finalTransportConfig.service || "custom",
+      smtpHost: finalTransportConfig.host || "-",
+      smtpPort: finalTransportConfig.port || "-",
     });
 
     const isVerified = await verifySmtpConnection(transporter, "PAYMENT SMTP");
     if (!isVerified) {
-      return res.status(500).send("Payments email authentication failed. Please check credentials.");
+      return res.status(500).send("Payments email authentication failed. For Gmail/Google Workspace, ensure 2FA is enabled and use a 16-character Google App Password (not the regular account password). Check PAYMENTS_EMAIL + PAYMENTS_PASS in .env.");
     }
 
     let subject = "";
@@ -344,7 +370,16 @@ Email: payments@hansariafood.com`;
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+    const sendResult = await transporter.sendMail(mailOptions);
+    console.log("[PAYMENT EMAIL] Sent successfully:", {
+      messageId: sendResult.messageId,
+      accepted: sendResult.accepted,
+      rejected: sendResult.rejected,
+      from: paymentSenderEmail,
+      to: paymentRecipientEmail,
+      reportType,
+      voucherNumber: voucherNumber || "-",
+    });
 
     // Update payment records to mark email as sent
     if (individualPaymentId) {
@@ -371,8 +406,20 @@ Email: payments@hansariafood.com`;
 
     res.status(200).send("Email sent successfully");
   } catch (error) {
-    console.error("Error sending payment received email:", error);
-    res.status(500).send("Error sending email");
+    console.error("[PAYMENT EMAIL] Failed to send payment received email:", {
+      code: error.code,
+      responseCode: error.responseCode,
+      command: error.command,
+      message: error.message,
+      sender: senderAuthEmail,
+      recipient: paymentRecipientEmail,
+      reportType,
+    });
+    const detail = error?.response || error?.message || "";
+    const userMsg = detail && typeof detail === "string"
+      ? `Error sending email: ${detail}`
+      : "Error sending payment email. Please check SMTP/App Password configuration and recipient email.";
+    res.status(500).send(userMsg);
   }
 });
 

@@ -213,6 +213,7 @@ const TallyLedgerBook = ({
     const isSending = sendingEmailIds.has(row.id);
     const isEmailSent = row.emailSent || sentEmailIds.has(row.id);
     const sentAtDate = row.emailSentAt;
+    const canSendViaIcon = !row.isOpening && isVoucherRow && hasEmailTarget;
     return (
     <>
       <td className="px-3 py-2 text-center">
@@ -228,9 +229,37 @@ const TallyLedgerBook = ({
       </td>
       <td className="px-3 py-2">
         <div className="flex flex-col items-center justify-center gap-1.5">
-          <span className="max-w-[180px] truncate text-xs text-slate-600">
-            {recipientEmail || "-"}
-          </span>
+          <div className="flex items-center justify-center gap-1.5">
+            <span className="max-w-[160px] truncate text-xs text-slate-600">
+              {recipientEmail || "-"}
+            </span>
+            {canSendViaIcon && (
+              <button
+              type="button"
+              onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
+              disabled={isSending}
+              aria-label={isEmailSent
+                ? `Re-send voucher PDF to ${recipientEmail}`
+                : `Send voucher PDF to ${recipientEmail}`}
+              title={isEmailSent
+                ? `Already sent${sentAtDate ? ` on ${new Date(sentAtDate).toLocaleString("en-GB")}` : ""} — click to re-send voucher PDF to ${recipientEmail}`
+                : `Click to send voucher PDF to ${recipientEmail}`}
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-white shadow transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                isEmailSent
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+                  : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+              }`}
+            >
+              {isSending ? (
+                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+              ) : isEmailSent ? (
+                <FaEnvelope size={11} />
+              ) : (
+                <FaEnvelope size={11} />
+              )}
+            </button>
+            )}
+          </div>
           <div className="flex items-center justify-center min-h-[28px]">
             {!row.isOpening && isVoucherRow && hasEmailTarget && (
               isEmailSent ? (
