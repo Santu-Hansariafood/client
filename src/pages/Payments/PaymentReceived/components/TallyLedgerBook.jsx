@@ -213,7 +213,7 @@ const TallyLedgerBook = ({
     const isSending = sendingEmailIds.has(row.id);
     const isEmailSent = row.emailSent || sentEmailIds.has(row.id);
     const sentAtDate = row.emailSentAt;
-    const canSendViaIcon = !row.isOpening && isVoucherRow && hasEmailTarget;
+    const canSendViaIcon = !row.isOpening && hasEmailTarget;
     return (
     <>
       <td className="px-3 py-2 text-center">
