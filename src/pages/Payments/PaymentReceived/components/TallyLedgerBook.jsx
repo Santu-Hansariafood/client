@@ -228,24 +228,9 @@ const TallyLedgerBook = ({
       </td>
       <td className="px-3 py-2">
         <div className="flex flex-col items-center justify-center gap-1.5">
-          {recipientEmail ? (
-            <button
-              type="button"
-              onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
-              disabled={!isVoucherRow || isSending || isEmailSent}
-              aria-label={`Send downloaded voucher PDF to ${recipientEmail}`}
-              title={
-                isEmailSent
-                  ? "Voucher PDF already sent"
-                  : `Click to send voucher PDF to ${recipientEmail}`
-              }
-              className="max-w-[180px] truncate text-xs font-semibold text-sky-700 underline decoration-dotted underline-offset-2 hover:text-sky-900 disabled:cursor-default disabled:no-underline disabled:opacity-70"
-            >
-              {recipientEmail}
-            </button>
-          ) : (
-            <span className="text-xs text-slate-600">-</span>
-          )}
+          <span className="max-w-[180px] truncate text-xs text-slate-600">
+            {recipientEmail || "-"}
+          </span>
           <div className="flex items-center justify-center min-h-[28px]">
             {!row.isOpening && isVoucherRow && hasEmailTarget && (
               isEmailSent ? (
@@ -262,7 +247,7 @@ const TallyLedgerBook = ({
                   onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
                   disabled={isSending}
                   aria-label={`Send voucher to ${recipientEmail}`}
-                  title={`Send voucher to ${recipientEmail}`}
+                  title={`Send voucher PDF to ${recipientEmail} using the payment email`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-[10px] font-black uppercase tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSending ? (
