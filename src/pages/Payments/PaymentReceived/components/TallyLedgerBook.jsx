@@ -228,9 +228,24 @@ const TallyLedgerBook = ({
       </td>
       <td className="px-3 py-2">
         <div className="flex flex-col items-center justify-center gap-1.5">
-          <span className="text-xs text-slate-600 truncate max-w-[160px]">
-            {recipientEmail || "-"}
-          </span>
+          {recipientEmail ? (
+            <button
+              type="button"
+              onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
+              disabled={!isVoucherRow || isSending || isEmailSent}
+              aria-label={`Send downloaded voucher PDF to ${recipientEmail}`}
+              title={
+                isEmailSent
+                  ? "Voucher PDF already sent"
+                  : `Click to send voucher PDF to ${recipientEmail}`
+              }
+              className="max-w-[180px] truncate text-xs font-semibold text-sky-700 underline decoration-dotted underline-offset-2 hover:text-sky-900 disabled:cursor-default disabled:no-underline disabled:opacity-70"
+            >
+              {recipientEmail}
+            </button>
+          ) : (
+            <span className="text-xs text-slate-600">-</span>
+          )}
           <div className="flex items-center justify-center min-h-[28px]">
             {!row.isOpening && isVoucherRow && hasEmailTarget && (
               isEmailSent ? (
