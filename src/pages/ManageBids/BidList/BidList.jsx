@@ -25,6 +25,8 @@ const BidList = () => {
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [consigneeSellers, setConsigneeSellers] = useState([]);
   const [consigneeSellersLoading, setConsigneeSellersLoading] = useState(false);
+  const [consigneeSellersPage, setConsigneeSellersPage] = useState(1);
+  const [consigneeSellersHasMore, setConsigneeSellersHasMore] = useState(false);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -243,17 +245,46 @@ const BidList = () => {
 
     setSelectedConsignee(consignee);
     setConsigneeSellers([]);
+    setConsigneeSellersPage(1);
+    setConsigneeSellersHasMore(false);
     setConsigneeSellersLoading(true);
     try {
       const response = await api.get("/bids/consignee-sellers", {
-        params: { consignee },
+        params: { consignee, page: 1, limit: 10 },
       });
       setConsigneeSellers(response.data?.data || []);
+      setConsigneeSellersHasMore(Boolean(response.data?.hasMore));
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to load consignee sellers.",
       );
       setSelectedConsignee("");
+    } finally {
+      setConsigneeSellersLoading(false);
+    }
+  };
+
+  const loadMoreConsigneeSellers = async () => {
+    if (consigneeSellersLoading || !consigneeSellersHasMore || !selectedConsignee) {
+      return;
+    }
+
+    const nextPage = consigneeSellersPage + 1;
+    setConsigneeSellersLoading(true);
+    try {
+      const response = await api.get("/bids/consignee-sellers", {
+        params: { consignee: selectedConsignee, page: nextPage, limit: 10 },
+      });
+      setConsigneeSellers((previous) => [
+        ...previous,
+        ...(response.data?.data || []),
+      ]);
+      setConsigneeSellersPage(nextPage);
+      setConsigneeSellersHasMore(Boolean(response.data?.hasMore));
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to load more consignee sellers.",
+      );
     } finally {
       setConsigneeSellersLoading(false);
     }
@@ -876,38 +907,52 @@ const BidList = () => {
             {consigneeSellersLoading ? (
               <Loading />
             ) : (
-              <Tables
-                headers={[
-                  "Rank",
-                  "Seller Name",
-                  "Company",
-                  "Phone Number",
-                  "Sauda Quantity",
-                  "Last Sauda",
-                ]}
-                rows={consigneeSellers.map((seller, index) => [
-                  index + 1,
-                  seller.sellerName || "Unknown",
-                  [
-                    ...(seller.saudaCompanies || []),
-                    ...(seller.sellerCompanies || []).filter(
-                      (company) =>
-                        !(seller.saudaCompanies || []).includes(company),
-                    ),
-                  ].filter(Boolean).join(", ") || "N/A",
-                  (seller.phoneNumbers || [])
-                    .map((phone) => phone?.value)
-                    .filter(Boolean)
-                    .join(", ") || seller.mobile || "N/A",
-                  `${seller.totalSaudaQuantity || 0} T`,
-                  seller.lastSaudaAt
-                    ? new Date(seller.lastSaudaAt).toLocaleString(
-                        "en-IN",
-                        { dateStyle: "medium", timeStyle: "short" },
-                      )
-                    : "N/A",
-                ])}
-              />
+              <div className="space-y-4">
+                <Tables
+                  headers={[
+                    "Rank",
+                    "Seller Name",
+                    "Company",
+                    "Phone Number",
+                    "Sauda Quantity",
+                    "Last Sauda",
+                  ]}
+                  rows={consigneeSellers.map((seller, index) => [
+                    index + 1,
+                    seller.sellerName || "Unknown",
+                    [
+                      ...(seller.saudaCompanies || []),
+                      ...(seller.sellerCompanies || []).filter(
+                        (company) =>
+                          !(seller.saudaCompanies || []).includes(company),
+                      ),
+                    ].filter(Boolean).join(", ") || "N/A",
+                    (seller.phoneNumbers || [])
+                      .map((phone) => phone?.value)
+                      .filter(Boolean)
+                      .join(", ") || seller.mobile || "N/A",
+                    `${seller.totalSaudaQuantity || 0} T`,
+                    seller.lastSaudaAt
+                      ? new Date(seller.lastSaudaAt).toLocaleString(
+                          "en-IN",
+                          { dateStyle: "medium", timeStyle: "short" },
+                        )
+                      : "N/A",
+                  ])}
+                />
+                {consigneeSellersHasMore && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={loadMoreConsigneeSellers}
+                      disabled={consigneeSellersLoading}
+                      className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {consigneeSellersLoading ? "Loading..." : "Show more"}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </PopupBox>
 

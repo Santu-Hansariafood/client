@@ -35,13 +35,17 @@ const hideBidsForSellerGroups = (bids, sellerGroups) => {
 router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
   try {
     const consignee = String(req.query.consignee || "").trim();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
     if (!consignee) {
       return res.status(400).json({ message: "Consignee is required." });
     }
 
     const consigneePattern = new RegExp(`^${escapeRegex(consignee)}$`, "i");
-    const sellers = await SelfOrder.aggregate([
-      { $match: { consignee: consigneePattern } },
+    const matchStage = { $match: { consignee: consigneePattern } };
+    const [sellers, countResult] = await Promise.all([
+      SelfOrder.aggregate([
+      matchStage,
       {
         $group: {
           _id: "$supplier",
@@ -57,7 +61,8 @@ router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
           lastSaudaAt: -1,
         },
       },
-      { $limit: 10 },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
       {
         $lookup: {
           from: "sellers",
@@ -85,9 +90,24 @@ router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
           lastSaudaAt: 1,
         },
       },
+      ]),
+      SelfOrder.aggregate([
+        matchStage,
+        { $group: { _id: "$supplier" } },
+        { $count: "total" },
+      ]),
     ]);
 
-    return res.json({ consignee, data: sellers });
+    const total = countResult[0]?.total || 0;
+
+    return res.json({
+      consignee,
+      data: sellers,
+      page,
+      limit,
+      total,
+      hasMore: page * limit < total,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to load consignee sellers.",
