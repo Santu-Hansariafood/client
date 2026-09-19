@@ -382,6 +382,7 @@ export const useAIAgentAPI = (
   };
 
   const resolveEmailContact = async (name, type) => {
+    if (!String(name || "").trim()) return { contact: null, email: "" };
     const endpoint = type === "buyer" ? "/buyers" : "/sellers";
     const response = await api.get(endpoint, {
       params: { search: name, limit: 20 },
@@ -405,22 +406,73 @@ export const useAIAgentAPI = (
     targetType,
     targetName,
     saudaNo,
+    lorryNo,
   }) => {
     setIsLoadingData(true);
-    setThinkingPath(`Preparing ${reportType} email for ${targetName}...`);
+    setThinkingPath(
+      `Preparing ${reportType} email${targetName ? ` for ${targetName}` : ` for Sauda ${saudaNo}`}...`,
+    );
     try {
-      const { contact, email } = await resolveEmailContact(
-        targetName,
-        targetType,
-      );
-      if (!contact || !email) {
+      let saudaOrder;
+      let recipients = [];
+      let displayName = targetName;
+
+      if (targetType === "both") {
+        if (!saudaNo) throw new Error("Sauda number is required");
+        const response = await api.get(
+          `/self-order?saudaNo=${encodeURIComponent(saudaNo)}`,
+          { signal: getApiSignal() },
+        );
+        saudaOrder = (response.data?.data || response.data || [])[0];
+        if (!saudaOrder) throw new Error(`Sauda ${saudaNo} was not found`);
+
+        const buyerName = saudaOrder.buyerCompany || saudaOrder.buyer || "";
+        const sellerName = saudaOrder.supplierCompany || "";
+        const [buyerResult, sellerResult] = await Promise.all([
+          resolveEmailContact(buyerName, "buyer").catch(() => ({ email: "" })),
+          resolveEmailContact(sellerName, "seller").catch(() => ({ email: "" })),
+        ]);
+        recipients = [
+          ...(Array.isArray(saudaOrder.buyerEmails)
+            ? saudaOrder.buyerEmails
+            : []),
+          saudaOrder.buyerEmail,
+          ...(Array.isArray(saudaOrder.sellerEmails)
+            ? saudaOrder.sellerEmails
+            : []),
+          saudaOrder.sellerEmail,
+          buyerResult.email,
+          sellerResult.email,
+        ]
+          .map((email) => String(email || "").trim())
+          .filter(Boolean)
+          .filter(
+            (email, index, emails) =>
+              emails.findIndex((item) => item.toLowerCase() === email.toLowerCase()) === index,
+          );
+        displayName = "Buyer and Seller";
+      } else {
+        const { contact, email } = await resolveEmailContact(
+          targetName,
+          targetType,
+        );
+        if (!contact || !email) {
+          return {
+            role: "assistant",
+            content: `I could not find a valid email for ${targetType} *${targetName}*.`,
+          };
+        }
+        recipients = [email];
+        displayName = contact.name || contact.sellerName || targetName;
+      }
+
+      if (recipients.length === 0) {
         return {
           role: "assistant",
-          content: `I could not find a valid email for ${targetType} *${targetName}*.`,
+          content: `I could not find buyer or seller email addresses for Sauda *${saudaNo}*.`,
         };
       }
 
-      const displayName = contact.name || contact.sellerName || targetName;
       const accountName =
         reportType === "Sauda"
           ? "Sauda email"
@@ -432,20 +484,25 @@ export const useAIAgentAPI = (
         if (reportType === "Sauda") {
           if (!saudaNo)
             throw new Error("Sauda number is required for a Sauda PDF");
-          const response = await api.get(
-            `/self-order?saudaNo=${encodeURIComponent(saudaNo)}`,
-            {
-              signal: getApiSignal(),
-            },
-          );
-          const order = (response.data?.data || response.data || [])[0];
+          const response = saudaOrder
+            ? null
+            : await api.get(
+                `/self-order?saudaNo=${encodeURIComponent(saudaNo)}`,
+                { signal: getApiSignal() },
+              );
+          const order =
+            saudaOrder || (response.data?.data || response.data || [])[0];
           if (!order) throw new Error(`Sauda ${saudaNo} was not found`);
           await sendSaudaOrderEmails({
             ...order,
-            sendPOToBuyer: targetType === "buyer" ? "yes" : "",
-            sendPOToSupplier: targetType === "seller" ? "yes" : "",
-            buyerEmails: targetType === "buyer" ? [email] : [],
-            sellerEmails: targetType === "seller" ? [email] : [],
+            sendPOToBuyer: targetType === "seller" ? "" : "yes",
+            sendPOToSupplier: targetType === "buyer" ? "" : "yes",
+            buyerEmails: targetType === "both" || targetType === "buyer"
+              ? recipients
+              : order.buyerEmails,
+            sellerEmails: targetType === "both" || targetType === "seller"
+              ? recipients
+              : order.sellerEmails,
           });
           return;
         }
@@ -454,7 +511,11 @@ export const useAIAgentAPI = (
           if (!saudaNo)
             throw new Error("Sauda number is required for a claim report");
           const response = await api.get("/loading-entries", {
-            params: { saudaNo, limit: 100 },
+            params: {
+              saudaNo,
+              ...(lorryNo ? { lorryNumber: lorryNo } : {}),
+              limit: 100,
+            },
             signal: getApiSignal(),
           });
           const entries = response.data?.data || response.data || [];
@@ -463,8 +524,9 @@ export const useAIAgentAPI = (
           doc.text("PAYMENT RECEIPT CLAIM REPORT", 14, 18);
           doc.setFontSize(10);
           doc.text(`Sauda No: ${saudaNo}`, 14, 27);
+          if (lorryNo) doc.text(`Lorry No: ${lorryNo}`, 14, 34);
           autoTable(doc, {
-            startY: 34,
+            startY: lorryNo ? 41 : 34,
             head: [
               ["Bill No", "Lorry No", "Seller", "Claim Amount", "Remarks"],
             ],
@@ -479,7 +541,7 @@ export const useAIAgentAPI = (
           const pdfBase64 = await createPdfBase64(doc);
           await api.post("/email/send-receiving-report", {
             pdf: pdfBase64,
-            sellerEmail: email,
+            email: recipients.join(", "),
             saudaNo,
             claimParameters: entries.flatMap(
               (entry) => entry.qualityClaims || [],
@@ -489,17 +551,32 @@ export const useAIAgentAPI = (
         }
 
         const response = await api.get("/payment-received", {
-          params: { search: targetName, limit: 100 },
+          params: {
+            ...(targetType === "both"
+              ? { search: lorryNo || saudaNo }
+              : { search: targetName }),
+            limit: 100,
+          },
           signal: getApiSignal(),
         });
-        const payments = response.data?.data || response.data || [];
+        const allPayments = response.data?.data || response.data || [];
+        const payments =
+          targetType === "both"
+            ? allPayments.filter((payment) =>
+                (payment.mappings || []).some(
+                  (mapping) => String(mapping.saudaNo) === String(saudaNo),
+                ),
+              )
+            : allPayments;
         const doc = new jsPDF();
         doc.setFontSize(16);
         doc.text("PAYMENT LEDGER REPORT", 14, 18);
         doc.setFontSize(10);
         doc.text(`Recipient: ${displayName}`, 14, 27);
+        doc.text(`Sauda No: ${saudaNo || "All"}`, 14, 34);
+        if (lorryNo) doc.text(`Lorry No: ${lorryNo}`, 14, 41);
         autoTable(doc, {
-          startY: 34,
+          startY: lorryNo ? 48 : 41,
           head: [["Date", "Voucher", "Buyer", "Seller", "Amount", "Mode"]],
           body: payments.map((payment) => [
             payment.date
@@ -515,7 +592,7 @@ export const useAIAgentAPI = (
         const pdfBase64 = await createPdfBase64(doc);
         await api.post("/email/send-payment-received", {
           pdf: pdfBase64,
-          recipientEmail: email,
+            recipientEmail: recipients.join(", "),
           reportType: "MIS",
           buyerCompany: targetType === "buyer" ? displayName : "",
           supplierCompany: targetType === "seller" ? displayName : "",
@@ -528,11 +605,13 @@ export const useAIAgentAPI = (
           `*Email ready for confirmation*\n\n` +
           `• *Report:* ${reportType}\n` +
           `• *Recipient:* ${displayName}\n` +
-          `• *Email:* ${email}\n` +
+          `• *Sauda No.:* ${saudaNo || "N/A"}\n` +
+          (lorryNo ? `• *Lorry No.:* ${lorryNo}\n` : "") +
+          `• *Email:* ${recipients.join(", ")}\n` +
           `• *Sending account:* ${accountName}\n\n` +
           "Review the recipient and confirm to send the PDF attachment.",
         emailAction: {
-          recipient: email,
+            recipient: recipients.join(", "),
           reportType,
           onConfirm: send,
         },
@@ -1184,9 +1263,45 @@ export const useAIAgentAPI = (
       content +=
         "\nPlease coordinate with the concerned buyer, seller, and logistics team.";
 
+      const [buyerContact, sellerContact] = await Promise.all([
+        resolveEmailContact(
+          sauda.buyerCompany || sauda.buyer || "",
+          "buyer",
+        ).catch(() => ({ email: "" })),
+        resolveEmailContact(sauda.supplierCompany || "", "seller").catch(
+          () => ({ email: "" }),
+        ),
+      ]);
+      const followUpRecipients = [buyerContact.email, sellerContact.email]
+        .map((email) => String(email || "").trim())
+        .filter(Boolean)
+        .filter((email, index, emails) => emails.indexOf(email) === index);
+
+      const reminderPdf = async () => {
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text(`Sauda ${saudaNo} Follow-up Report`, 14, 18);
+        doc.setFontSize(10);
+        doc.text(doc.splitTextToSize(content, 180), 14, 28);
+        await api.post("/email/send-follow-up-report", {
+          pdf: doc.output("datauristring").split(",")[1],
+          email: followUpRecipients.join(", "),
+          saudaNo,
+        });
+      };
+
       return {
         role: "assistant",
         content,
+        ...(followUpRecipients.length > 0
+          ? {
+              emailAction: {
+                recipient: followUpRecipients.join(", "),
+                reportType: "Follow-up",
+                onConfirm: reminderPdf,
+              },
+            }
+          : {}),
         suggestions: [
           `Sauda ${saudaNo} details`,
           "Payment status report",

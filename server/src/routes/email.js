@@ -44,13 +44,15 @@ const verifySmtpConnection = async (transporter, label = "SMTP") => {
 
 router.post("/send-pdf", async (req, res) => {
   const { pdf, email, saudaNo } = req.body;
+  const senderEmail = process.env.SAUDA_EMAIL || process.env.EMAIL_USER;
+  const senderPassword = process.env.SAUDA_PASS || process.env.EMAIL_PASS;
 
   if (!pdf || !email || !saudaNo) {
     return res.status(400).send("Missing required fields: pdf, email, saudaNo");
   }
 
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error("[EMAIL] Missing EMAIL_USER or EMAIL_PASS environment variables");
+  if (!senderEmail || !senderPassword) {
+    console.error("[EMAIL] Missing SAUDA_EMAIL/SAUDA_PASS or EMAIL_USER/EMAIL_PASS environment variables");
     return res.status(500).send("Email service not configured. Please contact admin.");
   }
 
@@ -58,8 +60,8 @@ router.post("/send-pdf", async (req, res) => {
     const transporter = nodemailer.createTransport({
       ...getEmailServiceConfig(),
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: senderEmail,
+        pass: senderPassword,
       },
     });
 
@@ -69,7 +71,7 @@ router.post("/send-pdf", async (req, res) => {
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: senderEmail,
       to: email,
       subject: `Sauda ID - ${saudaNo} Confirmation From Hansaria Food Pvt. Ltd.`,
 
@@ -101,10 +103,55 @@ Email: sauda@hansariafood.com`,
   }
 });
 
+router.post("/send-follow-up-report", async (req, res) => {
+  const { pdf, email, saudaNo } = req.body;
+  const senderEmail = process.env.SAUDA_EMAIL || process.env.EMAIL_USER;
+  const senderPassword = process.env.SAUDA_PASS || process.env.EMAIL_PASS;
+  const recipientEmail = typeof email === "string" ? email.trim() : "";
+
+  if (!pdf || !recipientEmail || !saudaNo) {
+    return res.status(400).send("Missing required fields: pdf, email, saudaNo");
+  }
+
+  if (!senderEmail || !senderPassword) {
+    console.error("[EMAIL] Missing SAUDA_EMAIL/SAUDA_PASS or EMAIL_USER/EMAIL_PASS environment variables");
+    return res.status(500).send("Email service not configured. Please contact admin.");
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      ...getEmailServiceConfig(),
+      auth: { user: senderEmail, pass: senderPassword },
+    });
+
+    if (!(await verifySmtpConnection(transporter, "FOLLOW-UP SMTP"))) {
+      return res.status(500).send("Follow-up email authentication failed. Please check credentials.");
+    }
+
+    await transporter.sendMail({
+      from: senderEmail,
+      to: recipientEmail,
+      subject: `Sauda ${saudaNo} Follow-up Report`,
+      text: `Please find attached the follow-up report for Sauda No. ${saudaNo}.`,
+      attachments: [{
+        filename: `Sauda_Follow_Up_${saudaNo}.pdf`,
+        content: pdf,
+        encoding: "base64",
+      }],
+    });
+
+    res.status(200).send("Follow-up email sent successfully");
+  } catch (error) {
+    console.error("Error sending follow-up email:", error);
+    res.status(500).send("Error sending follow-up email");
+  }
+});
+
 router.post("/send-receiving-report", async (req, res) => {
   const { 
     pdf, 
-    sellerEmail, 
+    sellerEmail,
+    email,
     saudaNo,
     billNo,
     claimParameters, 
@@ -112,7 +159,9 @@ router.post("/send-receiving-report", async (req, res) => {
     sentByName 
   } = req.body;
 
-  const recipientEmail = typeof sellerEmail === "string" ? sellerEmail.trim() : "";
+  const recipientEmail = typeof (email || sellerEmail) === "string"
+    ? (email || sellerEmail).trim()
+    : "";
 
   if (!pdf || !recipientEmail || !saudaNo) {
     return res.status(400).send("Missing required fields: pdf, sellerEmail, saudaNo");

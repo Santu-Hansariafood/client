@@ -603,6 +603,12 @@ export const useAIAgentCommands = ({
       /(?:call|phone|dial)\s+(buyer|seller|employee)\s+(.+)/i,
     );
     const emailTargetMatch = cleanCmd.match(/\bto\s+(buyer|seller)\s+(.+)$/i);
+    const emailSaudaMatch = cleanCmd.match(
+      /\bsend\b.*?\b(?:sauda|order)\s*(?:no|number)?\s*[:#]?\s*(\d+)/i,
+    );
+    const emailLorryMatch = cleanCmd.match(
+      /\b(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:#-]?\s*([a-z0-9-]+)/i,
+    );
     const moreTopSellersMatch = cleanCmd.match(
       /(?:show|give|get)\s+more\s+(?:top\s+)?sellers?\s+(?:for|of)\s+(?:consignee\s+)?(.+)/i,
     );
@@ -642,22 +648,27 @@ export const useAIAgentCommands = ({
 
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await apiMethods.fetchCommodities();
-    } else if (emailTargetMatch && cleanCmd.includes("send")) {
-      const targetType = emailTargetMatch[1].toLowerCase();
-      const targetName = emailTargetMatch[2].trim();
+    } else if (
+      cleanCmd.includes("send") &&
+      (emailTargetMatch || emailSaudaMatch)
+    ) {
+      const targetType = emailTargetMatch?.[1].toLowerCase() || "both";
+      const targetName = emailTargetMatch?.[2].trim() || "";
       const reportType = cleanCmd.includes("claim")
         ? "Claim"
-        : cleanCmd.includes("sauda")
-          ? "Sauda"
-          : "Payment";
+        : cleanCmd.includes("payment") || cleanCmd.includes("ledger")
+          ? "Payment"
+          : "Sauda";
       const requestedSauda = cleanCmd.match(
         /(?:sauda|order)\s*(?:no|number)?\s*[:#]?\s*(\d+)/i,
       )?.[1];
+      const requestedLorry = emailLorryMatch?.[1];
       response = await apiMethods.prepareEmailReport({
         reportType,
         targetType,
         targetName,
         saudaNo: requestedSauda,
+        lorryNo: requestedLorry,
       });
     } else if (callMatch) {
       response = await apiMethods.fetchContactForCall(

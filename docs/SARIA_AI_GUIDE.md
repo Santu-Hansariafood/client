@@ -91,6 +91,15 @@ Saria AI prepares the recipient and report preview first. Review the displayed r
 - `Send claim report for Sauda 12345 to seller Rahul`
 - `Send payment ledger to seller Rahul`
 - `Send payment ledger to buyer ABC Traders`
+- `Send Sauda PDF for Sauda 12345` sends to both the buyer and seller
+- `Send claim email for Sauda 12345` sends to both the buyer and seller
+- `Send payment email for Sauda 12345` sends to both the buyer and seller
+- `Send claim email for Sauda 12345 Lorry ABC123` filters by both numbers
+- `Send payment email for Sauda 12345 Lorry ABC123` filters by both numbers
+
+Buyer and seller names are optional when a Sauda number is provided. Saria AI
+looks up both parties, shows both email addresses and the Sauda/lorry numbers for
+confirmation before sending.
 
 The configured mailbox is selected by report type:
 
