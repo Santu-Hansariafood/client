@@ -13,7 +13,7 @@ import AIAgentFab from "./components/AIAgentFab";
 const AIAgent = () => {
   const navigate = useNavigate();
   const { userRole, user } = useAuth();
-  const userName = user?.name || user?.username || '';
+  const userName = user?.name || user?.username || "";
 
   const {
     isOpen,
@@ -34,17 +34,23 @@ const AIAgent = () => {
     getApiSignal,
     clearHistory,
     pageHistory,
-    currentPath
+    currentPath,
   } = useAIAgentCore(userName);
 
-  const { trackInteraction, getDynamicSuggestions, checkSafety } = useAIAgentLearning();
+  const { trackInteraction, getDynamicSuggestions, checkSafety } =
+    useAIAgentLearning();
 
   const apiMethods = useAIAgentAPI(
     setIsLoadingData,
     setThinkingPath,
     getApiSignal,
-    (contextSuggestions, responseText) => 
-      getDynamicSuggestions(contextSuggestions, responseText, currentPath, pageHistory)
+    (contextSuggestions, responseText) =>
+      getDynamicSuggestions(
+        contextSuggestions,
+        responseText,
+        currentPath,
+        pageHistory,
+      ),
   );
 
   const { handleSend } = useAIAgentCommands({

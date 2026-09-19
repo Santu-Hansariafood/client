@@ -25,8 +25,8 @@ export const useAIAgentCore = (userName) => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: userName 
-        ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?` 
+      content: userName
+        ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?`
         : "Hello! I am your Saria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
         "Show sidebar menu",
@@ -72,20 +72,34 @@ export const useAIAgentCore = (userName) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen, isMinimized, isLoadingData, thinkingPath, scrollToBottom]);
+  }, [
+    messages,
+    isOpen,
+    isMinimized,
+    isLoadingData,
+    thinkingPath,
+    scrollToBottom,
+  ]);
 
   return {
-    isOpen, setIsOpen,
-    isMinimized, setIsMinimized,
-    input, setInput,
-    isListening, setIsListening,
-    isLoadingData, setIsLoadingData,
-    thinkingPath, setThinkingPath,
-    messages, setMessages,
+    isOpen,
+    setIsOpen,
+    isMinimized,
+    setIsMinimized,
+    input,
+    setInput,
+    isListening,
+    setIsListening,
+    isLoadingData,
+    setIsLoadingData,
+    thinkingPath,
+    setThinkingPath,
+    messages,
+    setMessages,
     scrollRef,
     getApiSignal,
     clearHistory,
     pageHistory,
-    currentPath: location.pathname
+    currentPath: location.pathname,
   };
 };

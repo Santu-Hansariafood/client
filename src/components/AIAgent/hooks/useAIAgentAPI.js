@@ -17,7 +17,9 @@ export const useAIAgentAPI = (
 
   const formatTons = (value, digits = 2) => {
     const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue.toFixed(digits) : "0".padEnd(digits > 0 ? digits + 2 : 1, "0");
+    return Number.isFinite(numericValue)
+      ? numericValue.toFixed(digits)
+      : "0".padEnd(digits > 0 ? digits + 2 : 1, "0");
   };
 
   const getCachedResponse = (key) => {
@@ -32,12 +34,14 @@ export const useAIAgentAPI = (
   const setCachedResponse = (key, data) => {
     responseCacheRef.current[key] = {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     const keys = Object.keys(responseCacheRef.current);
     if (keys.length > 50) {
-      const oldestKey = keys.sort((a, b) => 
-        responseCacheRef.current[a].timestamp - responseCacheRef.current[b].timestamp
+      const oldestKey = keys.sort(
+        (a, b) =>
+          responseCacheRef.current[a].timestamp -
+          responseCacheRef.current[b].timestamp,
       )[0];
       delete responseCacheRef.current[oldestKey];
     }
@@ -167,7 +171,8 @@ export const useAIAgentAPI = (
       if (error.name === "AbortError") return null;
       return {
         role: "assistant",
-        content: "I could not generate the Finance and Sauda adjustment report.",
+        content:
+          "I could not generate the Finance and Sauda adjustment report.",
       };
     } finally {
       setIsLoadingData(false);
@@ -186,7 +191,8 @@ export const useAIAgentAPI = (
       const entries = response.data?.data || response.data || [];
       const totalDue = entries.reduce(
         (sum, entry) =>
-          sum + Number(entry.dueAmount ?? entry.pendingAmount ?? entry.balance ?? 0),
+          sum +
+          Number(entry.dueAmount ?? entry.pendingAmount ?? entry.balance ?? 0),
         0,
       );
 
@@ -209,7 +215,11 @@ export const useAIAgentAPI = (
       return {
         role: "assistant",
         content,
-        suggestions: ["Finance report", "Payment Sauda 1", "Due list for seller"],
+        suggestions: [
+          "Finance report",
+          "Payment Sauda 1",
+          "Due list for seller",
+        ],
       };
     } catch (error) {
       if (error.name === "AbortError") return null;
@@ -223,13 +233,18 @@ export const useAIAgentAPI = (
     }
   };
 
-  const fetchTopSellersByConsignee = async (consigneeName, loadMore = false) => {
+  const fetchTopSellersByConsignee = async (
+    consigneeName,
+    loadMore = false,
+  ) => {
     const consignee = String(consigneeName || "").trim();
     const key = consignee.toLowerCase();
     const page = loadMore ? (topSellerPageRef.current[key] || 1) + 1 : 1;
 
     setIsLoadingData(true);
-    setThinkingPath(`${loadMore ? "Loading more" : "Finding top"} sellers for ${consignee}...`);
+    setThinkingPath(
+      `${loadMore ? "Loading more" : "Finding top"} sellers for ${consignee}...`,
+    );
     try {
       const response = await api.get("/bids/consignee-sellers", {
         params: { consignee, page, limit: 10 },
@@ -239,7 +254,7 @@ export const useAIAgentAPI = (
       topSellerPageRef.current[key] = page;
 
       let content = `*Top Sellers for Consignee: ${consignee}*\n`;
-      content += `*Showing sellers ${((page - 1) * 10) + 1}-${(page - 1) * 10 + sellers.length}*\n\n`;
+      content += `*Showing sellers ${(page - 1) * 10 + 1}-${(page - 1) * 10 + sellers.length}*\n\n`;
 
       if (sellers.length === 0) {
         content += loadMore
@@ -253,10 +268,13 @@ export const useAIAgentAPI = (
               (company) => !(seller.saudaCompanies || []).includes(company),
             ),
           ].filter(Boolean);
-          const phone = (seller.phoneNumbers || [])
-            .map((item) => item?.value)
-            .filter(Boolean)
-            .join(", ") || seller.mobile || "N/A";
+          const phone =
+            (seller.phoneNumbers || [])
+              .map((item) => item?.value)
+              .filter(Boolean)
+              .join(", ") ||
+            seller.mobile ||
+            "N/A";
           const rank = (page - 1) * 10 + index + 1;
           content += `${rank}. *${seller.sellerName || "Unknown"}*\n`;
           content += `   • *Company:* ${companies.join(", ") || "N/A"}\n`;
@@ -306,7 +324,9 @@ export const useAIAgentAPI = (
         });
         const employees = response.data?.data || response.data || [];
         contact = employees.find((item) =>
-          String(item.name || "").toLowerCase().includes(name.toLowerCase()),
+          String(item.name || "")
+            .toLowerCase()
+            .includes(name.toLowerCase()),
         );
       } else {
         const endpoint = normalizedType === "buyer" ? "/buyers" : "/sellers";
@@ -318,11 +338,14 @@ export const useAIAgentAPI = (
         contact = contacts[0];
       }
 
-      const phone = normalizedType === "buyer"
-        ? Array.isArray(contact?.mobile) ? contact.mobile[0] : contact?.mobile
-        : normalizedType === "seller"
-          ? contact?.phoneNumbers?.[0]?.value || contact?.mobile
-          : contact?.mobile;
+      const phone =
+        normalizedType === "buyer"
+          ? Array.isArray(contact?.mobile)
+            ? contact.mobile[0]
+            : contact?.mobile
+          : normalizedType === "seller"
+            ? contact?.phoneNumbers?.[0]?.value || contact?.mobile
+            : contact?.mobile;
       const contactName = contact?.name || contact?.sellerName || name;
 
       if (!contact || !phone) {
@@ -365,20 +388,31 @@ export const useAIAgentAPI = (
       signal: getApiSignal(),
     });
     const contact = (response.data?.data || response.data || [])[0];
-    const email = type === "buyer"
-      ? Array.isArray(contact?.email) ? contact.email[0] : contact?.email
-      : contact?.emails?.[0]?.value || contact?.email;
+    const email =
+      type === "buyer"
+        ? Array.isArray(contact?.email)
+          ? contact.email[0]
+          : contact?.email
+        : contact?.emails?.[0]?.value || contact?.email;
     return { contact, email: String(email || "").trim() };
   };
 
   const createPdfBase64 = async (doc) =>
     doc.output("datauristring").split(",")[1];
 
-  const prepareEmailReport = async ({ reportType, targetType, targetName, saudaNo }) => {
+  const prepareEmailReport = async ({
+    reportType,
+    targetType,
+    targetName,
+    saudaNo,
+  }) => {
     setIsLoadingData(true);
     setThinkingPath(`Preparing ${reportType} email for ${targetName}...`);
     try {
-      const { contact, email } = await resolveEmailContact(targetName, targetType);
+      const { contact, email } = await resolveEmailContact(
+        targetName,
+        targetType,
+      );
       if (!contact || !email) {
         return {
           role: "assistant",
@@ -387,18 +421,23 @@ export const useAIAgentAPI = (
       }
 
       const displayName = contact.name || contact.sellerName || targetName;
-      const accountName = reportType === "Sauda"
-        ? "Sauda email"
-        : reportType === "Claim"
-          ? "Claims email"
-          : "Payment email";
+      const accountName =
+        reportType === "Sauda"
+          ? "Sauda email"
+          : reportType === "Claim"
+            ? "Claims email"
+            : "Payment email";
 
       const send = async () => {
         if (reportType === "Sauda") {
-          if (!saudaNo) throw new Error("Sauda number is required for a Sauda PDF");
-          const response = await api.get(`/self-order?saudaNo=${encodeURIComponent(saudaNo)}`, {
-            signal: getApiSignal(),
-          });
+          if (!saudaNo)
+            throw new Error("Sauda number is required for a Sauda PDF");
+          const response = await api.get(
+            `/self-order?saudaNo=${encodeURIComponent(saudaNo)}`,
+            {
+              signal: getApiSignal(),
+            },
+          );
           const order = (response.data?.data || response.data || [])[0];
           if (!order) throw new Error(`Sauda ${saudaNo} was not found`);
           await sendSaudaOrderEmails({
@@ -412,7 +451,8 @@ export const useAIAgentAPI = (
         }
 
         if (reportType === "Claim") {
-          if (!saudaNo) throw new Error("Sauda number is required for a claim report");
+          if (!saudaNo)
+            throw new Error("Sauda number is required for a claim report");
           const response = await api.get("/loading-entries", {
             params: { saudaNo, limit: 100 },
             signal: getApiSignal(),
@@ -425,7 +465,9 @@ export const useAIAgentAPI = (
           doc.text(`Sauda No: ${saudaNo}`, 14, 27);
           autoTable(doc, {
             startY: 34,
-            head: [["Bill No", "Lorry No", "Seller", "Claim Amount", "Remarks"]],
+            head: [
+              ["Bill No", "Lorry No", "Seller", "Claim Amount", "Remarks"],
+            ],
             body: entries.map((entry) => [
               entry.billNumber || "N/A",
               entry.lorryNumber || "N/A",
@@ -439,7 +481,9 @@ export const useAIAgentAPI = (
             pdf: pdfBase64,
             sellerEmail: email,
             saudaNo,
-            claimParameters: entries.flatMap((entry) => entry.qualityClaims || []),
+            claimParameters: entries.flatMap(
+              (entry) => entry.qualityClaims || [],
+            ),
           });
           return;
         }
@@ -458,7 +502,9 @@ export const useAIAgentAPI = (
           startY: 34,
           head: [["Date", "Voucher", "Buyer", "Seller", "Amount", "Mode"]],
           body: payments.map((payment) => [
-            payment.date ? new Date(payment.date).toLocaleDateString("en-GB") : "N/A",
+            payment.date
+              ? new Date(payment.date).toLocaleDateString("en-GB")
+              : "N/A",
             payment.voucherNumber || payment.voucherNo || "N/A",
             payment.buyerCompany || "N/A",
             payment.supplierCompany || "N/A",
@@ -493,7 +539,10 @@ export const useAIAgentAPI = (
       };
     } catch (error) {
       if (error.name === "AbortError") return null;
-      return { role: "assistant", content: error.message || "Unable to prepare the email report." };
+      return {
+        role: "assistant",
+        content: error.message || "Unable to prepare the email report.",
+      };
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -586,10 +635,11 @@ export const useAIAgentAPI = (
           p.companyIds.forEach((company) => {
             const companyName = company.companyName || company.name || "N/A";
             content += `• *${companyName}:*\n`;
-            
+
             if (company.commodities && company.commodities.length > 0) {
               company.commodities.forEach((cc) => {
-                const commodityName = cc.commodityId?.name || cc.commodityName || "N/A";
+                const commodityName =
+                  cc.commodityId?.name || cc.commodityName || "N/A";
                 if (cc.brokerage) {
                   content += `  - *${commodityName}:* ₹${cc.brokerage}/Tons\n`;
                 }
@@ -1043,32 +1093,49 @@ export const useAIAgentAPI = (
 
   const fetchSaudaReminderReport = async (saudaNo) => {
     setIsLoadingData(true);
-    setThinkingPath(`Preparing a professional reminder report for Sauda ${saudaNo}...`);
+    setThinkingPath(
+      `Preparing a professional reminder report for Sauda ${saudaNo}...`,
+    );
     try {
       const response = await api.get(`/self-order/details/${saudaNo}`, {
         signal: getApiSignal(),
       });
-      const { order: sauda, entries: loadings = [], payments = [] } = response.data || {};
+      const {
+        order: sauda,
+        entries: loadings = [],
+        payments = [],
+      } = response.data || {};
       if (!sauda) {
-        return { role: "assistant", content: `I could not find Sauda *${saudaNo}* for the reminder report.` };
+        return {
+          role: "assistant",
+          content: `I could not find Sauda *${saudaNo}* for the reminder report.`,
+        };
       }
 
       const contractedQuantity = Number(sauda.quantity || 0);
       const loadedQuantity = loadings.reduce(
-        (sum, entry) => sum + Number(entry.unloadingWeight || entry.loadingWeight || 0),
+        (sum, entry) =>
+          sum + Number(entry.unloadingWeight || entry.loadingWeight || 0),
         0,
       );
       const paidAmount = payments.reduce(
-        (sum, payment) => sum + (payment.mappings || [])
-          .filter((mapping) => String(mapping.saudaNo) === String(saudaNo))
-          .reduce((total, mapping) => total + Number(mapping.allocatedAmount || 0), 0),
+        (sum, payment) =>
+          sum +
+          (payment.mappings || [])
+            .filter((mapping) => String(mapping.saudaNo) === String(saudaNo))
+            .reduce(
+              (total, mapping) => total + Number(mapping.allocatedAmount || 0),
+              0,
+            ),
         0,
       );
       const totalClaims = loadings.reduce(
-        (sum, entry) => sum + (entry.qualityClaims || []).reduce(
-          (total, claim) => total + Number(claim.claimAmount || 0),
-          0,
-        ),
+        (sum, entry) =>
+          sum +
+          (entry.qualityClaims || []).reduce(
+            (total, claim) => total + Number(claim.claimAmount || 0),
+            0,
+          ),
         0,
       );
       const pendingQuantity = Math.max(0, contractedQuantity - loadedQuantity);
@@ -1099,24 +1166,39 @@ export const useAIAgentAPI = (
       payments.slice(0, 10).forEach((payment, index) => {
         const amount = (payment.mappings || [])
           .filter((mapping) => String(mapping.saudaNo) === String(saudaNo))
-          .reduce((total, mapping) => total + Number(mapping.allocatedAmount || 0), 0);
+          .reduce(
+            (total, mapping) => total + Number(mapping.allocatedAmount || 0),
+            0,
+          );
         content += `  ${index + 1}. ${payment.date ? new Date(payment.date).toLocaleDateString("en-GB") : "N/A"} | ${payment.paymentMode || "N/A"} | ₹${amount.toLocaleString("en-IN")}\n`;
       });
       content += `\n*4. FOLLOW-UP ACTIONS*\n`;
-      if (pendingQuantity > 0) content += `• Follow up for ${formatTons(pendingQuantity)} Tons pending delivery.\n`;
-      if (estimatedBalance > 0) content += `• Follow up for outstanding payment of approximately ₹${estimatedBalance.toLocaleString("en-IN")}.\n`;
-      if (totalClaims > 0) content += `• Review and close quality claims worth ₹${totalClaims.toLocaleString("en-IN")}.\n`;
-      if (pendingQuantity <= 0 && estimatedBalance <= 0 && totalClaims <= 0) content += "• No immediate follow-up is pending.\n";
-      content += "\nPlease coordinate with the concerned buyer, seller, and logistics team.";
+      if (pendingQuantity > 0)
+        content += `• Follow up for ${formatTons(pendingQuantity)} Tons pending delivery.\n`;
+      if (estimatedBalance > 0)
+        content += `• Follow up for outstanding payment of approximately ₹${estimatedBalance.toLocaleString("en-IN")}.\n`;
+      if (totalClaims > 0)
+        content += `• Review and close quality claims worth ₹${totalClaims.toLocaleString("en-IN")}.\n`;
+      if (pendingQuantity <= 0 && estimatedBalance <= 0 && totalClaims <= 0)
+        content += "• No immediate follow-up is pending.\n";
+      content +=
+        "\nPlease coordinate with the concerned buyer, seller, and logistics team.";
 
       return {
         role: "assistant",
         content,
-        suggestions: [`Sauda ${saudaNo} details`, "Payment status report", "Due list"],
+        suggestions: [
+          `Sauda ${saudaNo} details`,
+          "Payment status report",
+          "Due list",
+        ],
       };
     } catch (error) {
       if (error.name === "AbortError") return null;
-      return { role: "assistant", content: `I could not prepare the reminder report for Sauda *${saudaNo}*.` };
+      return {
+        role: "assistant",
+        content: `I could not prepare the reminder report for Sauda *${saudaNo}*.`,
+      };
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -1445,7 +1527,7 @@ export const useAIAgentAPI = (
   const fetchTodaySaudas = async () => {
     const today = new Date().toISOString().split("T")[0];
     const cacheKey = `today_saudas_${today}`;
-    
+
     // Check cache first
     const cached = getCachedResponse(cacheKey);
     if (cached) {
@@ -1537,7 +1619,8 @@ export const useAIAgentAPI = (
         if (comp.commodities && comp.commodities.length > 0) {
           content += `*Company Commodity Configuration:*\n`;
           comp.commodities.forEach((cc, idx) => {
-            const commodityName = cc.commodityName || cc.commodityId?.name || "N/A";
+            const commodityName =
+              cc.commodityName || cc.commodityId?.name || "N/A";
             content += `${idx + 1}. *${commodityName}*\n`;
             if (cc.brokerage) {
               content += `   • Brokerage: ₹${cc.brokerage}/Ton\n`;
@@ -1553,7 +1636,10 @@ export const useAIAgentAPI = (
                 } else if (paramValues.maxValue) {
                   paramLine += `${paramValues.maxValue}%`;
                 }
-                if (paramLine !== `   • ${param.parameterName || param.parameterId?.name || "Quality Parameter"}: `) {
+                if (
+                  paramLine !==
+                  `   • ${param.parameterName || param.parameterId?.name || "Quality Parameter"}: `
+                ) {
                   content += `${paramLine}\n`;
                 }
               });
@@ -2037,7 +2123,6 @@ export const useAIAgentAPI = (
     const results = [];
     let suggestions = [];
 
-    // First check for number-based queries (sauda, lorry, bill)
     if (/^\d{3,5}$/.test(query) || /(\d{3,5})\s*(?:sauda|order)/i.test(query)) {
       setThinkingPath("Checking Sauda Records...");
       const sNum = query.match(/(\d{3,5})/)[1];
@@ -2047,7 +2132,6 @@ export const useAIAgentAPI = (
       }
     }
 
-    // Check lorry and bill in parallel
     setThinkingPath("Scanning Vehicles and Invoices...");
     const [lorryRes, billRes] = await Promise.all([
       /\d{2}/.test(query) ? fetchLorryDetails(query) : Promise.resolve(null),
@@ -2061,7 +2145,6 @@ export const useAIAgentAPI = (
       results.push({ type: "Bill", response: billRes });
     }
 
-    // Now search for partners and companies in parallel
     setThinkingPath("Searching Partners and Companies...");
     const [seller, buyer, company] = await Promise.all([
       fetchFullPartnerDetails(query, "Seller"),
@@ -2073,7 +2156,6 @@ export const useAIAgentAPI = (
     if (buyer) results.push({ type: "Buyer", response: buyer });
     if (company) results.push({ type: "Company", response: company });
 
-    // Also check for commodities via smart search
     setThinkingPath("Checking Commodities and Quality Parameters...");
     try {
       const smartSearchRes = await api.get("/commodities/search/smart", {
@@ -2081,8 +2163,9 @@ export const useAIAgentAPI = (
         signal: getApiSignal(),
       });
 
-      const { qualityParameters, companies, commodities } = smartSearchRes.data || {};
-      
+      const { qualityParameters, companies, commodities } =
+        smartSearchRes.data || {};
+
       if (qualityParameters && qualityParameters.length > 0) {
         let content = `*Quality Parameters Found:*\n\n`;
         qualityParameters.forEach((qp, i) => {
@@ -2118,7 +2201,6 @@ export const useAIAgentAPI = (
     setIsLoadingData(false);
     setThinkingPath("");
 
-    // Determine what to return
     if (results.length === 0) {
       return {
         role: "assistant",
@@ -2126,35 +2208,34 @@ export const useAIAgentAPI = (
         suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
       };
     } else if (results.length === 1) {
-      // Single result, return it directly
       const result = results[0];
       if (result.response.suggestions) {
         suggestions = result.response.suggestions;
       }
       return {
         ...result.response,
-        suggestions: suggestions.length > 0 ? suggestions : ["Total sauda today", "Active bids"],
+        suggestions:
+          suggestions.length > 0
+            ? suggestions
+            : ["Total sauda today", "Active bids"],
       };
     } else {
-      // Multiple results, show a summary and let user pick
       let content = `*Deep Research Results for "${query}":*\n\n`;
       results.forEach((res, i) => {
         content += `${i + 1}. *${res.type}* Found\n`;
       });
       content += `\nShowing first result: \n---\n`;
-      
-      // Show first result's content
+
       const firstResult = results[0];
       content += firstResult.response.content;
-      
-      // Combine suggestions
+
       const allSuggestions = [];
-      results.forEach(res => {
+      results.forEach((res) => {
         if (res.response.suggestions) {
           allSuggestions.push(...res.response.suggestions);
         }
       });
-      
+
       return {
         role: "assistant",
         content,

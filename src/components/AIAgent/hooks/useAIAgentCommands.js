@@ -57,45 +57,72 @@ export const useAIAgentCommands = ({
   );
 
   const SYSTEM_DICTIONARY = [
-    "sauda", "order", "lorry", "vehicle", "truck", "bill", "invoice", "challan", "call", "phone", "employee", "consignee",
-    "payment", "due", "outstanding", "commodity", "commodities", "buyer", "seller",
-    "bid", "bids", "participate", "active", "pending", "accepted", "today", "sidebar",
-    "menu", "modules", "weather", "account", "status", "loading", "unloading", "dispatch"
+    "sauda",
+    "order",
+    "lorry",
+    "vehicle",
+    "truck",
+    "bill",
+    "invoice",
+    "challan",
+    "call",
+    "phone",
+    "employee",
+    "consignee",
+    "payment",
+    "due",
+    "outstanding",
+    "commodity",
+    "commodities",
+    "buyer",
+    "seller",
+    "bid",
+    "bids",
+    "participate",
+    "active",
+    "pending",
+    "accepted",
+    "today",
+    "sidebar",
+    "menu",
+    "modules",
+    "weather",
+    "account",
+    "status",
+    "loading",
+    "unloading",
+    "dispatch",
   ];
 
-  // Optimized Levenshtein distance with early exit
   const getLevenshteinDistance = (a, b, maxDistance = 2) => {
-    // Early exit if lengths differ by more than maxDistance
     if (Math.abs(a.length - b.length) > maxDistance) return maxDistance + 1;
-    
-    // Ensure a is the shorter string to minimize matrix size
+
     if (a.length > b.length) [a, b] = [b, a];
-    
+
     const matrix = [];
     for (let i = 0; i <= a.length; i++) matrix[i] = i;
-    
+
     for (let i = 1; i <= b.length; i++) {
       let prev = i;
       let minRow = Infinity;
       for (let j = 1; j <= a.length; j++) {
-        const curr = a[j - 1] === b[i - 1] 
-          ? matrix[j - 1] 
-          : Math.min(matrix[j - 1], matrix[j], prev) + 1;
+        const curr =
+          a[j - 1] === b[i - 1]
+            ? matrix[j - 1]
+            : Math.min(matrix[j - 1], matrix[j], prev) + 1;
         matrix[j - 1] = prev;
         prev = curr;
         if (curr < minRow) minRow = curr;
       }
       matrix[a.length] = prev;
-      // Early exit if all values in row exceed maxDistance
       if (minRow > maxDistance) return maxDistance + 1;
     }
     return matrix[a.length];
   };
 
   const rectifyTypo = (text) => {
-    // Check cache first
     if (typoCacheRef.current[text]) return typoCacheRef.current[text];
-    
+
     const typoAliases = {
       saller: "seller",
       byuer: "buyer",
@@ -106,53 +133,49 @@ export const useAIAgentCommands = ({
       cal: "call",
     };
     const words = text.split(/\s+/);
-    const correctedWords = words.map(word => {
+    const correctedWords = words.map((word) => {
       if (word.length < 3 || /^\d+$/.test(word)) return word;
-      if (typoAliases[word.toLowerCase()]) return typoAliases[word.toLowerCase()];
-      
+      if (typoAliases[word.toLowerCase()])
+        return typoAliases[word.toLowerCase()];
+
       let bestMatch = word;
       let minDistance = 2;
 
       for (const term of SYSTEM_DICTIONARY) {
-        const distance = getLevenshteinDistance(word.toLowerCase(), term, minDistance);
+        const distance = getLevenshteinDistance(
+          word.toLowerCase(),
+          term,
+          minDistance,
+        );
         if (distance < minDistance) {
           minDistance = distance;
           bestMatch = term;
         }
-        // Early exit if perfect match found
         if (minDistance === 0) break;
       }
       return bestMatch;
     });
-    
+
     const result = correctedWords.join(" ");
-    // Cache the result
     typoCacheRef.current[text] = result;
-    // Limit cache size
     if (Object.keys(typoCacheRef.current).length > 100) {
       typoCacheRef.current = {};
     }
     return result;
   };
 
-  // Helper function to find sidebar link by path or name with enhanced matching
   const findSidebarLink = (query) => {
     const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
-    
-    // First, try exact matches
+
     for (const section of sidebarModules) {
       for (const action of section.actions) {
         const actionName = action.name.toLowerCase().replace(/\s+/g, "");
-        if (
-          cleanQuery === actionName ||
-          action.link === query
-        ) {
+        if (cleanQuery === actionName || action.link === query) {
           return action;
         }
       }
     }
 
-    // Then try partial matches
     for (const section of sidebarModules) {
       for (const action of section.actions) {
         const actionName = action.name.toLowerCase().replace(/\s+/g, "");
@@ -165,7 +188,6 @@ export const useAIAgentCommands = ({
       }
     }
 
-    // Finally try section matches
     for (const section of sidebarModules) {
       const sectionName = section.section.toLowerCase().replace(/\s+/g, "");
       if (
@@ -179,19 +201,15 @@ export const useAIAgentCommands = ({
     return null;
   };
 
-  // New: Context-aware navigation suggestions
   const getContextualNavigationSuggestions = () => {
     const suggestions = [];
-    
-    // Based on current path
+
     if (currentPath) {
       const currentAction = findSidebarLink(currentPath);
       if (currentAction) {
-        // Find related actions in the same section
         for (const section of sidebarModules) {
-          if (section.actions.some(a => a.link === currentPath)) {
-            // Add other actions from the same section
-            section.actions.forEach(action => {
+          if (section.actions.some((a) => a.link === currentPath)) {
+            section.actions.forEach((action) => {
               if (action.link !== currentPath && suggestions.length < 2) {
                 suggestions.push(`Go to ${action.name}`);
               }
@@ -201,10 +219,9 @@ export const useAIAgentCommands = ({
         }
       }
     }
-    
-    // Add recent pages
+
     if (pageHistory && pageHistory.length > 0) {
-      pageHistory.slice(0, 3).forEach(page => {
+      pageHistory.slice(0, 3).forEach((page) => {
         const action = findSidebarLink(page.path);
         if (action) {
           const suggestion = `Go back to ${action.name}`;
@@ -214,7 +231,7 @@ export const useAIAgentCommands = ({
         }
       });
     }
-    
+
     return suggestions.slice(0, 4);
   };
 
@@ -223,7 +240,8 @@ export const useAIAgentCommands = ({
     sidebarModules.forEach((s) => {
       content += `• *${s.section}*: ${s.actions.map((a) => `_${a.name}_`).join(", ")}\n`;
     });
-    content += "\n*Tip: Type a module name to get its details here, or ask for specific records like Sauda, Lorry, Buyer, Seller, or Payment details.*";
+    content +=
+      "\n*Tip: Type a module name to get its details here, or ask for specific records like Sauda, Lorry, Buyer, Seller, or Payment details.*";
     return {
       role: "assistant",
       content,
@@ -265,8 +283,9 @@ export const useAIAgentCommands = ({
     if (checkSafety(cmd)) {
       const warningResponse = {
         role: "assistant",
-        content: "⚠️ **Warning:** I detected potentially harmful content or inappropriate language in your message. Please keep our conversation professional and focused on system data.",
-        suggestions: ["Total sauda today", "Active bids"]
+        content:
+          "⚠️ **Warning:** I detected potentially harmful content or inappropriate language in your message. Please keep our conversation professional and focused on system data.",
+        suggestions: ["Total sauda today", "Active bids"],
       };
       setMessages((prev) => [...prev, warningResponse]);
       return;
@@ -309,8 +328,9 @@ export const useAIAgentCommands = ({
 
     // Check for custom intents first!
     if (learningData && learningData.customIntents) {
-      const matchingCustomIntent = learningData.customIntents.find(intent => 
-        cleanCmd.includes(intent.query));
+      const matchingCustomIntent = learningData.customIntents.find((intent) =>
+        cleanCmd.includes(intent.query),
+      );
       if (matchingCustomIntent) {
         // If we have a matching custom intent, try to execute the expected action
         response = {
@@ -320,13 +340,17 @@ export const useAIAgentCommands = ({
         };
         // Check if expected action is a navigation or known command
         if (matchingCustomIntent.expectedAction.includes("Open")) {
-          const sidebarLink = findSidebarLink(matchingCustomIntent.expectedAction);
+          const sidebarLink = findSidebarLink(
+            matchingCustomIntent.expectedAction,
+          );
           if (sidebarLink && sidebarLink.link) {
             response = getModuleResult({
               ...sidebarLink,
               section:
                 sidebarModules.find((section) =>
-                  section.actions.some((action) => action.link === sidebarLink.link),
+                  section.actions.some(
+                    (action) => action.link === sidebarLink.link,
+                  ),
                 )?.section || "System Module",
             });
           }
@@ -347,8 +371,8 @@ export const useAIAgentCommands = ({
     ) {
       response = {
         role: "assistant",
-        content: userName 
-          ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?` 
+        content: userName
+          ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?`
           : "Hello! I am your Saria AI. How can I help you today?",
         suggestions: [
           "Show sidebar menu",
@@ -364,22 +388,33 @@ export const useAIAgentCommands = ({
     if (cleanCmd.includes("train") || cleanCmd.includes("teach")) {
       response = {
         role: "assistant",
-        content: "Great! You can train me in two ways: \n1. By giving feedback on my responses, or \n2. By teaching custom commands! For example, you can say: 'When I ask X, do Y'",
-        suggestions: ["Total sauda today", "Active bids", "Train custom command"],
+        content:
+          "Great! You can train me in two ways: \n1. By giving feedback on my responses, or \n2. By teaching custom commands! For example, you can say: 'When I ask X, do Y'",
+        suggestions: [
+          "Total sauda today",
+          "Active bids",
+          "Train custom command",
+        ],
       };
     }
 
     // Handle "Train custom command" / "Custom command" commands
-    if (cleanCmd.includes("custom command") || cleanCmd.includes("train custom")) {
+    if (
+      cleanCmd.includes("custom command") ||
+      cleanCmd.includes("train custom")
+    ) {
       response = {
         role: "assistant",
-        content: "Okay! To train a custom command, say something like: 'When I ask about rate, show highest rate today' or 'When I say go to buyers, open Buyer List'.",
+        content:
+          "Okay! To train a custom command, say something like: 'When I ask about rate, show highest rate today' or 'When I say go to buyers, open Buyer List'.",
         suggestions: ["Total sauda today", "Active bids"],
       };
     }
 
     // Handle "When I say X, do Y" pattern for training custom intents
-    const trainingMatch = rawCmd.match(/when i say (.+), (?:do|show|open|go to) (.+)/i);
+    const trainingMatch = rawCmd.match(
+      /when i say (.+), (?:do|show|open|go to) (.+)/i,
+    );
     if (trainingMatch) {
       const trigger = trainingMatch[1].trim().toLowerCase();
       const action = trainingMatch[2].trim();
@@ -393,9 +428,12 @@ export const useAIAgentCommands = ({
 
     // Handle "Go back to..." commands for page history
     if (cleanCmd.includes("go back to") || cleanCmd.includes("back to")) {
-      const targetName = cleanCmd.replace("go back to", "").replace("back to", "").trim();
+      const targetName = cleanCmd
+        .replace("go back to", "")
+        .replace("back to", "")
+        .trim();
       let targetPath = null;
-      
+
       // Look for matching page in history
       for (const page of pageHistory) {
         const action = findSidebarLink(page.path);
@@ -404,7 +442,7 @@ export const useAIAgentCommands = ({
           break;
         }
       }
-      
+
       if (!targetPath) {
         // Try to find by path or name directly
         const action = findSidebarLink(targetName);
@@ -412,7 +450,7 @@ export const useAIAgentCommands = ({
           targetPath = action.link;
         }
       }
-      
+
       if (targetPath) {
         const targetAction = findSidebarLink(targetPath);
         response = {
@@ -421,7 +459,9 @@ export const useAIAgentCommands = ({
                 ...targetAction,
                 section:
                   sidebarModules.find((section) =>
-                    section.actions.some((action) => action.link === targetAction.link),
+                    section.actions.some(
+                      (action) => action.link === targetAction.link,
+                    ),
                   )?.section || "System Module",
               })
             : {
@@ -441,7 +481,11 @@ export const useAIAgentCommands = ({
     }
 
     // Handle "Show page history" or "Recent pages" commands
-    if (cleanCmd.includes("page history") || cleanCmd.includes("recent pages") || cleanCmd.includes("history")) {
+    if (
+      cleanCmd.includes("page history") ||
+      cleanCmd.includes("recent pages") ||
+      cleanCmd.includes("history")
+    ) {
       if (pageHistory.length === 0) {
         response = {
           role: "assistant",
@@ -457,10 +501,13 @@ export const useAIAgentCommands = ({
         response = {
           role: "assistant",
           content: historyText,
-          suggestions: pageHistory.slice(1, 3).map(page => {
-            const action = findSidebarLink(page.path);
-            return action ? `Go back to ${action.name}` : null;
-          }).filter(Boolean),
+          suggestions: pageHistory
+            .slice(1, 3)
+            .map((page) => {
+              const action = findSidebarLink(page.path);
+              return action ? `Go back to ${action.name}` : null;
+            })
+            .filter(Boolean),
         };
       }
     }
@@ -495,7 +542,9 @@ export const useAIAgentCommands = ({
             ...sidebarAction,
             section:
               sidebarModules.find((section) =>
-                section.actions.some((action) => action.link === sidebarAction.link),
+                section.actions.some(
+                  (action) => action.link === sidebarAction.link,
+                ),
               )?.section || "System Module",
           });
         }
@@ -553,9 +602,7 @@ export const useAIAgentCommands = ({
     const callMatch = cleanCmd.match(
       /(?:call|phone|dial)\s+(buyer|seller|employee)\s+(.+)/i,
     );
-    const emailTargetMatch = cleanCmd.match(
-      /\bto\s+(buyer|seller)\s+(.+)$/i,
-    );
+    const emailTargetMatch = cleanCmd.match(/\bto\s+(buyer|seller)\s+(.+)$/i);
     const moreTopSellersMatch = cleanCmd.match(
       /(?:show|give|get)\s+more\s+(?:top\s+)?sellers?\s+(?:for|of)\s+(?:consignee\s+)?(.+)/i,
     );
@@ -603,7 +650,9 @@ export const useAIAgentCommands = ({
         : cleanCmd.includes("sauda")
           ? "Sauda"
           : "Payment";
-      const requestedSauda = cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:#]?\s*(\d+)/i)?.[1];
+      const requestedSauda = cleanCmd.match(
+        /(?:sauda|order)\s*(?:no|number)?\s*[:#]?\s*(\d+)/i,
+      )?.[1];
       response = await apiMethods.prepareEmailReport({
         reportType,
         targetType,
@@ -652,9 +701,14 @@ export const useAIAgentCommands = ({
         relationshipMatch[2].trim(),
       );
     } else if (dueMatch && !cleanCmd.includes("sauda no")) {
-      response = await apiMethods.fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
+      response = await apiMethods.fetchSellerSaudaStatus(
+        dueMatch[1].trim(),
+        "due",
+      );
     } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
-      response = await apiMethods.fetchPendingSaudaByEntity(pendingMatch[1].trim());
+      response = await apiMethods.fetchPendingSaudaByEntity(
+        pendingMatch[1].trim(),
+      );
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
         role: "assistant",
@@ -669,28 +723,32 @@ export const useAIAgentCommands = ({
       const lNo = downloadLorryMatch[1].trim();
       response = await apiMethods.fetchLorryDetails(lNo);
       if (response?.content) {
-        response.content =
-          `*Lorry ${lNo} Result:*\n\n` +
-          response.content;
+        response.content = `*Lorry ${lNo} Result:*\n\n` + response.content;
       }
     } else if (bidComponentMatch) {
-      response = await apiMethods.fetchBidComponentAnalysis(bidComponentMatch[1].trim());
+      response = await apiMethods.fetchBidComponentAnalysis(
+        bidComponentMatch[1].trim(),
+      );
     } else if (addLoadingMatch) {
       const sNo = addLoadingMatch[1];
       response = await apiMethods.fetchSaudaDetails(sNo);
       if (response?.content) {
-        response.content =
-          `*Sauda ${sNo} Result:*\n\n` +
-          response.content;
+        response.content = `*Sauda ${sNo} Result:*\n\n` + response.content;
       }
     } else if (buyerMatch) {
-      const details = await apiMethods.fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
+      const details = await apiMethods.fetchFullPartnerDetails(
+        buyerMatch[1].trim(),
+        "Buyer",
+      );
       response = details || {
         role: "assistant",
         content: `I couldn't find any Buyer matching "*${buyerMatch[1].trim()}*".`,
       };
     } else if (sellerMatch) {
-      const details = await apiMethods.fetchFullPartnerDetails(sellerMatch[1].trim(), "Seller");
+      const details = await apiMethods.fetchFullPartnerDetails(
+        sellerMatch[1].trim(),
+        "Seller",
+      );
       response = details || {
         role: "assistant",
         content: `I couldn't find any Seller matching "*${sellerMatch[1].trim()}*".`,
@@ -730,9 +788,13 @@ export const useAIAgentCommands = ({
     ) {
       response = await apiMethods.fetchActiveBids();
     } else if (interactionMatch) {
-      response = await apiMethods.fetchBidInteractions(interactionMatch[1].trim());
+      response = await apiMethods.fetchBidInteractions(
+        interactionMatch[1].trim(),
+      );
     } else if (companyMatch) {
-      const details = await apiMethods.fetchFullCompanyDetails(companyMatch[1].trim());
+      const details = await apiMethods.fetchFullCompanyDetails(
+        companyMatch[1].trim(),
+      );
       response = details || {
         role: "assistant",
         content: `No records for company *${companyMatch[1].trim()}*.`,
@@ -761,10 +823,11 @@ export const useAIAgentCommands = ({
     }
 
     setMessages((prev) => [...prev, response]);
-    
+
     if (response && response.content) {
       if (cleanCmd !== rawCmd) {
-        response.content = `_Showing results for "${cleanCmd}"_\n\n` + response.content;
+        response.content =
+          `_Showing results for "${cleanCmd}"_\n\n` + response.content;
       }
       trackInteraction(cmd, response.content);
     }
@@ -774,7 +837,6 @@ export const useAIAgentCommands = ({
     const userMessage = text || input.trim();
     if (!userMessage) return;
 
-    // Clear any existing debounce timer
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     const sendMessage = () => {
@@ -784,10 +846,8 @@ export const useAIAgentCommands = ({
     };
 
     if (immediate) {
-      // Send immediately for button clicks, etc.
       sendMessage();
     } else {
-      // Debounce for text input
       debounceTimerRef.current = setTimeout(sendMessage, 150); // Reduced from 300ms to 150ms for better responsiveness
     }
   };
