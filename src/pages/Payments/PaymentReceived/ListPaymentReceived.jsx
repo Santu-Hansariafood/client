@@ -690,7 +690,7 @@ const ListPaymentReceived = () => {
     doc.setFontSize(8.5);
     doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", margin + 7, infoY + 10);
+    doc.text("Buyer", margin + 7, infoY + 10);
     doc.setFont("helvetica", "normal");
     doc.text(`: ${buyerName}`, margin + 40, infoY + 10);
 
@@ -700,17 +700,17 @@ const ListPaymentReceived = () => {
     doc.text(`: ${startDate} To ${endDate}`, pageWidth / 2 + 40, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Seller Company", pageWidth - 88, infoY + 10);
+    doc.text("Seller", pageWidth - 88, infoY + 10);
     doc.setFont("helvetica", "normal");
     doc.text(`: ${sellerName}`, pageWidth - 48, infoY + 10);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Seller Company", margin + 7, infoY + 22);
+    doc.text("Seller", margin + 7, infoY + 22);
     doc.setFont("helvetica", "normal");
     doc.text(`: ${sellerName}`, margin + 40, infoY + 22);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Buyer Company", pageWidth - 88, infoY + 22);
+    doc.text("Buyer", pageWidth - 88, infoY + 22);
     doc.setFont("helvetica", "normal");
     doc.text(`: ${buyerName}`, pageWidth - 48, infoY + 22);
 
@@ -976,6 +976,7 @@ const ListPaymentReceived = () => {
     const tableData = [];
     const saudaTotals = {};
     let ledgerDebitTotal = 0;
+    let ledgerGstDebitTotal = 0;
     let ledgerCreditTotal = 0;
     let totalSaudaDifference = 0;
 
@@ -985,7 +986,6 @@ const ListPaymentReceived = () => {
         let saudaCreditTotal = 0;
         let saudaPaidTotal = 0;
         let saudaCdTotal = 0;
-        let saudaGstTotal = 0;
         let saudaQualityClaimsTotal = 0;
         let saudaBankChargesTotal = 0;
 
@@ -1040,7 +1040,7 @@ const ListPaymentReceived = () => {
             balance = Number(row.debit || row.balance || 0);
 
             saudaCdTotal += cd;
-            saudaGstTotal += gst;
+            ledgerGstDebitTotal += Number(gst) || 0;
             saudaQualityClaimsTotal += claims;
             saudaBankChargesTotal += bankCharges;
           }
@@ -1052,17 +1052,18 @@ const ListPaymentReceived = () => {
               : (Number(row.raw?.loadingWeight) || 0) *
                 (Number(row.raw?.actualRate || row.raw?.rate) || 0)
             : Math.max(0, Number(row.debit) || 0);
-          const deductionTotal =
-            claims +
-            cd +
-            bankCharges +
-            (Number(rowData.secondClaim) || 0) +
-            (Number(rowData.otherCharges) || 0) +
-            (Number(rowData.paymentTdsAmount) || 0);
           const rowDebit = isEntryRow
-            ? Math.max(0, grossAmount - deductionTotal)
+            ? Math.max(
+                0,
+                Number(rowData.billAmount || 0) -
+                  claims -
+                  bankCharges -
+                  (Number(rowData.secondClaim) || 0) -
+                  (Number(rowData.otherCharges) || 0) -
+                  (Number(rowData.paymentTdsAmount) || 0),
+              )
             : grossAmount;
-          const rowCredit = isEntryRow ? Math.max(0, Number(gst) || 0) : displayCredit;
+          const rowCredit = isEntryRow ? 0 : displayCredit;
           saudaDebitTotal += rowDebit;
           saudaCreditTotal += rowCredit;
           saudaPaidTotal += rowData.paidAmount;
@@ -1281,6 +1282,7 @@ const ListPaymentReceived = () => {
     });
 
     let totalGross = ledgerDebitTotal;
+    let totalGstDebit = ledgerGstDebitTotal;
     let totalCredit = ledgerCreditTotal;
 
     const totalGrossNum = Number(totalGross.toFixed(2));
@@ -1299,24 +1301,21 @@ const ListPaymentReceived = () => {
     let summaryY = 12;
 
     const boxHeight = 26;
+    const summaryWidth = pageWidth - 2 * margin;
     doc.setFillColor(248, 250, 252);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight, "F");
 
     doc.setLineWidth(0.5);
     doc.setDrawColor(226, 232, 240);
     doc.rect(margin, summaryY, pageWidth - 2 * margin, boxHeight);
-    doc.line(
-      margin + (pageWidth - 2 * margin) / 3,
-      summaryY,
-      margin + (pageWidth - 2 * margin) / 3,
-      summaryY + boxHeight,
-    );
-    doc.line(
-      margin + (2 * (pageWidth - 2 * margin)) / 3,
-      summaryY,
-      margin + (2 * (pageWidth - 2 * margin)) / 3,
-      summaryY + boxHeight,
-    );
+    for (let column = 1; column < 4; column += 1) {
+      doc.line(
+        margin + (column * summaryWidth) / 4,
+        summaryY,
+        margin + (column * summaryWidth) / 4,
+        summaryY + boxHeight,
+      );
+    }
     doc.line(
       margin,
       summaryY + boxHeight / 2,
@@ -1331,7 +1330,7 @@ const ListPaymentReceived = () => {
     const formattedTotalGross = Number(totalGross.toFixed(2));
     doc.text(
       "TOTAL DEBIT",
-      margin + (pageWidth - 2 * margin) / 6,
+      margin + summaryWidth / 8,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1341,7 +1340,28 @@ const ListPaymentReceived = () => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
-      margin + (pageWidth - 2 * margin) / 6,
+      margin + summaryWidth / 8,
+      summaryY + 19,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "bold");
+
+    const formattedTotalGst = Number(totalGstDebit.toFixed(2));
+    doc.setTextColor(30, 41, 59);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      "GST (Dr.)",
+      margin + (3 * summaryWidth) / 8,
+      summaryY + 8.5,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      formattedTotalGst.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      margin + (3 * summaryWidth) / 8,
       summaryY + 19,
       { align: "center" },
     );
@@ -1350,7 +1370,7 @@ const ListPaymentReceived = () => {
     const formattedTotalCredit = Number(totalCredit.toFixed(2));
     doc.text(
       "TOTAL CREDIT",
-      margin + (pageWidth - 2 * margin) / 2,
+      margin + (5 * summaryWidth) / 8,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1360,7 +1380,7 @@ const ListPaymentReceived = () => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
-      margin + (pageWidth - 2 * margin) / 2,
+      margin + (5 * summaryWidth) / 8,
       summaryY + 19,
       { align: "center" },
     );
@@ -1370,15 +1390,15 @@ const ListPaymentReceived = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFillColor(26, 58, 95);
     doc.rect(
-      margin + (2 * (pageWidth - 2 * margin)) / 3,
+      margin + (3 * summaryWidth) / 4,
       summaryY,
-      (pageWidth - 2 * margin) / 3,
+      summaryWidth / 4,
       boxHeight,
       "F",
     );
     doc.text(
       "DIFFERENCE",
-      margin + (5 * (pageWidth - 2 * margin)) / 6,
+      margin + (7 * summaryWidth) / 8,
       summaryY + 8.5,
       { align: "center" },
     );
@@ -1391,7 +1411,7 @@ const ListPaymentReceived = () => {
           : "Rs. 0.00";
     doc.text(
       differenceText,
-      margin + (5 * (pageWidth - 2 * margin)) / 6,
+      margin + (7 * summaryWidth) / 8,
       summaryY + 18,
       { align: "center" },
     );
