@@ -905,8 +905,7 @@ export const calculateEntryDueAmount = (item) => {
   const cd = gross * ((item.cd || 0) / 100);
   const bankCharges = Number(item.bankCharges) || 0;
   const amountAfterCd = gross - cd;
-  const amountAfterBankCharges = amountAfterCd - bankCharges;
-  const taxable = amountAfterBankCharges;
+  const taxable = amountAfterCd;
   const gst = taxable * ((item.gst || 0) / 100);
   const net = taxable + gst;
   return Math.max(0, net - (item.paidAmount || 0));

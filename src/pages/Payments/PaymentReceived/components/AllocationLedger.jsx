@@ -3,15 +3,14 @@ import {
   FaMoneyBillWave,
   FaHistory,
   FaFileInvoiceDollar,
-  FaMagic,
   FaCloudUploadAlt,
-  FaCheckCircle,
 } from "react-icons/fa";
 import SearchBox from "../../../../common/SearchBox/SearchBox";
 import Loading from "../../../../common/Loading/Loading";
 import Paginations from "../../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../../common/DateSelector/DateRangeSelector";
 import CompanyLedgerBanner from "./CompanyLedgerBanner";
+import AdjustmentModeToggle from "./AdjustmentModeToggle";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const AllocationLedger = ({
@@ -29,7 +28,6 @@ const AllocationLedger = ({
   entriesPageSize,
   fetchEntries,
   entryStats,
-  dateTotal,
   ledgerBalance,
   companyPair,
   fullCompanyMapping,
@@ -37,12 +35,9 @@ const AllocationLedger = ({
   hasCompanyTableScope,
   buyerOnlyMapping,
   loadingSellerOptions,
-  onSelectCreditPair,
   onSaveAll,
   loading,
   ledgerTopSummary = {},
-  isEditMode = false,
-  editingPaymentMappings = [],
   multiAdjustmentMode = false,
   setMultiAdjustmentMode,
   selectedAllocationKeys = new Set(),
@@ -52,14 +47,17 @@ const AllocationLedger = ({
     debitToSeller = 0,
     creditBalanceRemaining = 0,
   } = ledgerTopSummary;
-  const hasCompanyFilter =
-    Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
   const showPagination =
     entriesTotal > entriesPageSize && !fullCompanyMapping && !buyerOnlyMapping;
   const showMappingBanner = hasBuyerCompany;
 
   const totalAllocated = (entries || []).reduce((sum, e) => {
-    if (!e.isSaved) return sum + (parseFloat(e.allocatedAmount) || 0);
+    if (
+      !e.isSaved &&
+      (!multiAdjustmentMode || selectedAllocationKeys.has(e.uiKey))
+    ) {
+      return sum + (parseFloat(e.allocatedAmount) || 0);
+    }
     return sum;
   }, 0);
 
@@ -94,18 +92,11 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 shadow-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={multiAdjustmentMode}
-                onChange={(event) => setMultiAdjustmentMode?.(event.target.checked)}
-                className="h-4 w-4 accent-blue-600"
-              />
-              Multi adjustment
-              {multiAdjustmentMode && (
-                <span className="text-blue-600">({selectedAllocationKeys.size} selected)</span>
-              )}
-            </label>
+            <AdjustmentModeToggle
+              enabled={multiAdjustmentMode}
+              selectedCount={selectedAllocationKeys.size}
+              onChange={setMultiAdjustmentMode}
+            />
             <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
               <div className="flex flex-col">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">

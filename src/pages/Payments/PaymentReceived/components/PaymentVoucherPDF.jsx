@@ -542,7 +542,7 @@ const PaymentVoucherPDF = ({
     const cdAmount = grossAmount * (cdPercent / 100);
     const amountAfterCd = grossAmount - cdAmount;
     const amountAfterBankCharges = amountAfterCd - bankCharges;
-    const taxableAmount = amountAfterBankCharges;
+    const taxableAmount = amountAfterCd;
     const gstAmount = taxableAmount * (gstPercent / 100);
     const netAmount = taxableAmount + gstAmount;
 

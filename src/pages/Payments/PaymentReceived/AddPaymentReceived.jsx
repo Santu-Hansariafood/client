@@ -4,26 +4,19 @@ import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import Buttons from "../../../common/Buttons/Buttons";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+import AllocationRowActions from "./components/AllocationRowActions";
+import PaymentFormNavigation from "./components/PaymentFormNavigation";
 
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import {
-  FaSave,
-  FaArrowLeft,
-  FaExchangeAlt,
   FaHistory,
-  FaChartBar,
-  FaRegCalendarAlt,
-  FaCheckCircle,
-  FaPlus,
   FaTrash,
   FaMoneyBillWave,
   FaTimes,
   FaEdit,
 } from "react-icons/fa";
 
-const TabButton = lazy(() => import("./components/TabButton"));
 const StatDashboard = lazy(() => import("./components/StatDashboard"));
 const AccountSelection = lazy(() => import("./components/AccountSelection"));
 const PaymentRecordingPanel = lazy(
@@ -2228,8 +2221,11 @@ const AddPaymentReceived = () => {
                 minimumFractionDigits: 2,
               })}
             </span>
-            <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
-              Total Lorry Bill
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+              Bill + GST ₹
+              {details.gstAmount.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+              })}
             </span>
           </div>
         );
@@ -2865,52 +2861,16 @@ const AddPaymentReceived = () => {
         const isAdmin = user?.role === "Admin";
 
         return (
-          <div className="flex flex-col gap-1 w-full min-w-[100px]">
-            <div className="flex gap-1">
-              <Buttons
-                label={
-                  isLocked && !isAdmin
-                    ? "Locked"
-                    : isAdmin && row.isSaved
-                      ? "Adjust"
-                      : "Save"
-                }
-                onClick={() => handleSaveRow(row)}
-                disabled={(isLocked && !isAdmin) || loading}
-                variant={
-                  isLocked && !isAdmin
-                    ? "ghost"
-                    : isAdmin && row.isSaved
-                      ? "outline"
-                      : "primary"
-                }
-                size="sm"
-                icon={
-                  isLocked && !isAdmin ? (
-                    <FaCheckCircle size={12} />
-                  ) : isAdmin && row.isSaved ? (
-                    <FaExchangeAlt size={12} />
-                  ) : (
-                    <FaSave size={12} />
-                  )
-                }
-                className={`flex-1 !text-[10px] !py-2.5 ${
-                  isAdmin && row.isSaved
-                    ? "!border-green-500 !text-green-600 hover:!bg-green-50"
-                    : ""
-                }`}
-              />
-              {!isLocked && (
-                <button
-                  onClick={() => handleAddRow(row, index)}
-                  className="p-2.5 bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm"
-                  title="Add another allocation for this lorry"
-                >
-                  <FaPlus size={12} />
-                </button>
-              )}
-            </div>
-          </div>
+          <AllocationRowActions
+            row={row}
+            index={index}
+            isAdmin={isAdmin}
+            isLocked={isLocked}
+            multiAdjustmentMode={multiAdjustmentMode}
+            loading={loading}
+            onSave={handleSaveRow}
+            onAdd={handleAddRow}
+          />
         );
       },
     },
@@ -2927,64 +2887,14 @@ const AddPaymentReceived = () => {
       icon={FaHistory}
     >
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Buttons
-              label="Back"
-              icon={<FaArrowLeft size={12} />}
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-            />
-            <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-            {editingPaymentId && (
-              <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl border border-amber-200 shadow-sm">
-                <FaExchangeAlt className="text-amber-500" />
-                <span className="text-xs font-black uppercase tracking-wider">
-                  Edit Mode · Voucher #{editingPayment?.voucherNumber || "—"}
-                </span>
-              </div>
-            )}
-            <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
-              <TabButton
-                active={activeTab === "payment_list"}
-                label="Payment List"
-                icon={FaMoneyBillWave}
-                onClick={() => setActiveTab("payment_list")}
-              />
-              <TabButton
-                active={activeTab === "allocation"}
-                label="Allocation"
-                icon={FaExchangeAlt}
-                onClick={() => setActiveTab("allocation")}
-              />
-              <TabButton
-                active={activeTab === "history"}
-                label="History"
-                icon={FaHistory}
-                onClick={() => setActiveTab("history")}
-              />
-              <TabButton
-                active={activeTab === "summary"}
-                label="Summary"
-                icon={FaChartBar}
-                onClick={() => setActiveTab("summary")}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl border border-emerald-100 shadow-sm">
-            <FaRegCalendarAlt className="text-emerald-500" />
-            <span className="text-sm font-bold tracking-tight">
-              {new Date(formData.date).toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-          </div>
-        </div>
+        <PaymentFormNavigation
+          editingPaymentId={editingPaymentId}
+          voucherNumber={editingPayment?.voucherNumber}
+          activeTab={activeTab}
+          onBack={() => navigate(-1)}
+          onTabChange={setActiveTab}
+          date={formData.date}
+        />
 
         {(editingPaymentId ||
           liveUnadjustedAmount > 0.01 ||
