@@ -547,18 +547,20 @@ const AddPaymentReceived = () => {
 
   const entryStats = useMemo(() => {
     let totalDue = 0;
+    let totalGst = 0;
     let pendingCount = 0;
 
     entries.forEach((entry) => {
       const details = calculateTallyDetails(entry);
       if (details.dueAmount <= 0.01) return;
       totalDue += details.netAmount;
+      totalGst += details.gstAmount;
       if (entry.paymentStatus !== "done") {
         pendingCount++;
       }
     });
 
-    return { totalDue, pendingCount };
+    return { totalDue, totalGst, pendingCount };
   }, [entries]);
 
   const ledgerTopSummary = useMemo(
@@ -571,6 +573,7 @@ const AddPaymentReceived = () => {
         creditPendingInForm,
         creditTableTotal,
         totalDueFromTable: entryStats.totalDue,
+        totalGstFromTable: entryStats.totalGst,
       }),
     [
       allocationSource,
@@ -580,6 +583,7 @@ const AddPaymentReceived = () => {
       creditPendingInForm,
       creditTableTotal,
       entryStats.totalDue,
+      entryStats.totalGst,
     ],
   );
 

@@ -45,6 +45,7 @@ const AllocationLedger = ({
   const {
     creditEntryTotal = 0,
     debitToSeller = 0,
+    debitGstToSeller = 0,
     creditBalanceRemaining = 0,
   } = ledgerTopSummary;
   const showPagination =
@@ -318,14 +319,29 @@ const AllocationLedger = ({
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                      Total Credit (Cr.)
+                      Payment Credit (Cr.)
                     </p>
                   </div>
                   <p className="text-2xl font-black text-white tabular-nums tracking-tight">
                     {formatLedgerAmount(creditEntryTotal)}
                   </p>
                   <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
-                    Available Credit Pool
+                    GST excluded · debit side only
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]"></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-300">
+                      GST (Dr.)
+                    </p>
+                  </div>
+                  <p className="text-2xl font-black tracking-tight text-amber-200 tabular-nums">
+                    {formatLedgerAmount(debitGstToSeller)}
+                  </p>
+                  <p className="text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                    Included in lorry bill
                   </p>
                 </div>
 

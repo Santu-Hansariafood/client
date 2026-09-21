@@ -817,6 +817,7 @@ export const computeBuyerSellerLedgerSummary = ({
   creditPendingInForm = 0,
   creditTableTotal = 0,
   totalDueFromTable = 0,
+  totalGstFromTable = 0,
 }) => {
   const pendingDr = Number(creditPendingInForm) || 0;
   const tableDr = Number(creditTableTotal) || 0;
@@ -841,6 +842,7 @@ export const computeBuyerSellerLedgerSummary = ({
     debitPostedToSeller: postedDr,
     debitPendingInForm: pendingDr,
     debitToSeller,
+    debitGstToSeller: Number(totalGstFromTable) || 0,
     creditBalanceRemaining,
   };
 };
@@ -903,7 +905,6 @@ export const calculateEntryDueAmount = (item) => {
   const rate = item.actualRate || 0;
   const gross = weight * rate;
   const cd = gross * ((item.cd || 0) / 100);
-  const bankCharges = Number(item.bankCharges) || 0;
   const amountAfterCd = gross - cd;
   const taxable = amountAfterCd;
   const gst = taxable * ((item.gst || 0) / 100);

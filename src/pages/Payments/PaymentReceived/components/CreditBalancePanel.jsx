@@ -85,7 +85,7 @@ const CreditBalancePanel = ({
             {formatLedgerAmount(creditEntryTotal)}
           </p>
           <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
-            {creditHint}
+            {creditHint} · GST excluded
           </p>
         </div>
 
