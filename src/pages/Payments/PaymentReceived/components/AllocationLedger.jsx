@@ -117,20 +117,6 @@ const AllocationLedger = ({
               <FaMoneyBillWave className="text-blue-200" />
             </div>
 
-            {totalAllocated > 0 && (
-              <button
-                type="button"
-                onClick={onSaveAll}
-                disabled={loading}
-                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl shadow-xl shadow-blue-200 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest animate-in fade-in zoom-in duration-300"
-              >
-                {loading ? <Loading /> : <FaCloudUploadAlt size={16} />}
-                {loading
-                  ? "Saving..."
-                  : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
-              </button>
-            )}
-
             <DateRangeSelector
               startDate={formData.filterStartDate}
               endDate={formData.filterEndDate}
@@ -391,17 +377,19 @@ const AllocationLedger = ({
               </div>
 
               <div className="flex items-center gap-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-                {totalAllocated > 0 && (
+                {(multiAdjustmentMode || totalAllocated > 0) && (
                   <button
                     type="button"
                     onClick={onSaveAll}
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl shadow-blue-900/50 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest"
+                    disabled={loading || totalAllocated <= 0}
+                    className="flex items-center gap-2 rounded-xl border border-blue-500 bg-blue-600 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-blue-900/50 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? <Loading /> : <FaCloudUploadAlt size={16} />}
                     {loading
                       ? "Saving..."
-                      : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
+                      : totalAllocated > 0
+                        ? `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`
+                        : "Select rows and enter amounts"}
                   </button>
                 )}
                 <div className="text-right">

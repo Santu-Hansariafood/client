@@ -325,11 +325,40 @@ export const buildTallyVoucherRows = (
   openingBalance = 0,
   entries = [],
 ) => {
+  const allocationTotalsByEntryId = new Map();
+  payments.forEach((payment) => {
+    (payment.mappings || []).forEach((mapping) => {
+      const entryId =
+        typeof mapping.loadingEntryId === "object" && mapping.loadingEntryId
+          ? mapping.loadingEntryId._id
+          : mapping.loadingEntryId;
+      if (!entryId) return;
+      const key = String(entryId);
+      allocationTotalsByEntryId.set(
+        key,
+        (allocationTotalsByEntryId.get(key) || 0) +
+          (Number(mapping.allocatedAmount) || 0),
+      );
+    });
+  });
+
+  const settlementTolerance = 100;
+  const visibleEntries = entries.filter((entry) => {
+    if (entry.isRejected) return false;
+    const allocatedAmount = Math.max(
+      allocationTotalsByEntryId.get(String(entry._id)) || 0,
+      Number(entry.paidAmount) || 0,
+    );
+    if (allocatedAmount <= 0) return true;
+
+    const payableAmount =
+      calculateOutstandingAmount(entry) + (Number(entry.paidAmount) || 0);
+    return Math.abs(payableAmount - allocatedAmount) > settlementTolerance;
+  });
+
   const allItems = [
     ...payments.map((p) => ({ ...p, uiType: "payment" })),
-    ...entries
-      .filter((entry) => !entry.isRejected)
-      .map((e) => ({ ...e, uiType: "entry" })),
+    ...visibleEntries.map((e) => ({ ...e, uiType: "entry" })),
   ];
 
   const sorted = allItems.sort((a, b) => {
