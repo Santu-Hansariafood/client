@@ -213,12 +213,18 @@ const FinanceReport = () => {
       const response = await api.get("/financers/pending-options", {
         params: { sellerCompany, consignee: consignee || undefined },
       });
+      const normalizedConsignee = String(consignee || "").trim().toLowerCase();
+      const saudaOptions = (response.data?.saudaNumbers || []).filter(
+        (option) =>
+          !normalizedConsignee ||
+          String(option.consignee || "").trim().toLowerCase() === normalizedConsignee,
+      );
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id === rowId
             ? {
                 ...row,
-                saudaOptions: response.data?.saudaNumbers || [],
+                saudaOptions,
                 saudaNo: "",
                 adjustmentId: "",
                 purchaseQuantity: null,
@@ -376,6 +382,7 @@ const FinanceReport = () => {
         selectedOptions={row.saudaNos}
         isMulti
         isClearable
+        disableSorting
         isDisabled={!row.sellerCompany || row.saudaOptions.length === 0}
         placeholder="Select one or more Saudas"
         onChange={(options) => {
