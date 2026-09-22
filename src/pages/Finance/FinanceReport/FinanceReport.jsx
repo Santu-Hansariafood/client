@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, lazy, Suspense } from "react";
-import { FaPlus, FaTrash, FaUniversity, FaSave, FaEdit } from "react-icons/fa";
+import { FaPlus, FaTrash, FaUniversity, FaSave, FaEdit, FaDownload } from "react-icons/fa";
+import { AiOutlineEye } from "react-icons/ai";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -11,6 +12,9 @@ const Pagination = lazy(() => import("../../../common/Paginations/Paginations"))
 const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
 const DateSelector = lazy(
   () => import("../../../common/DateSelector/DateSelector"),
+);
+const DownloadSauda = lazy(
+  () => import("../../../components/DownloadSauda/DownloadSauda"),
 );
 
 const formatDate = (value) =>
@@ -53,6 +57,7 @@ const FinanceReport = () => {
   const [dateWiseTotals, setDateWiseTotals] = useState([]);
   const [adjustmentRows, setAdjustmentRows] = useState([]);
   const [selectedTotalDate, setSelectedTotalDate] = useState(null);
+  const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   const [saudaRows, setSaudaRows] = useState([
     {
       id: Date.now(),
@@ -76,6 +81,7 @@ const FinanceReport = () => {
           page,
           limit: itemsPerPage,
           startDate: formatDateParam(fromDate),
+          endDate: formatDateParam(toDate),
           consignee: selectedConsignee || undefined,
         },
       });
@@ -382,6 +388,16 @@ const FinanceReport = () => {
     (item) => item.saudaDetails || [],
   );
 
+  const selectedPartyTotals = selectedDateTotals.flatMap(
+    (item) => (item.partyTotals || []).map((party) => ({ ...party, date: item.date })),
+  );
+
+  const selectedAdjustments = selectedTotalDate
+    ? adjustmentRows.filter(
+        (item) => formatDateParam(selectedTotalDate) === formatDateParam(item.adjustmentDate),
+      )
+    : adjustmentRows;
+
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
       <select
@@ -620,13 +636,15 @@ const FinanceReport = () => {
               <div className="mt-6 overflow-x-auto">
                 <h3 className="mb-3 text-sm font-bold text-slate-700">Adjustment Equality Report</h3>
                 <Tables
-                  headers={["Sauda No", "Sauda Date", "Adjustment Date", "Seller Company", "Consignee", "Buying Quantity", "Selling / Adjusted Quantity", "Difference", "Status"]}
+                  headers={["Buyer", "Buyer Company", "Sauda No", "Seller Name", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
                   rows={adjustmentRows.map((adjustment) => [
+                    adjustment.buyer || "-",
+                    adjustment.buyerCompany || "-",
                     adjustment.saudaNo || "-",
+                    adjustment.sellerName || "-",
+                    adjustment.sellerCompany || "-",
                     formatDate(adjustment.saudaDate),
                     formatDate(adjustment.adjustmentDate),
-                    adjustment.sellerCompany || "-",
-                    adjustment.consignee || "-",
                     `${formatNumber(adjustment.purchaseQuantity)} Tons`,
                     `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
                     `${formatNumber(Math.abs(Number(adjustment.purchaseQuantity || 0) - Number(adjustment.adjustmentQuantity || 0)))} Tons`,
@@ -666,6 +684,24 @@ const FinanceReport = () => {
                 ])}
               />
             </div>
+            {selectedPartyTotals.length > 0 && (
+              <div className="mt-6 overflow-x-auto">
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Seller to Buyer Totals</h3>
+                <Tables
+                  headers={["Date", "Seller Name", "Seller Company", "Buyer", "Buyer Company", "Purchase Quantity", "Adjusted Quantity", "Pending Quantity"]}
+                  rows={selectedPartyTotals.map((party) => [
+                    formatDate(party.date),
+                    party.sellerName || "-",
+                    party.sellerCompany || "-",
+                    party.buyer || "-",
+                    party.buyerCompany || "-",
+                    `${formatNumber(party.purchaseQuantity)} Tons`,
+                    `${formatNumber(party.adjustedQuantity)} Tons`,
+                    `${formatNumber(party.pendingQuantity)} Tons`,
+                  ])}
+                />
+              </div>
+            )}
             {selectedSaudaDetails.length > 0 && (
               <div className="mt-6 overflow-x-auto">
                 <h3 className="mb-3 text-sm font-bold text-slate-700">Sauda Details</h3>
@@ -689,6 +725,63 @@ const FinanceReport = () => {
                     sauda.paymentTerms || "-",
                   ])}
                 />
+              </div>
+            )}
+            {selectedAdjustments.length > 0 && (
+              <div className="mt-6 overflow-x-auto">
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Adjusted Saudas</h3>
+                <Tables
+                  headers={["Adjustment Date", "Sauda No", "Buyer Company", "Seller Name", "Seller Company", "Adjusted Quantity", "Actions"]}
+                  rows={selectedAdjustments.map((adjustment) => [
+                    formatDate(adjustment.adjustmentDate),
+                    adjustment.saudaNo || "-",
+                    adjustment.buyerCompany || "-",
+                    adjustment.sellerName || "-",
+                    adjustment.sellerCompany || "-",
+                    `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
+                    <div key={`adjustment-actions-${adjustment._id || adjustment.saudaNo}`} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAdjustment(adjustment)}
+                        title="View adjustment details"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                      >
+                        <AiOutlineEye size={17} />
+                      </button>
+                      <DownloadSauda
+                        data={adjustment}
+                        button={
+                          <button
+                            type="button"
+                            title="Download Sauda"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          >
+                            <FaDownload size={13} />
+                          </button>
+                        }
+                      />
+                    </div>,
+                  ])}
+                />
+              </div>
+            )}
+            {selectedAdjustment && (
+              <div className="mt-4 grid gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
+                <div><span className="font-bold">Buyer:</span> {selectedAdjustment.buyer || "-"}</div>
+                <div><span className="font-bold">Buyer Company:</span> {selectedAdjustment.buyerCompany || "-"}</div>
+                <div><span className="font-bold">Sauda No:</span> {selectedAdjustment.saudaNo || "-"}</div>
+                <div><span className="font-bold">Seller Name:</span> {selectedAdjustment.sellerName || "-"}</div>
+                <div><span className="font-bold">Seller Company:</span> {selectedAdjustment.sellerCompany || "-"}</div>
+                <div><span className="font-bold">Consignee:</span> {selectedAdjustment.consignee || "-"}</div>
+                <div><span className="font-bold">Buying Quantity:</span> {formatNumber(selectedAdjustment.purchaseQuantity)} Tons</div>
+                <div><span className="font-bold">Adjusted Quantity:</span> {formatNumber(selectedAdjustment.adjustmentQuantity)} Tons</div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAdjustment(null)}
+                  className="text-left text-xs font-bold text-emerald-700 hover:text-emerald-900"
+                >
+                  Close details
+                </button>
               </div>
             )}
           </section>

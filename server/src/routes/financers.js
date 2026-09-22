@@ -307,6 +307,22 @@ router.get("/report", async (req, res) => {
       orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
     }
 
+    if (!rawSaudaNos.length) {
+      const savedAdjustments = await FinanceAdjustment.find({})
+        .select("saudaNo sellerCompany")
+        .lean();
+      const adjustedPairs = savedAdjustments
+        .filter((adjustment) => adjustment.saudaNo && adjustment.sellerCompany)
+        .map((adjustment) => ({
+          saudaNo: adjustment.saudaNo,
+          supplierCompany: {
+            $regex: `^${String(adjustment.sellerCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+            $options: "i",
+          },
+        }));
+      if (adjustedPairs.length) orderQuery.$nor = adjustedPairs;
+    }
+
     const [orders, total, companies, financerOrders, consigneeOptions, sellerCompanyOptions] = await Promise.all([
       SelfOrder.find(orderQuery)
         .select("saudaNo poDate supplierCompany buyerCompany consignee quantity rate cd gst deliveryDate paymentTerms companyId")
@@ -443,22 +459,43 @@ router.get("/report", async (req, res) => {
           ),
           adjustmentQuantity: 0,
           pendingQuantity: 0,
-          saudaDetails: (item.saudaDetails || []).map((sauda) => {
-            const loadedQuantity = totalsLoadedMap.get(String(sauda.saudaNo)) || 0;
-            const adjustmentQuantity = adjustments
-              .filter(
-                (adjustment) =>
-                  String(adjustment.saudaNo).toLowerCase() === String(sauda.saudaNo).toLowerCase() &&
-                  String(adjustment.sellerCompany).toLowerCase() === String(sauda.sellerCompany || "").toLowerCase(),
-              )
-              .reduce((totalAdjustment, adjustment) => totalAdjustment + Number(adjustment.adjustmentQuantity || 0), 0);
-            return {
-              ...sauda,
-              loadedQuantity,
-              adjustmentQuantity,
-              pendingQuantity: Math.max(0, Number(sauda.quantity || 0) - loadedQuantity - adjustmentQuantity),
-            };
-          }),
+          ...(() => {
+            const saudaDetails = (item.saudaDetails || []).map((sauda) => {
+              const loadedQuantity = totalsLoadedMap.get(String(sauda.saudaNo)) || 0;
+              const adjustmentQuantity = adjustments
+                .filter(
+                  (adjustment) =>
+                    String(adjustment.saudaNo).toLowerCase() === String(sauda.saudaNo).toLowerCase() &&
+                    String(adjustment.sellerCompany).toLowerCase() === String(sauda.sellerCompany || "").toLowerCase(),
+                )
+                .reduce((totalAdjustment, adjustment) => totalAdjustment + Number(adjustment.adjustmentQuantity || 0), 0);
+              return {
+                ...sauda,
+                loadedQuantity,
+                adjustmentQuantity,
+                pendingQuantity: Math.max(0, Number(sauda.quantity || 0) - loadedQuantity - adjustmentQuantity),
+              };
+            });
+            const partyTotals = [...saudaDetails.reduce((totals, sauda) => {
+              const key = `${sauda.sellerCompany || "-"}|${sauda.buyerCompany || "-"}`;
+              const current = totals.get(key) || {
+                sellerName: sauda.sellerName || "",
+                sellerCompany: sauda.sellerCompany || "-",
+                buyer: sauda.buyer || "",
+                buyerCompany: sauda.buyerCompany || "-",
+                purchaseQuantity: 0,
+                adjustedQuantity: 0,
+              };
+              current.purchaseQuantity += Number(sauda.quantity || 0);
+              current.adjustedQuantity += Number(sauda.adjustmentQuantity || 0);
+              totals.set(key, current);
+              return totals;
+            }, new Map()).values()].map((party) => ({
+              ...party,
+              pendingQuantity: Math.max(0, party.purchaseQuantity - party.adjustedQuantity),
+            }));
+            return { saudaDetails, partyTotals };
+          })(),
         },
       ]),
     );
@@ -484,15 +521,37 @@ router.get("/report", async (req, res) => {
 
     const adjustmentSaudaNos = [...new Set(adjustments.map((item) => item.saudaNo).filter(Boolean))];
     const adjustmentSaudas = await SelfOrder.find({ saudaNo: { $in: adjustmentSaudaNos } })
-      .select("saudaNo poDate")
+      .select("saudaNo poDate buyer buyerCompany supplier supplierCompany consignee commodity quantity rate cd gst deliveryDate paymentTerms")
+      .populate("supplier", "sellerName")
       .lean();
     const adjustmentSaudaDateMap = new Map(
       adjustmentSaudas.map((item) => [String(item.saudaNo).toLowerCase(), item.poDate]),
     );
-    const enrichedAdjustments = adjustments.map((adjustment) => ({
-      ...adjustment,
-      saudaDate: adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
-    }));
+    const adjustmentOrderMap = new Map(
+      adjustmentSaudas.map((item) => [
+        `${String(item.saudaNo).toLowerCase()}|${String(item.supplierCompany || "").toLowerCase()}`,
+        item,
+      ]),
+    );
+    const enrichedAdjustments = adjustments.map((adjustment) => {
+      const order = adjustmentOrderMap.get(
+        `${String(adjustment.saudaNo).toLowerCase()}|${String(adjustment.sellerCompany || "").toLowerCase()}`,
+      );
+      return {
+        ...adjustment,
+        saudaDate: order?.poDate || adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
+        buyer: order?.buyer || "",
+        buyerCompany: order?.buyerCompany || "",
+        sellerName: order?.supplier?.sellerName || "",
+        sellerCompany: order?.supplierCompany || adjustment.sellerCompany || "",
+        consignee: order?.consignee || adjustment.consignee || "",
+        commodity: order?.commodity || "",
+        quantity: Number(order?.quantity || adjustment.purchaseQuantity || 0),
+        rate: Number(order?.rate || 0),
+        deliveryDate: order?.deliveryDate || null,
+        paymentTerms: order?.paymentTerms || "",
+      };
+    });
 
     const data = orders.map((order) => ({
       ...order,
