@@ -62,9 +62,11 @@ const FinanceReport = () => {
     {
       id: Date.now(),
       saudaNo: "",
+      saudaNos: [],
       sellerCompany: "",
       saudaOptions: [],
       manualAdjustment: "",
+      saudaDetails: [],
       purchaseQuantity: null,
       consignee: "",
       pendingQuantity: null,
@@ -121,15 +123,18 @@ const FinanceReport = () => {
     }
   }, [consignees, selectedConsignee]);
 
-  const lookupSauda = async (rowId, saudaNo, sellerCompany, manualAdjustment) => {
-    const value = String(saudaNo || "").trim();
+  const lookupSauda = async (rowId, saudaNos, sellerCompany, manualAdjustment) => {
+    const values = (Array.isArray(saudaNos) ? saudaNos : [saudaNos])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+    const value = values.join(",");
     const company = String(sellerCompany || "").trim();
     const adjustment = Math.max(0, Number(manualAdjustment || 0));
-    if (!value || !company) {
+    if (!values.length || !company) {
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id === rowId
-            ? { ...row, status: !value ? "Enter Sauda No" : "Select seller company" }
+            ? { ...row, status: !values.length ? "Select Sauda No" : "Select seller company" }
             : row,
         ),
       );
@@ -145,59 +150,53 @@ const FinanceReport = () => {
           limit: 100,
         },
       });
-      const match = (response.data?.data || []).find(
-        (item) => String(item.saudaNo).toLowerCase() === value.toLowerCase(),
-      );
+      const adjustments = response.data?.adjustments || [];
+      const matches = response.data?.data || [];
+      const details = values.map((saudaNo) => {
+        const match = matches.find(
+          (item) => String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase(),
+        );
+        const adjustment = adjustments.find(
+          (item) =>
+            String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
+            String(item.sellerCompany).toLowerCase() === company.toLowerCase(),
+        );
+        return match
+          ? {
+              ...match,
+              adjustmentId: adjustment?._id || "",
+              adjustmentDate: adjustment?.adjustmentDate || "",
+              adjustmentQuantity: Number(adjustment?.adjustmentQuantity || 0),
+              pendingQuantity: Math.max(
+                0,
+                Number(match.quantity || 0) - Number(adjustment?.adjustmentQuantity || 0),
+              ),
+            }
+          : null;
+      }).filter(Boolean);
+      const purchaseQuantity = details.reduce((total, item) => total + Number(item.quantity || 0), 0);
+      const currentAdjustment = details.reduce((total, item) => total + Number(item.adjustmentQuantity || 0), 0);
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id !== rowId
             ? row
-            : match
-              ? {
-                  ...row,
-                  sellerCompany: company,
-                  saudaDate: match.poDate || null,
-                  purchaseQuantity: Number(match.quantity || 0),
-                  consignee: match.consignee || "",
-                  adjustmentId: response.data?.adjustments?.find(
-                    (adjustment) =>
-                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                  )?._id || "",
-                  adjustmentDate: response.data?.adjustments?.find(
-                    (adjustment) =>
-                      String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                      String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                  )?.adjustmentDate || "",
-                  manualAdjustment: String(
-                    response.data?.adjustments?.find(
-                      (adjustment) =>
-                        String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                        String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                    )?.adjustmentQuantity || 0,
-                  ),
-                  pendingQuantity: Math.abs(
-                    Number(match.quantity || 0) -
-                      Number(
-                        response.data?.adjustments?.find(
-                          (adjustment) =>
-                            String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                            String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                        )?.adjustmentQuantity || 0,
-                      ),
-                  ),
-                  status: getAdjustmentStatus(
-                    Number(match.quantity || 0),
-                    Number(
-                      response.data?.adjustments?.find(
-                        (adjustment) =>
-                          String(adjustment.saudaNo).toLowerCase() === value.toLowerCase() &&
-                          String(adjustment.sellerCompany).toLowerCase() === company.toLowerCase(),
-                      )?.adjustmentQuantity || 0,
-                    ),
-                  ),
-                }
-              : { ...row, pendingQuantity: null, status: "Not found" },
+            : {
+                ...row,
+                sellerCompany: company,
+                saudaNo: values.join(", "),
+                saudaNos: values,
+                saudaDetails: details,
+                saudaDate: details[0]?.poDate || null,
+                purchaseQuantity,
+                consignee: details[0]?.consignee || "",
+                adjustmentId: "",
+                adjustmentDate: details[0]?.adjustmentDate || "",
+                manualAdjustment: String(currentAdjustment),
+                pendingQuantity: Math.max(0, purchaseQuantity - currentAdjustment),
+                status: details.length === values.length
+                  ? getAdjustmentStatus(purchaseQuantity, currentAdjustment)
+                  : "Some Sauda not found",
+              },
         ),
       );
     } catch (error) {
@@ -206,24 +205,6 @@ const FinanceReport = () => {
       );
       toast.error(error.response?.data?.message || "Failed to find Sauda");
     }
-  };
-
-  const updateSaudaRow = (id, value) => {
-    setSaudaRows((rows) =>
-      rows.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              saudaNo: value,
-              adjustmentId: "",
-              purchaseQuantity: null,
-              consignee: "",
-              pendingQuantity: null,
-              status: "",
-            }
-          : row,
-      ),
-    );
   };
 
   const loadSaudaOptions = async (rowId, sellerCompany, consignee = selectedConsignee) => {
@@ -268,12 +249,14 @@ const FinanceReport = () => {
       {
         id: Date.now() + rows.length,
         saudaNo: "",
+        saudaNos: [],
         sellerCompany: "",
         saudaOptions: [],
         manualAdjustment: "",
         purchaseQuantity: null,
         consignee: "",
         pendingQuantity: null,
+        saudaDetails: [],
         status: "",
       },
     ]);
@@ -281,29 +264,38 @@ const FinanceReport = () => {
 
   const saveAdjustment = async (row) => {
     const adjustmentQuantity = Math.max(0, Number(row.manualAdjustment || 0));
-    if (!row.saudaNo || !row.sellerCompany || !row.purchaseQuantity || !adjustmentQuantity) {
-      toast.error("Lookup a Sauda and enter an adjustment quantity first");
+    if (!row.saudaNos?.length || !row.sellerCompany || !row.purchaseQuantity || !adjustmentQuantity) {
+      toast.error("Select Saudas and enter a combined adjustment quantity first");
       return;
     }
     try {
-      const payload = {
-        saudaNo: row.saudaNo,
-        sellerCompany: row.sellerCompany,
-        consignee: row.consignee,
-        purchaseQuantity: row.purchaseQuantity,
-        pendingQuantity: row.pendingQuantity,
-        adjustmentQuantity,
-      };
-      const response = row.adjustmentId
-        ? await api.put(`/financers/adjustments/${row.adjustmentId}`, payload)
-        : await api.post("/financers/adjustments", payload);
+      let remainingAdjustment = adjustmentQuantity;
+      for (const detail of row.saudaDetails) {
+        const quantity = Number(detail.quantity || 0);
+        const allocatedAdjustment = Math.min(quantity, remainingAdjustment);
+        const payload = {
+          saudaNo: detail.saudaNo,
+          sellerCompany: row.sellerCompany,
+          consignee: detail.consignee || row.consignee,
+          purchaseQuantity: quantity,
+          pendingQuantity: Math.max(0, quantity - allocatedAdjustment),
+          adjustmentQuantity: allocatedAdjustment,
+        };
+        if (detail.adjustmentId && allocatedAdjustment) {
+          await api.put(`/financers/adjustments/${detail.adjustmentId}`, payload);
+        } else if (!detail.adjustmentId && allocatedAdjustment) {
+          await api.post("/financers/adjustments", payload);
+        } else if (detail.adjustmentId && !allocatedAdjustment) {
+          await api.delete(`/financers/adjustments/${detail.adjustmentId}`);
+        }
+        remainingAdjustment = Math.max(0, remainingAdjustment - allocatedAdjustment);
+      }
       setSaudaRows((rows) =>
         rows.map((item) =>
           item.id === row.id
             ? {
                 ...item,
-                adjustmentId: response.data?._id || row.adjustmentId,
-                adjustmentDate: response.data?.adjustmentDate || new Date().toISOString(),
+                adjustmentDate: new Date().toISOString(),
                 status: getAdjustmentStatus(item.purchaseQuantity, item.manualAdjustment),
               }
             : item,
@@ -313,30 +305,6 @@ const FinanceReport = () => {
       loadReport();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save adjustment");
-    }
-  };
-
-  const deleteAdjustment = async (row) => {
-    if (!row.adjustmentId) return;
-    try {
-      await api.delete(`/financers/adjustments/${row.adjustmentId}`);
-      setSaudaRows((rows) =>
-        rows.map((item) =>
-          item.id === row.id
-            ? {
-                ...item,
-                adjustmentId: "",
-                manualAdjustment: "",
-                    pendingQuantity: Number(item.purchaseQuantity || 0),
-                    status: getAdjustmentStatus(item.purchaseQuantity, 0),
-              }
-            : item,
-        ),
-      );
-      toast.success("Adjustment deleted");
-      loadReport();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete adjustment");
     }
   };
 
@@ -401,18 +369,33 @@ const FinanceReport = () => {
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
       <select
-        value={row.saudaNo}
+        multiple
+        value={row.saudaNos}
         onChange={(event) => {
-          const saudaNo = event.target.value;
-          updateSaudaRow(row.id, saudaNo);
-          if (saudaNo && row.sellerCompany) {
-            lookupSauda(row.id, saudaNo, row.sellerCompany, row.manualAdjustment);
+          const saudaNos = Array.from(event.target.selectedOptions, (option) => option.value);
+          setSaudaRows((rows) =>
+            rows.map((item) =>
+              item.id === row.id
+                ? {
+                    ...item,
+                    saudaNo: saudaNos.join(", "),
+                    saudaNos,
+                    saudaDetails: [],
+                    purchaseQuantity: null,
+                    pendingQuantity: null,
+                    manualAdjustment: "",
+                    status: "",
+                  }
+                : item,
+            ),
+          );
+          if (saudaNos.length && row.sellerCompany) {
+            lookupSauda(row.id, saudaNos, row.sellerCompany, row.manualAdjustment);
           }
         }}
         disabled={!row.sellerCompany || row.saudaOptions.length === 0}
-        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
+        className="min-h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
       >
-        <option value="">Select Sauda number</option>
         {(row.saudaOptions || []).map((option) => (
           <option key={option.saudaNo} value={option.saudaNo}>
             {option.saudaNo} - {formatDate(option.poDate)}
@@ -430,11 +413,13 @@ const FinanceReport = () => {
                     ...item,
                     sellerCompany: company,
                     saudaNo: "",
+                    saudaNos: [],
                     adjustmentId: "",
                     saudaOptions: [],
                     purchaseQuantity: null,
                     consignee: "",
                     pendingQuantity: null,
+                    saudaDetails: [],
                     status: "",
                   }
                 : item,
@@ -507,7 +492,9 @@ const FinanceReport = () => {
       <div><span className="font-bold text-slate-500">Company:</span> {row.sellerCompany || "-"}</div>
       <div><span className="font-bold text-slate-500">Consignee:</span> {row.consignee || "-"}</div>
     </div>,
-    formatDate(row.saudaDate),
+    <div key={`selected-saudas-${row.id}`} className="min-w-[150px] text-xs font-semibold">
+      {(row.saudaNos || []).length ? row.saudaNos.join(", ") : "-"}
+    </div>,
     formatDate(row.adjustmentDate),
     row.purchaseQuantity === null ? "-" : `${formatNumber(row.purchaseQuantity)} Tons`,
     row.manualAdjustment ? `${formatNumber(row.manualAdjustment)} Tons` : "0 Tons",
@@ -525,16 +512,6 @@ const FinanceReport = () => {
       {row.status || "Enter Sauda No"}
     </span>,
     <div key={`remove-${row.id}`} className="flex gap-1">
-      {row.adjustmentId && (
-        <button
-          type="button"
-          onClick={() => deleteAdjustment(row)}
-          title="Delete adjustment"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50"
-        >
-          <FaTrash size={12} />
-        </button>
-      )}
       <button
         type="button"
         onClick={() => removeSaudaRow(row.id)}
@@ -628,7 +605,7 @@ const FinanceReport = () => {
             </div>
             <div className="overflow-x-auto">
               <Tables
-                headers={["Seller Sauda No", "Seller Company / Consignee", "Sauda Date", "Adjustment Date", "Buying Quantity", "Selling / Adjusted Quantity", "Difference", "Adjustment Status", "Actions"]}
+                headers={["Seller Sauda No(s)", "Seller Company / Consignee", "Selected Saudas", "Adjustment Date", "Combined Buying Quantity", "Combined Adjusted Quantity", "Combined Pending Quantity", "Adjustment Status", "Actions"]}
                 rows={saudaLookupRows}
               />
             </div>
