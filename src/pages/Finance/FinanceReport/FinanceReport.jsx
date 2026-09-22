@@ -314,10 +314,38 @@ const FinanceReport = () => {
     }
   };
 
+  const adjustEqualityRow = (adjustment) => {
+    const rowId = saudaRows[0]?.id || Date.now();
+    const saudaNo = String(adjustment.saudaNo || "").trim();
+    const sellerCompany = String(adjustment.sellerCompany || "").trim();
+    if (!saudaNo || !sellerCompany) return;
+
+    setSaudaRows((rows) => {
+      const nextRow = {
+        id: rowId,
+        saudaNo,
+        saudaNos: [saudaNo],
+        sellerCompany,
+        saudaOptions: rows[0]?.saudaOptions || [],
+        manualAdjustment: String(adjustment.adjustmentQuantity || 0),
+        purchaseQuantity: Number(adjustment.purchaseQuantity || 0),
+        consignee: adjustment.consignee || "",
+        pendingQuantity: Math.abs(
+          Number(adjustment.purchaseQuantity || 0) -
+            Number(adjustment.adjustmentQuantity || 0),
+        ),
+        saudaDetails: [],
+        status: "Loading Sauda...",
+      };
+      return rows.length ? rows.map((row, index) => (index === 0 ? nextRow : row)) : [nextRow];
+    });
+    lookupSauda(rowId, [saudaNo], sellerCompany, adjustment.adjustmentQuantity);
+  };
+
   const removeSaudaRow = (id) => {
     setSaudaRows((rows) =>
       rows.length === 1
-        ? [{ id: Date.now(), saudaNo: "", sellerCompany: "", saudaOptions: [], manualAdjustment: "", purchaseQuantity: null, consignee: "", pendingQuantity: null, status: "" }]
+        ? [{ id: Date.now(), saudaNo: "", saudaNos: [], sellerCompany: "", saudaOptions: [], manualAdjustment: "", purchaseQuantity: null, consignee: "", pendingQuantity: null, saudaDetails: [], status: "" }]
         : rows.filter((row) => row.id !== id),
     );
   };
@@ -628,9 +656,21 @@ const FinanceReport = () => {
                     `${formatNumber(adjustment.purchaseQuantity)} Tons`,
                     `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
                     `${formatNumber(Math.abs(Number(adjustment.purchaseQuantity || 0) - Number(adjustment.adjustmentQuantity || 0)))} Tons`,
-                    <span key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`} className={getAdjustmentStatus(adjustment.purchaseQuantity, adjustment.adjustmentQuantity) === "Equal" ? "font-bold text-emerald-600" : "font-bold text-amber-600"}>
-                      {getAdjustmentStatus(adjustment.purchaseQuantity, adjustment.adjustmentQuantity)}
-                    </span>,
+                    getAdjustmentStatus(adjustment.purchaseQuantity, adjustment.adjustmentQuantity) === "Equal" ? (
+                      <span key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`} className="font-bold text-emerald-600">
+                        Equal
+                      </span>
+                    ) : (
+                      <button
+                        key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
+                        type="button"
+                        onClick={() => adjustEqualityRow(adjustment)}
+                        title="Load this Sauda for adjustment"
+                        className="font-bold text-amber-600 underline decoration-dashed underline-offset-2 hover:text-amber-800"
+                      >
+                        Not Equal - Adjust
+                      </button>
+                    ),
                   ])}
                 />
               </div>
