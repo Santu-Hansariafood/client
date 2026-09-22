@@ -368,11 +368,18 @@ const FinanceReport = () => {
 
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
-      <select
-        multiple
-        value={row.saudaNos}
-        onChange={(event) => {
-          const saudaNos = Array.from(event.target.selectedOptions, (option) => option.value);
+      <DataDropdown
+        options={(row.saudaOptions || []).map((option) => ({
+          value: option.saudaNo,
+          label: `${option.saudaNo} - ${formatDate(option.poDate)}`,
+        }))}
+        selectedOptions={row.saudaNos}
+        isMulti
+        isClearable
+        isDisabled={!row.sellerCompany || row.saudaOptions.length === 0}
+        placeholder="Select one or more Saudas"
+        onChange={(options) => {
+          const saudaNos = (options || []).map((option) => option.value);
           setSaudaRows((rows) =>
             rows.map((item) =>
               item.id === row.id
@@ -393,19 +400,14 @@ const FinanceReport = () => {
             lookupSauda(row.id, saudaNos, row.sellerCompany, row.manualAdjustment);
           }
         }}
-        disabled={!row.sellerCompany || row.saudaOptions.length === 0}
-        className="min-h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100"
-      >
-        {(row.saudaOptions || []).map((option) => (
-          <option key={option.saudaNo} value={option.saudaNo}>
-            {option.saudaNo} - {formatDate(option.poDate)}
-          </option>
-        ))}
-      </select>
-      <select
-        value={row.sellerCompany}
-        onChange={(event) => {
-          const company = event.target.value;
+      />
+      <DataDropdown
+        options={sellerCompanyOptions}
+        selectedOptions={row.sellerCompany}
+        isClearable
+        placeholder="Select seller company"
+        onChange={(option) => {
+          const company = option?.value || "";
           setSaudaRows((rows) =>
             rows.map((item) =>
               item.id === row.id
@@ -425,15 +427,9 @@ const FinanceReport = () => {
                 : item,
             ),
           );
-          loadSaudaOptions(row.id, company, selectedConsignee);
+          if (company) loadSaudaOptions(row.id, company, selectedConsignee);
         }}
-        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-      >
-        <option value="">Select seller company</option>
-        {sellerCompanyOptions.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
-        ))}
-      </select>
+      />
       <input
         type="number"
         min="0"
