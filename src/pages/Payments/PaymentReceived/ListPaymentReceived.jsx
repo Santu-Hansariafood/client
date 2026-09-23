@@ -808,7 +808,7 @@ const ListPaymentReceived = () => {
         gstAmount,
         cdPercent,
         gstPercent,
-        totalQualityClaims,
+        totalQualityClaims: totalClaim,
         bankCharges,
         secondClaim,
         otherCharges,
@@ -868,7 +868,7 @@ const ListPaymentReceived = () => {
         lorryNo = raw.lorryNumber || "-";
         unloadingWeight = raw.unloadingWeight || null;
         billNo = raw.billNumber || "-";
-        billAmount = details.netAmount;
+        billAmount = details.grossAmount;
         paidAmount = raw.paidAmount || 0;
         payableAmount = details.dueAmount;
         remarks = raw.generalRemarks || raw.remarks || row.particulars || "-";
@@ -890,7 +890,7 @@ const ListPaymentReceived = () => {
         lorryNo = loadingEntry?.lorryNumber || "-";
         unloadingWeight = loadingEntry?.unloadingWeight || null;
         billNo = loadingEntry?.billNumber || "-";
-        billAmount = details.netAmount;
+        billAmount = details.grossAmount;
         paidAmount = Number(firstMapping?.allocatedAmount || 0);
         payableAmount = details.dueAmount;
         remarks =
@@ -1056,11 +1056,13 @@ const ListPaymentReceived = () => {
             ? Math.max(
                 0,
                 Number(rowData.billAmount || 0) -
+                  cd -
                   claims -
                   bankCharges -
                   (Number(rowData.secondClaim) || 0) -
                   (Number(rowData.otherCharges) || 0) -
-                  (Number(rowData.paymentTdsAmount) || 0),
+                  (Number(rowData.paymentTdsAmount) || 0) +
+                  gst,
               )
             : grossAmount;
           const rowCredit = isEntryRow ? 0 : displayCredit;

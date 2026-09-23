@@ -178,18 +178,16 @@ const TallyLedgerBook = ({
 
   const renderAmountCells = (r) => (
     <>
+      <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
+        {r.debit > 0 ? formatLedgerAmount(r.debit) : ""}
+      </td>
       <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
         {r.credit > 0 ? formatLedgerAmount(r.credit) : ""}
-        {r.balance !== 0 && (
-          <div className="mt-1 border-t border-emerald-100 pt-1 text-[9px] font-semibold text-slate-500">
-            Balance: {formatLedgerAmount(Math.abs(r.balance))}
-          </div>
-        )}
       </td>
-      <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-        {formatLedgerAmount(
-          r.raw?.uiType === "entry" ? r.debit : r.balance,
-        )}
+      <td className="px-3 py-2 text-right font-semibold text-slate-600 border-r border-slate-200 tabular-nums">
+        {r.balance !== 0
+          ? `${formatLedgerAmount(Math.abs(r.balance))} ${r.balance > 0 ? "Dr." : "Cr."}`
+          : "-"}
       </td>
     </>
   );
@@ -350,13 +348,13 @@ const TallyLedgerBook = ({
               Vch
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Due Amount
+              Debit (Dr.)
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Credit
+              Credit (Cr.)
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
-              Due / Bal
+              Balance
             </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-center">
               Download
@@ -503,14 +501,14 @@ const TallyLedgerBook = ({
                         <td className="px-3 py-1 border-r border-slate-200 text-[9px] font-bold text-slate-400 uppercase text-right">
                           BRK
                         </td>
-                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-rose-700">
-                          {item.type === "deduct"
-                            ? `− ${formatLedgerAmount(item.amount)}`
+                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-[#1e3a5f]">
+                          {item.type === "add"
+                            ? `+ ${formatLedgerAmount(item.amount)}`
                             : ""}
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-emerald-700">
-                          {item.type === "add"
-                            ? `+ ${formatLedgerAmount(item.amount)}`
+                          {item.type === "deduct"
+                            ? `− ${formatLedgerAmount(item.amount)}`
                             : ""}
                         </td>
                         <td className="px-3 py-1"></td>
@@ -583,12 +581,11 @@ const TallyLedgerBook = ({
                         <td className="px-3 py-1 border-r border-slate-200"></td>
                       </>
                     )}
-                    <td className="px-3 py-1 border-r border-slate-200"></td>
-                    {renderEmptyAmountCells(1)}
                     <td className="px-3 py-1 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums bg-white/60">
                       = {formatLedgerAmount(row.debit)}
                     </td>
-                    <td className="px-3 py-1"></td>
+                    {renderEmptyAmountCells(1)}
+                    <td className="px-3 py-1 border-r border-slate-200"></td>
                     <td className="px-3 py-1"></td>
                     <td className="px-3 py-1"></td>
                     <td className="px-3 py-1"></td>

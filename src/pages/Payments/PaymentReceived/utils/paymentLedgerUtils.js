@@ -187,7 +187,7 @@ export const buildEntryBreakdown = (entry) => {
       category: "gst",
     });
   }
-  if (entry.qualityClaims && Array.isArray(entry.qualityClaims)) {
+  if (!entry.manualClaim && entry.qualityClaims && Array.isArray(entry.qualityClaims)) {
     entry.qualityClaims.forEach((claim) => {
       const claimAmt = Number(claim.claimAmount) || 0;
       if (claimAmt > 0) {
@@ -458,7 +458,8 @@ export const buildTallyVoucherRows = (
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
         const dueAmount = calculateOutstandingAmount(item);
-        const debit = dueAmount;
+        const paidAmount = Number(item.paidAmount) || 0;
+        const debit = dueAmount + paidAmount;
 
         const credit = 0;
         const hasUnloading = item.unloadingWeight && item.unloadingWeight > 0;
