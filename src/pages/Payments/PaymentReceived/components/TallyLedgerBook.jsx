@@ -503,14 +503,14 @@ const TallyLedgerBook = ({
                         <td className="px-3 py-1 border-r border-slate-200 text-[9px] font-bold text-slate-400 uppercase text-right">
                           BRK
                         </td>
-                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-[#1e3a5f]">
-                          {item.type === "add"
-                            ? `+ ${formatLedgerAmount(item.amount)}`
+                        <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-rose-700">
+                          {item.type === "deduct"
+                            ? `− ${formatLedgerAmount(item.amount)}`
                             : ""}
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-emerald-700">
-                          {item.type === "deduct"
-                            ? `− ${formatLedgerAmount(item.amount)}`
+                          {item.type === "add"
+                            ? `+ ${formatLedgerAmount(item.amount)}`
                             : ""}
                         </td>
                         <td className="px-3 py-1"></td>
@@ -584,10 +584,10 @@ const TallyLedgerBook = ({
                       </>
                     )}
                     <td className="px-3 py-1 border-r border-slate-200"></td>
+                    {renderEmptyAmountCells(1)}
                     <td className="px-3 py-1 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums bg-white/60">
                       = {formatLedgerAmount(row.debit)}
                     </td>
-                    {renderEmptyAmountCells(1)}
                     <td className="px-3 py-1"></td>
                     <td className="px-3 py-1"></td>
                     <td className="px-3 py-1"></td>
