@@ -263,7 +263,7 @@ const AddPaymentReceived = () => {
       (entry.unloadingWeight || 0) > 0
         ? entry.unloadingWeight
         : entry.loadingWeight || 0;
-    const rate = entry.actualRate || 0;
+    const rate = entry.actualRate || entry.rate || 0;
     const cdPercent = entry.cd || 0;
     const gstPercent = entry.gst || 0;
     const bankCharges = Number(entry.bankCharges) || 0;

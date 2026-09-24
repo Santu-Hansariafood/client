@@ -118,7 +118,7 @@ const getPaymentReference = (payment = {}, mapping = {}, loadingEntry = {}) => {
   return "";
 };
 
-const calculateOutstandingAmount = (entry) => {
+const calculateEntryPayableAmount = (entry) => {
   if (!entry || entry.isRejected) return 0;
   const weight =
     Number(entry.unloadingWeight || 0) > 0
@@ -140,11 +140,14 @@ const calculateOutstandingAmount = (entry) => {
     (Number(entry.otherCharges) || 0) +
     (Number(entry.bankCharges) || 0) +
     (Number(entry.tds) || 0);
-  return Math.max(
-    0,
-    taxable + gst - deductions - (Number(entry.paidAmount) || 0),
-  );
+  return Math.max(0, taxable + gst - deductions);
 };
+
+const calculateOutstandingAmount = (entry) =>
+  Math.max(
+    0,
+    calculateEntryPayableAmount(entry) - (Number(entry.paidAmount) || 0),
+  );
 
 export const buildEntryBreakdown = (entry) => {
   if (!entry || entry.isRejected) return [];
@@ -325,35 +328,9 @@ export const buildTallyVoucherRows = (
   openingBalance = 0,
   entries = [],
 ) => {
-  const allocationTotalsByEntryId = new Map();
-  payments.forEach((payment) => {
-    (payment.mappings || []).forEach((mapping) => {
-      const entryId =
-        typeof mapping.loadingEntryId === "object" && mapping.loadingEntryId
-          ? mapping.loadingEntryId._id
-          : mapping.loadingEntryId;
-      if (!entryId) return;
-      const key = String(entryId);
-      allocationTotalsByEntryId.set(
-        key,
-        (allocationTotalsByEntryId.get(key) || 0) +
-          (Number(mapping.allocatedAmount) || 0),
-      );
-    });
-  });
-
-  const settlementTolerance = 100;
   const visibleEntries = entries.filter((entry) => {
     if (entry.isRejected) return false;
-    const allocatedAmount = Math.max(
-      allocationTotalsByEntryId.get(String(entry._id)) || 0,
-      Number(entry.paidAmount) || 0,
-    );
-    if (allocatedAmount <= 0) return true;
-
-    const payableAmount =
-      calculateOutstandingAmount(entry) + (Number(entry.paidAmount) || 0);
-    return Math.abs(payableAmount - allocatedAmount) > settlementTolerance;
+    return true;
   });
 
   const allItems = [
@@ -452,14 +429,14 @@ export const buildTallyVoucherRows = (
           }, 0);
         }
         if (item.manualClaim && item.manualClaimAmount) {
-          totalClaims += Number(item.manualClaimAmount) || 0;
+          totalClaims = Number(item.manualClaimAmount) || 0;
         }
         const secondClaim = Number(item.secondClaim) || 0;
         const otherCharges = Number(item.otherCharges) || 0;
         const tds = Number(item.tds) || 0;
+        const payableAmount = calculateEntryPayableAmount(item);
         const dueAmount = calculateOutstandingAmount(item);
-        const paidAmount = Number(item.paidAmount) || 0;
-        const debit = dueAmount + paidAmount;
+        const debit = payableAmount;
 
         const credit = 0;
         const hasUnloading = item.unloadingWeight && item.unloadingWeight > 0;
@@ -643,7 +620,14 @@ export const buildTallyVoucherRows = (
             raw: item,
             grossAmount: 0,
             gstAmount: 0,
-            totalClaims: 0,
+            totalClaims:
+              Number(mapping.claim) ||
+              (loadingEntry.manualClaim
+                ? Number(loadingEntry.manualClaimAmount) || 0
+                : (loadingEntry.qualityClaims || []).reduce(
+                    (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                    0,
+                  )),
             cdAmount: 0,
             bankCharges: Number(mapping.bankCharges) || 0,
             secondClaim: Number(mapping.secondClaim) || 0,
@@ -932,14 +916,26 @@ export const calculateEntryDueAmount = (item) => {
     (item.unloadingWeight || 0) > 0
       ? item.unloadingWeight
       : item.loadingWeight || 0;
-  const rate = item.actualRate || 0;
+  const rate = item.actualRate || item.rate || 0;
   const gross = weight * rate;
   const cd = gross * ((item.cd || 0) / 100);
   const amountAfterCd = gross - cd;
   const taxable = amountAfterCd;
   const gst = taxable * ((item.gst || 0) / 100);
   const net = taxable + gst;
-  return Math.max(0, net - (item.paidAmount || 0));
+  const qualityClaims = item.manualClaim
+    ? Number(item.manualClaimAmount) || 0
+    : (item.qualityClaims || []).reduce(
+        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+        0,
+      );
+  const deductions =
+    qualityClaims +
+    (Number(item.secondClaim) || 0) +
+    (Number(item.otherCharges) || 0) +
+    (Number(item.bankCharges) || 0) +
+    (Number(item.tds) || 0);
+  return Math.max(0, net - deductions - (Number(item.paidAmount) || 0));
 };
 
 export const hasAllocationTableScope = (ledgerType, companyPair) => {

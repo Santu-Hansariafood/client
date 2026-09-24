@@ -311,40 +311,10 @@ router.post("/", authJwt, async (req, res) => {
         if (mapping.loadingEntryId) {
           const entry = await LoadingEntry.findById(mapping.loadingEntryId);
           if (entry) {
-            const selfOrder = await SelfOrder.findOne({
-              saudaNo: entry.saudaNo,
+            const netAmount = await calculateLoadingEntryNetAmount({
+              ...entry.toObject(),
+              ...mapping,
             });
-            let netAmount = 0;
-            if (selfOrder) {
-              const weight =
-                entry.unloadingWeight && entry.unloadingWeight > 0
-                  ? entry.unloadingWeight
-                  : entry.loadingWeight || 0;
-              const rate = selfOrder.rate || 0;
-              const cdPercent = selfOrder.cd || 0;
-              const gstPercent = selfOrder.gst || 0;
-
-              const grossAmount = weight * rate;
-              const cdAmount = grossAmount * (cdPercent / 100);
-              const taxableAmount = grossAmount - cdAmount;
-              const gstAmount = taxableAmount * (gstPercent / 100);
-              const totalClaim = entry.manualClaim
-                ? Number(entry.manualClaimAmount) || 0
-                : (entry.qualityClaims || []).reduce(
-                    (sum, claim) => sum + (Number(claim.claimAmount) || 0),
-                    0,
-                  );
-              netAmount = Math.max(
-                0,
-                taxableAmount +
-                  gstAmount -
-                  totalClaim -
-                  (Number(entry.secondClaim) || 0) -
-                  (Number(entry.otherCharges) || 0) -
-                  (Number(entry.bankCharges) || 0) -
-                  (Number(entry.tds) || 0),
-              );
-            }
 
             const newPaidAmount =
               (entry.paidAmount || 0) + mapping.allocatedAmount;
@@ -950,9 +920,9 @@ const calculateLoadingEntryNetAmount = async (entry) => {
     entry.unloadingWeight && entry.unloadingWeight > 0
       ? entry.unloadingWeight
       : entry.loadingWeight || 0;
-  const rate = selfOrder.rate || 0;
-  const cdPercent = selfOrder.cd || 0;
-  const gstPercent = selfOrder.gst || 0;
+  const rate = Number(entry.actualRate || entry.rate || selfOrder.rate) || 0;
+  const cdPercent = Number(entry.cd ?? selfOrder.cd) || 0;
+  const gstPercent = Number(entry.gst ?? selfOrder.gst) || 0;
   const grossAmount = weight * rate;
   const cdAmount = grossAmount * (cdPercent / 100);
   const taxableAmount = grossAmount - cdAmount;
@@ -1138,7 +1108,10 @@ router.put("/:id", async (req, res) => {
             mapping.loadingEntryId,
           ).session(session);
           if (entry) {
-            const netAmount = await calculateLoadingEntryNetAmount(entry);
+            const netAmount = await calculateLoadingEntryNetAmount({
+              ...entry.toObject(),
+              ...mapping,
+            });
             const allocAmount = Number(mapping.allocatedAmount) || 0;
             const newPaidAmount = (entry.paidAmount || 0) + allocAmount;
 
