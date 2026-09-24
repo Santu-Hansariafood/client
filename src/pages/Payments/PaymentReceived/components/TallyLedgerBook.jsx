@@ -490,7 +490,6 @@ const TallyLedgerBook = ({
                           <span className="inline-block mr-2 font-bold w-4 text-right">
                             {item.type === "add" ? "+" : "−"}
                           </span>
-                          {item.label}
                         </td>
                         {showCompanyColumns && (
                           <>
@@ -502,14 +501,24 @@ const TallyLedgerBook = ({
                           BRK
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-[#1e3a5f]">
-                          {item.type === "add"
-                            ? `+ ${formatLedgerAmount(item.amount)}`
-                            : ""}
+                          {item.type === "add" && (
+                            <>
+                              <div className="text-[9px] leading-tight">
+                                {item.label}
+                              </div>
+                              <div>{formatLedgerAmount(item.amount)}</div>
+                            </>
+                          )}
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-emerald-700">
-                          {item.type === "deduct"
-                            ? `− ${formatLedgerAmount(item.amount)}`
-                            : ""}
+                          {item.type === "deduct" && (
+                            <>
+                              <div className="text-[9px] leading-tight">
+                                {item.label}
+                              </div>
+                              <div>{formatLedgerAmount(item.amount)}</div>
+                            </>
+                          )}
                         </td>
                         <td className="px-3 py-1"></td>
                         <td className="px-3 py-1"></td>

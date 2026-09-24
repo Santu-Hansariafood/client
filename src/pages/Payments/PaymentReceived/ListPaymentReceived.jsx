@@ -1055,17 +1055,17 @@ const ListPaymentReceived = () => {
           const rowDebit = isEntryRow
             ? Math.max(
                 0,
-                Number(rowData.billAmount || 0) -
-                  cd -
-                  claims -
-                  bankCharges -
-                  (Number(rowData.secondClaim) || 0) -
-                  (Number(rowData.otherCharges) || 0) -
-                  (Number(rowData.paymentTdsAmount) || 0) +
-                  gst,
+                Number(rowData.billAmount || 0) - cd + gst,
               )
             : grossAmount;
-          const rowCredit = isEntryRow ? 0 : displayCredit;
+          const claimCredit =
+            claims +
+            bankCharges +
+            (Number(rowData.secondClaim) || 0) +
+            (Number(rowData.otherCharges) || 0);
+          const rowCredit = isEntryRow
+            ? claimCredit + (Number(rowData.paymentTdsAmount) || 0)
+            : displayCredit;
           saudaDebitTotal += rowDebit;
           saudaCreditTotal += rowCredit;
           saudaPaidTotal += rowData.paidAmount;
@@ -1084,21 +1084,6 @@ const ListPaymentReceived = () => {
           const mappedLorries = !isEntryRow
             ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
             : "";
-          const adjustmentParts = [
-            gst > 0 ? `GST +${Number(gst).toFixed(2)}` : "",
-            claims > 0 ? `CLAIM -${Number(claims).toFixed(2)}` : "",
-            cd > 0 ? `CD -${Number(cd).toFixed(2)}` : "",
-            bankCharges > 0 ? `BANK -${Number(bankCharges).toFixed(2)}` : "",
-            Number(rowData.secondClaim) > 0
-              ? `2ND CLAIM -${Number(rowData.secondClaim).toFixed(2)}`
-              : "",
-            Number(rowData.otherCharges) > 0
-              ? `OTHER -${Number(rowData.otherCharges).toFixed(2)}`
-              : "",
-            Number(rowData.paymentTdsAmount) > 0
-              ? `TDS -${Number(rowData.paymentTdsAmount).toFixed(2)}`
-              : "",
-          ].filter(Boolean);
           const particulars = [
             rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
             mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
@@ -1107,10 +1092,44 @@ const ListPaymentReceived = () => {
               ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
               : "",
             isEntryRow ? "BILL" : "PAYMENT",
-            adjustmentParts.length > 0 ? adjustmentParts.join(" | ") : "",
           ]
             .filter(Boolean)
             .join(" | ");
+
+          const formatPdfAmount = (amount) =>
+            `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`;
+          const debitParts = isEntryRow
+            ? [
+                rowData.billAmount > 0
+                  ? `BILL ${formatPdfAmount(rowData.billAmount - cd)}`
+                  : "",
+                gst > 0 ? `GST ${formatPdfAmount(gst)}` : "",
+              ].filter(Boolean)
+            : [];
+          const creditParts = isEntryRow
+            ? [
+                claims > 0 ? `CLAIM ${formatPdfAmount(claims)}` : "",
+                Number(rowData.secondClaim) > 0
+                  ? `2ND CLAIM ${formatPdfAmount(rowData.secondClaim)}`
+                  : "",
+                Number(rowData.otherCharges) > 0
+                  ? `OTHER ${formatPdfAmount(rowData.otherCharges)}`
+                  : "",
+                bankCharges > 0
+                  ? `BANK ${formatPdfAmount(bankCharges)}`
+                  : "",
+                Number(rowData.paymentTdsAmount) > 0
+                  ? `TDS ${formatPdfAmount(rowData.paymentTdsAmount)}`
+                  : "",
+              ].filter(Boolean)
+            : [
+                displayCredit > 0
+                  ? `${row.reference === "Claim" ? "CLAIM" : row.reference === "TDS" ? "TDS" : "PAYMENT"} ${formatPdfAmount(displayCredit)}`
+                  : "",
+              ].filter(Boolean);
 
           const statusText =
             Number(row.raw?.unloadingWeight || row.raw?.loadingWeight || 0) === 0
@@ -1126,12 +1145,8 @@ const ListPaymentReceived = () => {
                 ? rowData.billNo
                 : "-"
               : row.raw?.voucherNumber || row.voucherNo || "-",
-            formattedDebit > 0
-              ? `Rs. ${formattedDebit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
-            formattedCredit > 0
-              ? `Rs. ${formattedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : "",
+            debitParts.join("\n"),
+            creditParts.join("\n"),
           ]);
         });
 
