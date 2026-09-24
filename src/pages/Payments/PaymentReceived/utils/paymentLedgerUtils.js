@@ -169,7 +169,7 @@ export const buildEntryBreakdown = (entry) => {
   if (grossAmount > 0) {
     breakdown.push({
       type: "add",
-      label: `Gross Amount (${weight.toFixed(3)}T × ₹${rate.toFixed(2)})`,
+      label: `Bill Amount (${weight.toFixed(3)}T × ₹${rate.toFixed(2)})`,
       amount: grossAmount,
       category: "gross",
     });
@@ -541,8 +541,7 @@ export const buildTallyVoucherRows = (
         payment.supplierCompany || sellerFromMapping || "";
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
-      const onAccountClaimAmount = mappedTotal > 0 ? 0 : paymentClaimAmount;
-      const paymentAllocBreakdown = buildPaymentAllocationBreakdown(payment);
+      const onAccountClaimAmount = paymentClaimAmount;
 
       if (payment.mappings && payment.mappings.length > 0) {
         payment.mappings.forEach((mapping, mIdx) => {
@@ -664,14 +663,18 @@ export const buildTallyVoucherRows = (
       if (unadjustedAmount > 0.01) {
         let unadjustedCredit = 0;
         let unadjustedDebit = 0;
+        const onAccountPaymentAmount = Math.max(
+          0,
+          unadjustedAmount - onAccountClaimAmount - (Number(payment.tds) || 0),
+        );
         if (isBuyer) {
           if (paymentType === "Adjustment") {
-            unadjustedDebit = unadjustedAmount;
+            unadjustedDebit = onAccountPaymentAmount;
           } else {
-            unadjustedCredit = unadjustedAmount;
+            unadjustedCredit = onAccountPaymentAmount;
           }
         } else {
-          unadjustedDebit = unadjustedAmount;
+          unadjustedDebit = onAccountPaymentAmount;
         }
         balance = balance + unadjustedDebit - unadjustedCredit;
         const entriesPart =
@@ -701,12 +704,12 @@ export const buildTallyVoucherRows = (
           raw: item,
           grossAmount: 0,
           gstAmount: 0,
-          totalClaims: onAccountClaimAmount,
+          totalClaims: 0,
           cdAmount: 0,
           bankCharges: 0,
           secondClaim: 0,
           otherCharges: 0,
-          tds: Number(payment.tds) || 0,
+          tds: 0,
           isPaymentRow: true,
           isOnAccount: true,
           voucherNo: payment.voucherNumber,
@@ -731,6 +734,47 @@ export const buildTallyVoucherRows = (
           partEntries: entriesPart,
           emailSent: Boolean(payment.emailSent),
           emailSentAt: payment.emailSentAt || null,
+        });
+
+        const componentRows = [
+          { label: "Claim", amount: onAccountClaimAmount, category: "claim" },
+          { label: "TDS", amount: Number(payment.tds) || 0, category: "tds" },
+        ];
+        componentRows.forEach((component) => {
+          if (component.amount <= 0) return;
+          const componentDebit =
+            !isBuyer || paymentType === "Adjustment" ? component.amount : 0;
+          const componentCredit = componentDebit > 0 ? 0 : component.amount;
+          balance = balance + componentDebit - componentCredit;
+          rows.push({
+            id: `${payment._id}-on-account-${component.category}`,
+            date,
+            particulars: `${component.label} | Vch #${payment.voucherNumber || "—"}`,
+            vchType: payment.paymentType || payment.paymentMode || "—",
+            buyerCompany,
+            supplierCompany,
+            debit: componentDebit,
+            credit: componentCredit,
+            balance,
+            raw: item,
+            grossAmount: 0,
+            gstAmount: 0,
+            totalClaims: component.category === "claim" ? component.amount : 0,
+            cdAmount: 0,
+            bankCharges: 0,
+            secondClaim: 0,
+            otherCharges: 0,
+            tds: component.category === "tds" ? component.amount : 0,
+            isPaymentRow: true,
+            isOnAccount: true,
+            voucherNo: payment.voucherNumber,
+            paymentMode: payment.paymentMode,
+            reference: component.label,
+            breakdown: [],
+            paymentAllocations: [],
+            emailSent: Boolean(payment.emailSent),
+            emailSentAt: payment.emailSentAt || null,
+          });
         });
       }
     }
