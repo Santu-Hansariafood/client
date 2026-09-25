@@ -651,11 +651,11 @@ const FinanceReport = () => {
               <div className="mt-6 overflow-x-auto">
                 <h3 className="mb-3 text-sm font-bold text-slate-700">Adjustment Equality Report</h3>
                 <Tables
-                  headers={["Buyer Company", "Seller Sauda No", "Mapped With Sauda No(s)", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
+                  headers={["Buyer Company", "Buyer Sauda No(s)", "Seller Sauda No", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
                   rows={adjustmentRows.map((adjustment) => [
                     adjustment.buyerCompany || "-",
-                    adjustment.saudaNo || "-",
                     (adjustment.adjustedWithSaudaNos || []).join(", ") || "-",
+                    adjustment.saudaNo || "-",
                     adjustment.sellerCompany || "-",
                     formatDate(adjustment.saudaDate),
                     formatDate(adjustment.adjustmentDate),
