@@ -492,6 +492,7 @@ router.get("/report", async (req, res) => {
               return totals;
             }, new Map()).values()].map((party) => ({
               ...party,
+              salesQuantity: party.adjustedQuantity,
               pendingQuantity: Math.max(0, party.purchaseQuantity - party.adjustedQuantity),
             }));
             return { saudaDetails, partyTotals };

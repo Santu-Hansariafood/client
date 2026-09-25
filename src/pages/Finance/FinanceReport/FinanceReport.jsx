@@ -712,17 +712,15 @@ const FinanceReport = () => {
             </div>
             {selectedPartyTotals.length > 0 && (
               <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">Seller to Buyer Totals</h3>
+                <h3 className="mb-3 text-sm font-bold text-slate-700">Buyer and Seller Finance Totals</h3>
                 <Tables
-                  headers={["Date", "Seller Name", "Seller Company", "Buyer", "Buyer Company", "Purchase Quantity", "Adjusted Quantity", "Pending Quantity"]}
+                  headers={["Date", "Seller Company", "Buyer Company", "Purchase Total", "Sales Total", "Pending Total"]}
                   rows={selectedPartyTotals.map((party) => [
                     formatDate(party.date),
-                    party.sellerName || "-",
                     party.sellerCompany || "-",
-                    party.buyer || "-",
                     party.buyerCompany || "-",
                     `${formatNumber(party.purchaseQuantity)} Tons`,
-                    `${formatNumber(party.adjustedQuantity)} Tons`,
+                    `${formatNumber(party.salesQuantity ?? party.adjustedQuantity)} Tons`,
                     `${formatNumber(party.pendingQuantity)} Tons`,
                   ])}
                 />
