@@ -533,12 +533,40 @@ router.get("/report", async (req, res) => {
         item,
       ]),
     );
+    const groupedAdjustmentSaudas = new Map();
+    adjustments.forEach((adjustment) => {
+      const groupId = String(adjustment.adjustmentGroupId || "").trim();
+      if (!groupId) return;
+      const group = groupedAdjustmentSaudas.get(groupId) || new Set();
+      if (adjustment.saudaNo) group.add(String(adjustment.saudaNo));
+      (adjustment.adjustedWithSaudaNos || []).forEach((saudaNo) => {
+        if (saudaNo) group.add(String(saudaNo));
+      });
+      groupedAdjustmentSaudas.set(groupId, group);
+    });
     const enrichedAdjustments = adjustments.map((adjustment) => {
       const order = adjustmentOrderMap.get(
         `${String(adjustment.saudaNo).toLowerCase()}|${String(adjustment.sellerCompany || "").toLowerCase()}`,
       );
+      const savedMappedSaudas = Array.isArray(adjustment.adjustedWithSaudaNos)
+        ? adjustment.adjustedWithSaudaNos
+        : [];
+      const groupedMappedSaudas = groupedAdjustmentSaudas.get(
+        String(adjustment.adjustmentGroupId || "").trim(),
+      );
+      const adjustedWithSaudaNos = (savedMappedSaudas.length
+        ? savedMappedSaudas
+        : groupedMappedSaudas
+          ? [...groupedMappedSaudas]
+          : []
+      ).filter(
+        (saudaNo) =>
+          String(saudaNo).toLowerCase() !==
+          String(adjustment.saudaNo).toLowerCase(),
+      );
       return {
         ...adjustment,
+        adjustedWithSaudaNos,
         saudaDate: order?.poDate || adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
         buyer: order?.buyer || "",
         buyerCompany: order?.buyerCompany || "",
