@@ -284,7 +284,9 @@ const FinanceReport = () => {
         const payload = {
           saudaNo: detail.saudaNo,
           adjustmentGroupId,
-          adjustedWithSaudaNos: row.saudaNos,
+          adjustedWithSaudaNos: row.saudaNos.filter(
+            (saudaNo) => String(saudaNo).toLowerCase() !== String(detail.saudaNo).toLowerCase(),
+          ),
           sellerCompany: row.sellerCompany,
           consignee: detail.consignee || row.consignee,
           purchaseQuantity: quantity,
@@ -649,13 +651,11 @@ const FinanceReport = () => {
               <div className="mt-6 overflow-x-auto">
                 <h3 className="mb-3 text-sm font-bold text-slate-700">Adjustment Equality Report</h3>
                 <Tables
-                  headers={["Buyer", "Buyer Company", "Sauda No", "Adjusted With Sauda No(s)", "Seller Name", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
+                  headers={["Buyer Company", "Seller Sauda No", "Mapped With Sauda No(s)", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
                   rows={adjustmentRows.map((adjustment) => [
-                    adjustment.buyer || "-",
                     adjustment.buyerCompany || "-",
                     adjustment.saudaNo || "-",
-                    (adjustment.adjustedWithSaudaNos || [adjustment.saudaNo]).join(", ") || "-",
-                    adjustment.sellerName || "-",
+                    (adjustment.adjustedWithSaudaNos || []).join(", ") || "-",
                     adjustment.sellerCompany || "-",
                     formatDate(adjustment.saudaDate),
                     formatDate(adjustment.adjustmentDate),
