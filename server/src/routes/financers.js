@@ -602,6 +602,10 @@ router.post("/adjustments", async (req, res) => {
     }
     const adjustment = await FinanceAdjustment.create({
       saudaNo: String(req.body.saudaNo).trim(),
+      adjustmentGroupId: String(req.body.adjustmentGroupId || "").trim(),
+      adjustedWithSaudaNos: Array.isArray(req.body.adjustedWithSaudaNos)
+        ? req.body.adjustedWithSaudaNos.map((value) => String(value).trim()).filter(Boolean)
+        : [],
       sellerCompany: String(req.body.sellerCompany).trim(),
       consignee: String(req.body.consignee || "").trim(),
       purchaseQuantity: Math.max(0, Number(req.body.purchaseQuantity || 0)),
@@ -628,6 +632,16 @@ router.put("/adjustments/:id", async (req, res) => {
         $set: {
           adjustmentQuantity,
           pendingQuantity: Math.max(0, Number(req.body.pendingQuantity || 0)),
+          ...(req.body.adjustmentGroupId !== undefined
+            ? { adjustmentGroupId: String(req.body.adjustmentGroupId || "").trim() }
+            : {}),
+          ...(Array.isArray(req.body.adjustedWithSaudaNos)
+            ? {
+                adjustedWithSaudaNos: req.body.adjustedWithSaudaNos
+                  .map((value) => String(value).trim())
+                  .filter(Boolean),
+              }
+            : {}),
           adjustmentDate: req.body.adjustmentDate ? new Date(req.body.adjustmentDate) : new Date(),
         },
       },

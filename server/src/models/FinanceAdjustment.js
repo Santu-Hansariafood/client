@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const financeAdjustmentSchema = new mongoose.Schema(
   {
     saudaNo: { type: String, required: true, trim: true },
+    adjustmentGroupId: { type: String, default: "", trim: true },
+    adjustedWithSaudaNos: { type: [String], default: [] },
     sellerCompany: { type: String, required: true, trim: true },
     consignee: { type: String, default: "", trim: true },
     purchaseQuantity: { type: Number, default: 0, min: 0 },

@@ -275,12 +275,16 @@ const FinanceReport = () => {
       return;
     }
     try {
+      const adjustmentGroupId =
+        row.adjustmentGroupId || `${Date.now()}-${row.id}`;
       let remainingAdjustment = adjustmentQuantity;
       for (const detail of row.saudaDetails) {
         const quantity = Number(detail.quantity || 0);
         const allocatedAdjustment = Math.min(quantity, remainingAdjustment);
         const payload = {
           saudaNo: detail.saudaNo,
+          adjustmentGroupId,
+          adjustedWithSaudaNos: row.saudaNos,
           sellerCompany: row.sellerCompany,
           consignee: detail.consignee || row.consignee,
           purchaseQuantity: quantity,
@@ -301,6 +305,7 @@ const FinanceReport = () => {
           item.id === row.id
             ? {
                 ...item,
+                adjustmentGroupId,
                 adjustmentDate: new Date().toISOString(),
                 status: getAdjustmentStatus(item.purchaseQuantity, item.manualAdjustment),
               }
@@ -644,11 +649,12 @@ const FinanceReport = () => {
               <div className="mt-6 overflow-x-auto">
                 <h3 className="mb-3 text-sm font-bold text-slate-700">Adjustment Equality Report</h3>
                 <Tables
-                  headers={["Buyer", "Buyer Company", "Sauda No", "Seller Name", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
+                  headers={["Buyer", "Buyer Company", "Sauda No", "Adjusted With Sauda No(s)", "Seller Name", "Seller Company", "Sauda Date", "Adjustment Date", "Buying Quantity", "Adjusted Quantity", "Difference", "Status"]}
                   rows={adjustmentRows.map((adjustment) => [
                     adjustment.buyer || "-",
                     adjustment.buyerCompany || "-",
                     adjustment.saudaNo || "-",
+                    (adjustment.adjustedWithSaudaNos || [adjustment.saudaNo]).join(", ") || "-",
                     adjustment.sellerName || "-",
                     adjustment.sellerCompany || "-",
                     formatDate(adjustment.saudaDate),
