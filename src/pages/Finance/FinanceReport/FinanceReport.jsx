@@ -751,9 +751,20 @@ const FinanceReport = () => {
     </div>,
     <div
       key={`selected-saudas-${row.id}`}
-      className="min-w-[150px] text-xs font-semibold"
+      className="min-w-[190px] space-y-1 text-xs font-semibold"
     >
-      {(row.saudaNos || []).length ? row.saudaNos.join(", ") : "-"}
+      {row.buyerSaudaNo ? (
+        <>
+          <div>Buyer: {row.buyerSaudaNo}</div>
+          <div className="font-medium text-slate-600">
+            Seller: {(row.saudaNos || []).join(", ") || "-"}
+          </div>
+        </>
+      ) : (row.saudaNos || []).length ? (
+        row.saudaNos.join(", ")
+      ) : (
+        "-"
+      )}
     </div>,
     formatDate(row.adjustmentDate),
     row.purchaseQuantity === null
@@ -918,7 +929,7 @@ const FinanceReport = () => {
                 headers={[
                   "Seller Sauda No(s)",
                   "Seller Company / Consignee",
-                  "Selected Saudas",
+                  "Buyer / Seller Sauda Mapping",
                   "Adjustment Date",
                   "Combined Buying Quantity",
                   "Combined Adjusted Quantity",
