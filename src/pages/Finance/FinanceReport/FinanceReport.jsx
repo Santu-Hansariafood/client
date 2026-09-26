@@ -242,8 +242,9 @@ const FinanceReport = () => {
         0,
       );
       const effectiveAdjustment =
-        currentAdjustment ||
-        Number(currentRow?.manualAdjustment || currentRow?.buyerQuantity || 0);
+        currentRow?.buyerSaudaNo
+          ? Number(currentRow.manualAdjustment || currentRow.buyerQuantity || 0)
+          : currentAdjustment || Number(currentRow?.manualAdjustment || 0);
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id !== rowId
@@ -260,15 +261,13 @@ const FinanceReport = () => {
                 adjustmentId: "",
                 adjustmentDate: details[0]?.adjustmentDate || "",
                 manualAdjustment: String(
-                  currentAdjustment ||
-                    row.manualAdjustment ||
-                    row.buyerQuantity ||
-                    "",
+                  row.buyerSaudaNo
+                    ? row.manualAdjustment || row.buyerQuantity || ""
+                    : currentAdjustment || row.manualAdjustment || "",
                 ),
-                pendingQuantity: Math.max(
-                  0,
-                  purchaseQuantity - effectiveAdjustment,
-                ),
+                pendingQuantity: currentRow?.buyerSaudaNo
+                  ? Math.abs(purchaseQuantity - effectiveAdjustment)
+                  : Math.max(0, purchaseQuantity - effectiveAdjustment),
                 status:
                   details.length === values.length
                     ? getAdjustmentStatus(purchaseQuantity, effectiveAdjustment)
@@ -315,7 +314,7 @@ const FinanceReport = () => {
                 saudaNo: "",
                 adjustmentId: "",
                 purchaseQuantity: null,
-                consignee: "",
+              consignee: row.buyerSaudaNo ? row.consignee : "",
                 pendingQuantity: null,
                 status: "",
               }
@@ -332,7 +331,11 @@ const FinanceReport = () => {
   useEffect(() => {
     saudaRows.forEach((row) => {
       if (row.sellerCompany) {
-        loadSaudaOptions(row.id, row.sellerCompany, selectedConsignee);
+        loadSaudaOptions(
+          row.id,
+          row.sellerCompany,
+          row.buyerSaudaNo ? row.consignee : selectedConsignee,
+        );
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -379,6 +382,13 @@ const FinanceReport = () => {
         adjustmentQuantity > Number(row.buyerQuantity || 0) + 0.01)
     ) {
       toast.error("Adjusted quantity cannot exceed the buying quantity");
+      return;
+    }
+    if (
+      row.buyerSaudaNo &&
+      getAdjustmentStatus(row.purchaseQuantity, row.buyerQuantity) !== "Equal"
+    ) {
+      toast.error("Add seller Saudas until their combined quantity matches the buyer Sauda");
       return;
     }
     try {
@@ -428,7 +438,9 @@ const FinanceReport = () => {
                 adjustmentDate: new Date().toISOString(),
                 status: getAdjustmentStatus(
                   item.purchaseQuantity,
-                  item.manualAdjustment,
+                  item.buyerSaudaNo
+                    ? item.buyerQuantity
+                    : item.manualAdjustment,
                 ),
               }
             : item,
@@ -658,7 +670,7 @@ const FinanceReport = () => {
                     adjustmentId: "",
                     saudaOptions: [],
                     purchaseQuantity: null,
-                    consignee: "",
+                    consignee: item.buyerSaudaNo ? item.consignee : "",
                     pendingQuantity: null,
                     saudaDetails: [],
                     status: "",
@@ -666,7 +678,13 @@ const FinanceReport = () => {
                 : item,
             ),
           );
-          if (company) loadSaudaOptions(row.id, company, selectedConsignee);
+          if (company) {
+            loadSaudaOptions(
+              row.id,
+              company,
+              row.buyerSaudaNo ? row.consignee : selectedConsignee,
+            );
+          }
         }}
       />
       <input
@@ -674,6 +692,8 @@ const FinanceReport = () => {
         min="0"
         step="0.01"
         value={row.manualAdjustment}
+        disabled={Boolean(row.buyerSaudaNo)}
+        title={row.buyerSaudaNo ? "Uses the buyer Sauda quantity" : undefined}
         onChange={(event) =>
           setSaudaRows((rows) =>
             rows.map((item) =>
@@ -727,7 +747,11 @@ const FinanceReport = () => {
           onClick={() => saveAdjustment(row)}
           title={row.adjustmentId ? "Update adjustment" : "Save adjustment"}
           className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={row.pendingQuantity === null || !row.manualAdjustment}
+          disabled={
+            row.pendingQuantity === null ||
+            !row.manualAdjustment ||
+            (row.buyerSaudaNo && row.status !== "Equal")
+          }
         >
           {row.adjustmentId ? <FaEdit size={12} /> : <FaSave size={12} />}
         </button>
