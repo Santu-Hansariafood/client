@@ -128,15 +128,28 @@ router.get("/pending-options", async (req, res) => {
       supplierCompany: companyRegex,
       ...(consigneeRegex ? { consignee: consigneeRegex } : {}),
     })
-      .select("saudaNo poDate consignee")
+      .select("saudaNo poDate consignee quantity")
       .sort({ poDate: -1, saudaNo: -1 })
       .lean();
+
+    const adjustmentTotals = await FinanceAdjustment.aggregate([
+      { $match: { sellerCompany: companyRegex } },
+      { $group: { _id: { $toLower: "$saudaNo" }, quantity: { $sum: "$adjustmentQuantity" } } },
+    ]);
+    const adjustedQuantityBySauda = new Map(
+      adjustmentTotals.map((item) => [String(item._id), Number(item.quantity || 0)]),
+    );
 
     const uniqueSaudaNumbers = [];
     const seenSaudaNumbers = new Set();
     saudaNumbers.forEach((item) => {
       const key = String(item.saudaNo || "").toLowerCase();
-      if (key && !seenSaudaNumbers.has(key)) {
+      const adjustedQuantity = adjustedQuantityBySauda.get(key) || 0;
+      if (
+        key &&
+        !seenSaudaNumbers.has(key) &&
+        adjustedQuantity < Number(item.quantity || 0) - 0.01
+      ) {
         seenSaudaNumbers.add(key);
         uniqueSaudaNumbers.push({
           saudaNo: item.saudaNo,
@@ -165,6 +178,8 @@ router.get("/report", async (req, res) => {
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
     const consignee = String(req.query.consignee || "").trim();
     const sellerCompany = String(req.query.sellerCompany || "").trim();
+    const buyerSaudaNo = String(req.query.buyerSaudaNo || "").trim();
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
     const manualAdjustment = Math.max(0, Number(req.query.manualAdjustment || 0));
     const rawSaudaNos = String(req.query.saudaNos || "")
       .split(",")
@@ -308,19 +323,55 @@ router.get("/report", async (req, res) => {
     }
 
     if (!rawSaudaNos.length) {
-      const savedAdjustments = await FinanceAdjustment.find({})
-        .select("saudaNo sellerCompany")
-        .lean();
-      const adjustedPairs = savedAdjustments
-        .filter((adjustment) => adjustment.saudaNo && adjustment.sellerCompany)
-        .map((adjustment) => ({
-          saudaNo: adjustment.saudaNo,
-          supplierCompany: {
-            $regex: `^${String(adjustment.sellerCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-            $options: "i",
+      const buyerAdjustmentTotals = await FinanceAdjustment.aggregate([
+        { $match: { buyerSaudaNo: { $exists: true, $ne: "" } } },
+        {
+          $group: {
+            _id: {
+              saudaNo: "$buyerSaudaNo",
+              buyerCompany: { $toLower: "$buyerCompany" },
+            },
+            quantity: { $sum: "$adjustmentQuantity" },
           },
-        }));
-      if (adjustedPairs.length) orderQuery.$nor = adjustedPairs;
+        },
+      ]);
+      const totalsByBuyerSauda = new Map(
+        buyerAdjustmentTotals.map((item) => [
+          `${String(item._id.saudaNo)}|${String(item._id.buyerCompany)}`,
+          Number(item.quantity || 0),
+        ]),
+      );
+      const mappedBuyerSaudas = [...new Set(buyerAdjustmentTotals.map((item) => item._id.saudaNo))];
+      if (mappedBuyerSaudas.length) {
+        const mappedOrders = await SelfOrder.find({
+          saudaNo: { $in: mappedBuyerSaudas },
+          $or: [
+            { companyId: { $in: scopedCompanyIds } },
+            ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
+          ],
+        })
+          .select("saudaNo buyerCompany quantity")
+          .lean();
+        const fullyAdjustedBuyerOrders = mappedOrders
+          .filter(
+            (order) =>
+              (totalsByBuyerSauda.get(
+                `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
+              ) || 0) >=
+              Number(order.quantity || 0) - 0.01,
+          );
+        if (fullyAdjustedBuyerOrders.length) {
+          orderQuery.$and = [
+            ...(orderQuery.$and || []),
+            {
+              $nor: fullyAdjustedBuyerOrders.map((order) => ({
+                saudaNo: order.saudaNo,
+                buyerCompany: order.buyerCompany,
+              })),
+            },
+          ];
+        }
+      }
     }
 
     const [orders, total, companies, financerOrders, consigneeOptions, sellerCompanyOptions] = await Promise.all([
@@ -389,7 +440,13 @@ router.get("/report", async (req, res) => {
     }
     const adjustmentQuery = {
       ...(rawSaudaNos.length
-        ? { saudaNo: { $in: rawSaudaNos }, sellerCompany: { $regex: `^${escapedSellerCompany}$`, $options: "i" } }
+        ? {
+            saudaNo: { $in: rawSaudaNos },
+            sellerCompany: { $regex: `^${escapedSellerCompany}$`, $options: "i" },
+            ...(buyerSaudaNo
+              ? { buyerSaudaNo, ...(buyerCompany ? { buyerCompany } : {}) }
+              : {}),
+          }
         : {}),
       ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
     };
@@ -631,6 +688,8 @@ router.post("/adjustments", async (req, res) => {
     }
     const adjustment = await FinanceAdjustment.create({
       saudaNo: String(req.body.saudaNo).trim(),
+      buyerSaudaNo: String(req.body.buyerSaudaNo || "").trim(),
+      buyerCompany: String(req.body.buyerCompany || "").trim(),
       adjustmentGroupId: String(req.body.adjustmentGroupId || "").trim(),
       adjustedWithSaudaNos: Array.isArray(req.body.adjustedWithSaudaNos)
         ? req.body.adjustedWithSaudaNos.map((value) => String(value).trim()).filter(Boolean)
@@ -661,6 +720,12 @@ router.put("/adjustments/:id", async (req, res) => {
         $set: {
           adjustmentQuantity,
           pendingQuantity: Math.max(0, Number(req.body.pendingQuantity || 0)),
+          ...(req.body.buyerSaudaNo !== undefined
+            ? { buyerSaudaNo: String(req.body.buyerSaudaNo || "").trim() }
+            : {}),
+          ...(req.body.buyerCompany !== undefined
+            ? { buyerCompany: String(req.body.buyerCompany || "").trim() }
+            : {}),
           ...(req.body.adjustmentGroupId !== undefined
             ? { adjustmentGroupId: String(req.body.adjustmentGroupId || "").trim() }
             : {}),

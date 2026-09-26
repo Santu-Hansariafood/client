@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const financeAdjustmentSchema = new mongoose.Schema(
   {
     saudaNo: { type: String, required: true, trim: true },
+    buyerSaudaNo: { type: String, default: "", trim: true },
+    buyerCompany: { type: String, default: "", trim: true },
     adjustmentGroupId: { type: String, default: "", trim: true },
     adjustedWithSaudaNos: { type: [String], default: [] },
     sellerCompany: { type: String, required: true, trim: true },
@@ -18,5 +20,6 @@ const financeAdjustmentSchema = new mongoose.Schema(
 
 financeAdjustmentSchema.index({ adjustmentDate: -1 });
 financeAdjustmentSchema.index({ saudaNo: 1, sellerCompany: 1 });
+financeAdjustmentSchema.index({ buyerSaudaNo: 1, buyerCompany: 1 });
 
 export default mongoose.model("FinanceAdjustment", financeAdjustmentSchema);
