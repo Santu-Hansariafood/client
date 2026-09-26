@@ -462,10 +462,45 @@ const FinanceReport = () => {
             : item,
         ),
       );
+        await lookupSauda(
+          row.id,
+          row.saudaNos,
+          row.sellerCompany,
+          row.manualAdjustment,
+          row.buyerSaudaNo,
+          row.buyerCompany,
+        );
       toast.success("Adjustment saved");
       loadReport();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save adjustment");
+    }
+  };
+
+  const deleteAdjustment = async (row) => {
+    const adjustmentIds = (row.saudaDetails || [])
+      .map((detail) => detail.adjustmentId)
+      .filter(Boolean);
+    if (!adjustmentIds.length) {
+      toast.error("No saved adjustments found for this Sauda selection");
+      return;
+    }
+    try {
+      await Promise.all(
+        adjustmentIds.map((id) => api.delete(`/financers/adjustments/${id}`)),
+      );
+      await lookupSauda(
+        row.id,
+        row.saudaNos,
+        row.sellerCompany,
+        row.manualAdjustment,
+        row.buyerSaudaNo,
+        row.buyerCompany,
+      );
+      toast.success("Adjustment deleted");
+      loadReport();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete adjustment");
     }
   };
 
@@ -764,7 +799,7 @@ const FinanceReport = () => {
           title={
             row.buyerSaudaNo && row.status !== "Equal"
               ? "Add seller Saudas until their combined quantity matches the buyer Sauda"
-              : row.adjustmentId
+              : row.saudaDetails?.some((detail) => detail.adjustmentId)
                 ? "Update adjustment"
                 : "Save adjustment"
           }
@@ -775,8 +810,22 @@ const FinanceReport = () => {
             (row.buyerSaudaNo && row.status !== "Equal")
           }
         >
-          {row.adjustmentId ? <FaEdit size={12} /> : <FaSave size={12} />}
+          {row.saudaDetails?.some((detail) => detail.adjustmentId) ? (
+            <FaEdit size={12} />
+          ) : (
+            <FaSave size={12} />
+          )}
         </button>
+        {row.saudaDetails?.some((detail) => detail.adjustmentId) && (
+          <button
+            type="button"
+            onClick={() => deleteAdjustment(row)}
+            title="Delete saved adjustment"
+            className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+          >
+            <FaTrash size={12} />
+          </button>
+        )}
       </div>
     </div>,
     <div key={`details-${row.id}`} className="min-w-[210px] space-y-1 text-xs">
