@@ -376,6 +376,22 @@ const FinanceReport = () => {
       );
       return;
     }
+    const selectedSaudaKeys = new Set(
+      row.saudaNos.map((saudaNo) => String(saudaNo).trim().toLowerCase()),
+    );
+    const resolvedSaudaKeys = new Set(
+      (row.saudaDetails || []).map((detail) =>
+        String(detail.saudaNo || "").trim().toLowerCase(),
+      ),
+    );
+    if (
+      !row.saudaDetails?.length ||
+      selectedSaudaKeys.size !== resolvedSaudaKeys.size ||
+      [...selectedSaudaKeys].some((saudaNo) => !resolvedSaudaKeys.has(saudaNo))
+    ) {
+      toast.error("Check the selected seller Saudas before saving");
+      return;
+    }
     if (
       adjustmentQuantity > Number(row.purchaseQuantity) + 0.01 ||
       (row.buyerSaudaNo &&
@@ -745,7 +761,13 @@ const FinanceReport = () => {
         <button
           type="button"
           onClick={() => saveAdjustment(row)}
-          title={row.adjustmentId ? "Update adjustment" : "Save adjustment"}
+          title={
+            row.buyerSaudaNo && row.status !== "Equal"
+              ? "Add seller Saudas until their combined quantity matches the buyer Sauda"
+              : row.adjustmentId
+                ? "Update adjustment"
+                : "Save adjustment"
+          }
           className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={
             row.pendingQuantity === null ||
