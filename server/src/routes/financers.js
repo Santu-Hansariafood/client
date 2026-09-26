@@ -337,7 +337,7 @@ router.get("/report", async (req, res) => {
       ]);
       const totalsByBuyerSauda = new Map(
         buyerAdjustmentTotals.map((item) => [
-          `${String(item._id.saudaNo)}|${String(item._id.buyerCompany)}`,
+          `${String(item._id.saudaNo).toLowerCase()}|${String(item._id.buyerCompany).toLowerCase()}`,
           Number(item.quantity || 0),
         ]),
       );
@@ -582,6 +582,20 @@ router.get("/report", async (req, res) => {
       .select("saudaNo poDate buyer buyerCompany supplier supplierCompany consignee commodity quantity rate cd gst deliveryDate paymentTerms")
       .populate("supplier", "sellerName")
       .lean();
+    const adjustedBuyerSaudaNos = [
+      ...new Set(adjustments.map((item) => item.buyerSaudaNo).filter(Boolean)),
+    ];
+    const adjustedBuyerOrders = await SelfOrder.find({
+      saudaNo: { $in: adjustedBuyerSaudaNos },
+    })
+      .select("saudaNo poDate buyerCompany quantity consignee")
+      .lean();
+    const buyerOrderMap = new Map(
+      adjustedBuyerOrders.map((order) => [
+        `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
+        order,
+      ]),
+    );
     const adjustmentSaudaDateMap = new Map(
       adjustmentSaudas.map((item) => [String(item.saudaNo).toLowerCase(), item.poDate]),
     );
@@ -606,6 +620,9 @@ router.get("/report", async (req, res) => {
       const order = adjustmentOrderMap.get(
         `${String(adjustment.saudaNo).toLowerCase()}|${String(adjustment.sellerCompany || "").toLowerCase()}`,
       );
+      const buyerOrder = buyerOrderMap.get(
+        `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
+      );
       const savedMappedSaudas = Array.isArray(adjustment.adjustedWithSaudaNos)
         ? adjustment.adjustedWithSaudaNos
         : [];
@@ -625,6 +642,10 @@ router.get("/report", async (req, res) => {
       return {
         ...adjustment,
         adjustedWithSaudaNos,
+        buyerCompany: adjustment.buyerCompany || buyerOrder?.buyerCompany || "",
+        buyerQuantity: Number(buyerOrder?.quantity || 0),
+        buyerSaudaDate: buyerOrder?.poDate || null,
+        buyerConsignee: buyerOrder?.consignee || "",
         saudaDate: order?.poDate || adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
         buyer: order?.buyer || "",
         buyerCompany: order?.buyerCompany || "",

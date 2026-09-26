@@ -471,7 +471,7 @@ const FinanceReport = () => {
           row.buyerCompany,
         );
       toast.success("Adjustment saved");
-      loadReport();
+        await loadReport();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save adjustment");
     }
@@ -498,7 +498,7 @@ const FinanceReport = () => {
         row.buyerCompany,
       );
       toast.success("Adjustment deleted");
-      loadReport();
+      await loadReport();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete adjustment");
     }
@@ -507,22 +507,34 @@ const FinanceReport = () => {
   const adjustEqualityRow = (adjustment) => {
     const rowId = saudaRows[0]?.id || Date.now();
     const saudaNo = String(adjustment.saudaNo || "").trim();
+    const saudaNos = [
+      ...new Set([
+        saudaNo,
+        ...(adjustment.adjustedWithSaudaNos || []).map((value) =>
+          String(value || "").trim(),
+        ),
+      ].filter(Boolean)),
+    ];
     const sellerCompany = String(adjustment.sellerCompany || "").trim();
     if (!saudaNo || !sellerCompany) return;
 
     setSaudaRows((rows) => {
       const nextRow = {
         id: rowId,
-        saudaNo,
-        saudaNos: [saudaNo],
+        saudaNo: saudaNos.join(", "),
+        saudaNos,
         buyerSaudaNo: adjustment.buyerSaudaNo || "",
         buyerCompany: adjustment.buyerCompany || "",
         buyerQuantity: adjustment.buyerSaudaNo
-          ? Number(adjustment.purchaseQuantity || 0)
+          ? Number(adjustment.buyerQuantity || 0)
           : null,
         sellerCompany,
         saudaOptions: rows[0]?.saudaOptions || [],
-        manualAdjustment: String(adjustment.adjustmentQuantity || 0),
+        manualAdjustment: String(
+          adjustment.buyerSaudaNo
+            ? adjustment.buyerQuantity || 0
+            : adjustment.adjustmentQuantity || 0,
+        ),
         purchaseQuantity: Number(adjustment.purchaseQuantity || 0),
         consignee: adjustment.consignee || "",
         pendingQuantity: Math.abs(
@@ -538,9 +550,11 @@ const FinanceReport = () => {
     });
     lookupSauda(
       rowId,
-      [saudaNo],
+      saudaNos,
       sellerCompany,
-      adjustment.adjustmentQuantity,
+      adjustment.buyerSaudaNo
+        ? adjustment.buyerQuantity
+        : adjustment.adjustmentQuantity,
       adjustment.buyerSaudaNo || "",
       adjustment.buyerCompany || "",
     );
@@ -661,6 +675,17 @@ const FinanceReport = () => {
           formatDateParam(item.adjustmentDate),
       )
     : adjustmentRows;
+
+  const adjustedQuantityByBuyerSauda = new Map();
+  adjustmentRows.forEach((adjustment) => {
+    if (!adjustment.buyerSaudaNo) return;
+    const key = `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
+    adjustedQuantityByBuyerSauda.set(
+      key,
+      (adjustedQuantityByBuyerSauda.get(key) || 0) +
+        Number(adjustment.adjustmentQuantity || 0),
+    );
+  });
 
   const saudaLookupRows = saudaRows.map((row) => [
     <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
@@ -1041,39 +1066,81 @@ const FinanceReport = () => {
                 rows={saudaLookupRows}
               />
             </div>
-            {adjustmentRows.length > 0 && (
-              <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">
-                  Adjustment Equality Report
-                </h3>
+            <div className="mt-6 overflow-x-auto">
+              <h3 className="mb-3 text-sm font-bold text-slate-700">
+                Adjusted Saudas
+              </h3>
+              {adjustmentRows.length ? (
                 <Tables
                   headers={[
+                    "Buyer Sauda",
                     "Buyer Company",
-                    "Buyer Sauda No(s)",
-                    "Seller Sauda No",
+                    "Buyer PO Date",
+                    "Buyer Quantity",
+                    "Buyer Adjusted Total",
+                    "Buyer Pending",
+                    "Seller Sauda",
+                    "Seller Name",
                     "Seller Company",
-                    "Sauda Date",
+                    "Consignee",
+                    "Commodity",
+                    "Seller Quantity",
+                    "Seller Adjusted",
+                    "Seller Pending",
+                    "Seller PO Date",
                     "Adjustment Date",
-                    "Buying Quantity",
-                    "Adjusted Quantity",
-                    "Difference",
                     "Status",
                   ]}
                   rows={adjustmentRows.map((adjustment) => [
+                    adjustment.buyerSaudaNo || "-",
                     adjustment.buyerCompany || "-",
-                    adjustment.buyerSaudaNo ||
-                      (adjustment.adjustedWithSaudaNos || []).join(", ") ||
-                      "-",
+                    formatDate(adjustment.buyerSaudaDate),
+                    adjustment.buyerSaudaNo
+                      ? `${formatNumber(adjustment.buyerQuantity)} Tons`
+                      : "-",
+                    adjustment.buyerSaudaNo
+                      ? `${formatNumber(
+                          adjustedQuantityByBuyerSauda.get(
+                            `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
+                          ) || 0,
+                        )} Tons`
+                      : "-",
+                    adjustment.buyerSaudaNo
+                      ? `${formatNumber(
+                          Math.max(
+                            0,
+                            Number(adjustment.buyerQuantity || 0) -
+                              (adjustedQuantityByBuyerSauda.get(
+                                `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
+                              ) || 0),
+                          ),
+                        )} Tons`
+                      : "-",
                     adjustment.saudaNo || "-",
+                    adjustment.sellerName || "-",
                     adjustment.sellerCompany || "-",
-                    formatDate(adjustment.saudaDate),
-                    formatDate(adjustment.adjustmentDate),
+                    adjustment.consignee || adjustment.buyerConsignee || "-",
+                    adjustment.commodity || "-",
                     `${formatNumber(adjustment.purchaseQuantity)} Tons`,
                     `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
-                    `${formatNumber(Math.abs(Number(adjustment.purchaseQuantity || 0) - Number(adjustment.adjustmentQuantity || 0)))} Tons`,
+                    `${formatNumber(
+                      Math.max(
+                        0,
+                        Number(adjustment.purchaseQuantity || 0) -
+                          Number(adjustment.adjustmentQuantity || 0),
+                      ),
+                    )} Tons`,
+                    formatDate(adjustment.saudaDate),
+                    formatDate(adjustment.adjustmentDate),
                     getAdjustmentStatus(
-                      adjustment.purchaseQuantity,
-                      adjustment.adjustmentQuantity,
+                      adjustment.buyerSaudaNo
+                        ? adjustment.buyerQuantity
+                        : adjustment.purchaseQuantity,
+                      adjustment.buyerSaudaNo
+                        ? adjustedQuantityByBuyerSauda.get(
+                            `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
+                          ) || 0
+                        : adjustment.adjustmentQuantity,
                     ) === "Equal" ? (
                       <span
                         key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
@@ -1094,8 +1161,12 @@ const FinanceReport = () => {
                     ),
                   ])}
                 />
-              </div>
-            )}
+              ) : (
+                <p className="py-4 text-sm text-slate-500">
+                  No adjusted Saudas for the selected date range.
+                </p>
+              )}
+            </div>
           </section>
 
           <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
