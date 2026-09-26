@@ -769,9 +769,15 @@ const FinanceReport = () => {
       {row.buyerSaudaNo && (
         <div>
           <span className="font-bold text-slate-500">Buyer Sauda:</span>{" "}
-          {row.buyerSaudaNo} ({row.buyerCompany || "-"})
+            {row.buyerSaudaNo}
         </div>
       )}
+        {row.buyerCompany && (
+          <div>
+            <span className="font-bold text-slate-500">Buyer Company:</span>{" "}
+            {row.buyerCompany || "-"}
+          </div>
+        )}
     </div>,
     <div
       key={`selected-saudas-${row.id}`}
