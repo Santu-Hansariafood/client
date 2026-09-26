@@ -354,11 +354,14 @@ router.get("/report", async (req, res) => {
           .lean();
         const fullyAdjustedBuyerOrders = mappedOrders
           .filter(
-            (order) =>
-              (totalsByBuyerSauda.get(
+            (order) => {
+              const adjustedQuantity = totalsByBuyerSauda.get(
                 `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
-              ) || 0) >=
-              Number(order.quantity || 0) - 0.01,
+              ) || 0;
+              return (
+                Math.abs(Number(order.quantity || 0) - adjustedQuantity) < 0.01
+              );
+            },
           );
         if (fullyAdjustedBuyerOrders.length) {
           orderQuery.$and = [
