@@ -79,21 +79,16 @@ const ListPaymentReceived = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const companiesRes = await api.get("/companies", {
-          params: { limit: 0 },
-        });
+        const [companiesRes, sellerCompaniesRes, buyerCompaniesRes] =
+          await Promise.all([
+            api.get("/companies", { params: { limit: 0 } }),
+            api.get("/seller-company", { params: { limit: 0 } }),
+            api.get("/buyers", { params: { limit: 0 } }),
+          ]);
         setAllCompanies(companiesRes.data.data || companiesRes.data || []);
-
-        const sellerCompaniesRes = await api.get("/seller-company", {
-          params: { limit: 0 },
-        });
         setSellerCompanies(
           sellerCompaniesRes.data.data || sellerCompaniesRes.data || [],
         );
-
-        const buyerCompaniesRes = await api.get("/buyers", {
-          params: { limit: 0 },
-        });
         setBuyerCompanies(
           buyerCompaniesRes.data.data || buyerCompaniesRes.data || [],
         );
@@ -272,6 +267,7 @@ const ListPaymentReceived = () => {
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadingEntries([]);
 
       const entryParams = {
         startDate: filters.startDate || undefined,
@@ -289,22 +285,27 @@ const ListPaymentReceived = () => {
         saudaNo: filters.saudaNo || undefined,
         limit: 1000,
       };
-      const [response, entriesResponse] = await Promise.all([
-        api.get("/payment-received", {
-          params: {
-            ...filters,
-            page,
-            limit,
-          },
-        }),
-        api.get("/loading-entries", { params: entryParams }),
-      ]);
+      api
+        .get("/loading-entries", { params: entryParams })
+        .then((entriesResponse) => {
+          setLoadingEntries(entriesResponse.data.data || []);
+        })
+        .catch((error) => {
+          console.error("Error fetching ledger entries:", error);
+        });
+      const response = await api.get("/payment-received", {
+        params: {
+          ...filters,
+          page,
+          limit,
+        },
+      });
 
       setPayments(response.data.data || []);
-      setLoadingEntries(entriesResponse.data.data || []);
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
+      setLoading(false);
     } catch (error) {
       toast.error("Error fetching ledger data");
     } finally {

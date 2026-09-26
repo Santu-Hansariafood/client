@@ -542,14 +542,26 @@ export const buildTallyVoucherRows = (
       const date = payment.date;
       const paymentClaimAmount = Number(payment.claim) || 0;
       const onAccountClaimAmount = paymentClaimAmount;
+      const paymentMappings = payment.mappings || [];
+      const mappedBillCount = paymentMappings.filter(
+        (mapping) => Number(mapping.allocatedAmount) > 0,
+      ).length;
+      const isMultiBillPayment = mappedBillCount > 1;
+      const displayMappings = isMultiBillPayment
+        ? [{ allocatedAmount: mappedTotal }]
+        : paymentMappings;
 
-      if (payment.mappings && payment.mappings.length > 0) {
-        payment.mappings.forEach((mapping, mIdx) => {
+      if (displayMappings.length > 0) {
+        displayMappings.forEach((mapping, mIdx) => {
           const allocatedAmt = Number(mapping.allocatedAmount) || 0;
           if (allocatedAmt <= 0) return;
-          const loadingEntry = mapping.loadingEntryId || {};
-          const lorryNum = loadingEntry.lorryNumber || "—";
-          const billNum = loadingEntry.billNumber || "";
+          const loadingEntry = isMultiBillPayment
+            ? {}
+            : mapping.loadingEntryId || {};
+          const lorryNum = isMultiBillPayment
+            ? `${mappedBillCount} bills`
+            : loadingEntry.lorryNumber || "—";
+          const billNum = isMultiBillPayment ? "" : loadingEntry.billNumber || "";
           let allocatedCredit = 0;
           let allocatedDebit = 0;
           if (isBuyer) {
@@ -591,47 +603,74 @@ export const buildTallyVoucherRows = (
               amount: Number(mapping.tds),
             });
           }
+          const particulars = isMultiBillPayment
+            ? [
+                `${paymentType === "Adjustment" ? "Multi-bill adjustment" : "Multi-bill payment"} (${mappedBillCount} bills)`,
+                payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+                payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
+                getPaymentReference(payment)
+                  ? `Reference: ${getPaymentReference(payment)}`
+                  : "",
+                payment.remarks ? `Purpose: ${payment.remarks}` : "",
+              ]
+                .filter(Boolean)
+                .join(" | ")
+            : [
+                `PYT: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
+                `Lorry ${lorryNum}`,
+                billNum ? `Bill ${billNum}` : "",
+                payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
+                payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
+                getPaymentReference(payment, mapping, loadingEntry)
+                  ? `Reference: ${getPaymentReference(payment, mapping, loadingEntry)}`
+                  : "",
+                payment.remarks ? `Purpose: ${payment.remarks}` : "",
+                payment.entries?.length
+                  ? `Purpose: ${payment.entries.map((entry) => entry.description).filter(Boolean).join(", ")}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" | ");
+
           rows.push({
             id: `${payment._id}-map-${mIdx}`,
             date,
-            particulars: [
-              `PYT: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
-              `Lorry ${lorryNum}`,
-              billNum ? `Bill ${billNum}` : "",
-              payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
-              payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
-              getPaymentReference(payment, mapping, loadingEntry)
-                ? `Reference: ${getPaymentReference(payment, mapping, loadingEntry)}`
-                : "",
-              payment.remarks ? `Purpose: ${payment.remarks}` : "",
-              payment.entries?.length
-                ? `Purpose: ${payment.entries.map((entry) => entry.description).filter(Boolean).join(", ")}`
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" | "),
+            particulars,
             vchType: payment.paymentMode || payment.paymentType || "—",
-            buyerCompany: loadingEntry.buyerCompany || buyerCompany,
-            supplierCompany: loadingEntry.supplierCompany || supplierCompany,
+            buyerCompany: isMultiBillPayment
+              ? buyerCompany
+              : loadingEntry.buyerCompany || buyerCompany,
+            supplierCompany: isMultiBillPayment
+              ? supplierCompany
+              : loadingEntry.supplierCompany || supplierCompany,
             debit: allocatedDebit,
             credit: allocatedCredit,
             balance,
             raw: item,
             grossAmount: 0,
             gstAmount: 0,
-            totalClaims:
-              Number(mapping.claim) ||
-              (loadingEntry.manualClaim
-                ? Number(loadingEntry.manualClaimAmount) || 0
-                : (loadingEntry.qualityClaims || []).reduce(
-                    (sum, claim) => sum + (Number(claim.claimAmount) || 0),
-                    0,
-                  )),
+            totalClaims: isMultiBillPayment
+              ? 0
+              : Number(mapping.claim) ||
+                (loadingEntry.manualClaim
+                  ? Number(loadingEntry.manualClaimAmount) || 0
+                  : (loadingEntry.qualityClaims || []).reduce(
+                      (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                      0,
+                    )),
             cdAmount: 0,
-            bankCharges: Number(mapping.bankCharges) || 0,
-            secondClaim: Number(mapping.secondClaim) || 0,
-            otherCharges: Number(mapping.otherCharges) || 0,
-            tds: Number(mapping.tds) || Number(payment.tds) || 0,
+            bankCharges: isMultiBillPayment
+              ? 0
+              : Number(mapping.bankCharges) || 0,
+            secondClaim: isMultiBillPayment
+              ? 0
+              : Number(mapping.secondClaim) || 0,
+            otherCharges: isMultiBillPayment
+              ? 0
+              : Number(mapping.otherCharges) || 0,
+            tds: isMultiBillPayment
+              ? Number(payment.tds) || 0
+              : Number(mapping.tds) || Number(payment.tds) || 0,
             weight:
               loadingEntry.unloadingWeight || loadingEntry.loadingWeight || 0,
             rate: loadingEntry.actualRate || loadingEntry.rate || 0,
@@ -639,20 +678,24 @@ export const buildTallyVoucherRows = (
             mappingIndex: mIdx,
             voucherNo: payment.voucherNumber,
             paymentMode: payment.paymentMode,
-            reference: getPaymentReference(payment, mapping, loadingEntry),
-            saudaNo: mapping.saudaNo || loadingEntry.saudaNo || "",
+            reference: isMultiBillPayment
+              ? getPaymentReference(payment)
+              : getPaymentReference(payment, mapping, loadingEntry),
+            saudaNo: isMultiBillPayment
+              ? ""
+              : mapping.saudaNo || loadingEntry.saudaNo || "",
             lorryNumber: lorryNum,
             billNumber: billNum,
             allocatedAmount: allocatedAmt,
-            debitNote: mapping.debitNote || "",
-            creditNote: mapping.creditNote || "",
+            debitNote: isMultiBillPayment ? "" : mapping.debitNote || "",
+            creditNote: isMultiBillPayment ? "" : mapping.creditNote || "",
             generalRemarks:
               mapping.remarks ||
               mapping.generalRemarks ||
               payment.remarks ||
               payment.entries?.map((entry) => entry.description).filter(Boolean).join(", ") ||
               "",
-            breakdown: mapParts,
+            breakdown: isMultiBillPayment ? [] : mapParts,
             paymentAllocations: [],
             emailSent: Boolean(payment.emailSent),
             emailSentAt: payment.emailSentAt || null,
