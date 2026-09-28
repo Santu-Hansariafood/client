@@ -179,6 +179,10 @@ router.get("/report", async (req, res) => {
       100,
       Math.max(1, parseInt(req.query.adjustmentLimit || "10", 10)),
     );
+    const adjustedSaudaDate = req.query.adjustedSaudaDate
+      ? new Date(req.query.adjustedSaudaDate)
+      : null;
+    const exportAdjustedSaudas = req.query.exportAdjustedSaudas === "true";
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
     const consignee = String(req.query.consignee || "").trim();
@@ -458,15 +462,25 @@ router.get("/report", async (req, res) => {
         : {}),
       ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
     };
+    const adjustedSaudaDateFilter = {};
+    if (adjustedSaudaDate && !Number.isNaN(adjustedSaudaDate.getTime())) {
+      adjustedSaudaDateFilter.$gte = new Date(adjustedSaudaDate);
+      adjustedSaudaDateFilter.$gte.setHours(0, 0, 0, 0);
+      adjustedSaudaDateFilter.$lte = new Date(adjustedSaudaDate);
+      adjustedSaudaDateFilter.$lte.setHours(23, 59, 59, 999);
+    }
+    const adjustedSaudasQuery = Object.keys(adjustedSaudaDateFilter).length
+      ? { adjustmentDate: adjustedSaudaDateFilter }
+      : {};
     const adjustmentSort = { adjustmentDate: -1, createdAt: -1 };
     const [adjustments, paginatedAdjustments, adjustedSaudasTotal, dateWiseSaudas] = await Promise.all([
       FinanceAdjustment.find(adjustmentQuery).sort(adjustmentSort).lean(),
-      FinanceAdjustment.find(adjustmentQuery)
+      FinanceAdjustment.find(adjustedSaudasQuery)
         .sort(adjustmentSort)
-        .skip((adjustmentPage - 1) * adjustmentLimit)
-        .limit(adjustmentLimit)
+        .skip(exportAdjustedSaudas ? 0 : (adjustmentPage - 1) * adjustmentLimit)
+        .limit(exportAdjustedSaudas ? 0 : adjustmentLimit)
         .lean(),
-      FinanceAdjustment.countDocuments(adjustmentQuery),
+      FinanceAdjustment.countDocuments(adjustedSaudasQuery),
       SelfOrder.aggregate([
         { $match: orderQuery },
         {
@@ -592,13 +606,23 @@ router.get("/report", async (req, res) => {
       );
     });
 
-    const adjustmentSaudaNos = [...new Set(adjustments.map((item) => item.saudaNo).filter(Boolean))];
+    const enrichmentAdjustments = [
+      ...new Map(
+        [...adjustments, ...paginatedAdjustments].map((item) => [
+          String(item._id),
+          item,
+        ]),
+      ).values(),
+    ];
+    const adjustmentSaudaNos = [
+      ...new Set(enrichmentAdjustments.map((item) => item.saudaNo).filter(Boolean)),
+    ];
     const adjustmentSaudas = await SelfOrder.find({ saudaNo: { $in: adjustmentSaudaNos } })
       .select("saudaNo poDate buyer buyerCompany supplier supplierCompany consignee commodity quantity rate cd gst deliveryDate paymentTerms")
       .populate("supplier", "sellerName")
       .lean();
     const adjustedBuyerSaudaNos = [
-      ...new Set(adjustments.map((item) => item.buyerSaudaNo).filter(Boolean)),
+      ...new Set(enrichmentAdjustments.map((item) => item.buyerSaudaNo).filter(Boolean)),
     ];
     const adjustedBuyerOrders = await SelfOrder.find({
       saudaNo: { $in: adjustedBuyerSaudaNos },
@@ -620,8 +644,20 @@ router.get("/report", async (req, res) => {
         item,
       ]),
     );
+    const adjustmentGroupIds = [
+      ...new Set(
+        paginatedAdjustments
+          .map((adjustment) => String(adjustment.adjustmentGroupId || "").trim())
+          .filter(Boolean),
+      ),
+    ];
+    const groupedAdjustmentRecords = adjustmentGroupIds.length
+      ? await FinanceAdjustment.find({ adjustmentGroupId: { $in: adjustmentGroupIds } })
+          .select("adjustmentGroupId saudaNo adjustedWithSaudaNos")
+          .lean()
+      : [];
     const groupedAdjustmentSaudas = new Map();
-    adjustments.forEach((adjustment) => {
+    [...enrichmentAdjustments, ...groupedAdjustmentRecords].forEach((adjustment) => {
       const groupId = String(adjustment.adjustmentGroupId || "").trim();
       if (!groupId) return;
       const group = groupedAdjustmentSaudas.get(groupId) || new Set();
@@ -631,7 +667,7 @@ router.get("/report", async (req, res) => {
       });
       groupedAdjustmentSaudas.set(groupId, group);
     });
-    const enrichedAdjustments = adjustments.map((adjustment) => {
+    const enrichedAdjustments = enrichmentAdjustments.map((adjustment) => {
       const order = adjustmentOrderMap.get(
         `${String(adjustment.saudaNo).toLowerCase()}|${String(adjustment.sellerCompany || "").toLowerCase()}`,
       );
@@ -663,7 +699,6 @@ router.get("/report", async (req, res) => {
         buyerConsignee: buyerOrder?.consignee || "",
         saudaDate: order?.poDate || adjustmentSaudaDateMap.get(String(adjustment.saudaNo).toLowerCase()) || null,
         buyer: order?.buyer || "",
-        buyerCompany: order?.buyerCompany || "",
         sellerName: order?.supplier?.sellerName || "",
         sellerCompany: order?.supplierCompany || adjustment.sellerCompany || "",
         consignee: order?.consignee || adjustment.consignee || "",
@@ -674,6 +709,7 @@ router.get("/report", async (req, res) => {
         paymentTerms: order?.paymentTerms || "",
       };
     });
+    const reportAdjustmentIds = new Set(adjustments.map((item) => String(item._id)));
     const enrichedAdjustmentMap = new Map(
       enrichedAdjustments.map((adjustment) => [String(adjustment._id), adjustment]),
     );
@@ -711,7 +747,9 @@ router.get("/report", async (req, res) => {
         .filter(Boolean)
         .sort((first, second) => first.localeCompare(second)),
       financerCount: financerRecords.length,
-      adjustments: enrichedAdjustments,
+      adjustments: enrichedAdjustments.filter((adjustment) =>
+        reportAdjustmentIds.has(String(adjustment._id)),
+      ),
       adjustedSaudas,
       adjustedSaudasTotal,
       adjustmentPage,

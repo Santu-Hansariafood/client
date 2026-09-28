@@ -18,6 +18,7 @@ import { AiOutlineEye } from "react-icons/ai";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
+import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 
 import Buttons from "../../../common/Buttons/Buttons";
 const AdminPageShell = lazy(
@@ -81,6 +82,7 @@ const FinanceReport = () => {
   const [adjustmentRows, setAdjustmentRows] = useState([]);
   const [paginatedAdjustmentRows, setPaginatedAdjustmentRows] = useState([]);
   const [adjustedSaudasTotal, setAdjustedSaudasTotal] = useState(0);
+  const [adjustedSaudaDate, setAdjustedSaudaDate] = useState(null);
   const [selectedTotalDate, setSelectedTotalDate] = useState(null);
   const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   const adjustmentLookupRef = useRef(null);
@@ -113,6 +115,7 @@ const FinanceReport = () => {
           limit: itemsPerPage,
           adjustmentPage: adjustedSaudasPage,
           adjustmentLimit: itemsPerPage,
+          adjustedSaudaDate: formatDateParam(adjustedSaudaDate),
           startDate: formatDateParam(fromDate),
           endDate: formatDateParam(toDate),
           consignee: selectedConsignee || undefined,
@@ -132,7 +135,7 @@ const FinanceReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, adjustedSaudasPage, fromDate, toDate, selectedConsignee]);
+  }, [page, adjustedSaudasPage, adjustedSaudaDate, fromDate, toDate, selectedConsignee]);
 
   useEffect(() => {
     loadReport();
@@ -628,6 +631,44 @@ const FinanceReport = () => {
     setPage(1);
   };
 
+  const downloadAdjustedSaudasByDate = async () => {
+    const date = formatDateParam(adjustedSaudaDate);
+    if (!date) {
+      toast.info("Select an adjustment date to download");
+      return;
+    }
+    try {
+      const response = await api.get("/financers/report", {
+        params: {
+          adjustedSaudaDate: date,
+          exportAdjustedSaudas: true,
+        },
+      });
+      const rows = (response.data?.adjustedSaudas || []).map((adjustment) => ({
+        "Adjustment Date": formatDate(adjustment.adjustmentDate),
+        "Buyer Sauda": adjustment.buyerSaudaNo || "-",
+        "Buyer Company": adjustment.buyerCompany || "-",
+        "Adjusted With Seller Saudas": [
+          adjustment.saudaNo,
+          ...(adjustment.adjustedWithSaudaNos || []),
+        ]
+          .filter(Boolean)
+          .join(", "),
+        "Seller Company": adjustment.sellerCompany || "-",
+        "Seller Quantity (Tons)": Number(adjustment.purchaseQuantity || 0),
+        "Adjusted Quantity (Tons)": Number(adjustment.adjustmentQuantity || 0),
+        "Consignee": adjustment.consignee || adjustment.buyerConsignee || "-",
+      }));
+      if (!rows.length) {
+        toast.info("No adjusted Saudas found for this date");
+        return;
+      }
+      await generateExcel(rows, `adjusted-saudas-${date}.xlsx`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to download adjusted Saudas");
+    }
+  };
+
   const orderRows = orders.map((order, index) => [
     (page - 1) * itemsPerPage + index + 1,
     formatDate(order.poDate),
@@ -1074,15 +1115,41 @@ const FinanceReport = () => {
               />
             </div>
             <div className="mt-6 overflow-x-auto">
-              <h3 className="mb-3 text-sm font-bold text-slate-700">
-                Adjusted Saudas
-              </h3>
-              {adjustmentRows.length ? (
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <h3 className="text-sm font-bold text-slate-700">
+                  Adjusted Saudas
+                </h3>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="w-full sm:w-52">
+                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                      Adjustment Date for Download
+                    </label>
+                    <DateSelector
+                      selectedDate={adjustedSaudaDate}
+                      onChange={(date) => {
+                        setAdjustedSaudaDate(date);
+                        setAdjustedSaudasPage(1);
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={downloadAdjustedSaudasByDate}
+                    disabled={!adjustedSaudaDate}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <FaDownload size={13} />
+                    Download Excel
+                  </button>
+                </div>
+              </div>
+              {adjustedSaudasTotal > 0 ? (
                 <div>
                   <Tables
                     headers={[
                       "Buyer Sauda",
                       "Buyer Company",
+                      "Buyer Sauda -> Seller Sauda(s)",
                       "Buyer PO Date",
                       "Buyer Quantity",
                       "Buyer Adjusted Total",
@@ -1102,6 +1169,12 @@ const FinanceReport = () => {
                     rows={paginatedAdjustmentRows.map((adjustment) => [
                     adjustment.buyerSaudaNo || "-",
                     adjustment.buyerCompany || "-",
+                    `${adjustment.buyerSaudaNo || "-"} -> ${[
+                      adjustment.saudaNo,
+                      ...(adjustment.adjustedWithSaudaNos || []),
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "-"}`,
                     formatDate(adjustment.buyerSaudaDate),
                     adjustment.buyerSaudaNo
                       ? `${formatNumber(adjustment.buyerQuantity)} Tons`
@@ -1178,7 +1251,9 @@ const FinanceReport = () => {
                 </div>
               ) : (
                 <p className="py-4 text-sm text-slate-500">
-                  No adjusted Saudas for the selected date range.
+                  {adjustedSaudaDate
+                    ? "No adjusted Saudas found for the selected adjustment date."
+                    : "No adjusted Saudas have been saved yet."}
                 </p>
               )}
             </div>
