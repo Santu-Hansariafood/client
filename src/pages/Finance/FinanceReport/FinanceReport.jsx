@@ -12,32 +12,26 @@ import {
   FaUniversity,
   FaSave,
   FaEdit,
-  FaDownload,
 } from "react-icons/fa";
-import { AiOutlineEye } from "react-icons/ai";
 import { toast } from "react-toastify";
+import { pdf } from "@react-pdf/renderer";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
+import AdjustedSaudasSection from "./components/AdjustedSaudasSection";
+import DateWiseTotalsSection from "./components/DateWiseTotalsSection";
+import FinanceReportFilters from "./components/FinanceReportFilters";
+import PurchaseOrdersSection from "./components/PurchaseOrdersSection";
+import SaudaMappingPdf from "./components/SaudaMappingPdf";
 
 import Buttons from "../../../common/Buttons/Buttons";
 const AdminPageShell = lazy(
   () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(
-  () => import("../../../common/Paginations/Paginations"),
-);
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
-const DateSelector = lazy(
-  () => import("../../../common/DateSelector/DateSelector"),
-);
-const DownloadSauda = lazy(
-  () => import("../../../components/DownloadSauda/DownloadSauda"),
-);
-
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
 
@@ -75,6 +69,7 @@ const FinanceReport = () => {
   const [consignees, setConsignees] = useState([]);
   const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedConsignee, setSelectedConsignee] = useState("");
+  const [exportingFormat, setExportingFormat] = useState("");
   const [page, setPage] = useState(1);
   const [adjustedSaudasPage, setAdjustedSaudasPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -82,8 +77,6 @@ const FinanceReport = () => {
   const [adjustmentRows, setAdjustmentRows] = useState([]);
   const [paginatedAdjustmentRows, setPaginatedAdjustmentRows] = useState([]);
   const [adjustedSaudasTotal, setAdjustedSaudasTotal] = useState(0);
-  const [adjustedSaudaDate, setAdjustedSaudaDate] = useState(null);
-  const [selectedTotalDate, setSelectedTotalDate] = useState(null);
   const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   const adjustmentLookupRef = useRef(null);
   const [saudaRows, setSaudaRows] = useState([
@@ -115,7 +108,6 @@ const FinanceReport = () => {
           limit: itemsPerPage,
           adjustmentPage: adjustedSaudasPage,
           adjustmentLimit: itemsPerPage,
-          adjustedSaudaDate: formatDateParam(adjustedSaudaDate),
           startDate: formatDateParam(fromDate),
           endDate: formatDateParam(toDate),
           consignee: selectedConsignee || undefined,
@@ -138,7 +130,6 @@ const FinanceReport = () => {
   }, [
     page,
     adjustedSaudasPage,
-    adjustedSaudaDate,
     fromDate,
     toDate,
     selectedConsignee,
@@ -645,43 +636,120 @@ const FinanceReport = () => {
     setPage(1);
   };
 
-  const downloadAdjustedSaudasByDate = async () => {
-    const date = formatDateParam(adjustedSaudaDate);
-    if (!date) {
-      toast.info("Select an adjustment date to download");
-      return;
-    }
+  const downloadSaudaMappings = async (format) => {
+    setExportingFormat(format);
     try {
       const response = await api.get("/financers/report", {
         params: {
-          adjustedSaudaDate: date,
+          page: 1,
+          limit: 1,
+          adjustmentPage: 1,
+          adjustmentLimit: itemsPerPage,
           exportAdjustedSaudas: true,
+          startDate: formatDateParam(fromDate),
+          endDate: formatDateParam(toDate),
+          consignee: selectedConsignee || undefined,
         },
       });
-      const rows = (response.data?.adjustedSaudas || []).map((adjustment) => ({
-        "Adjustment Date": formatDate(adjustment.adjustmentDate),
-        "Buyer Sauda (Buying Side)": adjustment.buyerSaudaNo || "No buyer Sauda linked",
-        "Buyer Company": adjustment.buyerCompany || "-",
-        "Seller Saudas (Selling Side)": [...new Set([
-          adjustment.saudaNo,
-          ...(adjustment.adjustedWithSaudaNos || []),
-        ])]
-          .filter(Boolean)
-          .join(", "),
-        "Seller Company": adjustment.sellerCompany || "-",
-        "Seller Quantity (Tons)": Number(adjustment.purchaseQuantity || 0),
-        "Adjusted Quantity (Tons)": Number(adjustment.adjustmentQuantity || 0),
-        Consignee: adjustment.consignee || adjustment.buyerConsignee || "-",
-      }));
+      const adjustments = response.data?.adjustedSaudas || [];
+      const buyerAdjustedTotals = new Map();
+      adjustments.forEach((adjustment) => {
+        if (!adjustment.buyerSaudaNo) return;
+        const key = `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
+        buyerAdjustedTotals.set(
+          key,
+          (buyerAdjustedTotals.get(key) || 0) +
+            Number(adjustment.adjustmentQuantity || 0),
+        );
+      });
+      const rows = adjustments.map((adjustment) => {
+        const buyerKey = `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
+        const buyerAdjustedTotal = buyerAdjustedTotals.get(buyerKey) || 0;
+        const sellerQuantity = Number(
+          adjustment.purchaseQuantity || adjustment.quantity || 0,
+        );
+        const adjustedQuantity = Number(adjustment.adjustmentQuantity || 0);
+        const sellerSaudas = [
+          ...new Set([
+            adjustment.saudaNo,
+            ...(adjustment.adjustedWithSaudaNos || []),
+          ]),
+        ].filter(Boolean);
+
+        return {
+          "Adjustment Date": formatDate(adjustment.adjustmentDate),
+          "Buyer Sauda": adjustment.buyerSaudaNo || "-",
+          "Buyer Company": adjustment.buyerCompany || "-",
+          "Buyer PO Date": formatDate(adjustment.buyerSaudaDate),
+          "Buyer Quantity (Tons)": Number(adjustment.buyerQuantity || 0),
+          "Buyer Adjusted Total (Tons)": buyerAdjustedTotal,
+          "Buyer Pending (Tons)": adjustment.buyerSaudaNo
+            ? Math.max(
+                0,
+                Number(adjustment.buyerQuantity || 0) - buyerAdjustedTotal,
+              )
+            : 0,
+          "Seller Sauda": adjustment.saudaNo || "-",
+          "All Mapped Seller Saudas": sellerSaudas.join(", ") || "-",
+          "Seller Name": adjustment.sellerName || "-",
+          "Seller Company": adjustment.sellerCompany || "-",
+          Consignee:
+            adjustment.consignee || adjustment.buyerConsignee || "-",
+          Commodity: adjustment.commodity || "-",
+          "Seller PO Date": formatDate(adjustment.saudaDate),
+          "Seller Quantity (Tons)": sellerQuantity,
+          "Adjusted Quantity (Tons)": adjustedQuantity,
+          "Seller Pending (Tons)": Math.max(
+            0,
+            sellerQuantity - adjustedQuantity,
+          ),
+          Rate: Number(adjustment.rate || 0),
+          CD: Number(adjustment.cd || 0),
+          GST: Number(adjustment.gst || 0),
+          "Delivery Date": formatDate(adjustment.deliveryDate),
+          "Payment Terms": adjustment.paymentTerms || "-",
+        };
+      });
       if (!rows.length) {
-        toast.info("No adjusted Saudas found for this date");
+        toast.info("No Sauda mappings match the selected filters");
         return;
       }
-      await generateExcel(rows, `adjusted-saudas-${date}.xlsx`);
+
+      const from = formatDateParam(fromDate) || "all-dates";
+      const to = formatDateParam(toDate) || "all-dates";
+      const consigneeName = (selectedConsignee || "all-consignees")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const fileName = `finance-sauda-mapping-${from}-to-${to}-${consigneeName}`;
+
+      if (format === "excel") {
+        await generateExcel(rows, `${fileName}.xlsx`);
+        return;
+      }
+
+      const pdfBlob = await pdf(
+        <SaudaMappingPdf
+          rows={rows}
+          from={from}
+          to={to}
+          consignee={selectedConsignee}
+        />,
+      ).toBlob();
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pdfUrl;
+      downloadLink.download = `${fileName}.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to download adjusted Saudas",
+        error.response?.data?.message || "Failed to export Sauda mappings",
       );
+    } finally {
+      setExportingFormat("");
     }
   };
 
@@ -718,11 +786,7 @@ const FinanceReport = () => {
     label: company,
   }));
 
-  const selectedDateTotals = selectedTotalDate
-    ? dateWiseTotals.filter(
-        (item) => formatDateParam(selectedTotalDate) === item.date,
-      )
-    : dateWiseTotals;
+  const selectedDateTotals = dateWiseTotals;
 
   const selectedSaudaDetails = selectedDateTotals.flatMap(
     (item) => item.saudaDetails || [],
@@ -732,13 +796,7 @@ const FinanceReport = () => {
     (item.partyTotals || []).map((party) => ({ ...party, date: item.date })),
   );
 
-  const selectedAdjustments = selectedTotalDate
-    ? adjustmentRows.filter(
-        (item) =>
-          formatDateParam(selectedTotalDate) ===
-          formatDateParam(item.adjustmentDate),
-      )
-    : adjustmentRows;
+  const selectedAdjustments = adjustmentRows;
 
   const adjustedQuantityByBuyerSauda = new Map();
   adjustmentRows.forEach((adjustment) => {
@@ -999,97 +1057,30 @@ const FinanceReport = () => {
         noContentCard
       >
         <div className="space-y-6">
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">
-                  Sauda Report Filters
-                </h2>
-                <p className="text-sm text-slate-500">
-                  View financed Saudas by date range and consignee
-                </p>
-              </div>
-              <div className="grid w-full gap-3 sm:grid-cols-3 sm:items-end">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-600">
-                    From Date
-                  </label>
-                  <DateSelector
-                    selectedDate={fromDate}
-                    onChange={handleDateChange(setFromDate)}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-600">
-                    To Date
-                  </label>
-                  <DateSelector
-                    selectedDate={toDate}
-                    onChange={handleDateChange(setToDate)}
-                  />
-                </div>
-                <div>
-                  <DataDropdown
-                    label="Consignee"
-                    options={consigneeOptions}
-                    selectedOptions={selectedConsignee}
-                    onChange={(option) => {
-                      setSelectedConsignee(option?.value || "");
-                      setPage(1);
-                    }}
-                    placeholder="All Consignees"
-                    isClearable
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
+          <FinanceReportFilters
+            fromDate={fromDate}
+            toDate={toDate}
+            consigneeOptions={consigneeOptions}
+            selectedConsignee={selectedConsignee}
+            exportingFormat={exportingFormat}
+            loading={loading}
+            onFromDateChange={handleDateChange(setFromDate)}
+            onToDateChange={handleDateChange(setToDate)}
+            onConsigneeChange={(value) => {
+              setSelectedConsignee(value);
+              setPage(1);
+            }}
+            onExport={downloadSaudaMappings}
+          />
 
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">
-                  Purchase Orders
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Company-wise financed Sauda list
-                </p>
-              </div>
-              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                {total} Records
-              </span>
-            </div>
-            {loading ? (
-              <Loading />
-            ) : (
-              <div className="overflow-x-auto">
-                <Tables
-                  headers={[
-                    "Sl No",
-                    "Date",
-                    "Sauda No",
-                    "Seller Company",
-                    "Buyer Company",
-                    "Consignee",
-                    "Purchase Quantity",
-                    "Rate",
-                    "CD",
-                    "GST",
-                    "Delivery Date",
-                    "Payment Terms",
-                    "Action",
-                  ]}
-                  rows={orderRows}
-                />
-              </div>
-            )}
-            <Pagination
-              currentPage={page}
-              totalItems={total}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setPage}
-            />
-          </section>
+          <PurchaseOrdersSection
+            rows={orderRows}
+            loading={loading}
+            total={total}
+            page={page}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setPage}
+          />
 
           <section
             ref={adjustmentLookupRef}
@@ -1130,367 +1121,31 @@ const FinanceReport = () => {
                 rows={saudaLookupRows}
               />
             </div>
-            <div className="mt-6 overflow-x-auto">
-              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <h3 className="text-sm font-bold text-slate-700">
-                  Adjusted Saudas
-                </h3>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                  <div className="w-full sm:w-52">
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
-                      Adjustment Date for Download
-                    </label>
-                    <DateSelector
-                      selectedDate={adjustedSaudaDate}
-                      onChange={(date) => {
-                        setAdjustedSaudaDate(date);
-                        setAdjustedSaudasPage(1);
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={downloadAdjustedSaudasByDate}
-                    disabled={!adjustedSaudaDate}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <FaDownload size={13} />
-                    Download Excel
-                  </button>
-                </div>
-              </div>
-              {adjustedSaudasTotal > 0 ? (
-                <div>
-                  <Tables
-                    headers={[
-                      "Buyer Sauda",
-                      "Buyer Company",
-                      "Buyer / Seller Sauda Mapping",
-                      "Buyer PO Date",
-                      "Buyer Quantity",
-                      "Buyer Adjusted Total",
-                      "Buyer Pending",
-                      "Seller Sauda",
-                      "Seller Name",
-                      "Seller Company",
-                      "Consignee",
-                      "Commodity",
-                      "Seller Quantity",
-                      "Seller Adjusted",
-                      "Seller Pending",
-                      "Seller PO Date",
-                      "Adjustment Date",
-                      "Status",
-                    ]}
-                    rows={paginatedAdjustmentRows.map((adjustment) => [
-                      adjustment.buyerSaudaNo || "-",
-                      adjustment.buyerCompany || "-",
-                      <div
-                        key={`mapping-${adjustment._id || adjustment.saudaNo}`}
-                        className="min-w-[190px] space-y-1 text-xs"
-                      >
-                        <div>
-                          <span className="font-bold text-slate-500">Buyer:</span>{" "}
-                          {adjustment.buyerSaudaNo || "No buyer Sauda linked"}
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Seller(s):</span>{" "}
-                          {[...new Set([
-                          adjustment.saudaNo,
-                          ...(adjustment.adjustedWithSaudaNos || []),
-                          ])]
-                            .filter(Boolean)
-                            .join(", ") || "-"}
-                        </div>
-                      </div>,
-                      formatDate(adjustment.buyerSaudaDate),
-                      adjustment.buyerSaudaNo
-                        ? `${formatNumber(adjustment.buyerQuantity)} Tons`
-                        : "-",
-                      adjustment.buyerSaudaNo
-                        ? `${formatNumber(
-                            adjustedQuantityByBuyerSauda.get(
-                              `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
-                            ) || 0,
-                          )} Tons`
-                        : "-",
-                      adjustment.buyerSaudaNo
-                        ? `${formatNumber(
-                            Math.max(
-                              0,
-                              Number(adjustment.buyerQuantity || 0) -
-                                (adjustedQuantityByBuyerSauda.get(
-                                  `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
-                                ) || 0),
-                            ),
-                          )} Tons`
-                        : "-",
-                      adjustment.saudaNo || "-",
-                      adjustment.sellerName || "-",
-                      adjustment.sellerCompany || "-",
-                      adjustment.consignee || adjustment.buyerConsignee || "-",
-                      adjustment.commodity || "-",
-                      `${formatNumber(adjustment.purchaseQuantity)} Tons`,
-                      `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
-                      `${formatNumber(
-                        Math.max(
-                          0,
-                          Number(adjustment.purchaseQuantity || 0) -
-                            Number(adjustment.adjustmentQuantity || 0),
-                        ),
-                      )} Tons`,
-                      formatDate(adjustment.saudaDate),
-                      formatDate(adjustment.adjustmentDate),
-                      getAdjustmentStatus(
-                        adjustment.buyerSaudaNo
-                          ? adjustment.buyerQuantity
-                          : adjustment.purchaseQuantity,
-                        adjustment.buyerSaudaNo
-                          ? adjustedQuantityByBuyerSauda.get(
-                              `${String(adjustment.buyerSaudaNo).toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
-                            ) || 0
-                          : adjustment.adjustmentQuantity,
-                      ) === "Equal" ? (
-                        <span
-                          key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
-                          className="font-bold text-emerald-600"
-                        >
-                          Equal
-                        </span>
-                      ) : (
-                        <button
-                          key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
-                          type="button"
-                          onClick={() => adjustEqualityRow(adjustment)}
-                          title="Load this Sauda for adjustment"
-                          className="font-bold text-amber-600 underline decoration-dashed underline-offset-2 hover:text-amber-800"
-                        >
-                          Not Equal - Adjust
-                        </button>
-                      ),
-                    ])}
-                  />
-                  <Pagination
-                    currentPage={adjustedSaudasPage}
-                    totalItems={adjustedSaudasTotal}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setAdjustedSaudasPage}
-                  />
-                </div>
-              ) : (
-                <p className="py-4 text-sm text-slate-500">
-                  {adjustedSaudaDate
-                    ? "No adjusted Saudas found for the selected adjustment date."
-                    : "No adjusted Saudas have been saved yet."}
-                </p>
-              )}
-            </div>
+            <AdjustedSaudasSection
+              rows={paginatedAdjustmentRows}
+              total={adjustedSaudasTotal}
+              page={adjustedSaudasPage}
+              itemsPerPage={itemsPerPage}
+              adjustedQuantityByBuyerSauda={adjustedQuantityByBuyerSauda}
+              formatDate={formatDate}
+              formatNumber={formatNumber}
+              getAdjustmentStatus={getAdjustmentStatus}
+              onPageChange={setAdjustedSaudasPage}
+              onAdjust={adjustEqualityRow}
+            />
           </section>
 
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">
-                  Date-wise Totals
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Sauda, adjustment, loaded, and pending quantities for a
-                  selected date
-                </p>
-              </div>
-              <div className="w-full sm:w-56">
-                <label className="mb-1 block text-xs font-bold text-slate-600">
-                  Select Date
-                </label>
-                <DateSelector
-                  selectedDate={selectedTotalDate}
-                  onChange={setSelectedTotalDate}
-                />
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <Tables
-                headers={[
-                  "Date",
-                  "Total Saudas",
-                  "Sauda Quantity",
-                  "Loaded Quantity",
-                  "Total Adjustment",
-                  "Pending Quantity",
-                ]}
-                rows={selectedDateTotals.map((item) => [
-                  formatDate(item.date),
-                  formatNumber(item.saudaCount),
-                  `${formatNumber(item.saudaQuantity)} Tons`,
-                  `${formatNumber(item.loadedQuantity)} Tons`,
-                  `${formatNumber(item.adjustmentQuantity)} Tons`,
-                  `${formatNumber(item.pendingQuantity)} Tons`,
-                ])}
-              />
-            </div>
-            {selectedPartyTotals.length > 0 && (
-              <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">
-                  Buyer and Seller Finance Totals
-                </h3>
-                <Tables
-                  headers={[
-                    "Date",
-                    "Seller Company",
-                    "Buyer Company",
-                    "Purchase Total",
-                    "Sales Total",
-                    "Pending Total",
-                  ]}
-                  rows={selectedPartyTotals.map((party) => [
-                    formatDate(party.date),
-                    party.sellerCompany || "-",
-                    party.buyerCompany || "-",
-                    `${formatNumber(party.purchaseQuantity)} Tons`,
-                    `${formatNumber(party.salesQuantity ?? party.adjustedQuantity)} Tons`,
-                    `${formatNumber(party.pendingQuantity)} Tons`,
-                  ])}
-                />
-              </div>
-            )}
-            {selectedSaudaDetails.length > 0 && (
-              <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">
-                  Sauda Details
-                </h3>
-                <Tables
-                  headers={[
-                    "Sauda Date",
-                    "Sauda No",
-                    "Buyer",
-                    "Buyer Company",
-                    "Seller Name",
-                    "Seller Company",
-                    "Consignee",
-                    "Commodity",
-                    "Quantity",
-                    "Loaded",
-                    "Adjusted",
-                    "Pending",
-                    "Rate",
-                    "Delivery Date",
-                    "Payment Terms",
-                  ]}
-                  rows={selectedSaudaDetails.map((sauda) => [
-                    formatDate(sauda.saudaDate),
-                    sauda.saudaNo || "-",
-                    sauda.buyer || "-",
-                    sauda.buyerCompany || "-",
-                    sauda.sellerName || "-",
-                    sauda.sellerCompany || "-",
-                    sauda.consignee || "-",
-                    sauda.commodity || "-",
-                    `${formatNumber(sauda.quantity)} Tons`,
-                    `${formatNumber(sauda.loadedQuantity)} Tons`,
-                    `${formatNumber(sauda.adjustmentQuantity)} Tons`,
-                    `${formatNumber(sauda.pendingQuantity)} Tons`,
-                    formatNumber(sauda.rate),
-                    formatDate(sauda.deliveryDate),
-                    sauda.paymentTerms || "-",
-                  ])}
-                />
-              </div>
-            )}
-            {selectedAdjustments.length > 0 && (
-              <div className="mt-6 overflow-x-auto">
-                <h3 className="mb-3 text-sm font-bold text-slate-700">
-                  Adjusted Saudas
-                </h3>
-                <Tables
-                  headers={[
-                    "Adjustment Date",
-                    "Sauda No",
-                    "Buyer Company",
-                    "Seller Name",
-                    "Seller Company",
-                    "Adjusted Quantity",
-                    "Actions",
-                  ]}
-                  rows={selectedAdjustments.map((adjustment) => [
-                    formatDate(adjustment.adjustmentDate),
-                    adjustment.saudaNo || "-",
-                    adjustment.buyerCompany || "-",
-                    adjustment.sellerName || "-",
-                    adjustment.sellerCompany || "-",
-                    `${formatNumber(adjustment.adjustmentQuantity)} Tons`,
-                    <div
-                      key={`adjustment-actions-${adjustment._id || adjustment.saudaNo}`}
-                      className="flex items-center gap-2"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setSelectedAdjustment(adjustment)}
-                        title="View adjustment details"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                      >
-                        <AiOutlineEye size={17} />
-                      </button>
-                      <DownloadSauda
-                        data={adjustment}
-                        button={
-                          <button
-                            type="button"
-                            title="Download Sauda"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          >
-                            <FaDownload size={13} />
-                          </button>
-                        }
-                      />
-                    </div>,
-                  ])}
-                />
-              </div>
-            )}
-            {selectedAdjustment && (
-              <div className="mt-4 grid gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <span className="font-bold">Buyer:</span>{" "}
-                  {selectedAdjustment.buyer || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Buyer Company:</span>{" "}
-                  {selectedAdjustment.buyerCompany || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Sauda No:</span>{" "}
-                  {selectedAdjustment.saudaNo || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Seller Name:</span>{" "}
-                  {selectedAdjustment.sellerName || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Seller Company:</span>{" "}
-                  {selectedAdjustment.sellerCompany || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Consignee:</span>{" "}
-                  {selectedAdjustment.consignee || "-"}
-                </div>
-                <div>
-                  <span className="font-bold">Buying Quantity:</span>{" "}
-                  {formatNumber(selectedAdjustment.purchaseQuantity)} Tons
-                </div>
-                <div>
-                  <span className="font-bold">Adjusted Quantity:</span>{" "}
-                  {formatNumber(selectedAdjustment.adjustmentQuantity)} Tons
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedAdjustment(null)}
-                  className="text-left text-xs font-bold text-emerald-700 hover:text-emerald-900"
-                >
-                  Close details
-                </button>
-              </div>
-            )}
-          </section>
+          <DateWiseTotalsSection
+            dateTotals={selectedDateTotals}
+            partyTotals={selectedPartyTotals}
+            saudaDetails={selectedSaudaDetails}
+            adjustments={selectedAdjustments}
+            selectedAdjustment={selectedAdjustment}
+            formatDate={formatDate}
+            formatNumber={formatNumber}
+            onSelectAdjustment={setSelectedAdjustment}
+            onClearAdjustment={() => setSelectedAdjustment(null)}
+          />
         </div>
       </AdminPageShell>
     </Suspense>

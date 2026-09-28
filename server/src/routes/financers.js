@@ -461,6 +461,14 @@ router.get("/report", async (req, res) => {
           }
         : {}),
       ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
+      ...(consignee
+        ? {
+            consignee: {
+              $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+              $options: "i",
+            },
+          }
+        : {}),
     };
     const adjustedSaudaDateFilter = {};
     if (adjustedSaudaDate && !Number.isNaN(adjustedSaudaDate.getTime())) {
@@ -468,10 +476,29 @@ router.get("/report", async (req, res) => {
       adjustedSaudaDateFilter.$gte.setHours(0, 0, 0, 0);
       adjustedSaudaDateFilter.$lte = new Date(adjustedSaudaDate);
       adjustedSaudaDateFilter.$lte.setHours(23, 59, 59, 999);
+    } else {
+      if (startDate && !Number.isNaN(startDate.getTime())) {
+        adjustedSaudaDateFilter.$gte = startDate;
+      }
+      if (endDate && !Number.isNaN(endDate.getTime())) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        adjustedSaudaDateFilter.$lte = endOfDay;
+      }
     }
-    const adjustedSaudasQuery = Object.keys(adjustedSaudaDateFilter).length
-      ? { adjustmentDate: adjustedSaudaDateFilter }
-      : {};
+    const adjustedSaudasQuery = {
+      ...(Object.keys(adjustedSaudaDateFilter).length
+        ? { adjustmentDate: adjustedSaudaDateFilter }
+        : {}),
+      ...(consignee
+        ? {
+            consignee: {
+              $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+              $options: "i",
+            },
+          }
+        : {}),
+    };
     const adjustmentSort = { adjustmentDate: -1, createdAt: -1 };
     const [adjustments, paginatedAdjustments, adjustedSaudasTotal, dateWiseSaudas] = await Promise.all([
       FinanceAdjustment.find(adjustmentQuery).sort(adjustmentSort).lean(),
