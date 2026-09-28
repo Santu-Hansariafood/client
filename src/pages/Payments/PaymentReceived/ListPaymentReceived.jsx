@@ -1310,13 +1310,25 @@ const ListPaymentReceived = () => {
     const finalY = doc.lastAutoTable?.finalY || 70;
     doc.addPage();
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(26, 58, 95);
-    doc.text("HANSARIA FOOD PRIVATE LIMITED | PARTY LEDGER", margin, 7);
+    doc.text("HANSARIA FOOD PRIVATE LIMITED", margin, 7);
+    doc.setFont("helvetica", "normal");
+    doc.text("PARTY LEDGER", pageWidth - margin, 7, { align: "right" });
     doc.setDrawColor(180, 180, 180);
     doc.setLineWidth(0.2);
     doc.line(margin, 10, pageWidth - margin, 10);
-    let summaryY = 12;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.setTextColor(26, 58, 95);
+    doc.text("PARTY LEDGER SUMMARY", pageWidth / 2, 23, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Account totals and settlement", pageWidth / 2, 29, {
+      align: "center",
+    });
+    let summaryY = 34;
 
     const boxHeight = 26;
     const summaryWidth = pageWidth - 2 * margin;
@@ -1430,13 +1442,13 @@ const ListPaymentReceived = () => {
     doc.text(
       differenceText,
       margin + (7 * summaryWidth) / 8,
-      summaryY + 18,
+      summaryY + 17,
       { align: "center" },
     );
     doc.setTextColor(0, 0, 0);
-    summaryY += boxHeight + 5;
+    summaryY += boxHeight + 4;
 
-    let bankSectionY = summaryY + 20;
+    let bankSectionY = summaryY + 10;
 
     let sellerCompanyData = null;
     const sellerCompanyName =
@@ -1575,18 +1587,18 @@ const ListPaymentReceived = () => {
     doc.text(
       `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
       pageWidth - margin,
-      finalSectionY + 55,
+      finalSectionY + 45,
       { align: "right" },
     );
     doc.setFont("helvetica", "bold");
-    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 64, {
+    doc.text("Authorised Signatory", pageWidth - margin, finalSectionY + 55, {
       align: "right",
     });
     doc.line(
       pageWidth - 75,
-      finalSectionY + 61,
+      finalSectionY + 52,
       pageWidth - margin,
-      finalSectionY + 61,
+      finalSectionY + 52,
     );
 
     const pageCount = doc.internal.getNumberOfPages();
