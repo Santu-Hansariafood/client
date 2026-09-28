@@ -75,9 +75,12 @@ const FinanceReport = () => {
   const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [page, setPage] = useState(1);
+  const [adjustedSaudasPage, setAdjustedSaudasPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [dateWiseTotals, setDateWiseTotals] = useState([]);
   const [adjustmentRows, setAdjustmentRows] = useState([]);
+  const [paginatedAdjustmentRows, setPaginatedAdjustmentRows] = useState([]);
+  const [adjustedSaudasTotal, setAdjustedSaudasTotal] = useState(0);
   const [selectedTotalDate, setSelectedTotalDate] = useState(null);
   const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   const adjustmentLookupRef = useRef(null);
@@ -108,6 +111,8 @@ const FinanceReport = () => {
         params: {
           page,
           limit: itemsPerPage,
+          adjustmentPage: adjustedSaudasPage,
+          adjustmentLimit: itemsPerPage,
           startDate: formatDateParam(fromDate),
           endDate: formatDateParam(toDate),
           consignee: selectedConsignee || undefined,
@@ -118,6 +123,8 @@ const FinanceReport = () => {
       setTotal(Number(response.data?.total) || 0);
       setDateWiseTotals(response.data?.dateWiseTotals || []);
       setAdjustmentRows(response.data?.adjustments || []);
+      setPaginatedAdjustmentRows(response.data?.adjustedSaudas || []);
+      setAdjustedSaudasTotal(Number(response.data?.adjustedSaudasTotal) || 0);
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to load finance report",
@@ -125,7 +132,7 @@ const FinanceReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, fromDate, toDate, selectedConsignee]);
+  }, [page, adjustedSaudasPage, fromDate, toDate, selectedConsignee]);
 
   useEffect(() => {
     loadReport();
@@ -1071,27 +1078,28 @@ const FinanceReport = () => {
                 Adjusted Saudas
               </h3>
               {adjustmentRows.length ? (
-                <Tables
-                  headers={[
-                    "Buyer Sauda",
-                    "Buyer Company",
-                    "Buyer PO Date",
-                    "Buyer Quantity",
-                    "Buyer Adjusted Total",
-                    "Buyer Pending",
-                    "Seller Sauda",
-                    "Seller Name",
-                    "Seller Company",
-                    "Consignee",
-                    "Commodity",
-                    "Seller Quantity",
-                    "Seller Adjusted",
-                    "Seller Pending",
-                    "Seller PO Date",
-                    "Adjustment Date",
-                    "Status",
-                  ]}
-                  rows={adjustmentRows.map((adjustment) => [
+                <div>
+                  <Tables
+                    headers={[
+                      "Buyer Sauda",
+                      "Buyer Company",
+                      "Buyer PO Date",
+                      "Buyer Quantity",
+                      "Buyer Adjusted Total",
+                      "Buyer Pending",
+                      "Seller Sauda",
+                      "Seller Name",
+                      "Seller Company",
+                      "Consignee",
+                      "Commodity",
+                      "Seller Quantity",
+                      "Seller Adjusted",
+                      "Seller Pending",
+                      "Seller PO Date",
+                      "Adjustment Date",
+                      "Status",
+                    ]}
+                    rows={paginatedAdjustmentRows.map((adjustment) => [
                     adjustment.buyerSaudaNo || "-",
                     adjustment.buyerCompany || "-",
                     formatDate(adjustment.buyerSaudaDate),
@@ -1159,8 +1167,15 @@ const FinanceReport = () => {
                         Not Equal - Adjust
                       </button>
                     ),
-                  ])}
-                />
+                    ])}
+                  />
+                  <Pagination
+                    currentPage={adjustedSaudasPage}
+                    totalItems={adjustedSaudasTotal}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setAdjustedSaudasPage}
+                  />
+                </div>
               ) : (
                 <p className="py-4 text-sm text-slate-500">
                   No adjusted Saudas for the selected date range.

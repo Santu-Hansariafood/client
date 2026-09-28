@@ -174,6 +174,11 @@ router.get("/report", async (req, res) => {
     const companyId = req.query.companyId ? toObjectId(req.query.companyId) : null;
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || "10", 10)));
+    const adjustmentPage = Math.max(1, parseInt(req.query.adjustmentPage || "1", 10));
+    const adjustmentLimit = Math.min(
+      100,
+      Math.max(1, parseInt(req.query.adjustmentLimit || "10", 10)),
+    );
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
     const consignee = String(req.query.consignee || "").trim();
@@ -453,8 +458,15 @@ router.get("/report", async (req, res) => {
         : {}),
       ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
     };
-    const [adjustments, dateWiseSaudas] = await Promise.all([
-      FinanceAdjustment.find(adjustmentQuery).sort({ adjustmentDate: -1, createdAt: -1 }).lean(),
+    const adjustmentSort = { adjustmentDate: -1, createdAt: -1 };
+    const [adjustments, paginatedAdjustments, adjustedSaudasTotal, dateWiseSaudas] = await Promise.all([
+      FinanceAdjustment.find(adjustmentQuery).sort(adjustmentSort).lean(),
+      FinanceAdjustment.find(adjustmentQuery)
+        .sort(adjustmentSort)
+        .skip((adjustmentPage - 1) * adjustmentLimit)
+        .limit(adjustmentLimit)
+        .lean(),
+      FinanceAdjustment.countDocuments(adjustmentQuery),
       SelfOrder.aggregate([
         { $match: orderQuery },
         {
@@ -662,6 +674,12 @@ router.get("/report", async (req, res) => {
         paymentTerms: order?.paymentTerms || "",
       };
     });
+    const enrichedAdjustmentMap = new Map(
+      enrichedAdjustments.map((adjustment) => [String(adjustment._id), adjustment]),
+    );
+    const adjustedSaudas = paginatedAdjustments
+      .map((adjustment) => enrichedAdjustmentMap.get(String(adjustment._id)))
+      .filter(Boolean);
 
     const data = orders.map((order) => ({
       ...order,
@@ -694,6 +712,10 @@ router.get("/report", async (req, res) => {
         .sort((first, second) => first.localeCompare(second)),
       financerCount: financerRecords.length,
       adjustments: enrichedAdjustments,
+      adjustedSaudas,
+      adjustedSaudasTotal,
+      adjustmentPage,
+      adjustmentLimit,
       dateWiseTotals: [...dateTotals.values()].sort((first, second) => first.date.localeCompare(second.date)),
     });
   } catch (error) {
