@@ -206,6 +206,7 @@ const TallyLedgerBook = ({
 
   const renderActionCells = (row, buyerCompany, sellerCompany) => {
     const recipientEmail = resolveRecipientEmail(row, sellerCompany);
+    const canShowVoucherActions = row.isPrimaryPaymentMapping !== false;
     const hasEmailTarget = Boolean(recipientEmail && onSendEmail);
     const isVoucherRow = row.isPaymentRow || row.raw?.uiType !== "entry";
     const isSending = sendingEmailIds.has(row.id);
@@ -215,7 +216,7 @@ const TallyLedgerBook = ({
     return (
     <>
       <td className="px-3 py-2 text-center">
-        {!row.isOpening && (
+        {!row.isOpening && canShowVoucherActions && (
           <button
             onClick={() => handleDownloadClick(row, buyerCompany, sellerCompany)}
             disabled={qrLoading[row.id]}
@@ -227,75 +228,79 @@ const TallyLedgerBook = ({
       </td>
       <td className="px-3 py-2">
         <div className="flex flex-col items-center justify-center gap-1.5">
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="max-w-[160px] truncate text-xs text-slate-600">
-              {recipientEmail || "-"}
-            </span>
-            {canSendViaIcon && (
-              <button
-              type="button"
-              onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
-              disabled={isSending}
-              aria-label={isEmailSent
-                ? `Re-send voucher PDF to ${recipientEmail}`
-                : `Send voucher PDF to ${recipientEmail}`}
-              title={isEmailSent
-                ? `Already sent${sentAtDate ? ` on ${new Date(sentAtDate).toLocaleString("en-GB")}` : ""} — click to re-send voucher PDF to ${recipientEmail}`
-                : `Click to send voucher PDF to ${recipientEmail}`}
-              className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-white shadow transition disabled:opacity-60 disabled:cursor-not-allowed ${
-                isEmailSent
-                  ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-                  : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
-              }`}
-            >
-              {isSending ? (
-                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-              ) : isEmailSent ? (
-                <FaEnvelope size={11} />
-              ) : (
-                <FaEnvelope size={11} />
-              )}
-            </button>
-            )}
-          </div>
-          <div className="flex items-center justify-center min-h-[28px]">
-            {!row.isOpening && isVoucherRow && hasEmailTarget && (
-              isEmailSent ? (
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded text-[10px] font-black uppercase tracking-wider shadow"
-                  title={sentAtDate ? `Sent on ${new Date(sentAtDate).toLocaleString("en-GB")}` : "Email sent successfully"}
-                >
-                  <FaCheck size={10} />
-                  Sent
-                </span>
-              ) : (
+          {canShowVoucherActions && (
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="max-w-[160px] truncate text-xs text-slate-600">
+                {recipientEmail || "-"}
+              </span>
+              {canSendViaIcon && (
                 <button
                   type="button"
                   onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
                   disabled={isSending}
-                  aria-label={`Send voucher to ${recipientEmail}`}
-                  title={`Send voucher PDF to ${recipientEmail} using the payment email`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-[10px] font-black uppercase tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={isEmailSent
+                    ? `Re-send voucher PDF to ${recipientEmail}`
+                    : `Send voucher PDF to ${recipientEmail}`}
+                  title={isEmailSent
+                    ? `Already sent${sentAtDate ? ` on ${new Date(sentAtDate).toLocaleString("en-GB")}` : ""} — click to re-send voucher PDF to ${recipientEmail}`
+                    : `Click to send voucher PDF to ${recipientEmail}`}
+                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-white shadow transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                    isEmailSent
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+                      : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                  }`}
                 >
                   {isSending ? (
                     <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                  ) : isEmailSent ? (
+                    <FaEnvelope size={11} />
                   ) : (
-                    <FaEnvelope size={10} />
+                    <FaEnvelope size={11} />
                   )}
-                  {isSending ? "Sending..." : "Send"}
                 </button>
-              )
-            )}
-            {!row.isOpening && isVoucherRow && !hasEmailTarget && (
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                No Email
-              </span>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+          {canShowVoucherActions && (
+            <div className="flex items-center justify-center min-h-[28px]">
+              {!row.isOpening && isVoucherRow && hasEmailTarget && (
+                isEmailSent ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded text-[10px] font-black uppercase tracking-wider shadow"
+                    title={sentAtDate ? `Sent on ${new Date(sentAtDate).toLocaleString("en-GB")}` : "Email sent successfully"}
+                  >
+                    <FaCheck size={10} />
+                    Sent
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSendClick(row, buyerCompany, sellerCompany)}
+                    disabled={isSending}
+                    aria-label={`Send voucher to ${recipientEmail}`}
+                    title={`Send voucher PDF to ${recipientEmail} using the payment email`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-[10px] font-black uppercase tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSending ? (
+                      <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                    ) : (
+                      <FaEnvelope size={10} />
+                    )}
+                    {isSending ? "Sending..." : "Send"}
+                  </button>
+                )
+              )}
+              {!row.isOpening && isVoucherRow && !hasEmailTarget && (
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  No Email
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </td>
       <td className="px-3 py-2 text-center">
-        {!row.isOpening && row.raw && onEdit && (
+        {!row.isOpening && canShowVoucherActions && row.raw && onEdit && (
           <button
             onClick={() => onEdit(row.raw)}
             className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded text-xs font-bold transition shadow"
@@ -305,7 +310,7 @@ const TallyLedgerBook = ({
         )}
       </td>
       <td className="px-3 py-2 text-center">
-        {!row.isOpening && row.raw && onDelete && (
+        {!row.isOpening && canShowVoucherActions && row.raw && onDelete && (
           <button
             onClick={() => onDelete(row.raw._id)}
             className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded text-xs font-bold transition shadow"
@@ -490,6 +495,7 @@ const TallyLedgerBook = ({
                           <span className="inline-block mr-2 font-bold w-4 text-right">
                             {item.type === "add" ? "+" : "−"}
                           </span>
+                          {item.label}
                         </td>
                         {showCompanyColumns && (
                           <>
@@ -502,22 +508,12 @@ const TallyLedgerBook = ({
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-[#1e3a5f]">
                           {item.type === "add" && (
-                            <>
-                              <div className="text-[9px] leading-tight">
-                                {item.label}
-                              </div>
-                              <div>{formatLedgerAmount(item.amount)}</div>
-                            </>
+                            formatLedgerAmount(item.amount)
                           )}
                         </td>
                         <td className="px-3 py-1 text-right font-bold tabular-nums border-r border-slate-200 text-emerald-700">
                           {item.type === "deduct" && (
-                            <>
-                              <div className="text-[9px] leading-tight">
-                                {item.label}
-                              </div>
-                              <div>{formatLedgerAmount(item.amount)}</div>
-                            </>
+                            formatLedgerAmount(item.amount)
                           )}
                         </td>
                         <td className="px-3 py-1"></td>

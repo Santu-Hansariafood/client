@@ -543,25 +543,22 @@ export const buildTallyVoucherRows = (
       const paymentClaimAmount = Number(payment.claim) || 0;
       const onAccountClaimAmount = paymentClaimAmount;
       const paymentMappings = payment.mappings || [];
-      const mappedBillCount = paymentMappings.filter(
+      const firstMappedIndex = paymentMappings.findIndex(
         (mapping) => Number(mapping.allocatedAmount) > 0,
-      ).length;
-      const isMultiBillPayment = mappedBillCount > 1;
-      const displayMappings = isMultiBillPayment
-        ? [{ allocatedAmount: mappedTotal }]
-        : paymentMappings;
+      );
 
-      if (displayMappings.length > 0) {
-        displayMappings.forEach((mapping, mIdx) => {
+      if (paymentMappings.length > 0) {
+        paymentMappings.forEach((mapping, mIdx) => {
           const allocatedAmt = Number(mapping.allocatedAmount) || 0;
           if (allocatedAmt <= 0) return;
-          const loadingEntry = isMultiBillPayment
-            ? {}
-            : mapping.loadingEntryId || {};
-          const lorryNum = isMultiBillPayment
-            ? `${mappedBillCount} bills`
-            : loadingEntry.lorryNumber || "—";
-          const billNum = isMultiBillPayment ? "" : loadingEntry.billNumber || "";
+          const loadingEntry = mapping.loadingEntryId || {};
+          const lorryNum =
+            loadingEntry.lorryNumber || mapping.lorryNumber || "—";
+          const billNum =
+            loadingEntry.billNumber || mapping.billNumber || mapping.billNo || "";
+          const allocatedTds =
+            Number(mapping.tds) ||
+            (mIdx === firstMappedIndex ? Number(payment.tds) || 0 : 0);
           let allocatedCredit = 0;
           let allocatedDebit = 0;
           if (isBuyer) {
@@ -596,27 +593,15 @@ export const buildTallyVoucherRows = (
               amount: Number(mapping.bankCharges),
             });
           }
-          if (mapping.tds && Number(mapping.tds) > 0) {
+          if (allocatedTds > 0) {
             mapParts.push({
               type: "deduct",
               label: `TDS${mapping.tdsRemarks ? ` · ${mapping.tdsRemarks}` : ""}`,
-              amount: Number(mapping.tds),
+              amount: allocatedTds,
             });
           }
-          const particulars = isMultiBillPayment
-            ? [
-                `${paymentType === "Adjustment" ? "Multi-bill adjustment" : "Multi-bill payment"} (${mappedBillCount} bills)`,
-                payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
-                payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
-                getPaymentReference(payment)
-                  ? `Reference: ${getPaymentReference(payment)}`
-                  : "",
-                payment.remarks ? `Purpose: ${payment.remarks}` : "",
-              ]
-                .filter(Boolean)
-                .join(" | ")
-            : [
-                `PYT: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
+          const particulars = [
+                `${paymentType === "Adjustment" ? "Adjustment" : "PYT"}: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
                 `Lorry ${lorryNum}`,
                 billNum ? `Bill ${billNum}` : "",
                 payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
@@ -637,21 +622,15 @@ export const buildTallyVoucherRows = (
             date,
             particulars,
             vchType: payment.paymentMode || payment.paymentType || "—",
-            buyerCompany: isMultiBillPayment
-              ? buyerCompany
-              : loadingEntry.buyerCompany || buyerCompany,
-            supplierCompany: isMultiBillPayment
-              ? supplierCompany
-              : loadingEntry.supplierCompany || supplierCompany,
+            buyerCompany: loadingEntry.buyerCompany || buyerCompany,
+            supplierCompany: loadingEntry.supplierCompany || supplierCompany,
             debit: allocatedDebit,
             credit: allocatedCredit,
             balance,
             raw: item,
             grossAmount: 0,
             gstAmount: 0,
-            totalClaims: isMultiBillPayment
-              ? 0
-              : Number(mapping.claim) ||
+            totalClaims: Number(mapping.claim) ||
                 (loadingEntry.manualClaim
                   ? Number(loadingEntry.manualClaimAmount) || 0
                   : (loadingEntry.qualityClaims || []).reduce(
@@ -659,43 +638,32 @@ export const buildTallyVoucherRows = (
                       0,
                     )),
             cdAmount: 0,
-            bankCharges: isMultiBillPayment
-              ? 0
-              : Number(mapping.bankCharges) || 0,
-            secondClaim: isMultiBillPayment
-              ? 0
-              : Number(mapping.secondClaim) || 0,
-            otherCharges: isMultiBillPayment
-              ? 0
-              : Number(mapping.otherCharges) || 0,
-            tds: isMultiBillPayment
-              ? Number(payment.tds) || 0
-              : Number(mapping.tds) || Number(payment.tds) || 0,
+            bankCharges: Number(mapping.bankCharges) || 0,
+            secondClaim: Number(mapping.secondClaim) || 0,
+            otherCharges: Number(mapping.otherCharges) || 0,
+            tds: allocatedTds,
             weight:
               loadingEntry.unloadingWeight || loadingEntry.loadingWeight || 0,
             rate: loadingEntry.actualRate || loadingEntry.rate || 0,
             isPaymentRow: true,
             mappingIndex: mIdx,
+            isPrimaryPaymentMapping: mIdx === firstMappedIndex,
             voucherNo: payment.voucherNumber,
             paymentMode: payment.paymentMode,
-            reference: isMultiBillPayment
-              ? getPaymentReference(payment)
-              : getPaymentReference(payment, mapping, loadingEntry),
-            saudaNo: isMultiBillPayment
-              ? ""
-              : mapping.saudaNo || loadingEntry.saudaNo || "",
+            reference: getPaymentReference(payment, mapping, loadingEntry),
+            saudaNo: mapping.saudaNo || loadingEntry.saudaNo || "",
             lorryNumber: lorryNum,
             billNumber: billNum,
             allocatedAmount: allocatedAmt,
-            debitNote: isMultiBillPayment ? "" : mapping.debitNote || "",
-            creditNote: isMultiBillPayment ? "" : mapping.creditNote || "",
+            debitNote: mapping.debitNote || "",
+            creditNote: mapping.creditNote || "",
             generalRemarks:
               mapping.remarks ||
               mapping.generalRemarks ||
               payment.remarks ||
               payment.entries?.map((entry) => entry.description).filter(Boolean).join(", ") ||
               "",
-            breakdown: isMultiBillPayment ? [] : mapParts,
+            breakdown: mapParts,
             paymentAllocations: [],
             emailSent: Boolean(payment.emailSent),
             emailSentAt: payment.emailSentAt || null,
@@ -703,13 +671,13 @@ export const buildTallyVoucherRows = (
         });
       }
 
-      if (unadjustedAmount > 0.01) {
+      const onAccountPaymentAmount = Math.max(
+        0,
+        unadjustedAmount - onAccountClaimAmount - (Number(payment.tds) || 0),
+      );
+      if (onAccountPaymentAmount > 0.01) {
         let unadjustedCredit = 0;
         let unadjustedDebit = 0;
-        const onAccountPaymentAmount = Math.max(
-          0,
-          unadjustedAmount - onAccountClaimAmount - (Number(payment.tds) || 0),
-        );
         if (isBuyer) {
           if (paymentType === "Adjustment") {
             unadjustedDebit = onAccountPaymentAmount;
