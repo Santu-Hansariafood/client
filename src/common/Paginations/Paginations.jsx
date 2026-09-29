@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -30,9 +30,10 @@ const Pagination = ({
     }
   }, [normalizedCurrentPage, safeCurrentPage, onPageChange, totalItems]);
 
-  const getVisiblePages = () => {
+  const getVisiblePages = useCallback(() => {
     const pages = [];
-    const delta = 1;
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    const delta = isMobile ? 0 : 1;
 
     const rangeStart = Math.max(2, safeCurrentPage - delta);
     const rangeEnd = Math.min(totalPages - 1, safeCurrentPage + delta);
@@ -50,90 +51,104 @@ const Pagination = ({
     if (totalPages > 1) pages.push(totalPages);
 
     return pages;
-  };
+  }, [safeCurrentPage, totalPages]);
 
-  const btnBase =
-    "inline-flex items-center justify-center min-w-[2.4rem] h-9 px-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/50";
+  const btnBaseMobile =
+    "inline-flex items-center justify-center min-w-[2.5rem] sm:min-w-[2.4rem] h-10 sm:h-9 px-1.5 sm:px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-250 ease-out focus:outline-none focus:ring-2 focus:ring-emerald-400/50 select-none active:scale-95";
 
   const btnDefault =
-    "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300";
+    "bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 hover:-translate-y-0.5 shadow-sm hover:shadow-md";
 
   const btnActive =
-    "bg-emerald-600 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700";
+    "bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 animate-scale-in";
 
   const btnDisabled =
-    "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200";
+    "bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100 opacity-60";
+
+  const navBtnBase =
+    "inline-flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-xl transition-all duration-250 ease-out focus:outline-none focus:ring-2 focus:ring-emerald-400/50 select-none active:scale-95";
 
   return (
-    <div className="w-full flex flex-col gap-3 mt-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
-        <span>
-          Showing {totalItems === 0 ? 0 : (safeCurrentPage - 1) * itemsPerPage + 1}{" "}
-          - {Math.min(safeCurrentPage * itemsPerPage, totalItems)} of {totalItems}
+    <div className="w-full flex flex-col gap-3 sm:gap-4 mt-5 sm:mt-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-slate-600 px-1">
+        <span className="font-semibold tracking-wide text-center sm:text-left">
+          Showing <span className="text-emerald-700 font-bold">{totalItems === 0 ? 0 : (safeCurrentPage - 1) * itemsPerPage + 1}</span>
+          {" - "}
+          <span className="text-emerald-700 font-bold">{Math.min(safeCurrentPage * itemsPerPage, totalItems)}</span>
+          {" of "}
+          <span className="text-slate-900 font-extrabold">{totalItems}</span>
         </span>
-
+        <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+          Page {safeCurrentPage} / {totalPages}
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-slate-50/80 backdrop-blur border border-slate-200 shadow-md shadow-slate-900/5">
         <button
           onClick={() => onPageChange(1)}
           disabled={safeCurrentPage === 1}
-          className={`${btnBase} ${
+          className={`${navBtnBase} ${
             safeCurrentPage === 1 ? btnDisabled : btnDefault
           }`}
+          title="First page"
         >
-          <FaAngleDoubleLeft />
+          <FaAngleDoubleLeft className="text-sm sm:text-base" />
         </button>
 
         <button
           onClick={() => onPageChange(safeCurrentPage - 1)}
           disabled={safeCurrentPage === 1}
-          className={`${btnBase} ${
+          className={`${navBtnBase} ${
             safeCurrentPage === 1 ? btnDisabled : btnDefault
           }`}
+          title="Previous page"
         >
-          <FaChevronLeft />
+          <FaChevronLeft className="text-sm sm:text-base" />
         </button>
 
-        {getVisiblePages().map((page, index) => (
-          <button
-            key={index}
-            onClick={() => typeof page === "number" && onPageChange(page)}
-            disabled={page === "..."}
-            className={`${btnBase} ${
-              safeCurrentPage === page
-                ? btnActive
-                : page === "..."
-                  ? "cursor-default text-slate-400"
-                  : btnDefault
-            }`}
-          >
-            {page}
-          </button>
-        ))}
+        <div className="flex items-center gap-1 px-1 sm:px-1.5">
+          {getVisiblePages().map((page, index) => (
+            <button
+              key={index}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+              disabled={page === "..."}
+              className={`${btnBaseMobile} ${
+                safeCurrentPage === page
+                  ? btnActive
+                  : page === "..."
+                    ? "cursor-default text-slate-400 font-bold min-w-[1.5rem]"
+                    : btnDefault
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
 
         <button
           onClick={() => onPageChange(safeCurrentPage + 1)}
           disabled={safeCurrentPage === totalPages}
-          className={`${btnBase} ${
+          className={`${navBtnBase} ${
             safeCurrentPage === totalPages ? btnDisabled : btnDefault
           }`}
+          title="Next page"
         >
-          <FaChevronRight />
+          <FaChevronRight className="text-sm sm:text-base" />
         </button>
 
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={safeCurrentPage === totalPages}
-          className={`${btnBase} ${
+          className={`${navBtnBase} ${
             safeCurrentPage === totalPages ? btnDisabled : btnDefault
           }`}
+          title="Last page"
         >
-          <FaAngleDoubleRight />
+          <FaAngleDoubleRight className="text-sm sm:text-base" />
         </button>
 
-        {showGoTo && (
-          <div className="ml-2 flex items-center gap-2">
+        {showGoTo && totalPages > 5 && (
+          <div className="w-full sm:w-auto sm:ml-2 flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 mt-1 sm:mt-0">
             <input
               type="number"
               min={1}
@@ -150,8 +165,8 @@ const Pagination = ({
                   setGotoValue("");
                 }
               }}
-              className="w-16 h-9 px-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-400/40"
-              placeholder="Pg"
+              className="w-full sm:w-16 h-10 sm:h-9 px-3 sm:px-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 transition-all outline-none bg-white"
+              placeholder="Go to page"
             />
             <button
               onClick={() => {
@@ -162,7 +177,7 @@ const Pagination = ({
                 onPageChange(n);
                 setGotoValue("");
               }}
-              className={`${btnBase} ${btnDefault}`}
+              className="shrink-0 inline-flex items-center justify-center h-10 sm:h-9 px-4 sm:px-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-500/20 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-250 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
             >
               Go
             </button>

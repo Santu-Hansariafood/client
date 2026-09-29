@@ -5,10 +5,25 @@
 @layer base {
   body {
     @apply font-sans antialiased text-slate-900 bg-slate-50;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    -webkit-touch-callout: none;
+  }
+
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
   }
 }
 
@@ -48,6 +63,78 @@
     }
   }
 
+  @keyframes weatherFloat {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes mobileNavFloat {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-3px) scale(1.02);
+    }
+  }
+
+  @keyframes ringRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes ringRotateReverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes modalBackdrop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modalSlideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes modalZoomIn {
+    from {
+      opacity: 0;
+      transform: scale(0.92) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes cardStaggerIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes gradientBorder {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
   .animate-page-title {
     animation: pageTitleIn 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
@@ -63,26 +150,98 @@
     animation: shimmer 1.2s linear infinite;
   }
 
-  @keyframes weatherFloat {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
-  }
-
   .animate-weather-float {
     animation: weatherFloat 4s ease-in-out infinite;
+  }
+
+  .animate-mobile-nav-float {
+    animation: mobileNavFloat 2.5s ease-in-out infinite;
+  }
+
+  .animate-ring-rotate {
+    animation: ringRotate 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-ring-rotate-reverse {
+    animation: ringRotateReverse 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-modal-backdrop {
+    animation: modalBackdrop 250ms ease-out;
+  }
+
+  .animate-modal-mobile {
+    animation: modalSlideUpMobile 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-modal-desktop {
+    animation: modalZoomIn 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-card-stagger {
+    animation: cardStaggerIn 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-gradient-border {
+    background-size: 200% 200%;
+    animation: gradientBorder 4s ease infinite;
+  }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+  .stagger-7 { animation-delay: 350ms; }
+  .stagger-8 { animation-delay: 400ms; }
+
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .pb-safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .animate-page-title,
     .animate-page-underline,
     .animate-shimmer,
-    .animate-weather-float {
+    .animate-weather-float,
+    .animate-mobile-nav-float,
+    .animate-ring-rotate,
+    .animate-ring-rotate-reverse,
+    .animate-modal-backdrop,
+    .animate-modal-mobile,
+    .animate-modal-desktop,
+    .animate-card-stagger,
+    .animate-gradient-border,
+    .animate-fade-in-up,
+    .animate-slide-up,
+    .animate-slide-down,
+    .animate-scale-in,
+    .animate-fade-in,
+    .animate-glow,
+    .animate-spin-slow,
+    .animate-gradient-shift,
+    .animate-pop-in,
+    .animate-dot-pulse,
+    .animate-bounce-soft,
+    .animate-float,
+    .animate-pulseSlow,
+    .animate-ripple,
+    .animate-shake {
       animation: none !important;
+      transition: none !important;
     }
   }
 }
@@ -104,4 +263,25 @@
 
 .animate-fade-in-up.delay-100 {
   animation-delay: 0.1s;
+}
+
+.react-select__menu {
+  animation: slideDown 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transform-origin: top center;
+}
+
+.react-select__option {
+  transition: background-color 180ms ease, color 180ms ease, padding-left 180ms ease !important;
+}
+
+.react-select__option:hover {
+  padding-left: 20px !important;
+}
+
+.react-select__control {
+  transition: all 200ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.react-select__multi-value {
+  animation: popIn 260ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }

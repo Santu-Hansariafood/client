@@ -187,9 +187,9 @@ const WeatherWidget = () => {
         type="button"
         onClick={() => setIsWeatherModalOpen(true)}
         aria-label={`Weather: ${weather.temp}°C in ${locationName}. Open atmospheric intelligence`}
-        className="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/15 to-white/5 hover:from-white/20 hover:to-white/10 transition-all duration-300 border border-white/15 shadow-lg shadow-black/10 group min-w-0"
+        className="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/15 to-white/5 hover:from-white/20 hover:to-white/10 transition-all duration-300 border border-white/15 shadow-lg shadow-black/10 group min-w-0 focus-visible:ring-2 focus-visible:ring-white/40 focus:outline-none animate-float hover:animate-none"
       >
-        <div className="relative shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-white/10 border border-white/10 group-hover:scale-110 transition-transform duration-300">
+        <div key={`weather-icon-${isWeatherModalOpen ? 'open' : 'closed'}`} className="relative shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-white/10 border border-white/10 group-hover:scale-110 transition-transform duration-300 animate-pop-in">
           <div className="w-6 h-6 sm:w-7 sm:h-7">
             {getWeatherIcon(weather.code, weather.isDay)}
           </div>
@@ -208,6 +208,7 @@ const WeatherWidget = () => {
       </button>
 
       <PopupBox
+        key={isWeatherModalOpen ? 'modal-open' : 'modal-closed'}
         isOpen={isWeatherModalOpen}
         onClose={() => setIsWeatherModalOpen(false)}
         title={modalTitle}

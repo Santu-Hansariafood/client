@@ -3,7 +3,8 @@ import axios from "axios";
 const rawBaseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 8 * 60 * 1000;
+const MAX_CACHE_SIZE = 200;
 const cache = new Map();
 const inFlightRequests = new Map();
 const AUTH_EXEMPT_PATHS = [
@@ -19,6 +20,9 @@ const AUTH_EXEMPT_PATHS = [
   "/auth/refresh-token",
   "/auth/logout",
 ];
+
+const RETRY_DELAYS = [400, 800];
+const MAX_RETRIES = 2;
 
 let refreshPromise = null;
 
@@ -91,6 +95,24 @@ const getRequestKey = (config) => {
   return `${method?.toUpperCase()}:${url}:${JSON.stringify(params || {})}:${JSON.stringify(data || {})}`;
 };
 
+const isTransientError = (error) => {
+  const status = error.response?.status;
+  if (status && status >= 500 && status < 600) {
+    return true;
+  }
+  if (!error.response) {
+    return true;
+  }
+  const code = error.code;
+  if (code === "ECONNABORTED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENETWORK") {
+    return true;
+  }
+  if (error.message && error.message.includes("timeout")) {
+    return true;
+  }
+  return false;
+};
+
 const instance = axios.create({
   baseURL: apiBaseURL,
   timeout: 30000,
@@ -124,6 +146,27 @@ instance.interceptors.request.use((config) => {
     const key = getCacheKey(config);
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      axios
+        .request({ ...config, skipCache: true })
+        .then((freshResponse) => {
+          const cacheKey = getCacheKey(config);
+          cache.set(cacheKey, {
+            data: freshResponse,
+            timestamp: Date.now(),
+          });
+          if (cache.size > MAX_CACHE_SIZE) {
+            const keys = cache.keys();
+            for (let i = 0; i < 40; i++) {
+              const next = keys.next();
+              if (next.done) break;
+              cache.delete(next.value);
+            }
+          }
+        })
+        .catch(() => {
+          // ignore background revalidation errors
+        });
+
       return Promise.reject({
         isCached: true,
         cachedData: cached.data,
@@ -164,6 +207,15 @@ instance.interceptors.response.use(
           data: response,
           timestamp: Date.now(),
         });
+
+        if (cache.size > MAX_CACHE_SIZE) {
+          const keys = cache.keys();
+          for (let i = 0; i < 40; i++) {
+            const next = keys.next();
+            if (next.done) break;
+            cache.delete(next.value);
+          }
+        }
       }
     }
 
@@ -184,6 +236,29 @@ instance.interceptors.response.use(
       if (pendingRequest) {
         pendingRequest.reject(error);
         inFlightRequests.delete(requestKey);
+      }
+
+      const status = error.response?.status;
+      const is4xx = status && status >= 400 && status < 500;
+      const is401 = status === 401;
+
+      if (
+        !is4xx ||
+        is401 ||
+        (is4xx && !shouldHandleUnauthorized(error))
+      ) {
+        if (isTransientError(error) && !is401) {
+          const retryCount = error.config._retryCount || 0;
+          if (retryCount < MAX_RETRIES) {
+            const delay = RETRY_DELAYS[retryCount];
+            error.config._retryCount = retryCount + 1;
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(instance(error.config));
+              }, delay);
+            });
+          }
+        }
       }
     }
 
