@@ -1092,6 +1092,9 @@ const ListPaymentReceived = () => {
             isEntryRow
               ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
               : "",
+            !isEntryRow && row.raw?.paymentType === "Adjustment"
+              ? `ADJUSTED: ${formatPdfAmount(rowData.paidAmount || row.debit)}`
+              : "",
             isEntryRow ? "BILL" : "PAYMENT",
           ]
             .filter(Boolean)

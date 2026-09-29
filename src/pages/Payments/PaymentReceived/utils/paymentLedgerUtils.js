@@ -604,6 +604,9 @@ export const buildTallyVoucherRows = (
                 `${paymentType === "Adjustment" ? "Adjustment" : "PYT"}: Sauda ${mapping.saudaNo || loadingEntry.saudaNo || "—"}`,
                 `Lorry ${lorryNum}`,
                 billNum ? `Bill ${billNum}` : "",
+                paymentType === "Adjustment"
+                  ? `Adjusted ${formatLedgerAmount(allocatedAmt)}`
+                  : "",
                 payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
                 payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
                 getPaymentReference(payment, mapping, loadingEntry)
@@ -699,6 +702,9 @@ export const buildTallyVoucherRows = (
           date,
           particulars: [
             "On Account",
+            paymentType === "Adjustment"
+              ? `Adjusted ${formatLedgerAmount(onAccountPaymentAmount)}`
+              : "",
             payment.voucherNumber ? `Vch #${payment.voucherNumber}` : "",
             payment.sellerBillNo ? `Ref ${payment.sellerBillNo}` : "",
             getPaymentReference(payment) ? `Reference: ${getPaymentReference(payment)}` : "",
