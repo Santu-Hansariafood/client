@@ -11,7 +11,7 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
-  const { userRole, mobile, logout } = useAuth();
+  const { userRole, mobile, logout, updateTokens, token } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
@@ -62,25 +62,41 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       return;
     }
     if (!confirmLogoutAllDevices) {
-      toast.error("Please confirm logout from all logged-in devices.");
+      toast.error("Please confirm by checking the checkbox.");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post("/reset-password", {
+      const keepThisSession = Boolean(token);
+      const response = await api.post("/reset-password", {
         mobile,
         role: userRole,
         otp,
         newPassword,
+        keepSession: keepThisSession,
       });
-      toast.success(
-        "Password updated successfully. All logged-in devices have been logged out.",
-      );
-      onClose();
-      resetForm();
-      logout();
-      navigate("/login", { replace: true });
+      const data = response?.data || response;
+
+      if (keepThisSession && data?.token) {
+        updateTokens({
+          token: data.token,
+          refreshToken: data.refreshToken || undefined,
+        });
+        toast.success(
+          "Password updated successfully. Your session is kept alive.",
+        );
+        onClose();
+        resetForm();
+      } else {
+        toast.success(
+          "Password updated successfully. All logged-in devices have been logged out.",
+        );
+        onClose();
+        resetForm();
+        logout();
+        navigate("/login", { replace: true });
+      }
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to update password.",
@@ -123,7 +139,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               "An OTP will be sent to your registered email address to verify your identity."}
             {step === 2 && "Enter the 6-digit OTP sent to your email."}
             {step === 3 &&
-              "Create a new secure password and confirm logout from all devices."}
+              "Create a new secure password. Other devices will be signed out, but this device will stay signed in."}
           </p>
 
           {step === 1 && (
@@ -201,8 +217,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                   className="mt-1 h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <span>
-                  I understand that changing this password will log out this
-                  account from all logged-in devices.
+                  I understand that changing this password will sign this
+                  account out from all other devices. This device will remain
+                  signed in.
                 </span>
               </label>
               <button

@@ -3,97 +3,500 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset OTP</title>
+    <title>{{subject}}</title>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 40%, #eff6ff 100%);
+            color: #0f172a;
+            padding: 32px 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
-            max-width: 600px;
-            margin: 20px auto;
+            max-width: 580px;
+            margin: 0 auto;
             background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-top: 5px solid #007bff; /* Blue accent */
+            border-radius: 20px;
+            box-shadow: 0 20px 50px -20px rgba(5, 150, 105, 0.25), 0 10px 30px -10px rgba(15, 23, 42, 0.1);
+            overflow: hidden;
+            position: relative;
         }
-        .header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+        .outer-border {
+            padding: 4px;
+            background: linear-gradient(135deg, #065f46 0%, #10b981 40%, #fbbf24 100%);
+            border-radius: 20px;
         }
-        .header h1 {
-            margin: 0;
-            color: #007bff;
-            font-size: 24px;
+        .top-ribbon {
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+            padding: 24px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .top-ribbon::before {
+            content: "";
+            position: absolute;
+            top: -80px;
+            right: -40px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.35) 0%, rgba(251, 191, 36, 0) 70%);
+        }
+        .top-ribbon::after {
+            content: "";
+            position: absolute;
+            bottom: -60px;
+            left: -30px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
+        }
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .logo-badge {
+            width: 52px;
+            height: 52px;
+            background: #ffffff;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.25);
+            flex-shrink: 0;
+        }
+        .logo-badge span {
+            color: #065f46;
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .brand-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .brand-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+        .brand-text p {
+            font-size: 11px;
+            font-weight: 700;
+            color: #fbbf24;
+            letter-spacing: 2px;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+        .header-meta {
+            text-align: right;
+        }
+        .header-meta .pill {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 999px;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .header-meta .ref {
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
         }
         .content {
-            padding: 20px 0;
-            text-align: center;
+            padding: 32px 32px 24px 32px;
+            position: relative;
+        }
+        .greeting-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #a7f3d0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px -12px rgba(16, 185, 129, 0.4);
+        }
+        .content h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #065f46;
+            letter-spacing: -0.2px;
+            margin-bottom: 6px;
+        }
+        .content .sub-heading {
+            font-size: 12px;
+            font-weight: 700;
+            color: #10b981;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
         }
         .content p {
-            line-height: 1.6;
-            font-size: 16px;
-            margin-bottom: 15px;
+            font-size: 14px;
+            color: #334155;
+            margin-bottom: 12px;
+            line-height: 1.65;
+        }
+        .content p strong {
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .otp-section {
+            margin: 28px 0 16px 0;
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+            border: 1.5px dashed #10b981;
+            border-radius: 16px;
+            padding: 22px;
+            text-align: center;
+            position: relative;
+        }
+        .otp-section::before,
+        .otp-section::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border: 1.5px dashed #10b981;
+            border-radius: 50%;
+        }
+        .otp-section::before {
+            top: -9px;
+            left: 28px;
+        }
+        .otp-section::after {
+            bottom: -9px;
+            right: 28px;
+        }
+        .otp-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #065f46;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
         }
         .otp-code {
-            display: inline-block;
-            background-color: #e9ecef;
-            color: #007bff;
-            font-size: 28px;
-            font-weight: bold;
-            padding: 15px 25px;
-            margin: 20px 0;
-            border-radius: 5px;
-            letter-spacing: 3px;
-        }
-        .footer {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            font-size: 12px;
-            color: #888;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-        .button {
-            display: inline-block;
-            background-color: #007bff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
             color: #ffffff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 20px;
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: 10px;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px -10px rgba(5, 150, 105, 0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+            margin-bottom: 10px;
+            user-select: all;
+            -webkit-user-select: all;
+            cursor: pointer;
+        }
+        .otp-code .digit {
+            display: inline-block;
+            padding: 0 4px;
+            min-width: 28px;
+        }
+        .otp-tip {
+            font-size: 11px;
+            color: #065f46;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+        .otp-tip span {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #ffffff;
+            border: 1px solid #a7f3d0;
+            border-radius: 999px;
+            margin-left: 4px;
+        }
+        .validity-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 22px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fcd34d;
+            border-radius: 14px;
+        }
+        .validity-strip .col {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .validity-strip .clock {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #fbbf24;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            box-shadow: 0 6px 14px -8px rgba(251, 191, 36, 0.6);
+            flex-shrink: 0;
+        }
+        .validity-strip h4 {
+            font-size: 11px;
+            font-weight: 900;
+            color: #92400e;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .validity-strip p {
+            font-size: 13px;
+            color: #78350f;
+            font-weight: 700;
+            margin: 0;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
+            margin: 28px 0 22px 0;
         }
         .disclaimer {
-            font-size: 12px;
-            color: #999;
-            margin-top: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 18px;
         }
+        .disclaimer h5 {
+            font-size: 11px;
+            font-weight: 900;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .disclaimer h5::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background: #f43f5e;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .disclaimer p {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .contact-block {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px 16px;
+            margin-top: 22px;
+            padding: 18px;
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            border-radius: 14px;
+        }
+        .contact-block .item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ecfeff;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .contact-block .item .ic {
+            width: 26px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fbbf24;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .footer {
+            padding: 18px 32px 28px 32px;
+            border-top: 1px solid #e2e8f0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+        .footer-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .footer-brand {
+            font-size: 12px;
+            font-weight: 900;
+            color: #065f46;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .footer-slogan {
+            font-size: 10px;
+            font-weight: 800;
+            color: #10b981;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .footer-bottom {
+            text-align: center;
+        }
+        .footer-bottom p {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        .footer-bottom .year {
+            font-weight: 800;
+            color: #065f46;
+        }
+        .confetti-a, .confetti-b, .confetti-c {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            opacity: 0.9;
+        }
+        .confetti-a { top: 20px; right: 24px; background: #fbbf24; transform: rotate(25deg);}
+        .confetti-b { top: 44px; right: 48px; background: #10b981; width: 5px; height: 14px; border-radius: 1px; transform: rotate(-30deg);}
+        .confetti-c { top: 6px; right: 56px; background: #06b6d4; border-radius: 50%; width: 7px; height: 7px;}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Hansaria Food Private Limited</h1>
-        </div>
-        <div class="content">
-            <p>Hello,</p>
-            <p>You recently requested to reset your password for your Hansaria Food account. Please use the following One-Time Password (OTP) to complete the process:</p>
-            <div class="otp-code">{{otp}}</div>
-            <p>This OTP is valid for <strong>10 minutes</strong>. For security reasons, do not share this code with anyone.</p>
-            <p>If you did not request a password reset, please ignore this email or contact our support team immediately.</p>
-        </div>
-        <div class="footer">
-            <p>&copy; {{year}} Hansaria Food Private Limited. All rights reserved.</p>
-            <p>Contact: +91-8336924066 | +91-9330433535</p>
-            <p>Email: sauda@hansariafood.com</p>
+    <div class="outer-border">
+        <div class="container">
+            <div class="top-ribbon">
+                <div class="confetti-a"></div>
+                <div class="confetti-b"></div>
+                <div class="confetti-c"></div>
+                <div class="brand-row">
+                    <div class="logo-badge">
+                        <span>HANSARIA</span>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Hansaria Food Private Limited</h1>
+                        <p>— Growing Together —</p>
+                    </div>
+                    <div class="header-meta">
+                        <span class="pill">{{subjectTag}}</span>
+                        <div class="ref">Ref ID: {{refId}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="greeting-icon">🔐</div>
+                <h2>Hello, {{userName}}!</h2>
+                <p class="sub-heading">Secure {{actionType}} Code</p>
+
+                <p>You recently requested to <strong>{{actionDescription}}</strong> for your Hansaria Food Bid Portal account. Please use the following One-Time Password to complete the process securely.</p>
+                <p>This request came from <strong>{{device}}</strong> on <strong>{{requestTime}}</strong>.</p>
+
+                <div class="otp-section">
+                    <div class="otp-label">Your One-Time Password (Click / Tap to Copy)</div>
+                    <div class="otp-code" title="Click to copy OTP">
+                        <span class="digit">{{otpDigit1}}</span>
+                        <span class="digit">{{otpDigit2}}</span>
+                        <span class="digit">{{otpDigit3}}</span>
+                        <span class="digit">{{otpDigit4}}</span>
+                        <span class="digit">{{otpDigit5}}</span>
+                        <span class="digit">{{otpDigit6}}</span>
+                    </div>
+                    <div class="otp-label" style="margin-top: 14px; margin-bottom: 0; color: #64748b; letter-spacing: 1px;">
+                        Or copy as plain text:
+                    </div>
+                    <div class="otp-tip" style="margin-top: 8px;">
+                        OTP <span>{{otp}}</span>
+                    </div>
+                </div>
+
+                <div class="validity-strip">
+                    <div class="col">
+                        <div class="clock">⏱</div>
+                        <div>
+                            <h4>Valid For</h4>
+                            <p>10 minutes from receipt</p>
+                        </div>
+                    </div>
+                    <div class="col" style="justify-content: flex-end;">
+                        <div class="clock" style="background: #10b981;">🔒</div>
+                        <div style="text-align: right;">
+                            <h4>Do Not Share</h4>
+                            <p>with anyone including staff</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="disclaimer">
+                    <h5>Security Notice</h5>
+                    <p>If you <strong>did not request</strong> this OTP, please <strong>DO NOT</strong> disclose it to anyone and contact our support team immediately. Hansaria Food employees will <strong>never</strong> ask for your OTP, password, or confidential details over call, email, or WhatsApp. Your account security is our priority.</p>
+                </div>
+
+                <div class="contact-block">
+                    <div class="item">
+                        <div class="ic">📞</div>
+                        <div>+91-8336924066</div>
+                    </div>
+                    <div class="item">
+                        <div class="ic">📞</div>
+                        <div>+91-9330433535</div>
+                    </div>
+                    <div class="item">
+                        <div class="ic">✉️</div>
+                        <div>sauda@hansariafood.com</div>
+                    </div>
+                    <div class="item">
+                        <div class="ic">🌐</div>
+                        <div>www.hansariafood.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="footer-top">
+                    <div class="footer-brand">Hansaria Food Pvt. Ltd.</div>
+                    <div class="footer-slogan">Quality • Trust • Transparency</div>
+                </div>
+                <div class="footer-bottom">
+                    <p>© <span class="year">{{year}}</span> Hansaria Food Private Limited. All rights reserved.</p>
+                    <p>Registered Office: Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3, Bidhannagar, Kolkata, West Bengal 700106</p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

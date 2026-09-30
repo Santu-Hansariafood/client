@@ -72,7 +72,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 
   res.cookie("refreshToken", refreshToken, {
     ...baseOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -107,6 +107,35 @@ const getEmailByRole = (user, role) => {
     default:
       return null;
   }
+};
+
+const renderOtpTemplate = (template, payload) => {
+  const otp = String(payload.otp || "");
+  const digits = otp.padStart(6, "0").split("");
+  const replacements = [
+    ["{{otp}}", otp],
+    ["{{otpDigit1}}", digits[0] || "0"],
+    ["{{otpDigit2}}", digits[1] || "0"],
+    ["{{otpDigit3}}", digits[2] || "0"],
+    ["{{otpDigit4}}", digits[3] || "0"],
+    ["{{otpDigit5}}", digits[4] || "0"],
+    ["{{otpDigit6}}", digits[5] || "0"],
+    ["{{year}}", String(payload.year || new Date().getFullYear())],
+    ["{{userName}}", payload.userName || "Valued User"],
+    ["{{actionType}}", payload.actionType || "Verification"],
+    ["{{subjectTag}}", payload.subjectTag || "SECURE OTP"],
+    ["{{refId}}", payload.refId || `OTP-${Date.now().toString().slice(-8)}`],
+    ["{{actionDescription}}", payload.actionDescription || "verify your account"],
+    ["{{device}}", payload.device || "your registered device"],
+    ["{{requestTime}}", payload.requestTime || new Date().toLocaleString("en-IN")],
+    ["{{subject}}", payload.subject || "OTP Verification"],
+  ];
+  let output = template;
+  replacements.forEach(([placeholder, value]) => {
+    const escaped = String(value).replace(/[$]/g, "$$$$");
+    output = output.split(placeholder).join(escaped);
+  });
+  return output;
 };
 
 router.post("/forgot-password", async (req, res) => {
@@ -146,6 +175,8 @@ router.post("/forgot-password", async (req, res) => {
 
     user.otp = otp;
     user.otpExpires = otpExpires;
+    user.otpVerified = false;
+    user.otpVerifiedAt = undefined;
     await user.save();
 
     const templatePath = path.join(__dirname, "../templates/otp-email.html");
@@ -158,8 +189,21 @@ router.post("/forgot-password", async (req, res) => {
         .json({ message: "Failed to load email template." });
     }
 
-    emailTemplate = emailTemplate.replace("{{otp}}", otp);
-    emailTemplate = emailTemplate.replace("{{year}}", new Date().getFullYear());
+    const displayName =
+      user.name || user.sellerName || user.buyerName || normalizedMobile;
+
+    emailTemplate = renderOtpTemplate(emailTemplate, {
+      otp,
+      year: new Date().getFullYear(),
+      userName: displayName,
+      actionType: "Password Reset",
+      subjectTag: "RESET OTP",
+      subject: "Password Reset OTP - Hansaria Food Private Limited",
+      refId: `PWR-${Date.now().toString().slice(-8)}`,
+      actionDescription: "reset your password",
+      device: getClientDevice(req),
+      requestTime: new Date().toLocaleString("en-IN"),
+    });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -209,6 +253,12 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    user.otpVerifiedAt = new Date();
+    user.otpVerified = true;
+    await user.save();
+
     res.json({ message: "OTP verified successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -248,6 +298,8 @@ router.post("/change-password-otp", async (req, res) => {
 
     user.otp = otp;
     user.otpExpires = otpExpires;
+    user.otpVerified = false;
+    user.otpVerifiedAt = undefined;
     await user.save();
 
     const templatePath = path.join(__dirname, "../templates/otp-email.html");
@@ -260,8 +312,21 @@ router.post("/change-password-otp", async (req, res) => {
         .json({ message: "Failed to load email template." });
     }
 
-    emailTemplate = emailTemplate.replace("{{otp}}", otp);
-    emailTemplate = emailTemplate.replace("{{year}}", new Date().getFullYear());
+    const displayName =
+      user.name || user.sellerName || user.buyerName || normalizedMobile;
+
+    emailTemplate = renderOtpTemplate(emailTemplate, {
+      otp,
+      year: new Date().getFullYear(),
+      userName: displayName,
+      actionType: "Change Password",
+      subjectTag: "CHANGE OTP",
+      subject: "Change Password OTP - Hansaria Food Private Limited",
+      refId: `CHG-${Date.now().toString().slice(-8)}`,
+      actionDescription: "change your account password",
+      device: getClientDevice(req),
+      requestTime: new Date().toLocaleString("en-IN"),
+    });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -279,7 +344,7 @@ router.post("/change-password-otp", async (req, res) => {
 
 router.post("/reset-password", async (req, res) => {
   try {
-    const { mobile, role, otp, newPassword } = req.body;
+    const { mobile, role, otp, newPassword, keepSession } = req.body;
     let normalizedMobile = String(mobile || "").trim();
     const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
     const phoneMatch = normalizedMobile.match(phoneRegex);
@@ -306,7 +371,44 @@ router.post("/reset-password", async (req, res) => {
     user.passwordChangedAt = new Date();
     user.otp = undefined;
     user.otpExpires = undefined;
+    user.otpVerified = undefined;
+    user.otpVerifiedAt = undefined;
     await user.save();
+
+    if (keepSession && req.cookies?.accessToken) {
+      const displayName =
+        user.name || user.sellerName || user.buyerName || normalizedMobile;
+      const freshAccessToken = jwt.sign(
+        {
+          sub: user._id.toString(),
+          role,
+          mobile: normalizedMobile,
+          name: displayName,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" },
+      );
+      const freshRefreshToken = jwt.sign(
+        {
+          sub: user._id.toString(),
+          role,
+          mobile: normalizedMobile,
+          name: displayName,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "30d" },
+      );
+      setAuthCookies(res, freshAccessToken, freshRefreshToken);
+
+      return res.json({
+        message: "Password updated successfully.",
+        token: freshAccessToken,
+        refreshToken: freshRefreshToken,
+      });
+    }
+
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
 
     res.json({
       message:
