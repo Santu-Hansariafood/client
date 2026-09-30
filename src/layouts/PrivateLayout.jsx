@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
@@ -9,10 +9,10 @@ import AIAgent from "../components/AIAgent/AIAgent";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 import Loading from "../common/Loading/Loading";
+import MobileBottomNav from "../common/MobileBottomNav/MobileBottomNav";
+import DashboardLayout from "./DashboardLayout/DashboardLayout";
 
-const PageLoader = () => (
-  <Loading/>
-);
+const PageLoader = () => <Loading />;
 
 const PrivateLayout = () => {
   const { userRole, logout } = useAuth();
@@ -21,6 +21,27 @@ const PrivateLayout = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const isDashboardUser = useMemo(
+    () =>
+      userRole === "Admin" ||
+      userRole === "Employee" ||
+      userRole === "SuperAdmin" ||
+      userRole === "Owner",
+    [userRole],
+  );
+
+  const isBottomNavUser = useMemo(
+    () =>
+      userRole === "Buyer" ||
+      userRole === "Seller" ||
+      userRole === "Admin" ||
+      userRole === "Employee" ||
+      userRole === "Transporter" ||
+      userRole === "SuperAdmin" ||
+      userRole === "Owner",
+    [userRole],
+  );
 
   const handleLogout = useCallback(() => {
     logout();
@@ -33,49 +54,54 @@ const PrivateLayout = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
-      {(userRole === "Admin" || userRole === "Employee") && (
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-        />
-      )}
+    <DashboardLayout>
+      <div className="flex h-screen overflow-hidden">
+        {isDashboardUser && (
+          <Sidebar
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
+        )}
 
-      <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
-        <Header
-          onLogoutClick={() => setShowLogoutConfirmation(true)}
-          showMenuButton={
-            userRole === "Admin" || userRole === "Employee"
-          }
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          isSidebarOpen={isSidebarOpen}
-          isProfileDropdownOpen={isProfileDropdownOpen}
-          setProfileDropdownOpen={setProfileDropdownOpen}
-        />
+        <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
+          <Header
+            onLogoutClick={() => setShowLogoutConfirmation(true)}
+            showMenuButton={isDashboardUser}
+            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            isSidebarOpen={isSidebarOpen}
+            isProfileDropdownOpen={isProfileDropdownOpen}
+            setProfileDropdownOpen={setProfileDropdownOpen}
+          />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100">
-          <div className={`min-h-full flex flex-col ${(userRole === "Buyer" || userRole === "Seller") ? "pb-20 md:pb-0" : ""}`}>
-            <div className="flex-1 p-4 sm:p-6 lg:p-8">
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
+          <main className="flex-1 overflow-y-auto">
+            <div
+              className={`min-h-full flex flex-col ${
+                isBottomNavUser ? "pb-24 sm:pb-20 md:pb-6" : "pb-6"
+              }`}
+            >
+              <div className="flex-1 px-3 sm:px-5 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
+                <Suspense fallback={<PageLoader />}>
+                  <Outlet />
+                </Suspense>
+              </div>
+
+              <Footer />
             </div>
+          </main>
+        </div>
 
-            <Footer />
-          </div>
-        </main>
+        {isBottomNavUser && <MobileBottomNav />}
+
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+
+        {isDashboardUser && <AIAgent />}
       </div>
-
-      {showLogoutConfirmation && (
-        <LogoutConfirmationModal
-          onConfirm={handleLogout}
-          onCancel={() => setShowLogoutConfirmation(false)}
-        />
-      )}
-
-      {userRole === "Admin" && <AIAgent />}
-      {userRole === "Employee" && <AIAgent />}
-    </div>
+    </DashboardLayout>
   );
 };
 
