@@ -270,9 +270,14 @@ instance.interceptors.response.use(
         return refreshSession()
           .then(() => instance(requestConfig))
           .catch((refreshError) => {
-            clearStoredAuth();
-            if (typeof window !== "undefined") {
-              window.location.href = "/login";
+            if (
+              refreshError.response?.status === 401 ||
+              refreshError.response?.status === 403
+            ) {
+              clearStoredAuth();
+              if (typeof window !== "undefined") {
+                window.location.href = "/login";
+              }
             }
             return Promise.reject(refreshError);
           });

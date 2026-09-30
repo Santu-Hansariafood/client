@@ -652,7 +652,9 @@ const PaymentVoucherPDF = ({
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Ref. No</Text>
-            <Text style={styles.metaValue}>{reference || voucherNumber || "-"}</Text>
+            <Text style={styles.metaValue}>
+              {reference || voucherNumber || "-"}
+            </Text>
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Bill No</Text>
@@ -711,9 +713,28 @@ const PaymentVoucherPDF = ({
                     </Text>
                   </View>
                   {entry.loadingEntry?.isRejected && (
-                    <View style={[styles.claimsTableRow, { backgroundColor: "#fee2e2" }]}>
-                      <Text style={[styles.col1, { color: "#b91c1c", fontWeight: "bold" }]}>REJECTED LORRY</Text>
-                      <Text style={[styles.col4, { color: "#b91c1c", fontWeight: "bold" }]}>-</Text>
+                    <View
+                      style={[
+                        styles.claimsTableRow,
+                        { backgroundColor: "#fee2e2" },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.col1,
+                          { color: "#b91c1c", fontWeight: "bold" },
+                        ]}
+                      >
+                        REJECTED LORRY
+                      </Text>
+                      <Text
+                        style={[
+                          styles.col4,
+                          { color: "#b91c1c", fontWeight: "bold" },
+                        ]}
+                      >
+                        -
+                      </Text>
                     </View>
                   )}
                   {breakdown.cdAmount > 0 && (

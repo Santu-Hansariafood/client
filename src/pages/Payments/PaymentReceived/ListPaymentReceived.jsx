@@ -1085,6 +1085,18 @@ const ListPaymentReceived = () => {
           const mappedLorries = !isEntryRow
             ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
             : "";
+          const mappedPaymentCount = (row.raw?.mappings || []).filter(
+            (mapping) => Number(mapping.allocatedAmount) > 0,
+          ).length;
+          const paymentAmountReceived = Number(
+            rowData.paidAmount || row.debit || row.credit || 0,
+          );
+          const paymentAmountLabel = mappedPaymentCount > 1 ? "M" : "S";
+          const formatPdfAmount = (amount) =>
+            `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`;
           const particulars = [
             rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
             mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
@@ -1093,15 +1105,12 @@ const ListPaymentReceived = () => {
               ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
               : "",
             isEntryRow ? "BILL" : "PAYMENT",
+            !isEntryRow && paymentAmountReceived > 0
+              ? `${paymentAmountLabel}- AMOUNT RECEIVED: ${formatPdfAmount(paymentAmountReceived)}`
+              : "",
           ]
             .filter(Boolean)
             .join(" | ");
-
-          const formatPdfAmount = (amount) =>
-            `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`;
           const debitParts = isEntryRow
             ? [
                 rowData.billAmount > 0
@@ -1563,6 +1572,9 @@ const ListPaymentReceived = () => {
     doc.text(formulaLine1, margin + 10, finalSectionY + 15);
     doc.text(formulaLine2, margin + 10, finalSectionY + 25);
     doc.text(formulaLine3, margin + 10, finalSectionY + 35);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("M = Multi Entry    S = Single Entry", margin + 10, finalSectionY + 47);
 
     try {
       const qrText = encodeURIComponent(

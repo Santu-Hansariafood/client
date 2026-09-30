@@ -250,21 +250,19 @@ const AdminAuditReports = () => {
           </div>
         </div>
 
-        {loading ? (
+        {loading && records.length === 0 ? (
           <Loading />
         ) : (
-          <>
-            <Tables headers={tableHeaders} rows={tableRows} />
+          <Tables headers={tableHeaders} rows={tableRows} />
+        )}
 
-            {total > 0 && (
-              <Pagination
-                currentPage={page}
-                totalItems={total}
-                itemsPerPage={limit}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </>
+        {total > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            itemsPerPage={limit}
+            onPageChange={handlePageChange}
+          />
         )}
 
         {selectedRecord && (
