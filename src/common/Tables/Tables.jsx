@@ -2,6 +2,59 @@ import PropTypes from "prop-types";
 import React from "react";
 import { FaInbox } from "react-icons/fa";
 
+const ExpandableCell = ({ content }) => {
+  const [expanded, setExpanded] = React.useState(false);
+  const [hasMore, setHasMore] = React.useState(false);
+  const contentRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (expanded || !contentRef.current) return undefined;
+
+    const element = contentRef.current;
+    const measureOverflow = () => {
+      setHasMore(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    measureOverflow();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measureOverflow);
+    observer?.observe(element);
+
+    return () => observer?.disconnect();
+  }, [content, expanded]);
+
+  return (
+    <>
+      <div
+        ref={contentRef}
+        style={
+          expanded
+            ? undefined
+            : {
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+                overflow: "hidden",
+              }
+        }
+      >
+        {content}
+      </div>
+      {(hasMore || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="mt-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline"
+        >
+          {expanded ? "See less" : "See more"}
+        </button>
+      )}
+    </>
+  );
+};
+
 // eslint-disable-next-line react/display-name
 const Tables = React.memo(({ headers, rows }) => {
   return (
@@ -32,7 +85,7 @@ const Tables = React.memo(({ headers, rows }) => {
                         {headers[cellIndex]}
                       </span>
                       <div className="text-xs sm:text-sm font-semibold text-slate-800 text-right break-words max-w-[62%] leading-relaxed">
-                        {cell}
+                        <ExpandableCell content={cell} />
                       </div>
                     </div>
                   ))}
@@ -68,8 +121,7 @@ const Tables = React.memo(({ headers, rows }) => {
         <div className="relative">
           <table className="w-full min-w-[600px] border-collapse">
             <thead>
-              <tr className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-gradient-border opacity-50" />
+              <tr className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800">
                 {headers.map((header, index) => (
                   <th
                     key={index}
@@ -106,7 +158,7 @@ const Tables = React.memo(({ headers, rows }) => {
                         "
                       >
                         <div className="transition-transform duration-300 ease-out group-hover:translate-x-0.5">
-                          {cell}
+                          <ExpandableCell content={cell} />
                         </div>
                       </td>
                     ))}
