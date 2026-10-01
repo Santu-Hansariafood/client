@@ -74,6 +74,7 @@ const ListPaymentReceived = () => {
     saudaNo: "",
     supplierCompany: "",
     buyerCompany: "",
+    onlyCredit: false,
   });
 
   useEffect(() => {
@@ -318,12 +319,18 @@ const ListPaymentReceived = () => {
   }, [fetchPayments]);
 
   const tallyListRows = useMemo(() => {
-    return buildTallyVoucherRows(
+    const builtRows = buildTallyVoucherRows(
       payments,
       openingBalance,
       loadingEntries,
     );
-  }, [payments, openingBalance, loadingEntries]);
+    if (filters.onlyCredit) {
+      return builtRows.filter(
+        (row) => row.isOpening || (Number(row.credit) || 0) > 0,
+      );
+    }
+    return builtRows;
+  }, [payments, openingBalance, loadingEntries, filters.onlyCredit]);
 
   const stats = useMemo(() => {
     const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);
@@ -394,6 +401,7 @@ const ListPaymentReceived = () => {
       saudaNo: "",
       supplierCompany: "",
       buyerCompany: "",
+      onlyCredit: false,
     });
     setSelectedLedger(null);
     setSelectedCompany(null);
@@ -1012,153 +1020,152 @@ const ListPaymentReceived = () => {
             );
           })
           .forEach(({ row, rowData }) => {
+            const credit = Number(row.credit) || 0;
+            const isEntryRow = row.raw?.uiType === "entry";
+            const displayClaimAmount = getLedgerRowClaimAmount(row);
 
-          const credit = Number(row.credit) || 0;
-          const isEntryRow = row.raw?.uiType === "entry";
-          const displayClaimAmount = getLedgerRowClaimAmount(row);
-
-          let gst = rowData.gstAmount || 0;
-          let claims =
-            displayClaimAmount ||
-            rowData.totalQualityClaims + rowData.paymentClaimAmount;
-          let cd = rowData.cdAmount || 0;
-          let bankCharges = rowData.bankCharges || 0;
-          let balance = Number(row.balance || 0);
-          const displayCredit = isEntryRow
-            ? 0
-            : Math.max(credit, Number(rowData.paidAmount) || 0);
-
-          if (isEntryRow) {
-            gst = row.gstAmount || 0;
-            claims = Number(
+            let gst = rowData.gstAmount || 0;
+            let claims =
               displayClaimAmount ||
-                rowData.totalQualityClaims + rowData.paymentClaimAmount ||
-                row.raw?.manualClaimAmount ||
-                0,
-            );
-            cd = Number(row.cdAmount || 0);
-            bankCharges = Number(row.bankCharges || 0);
-            balance = Number(row.debit || row.balance || 0);
+              rowData.totalQualityClaims + rowData.paymentClaimAmount;
+            let cd = rowData.cdAmount || 0;
+            let bankCharges = rowData.bankCharges || 0;
+            let balance = Number(row.balance || 0);
+            const displayCredit = isEntryRow
+              ? 0
+              : Math.max(credit, Number(rowData.paidAmount) || 0);
 
-            saudaCdTotal += cd;
-            ledgerGstDebitTotal += Number(gst) || 0;
-            saudaQualityClaimsTotal += claims;
-            saudaBankChargesTotal += bankCharges;
-          }
+            if (isEntryRow) {
+              gst = row.gstAmount || 0;
+              claims = Number(
+                displayClaimAmount ||
+                  rowData.totalQualityClaims + rowData.paymentClaimAmount ||
+                  row.raw?.manualClaimAmount ||
+                  0,
+              );
+              cd = Number(row.cdAmount || 0);
+              bankCharges = Number(row.bankCharges || 0);
+              balance = Number(row.debit || row.balance || 0);
 
-          const grossAmount = isEntryRow
-            ? (Number(row.raw?.unloadingWeight) || 0) > 0
-              ? (Number(row.raw?.unloadingWeight) || 0) *
-                (Number(row.raw?.actualRate || row.raw?.rate) || 0)
-              : (Number(row.raw?.loadingWeight) || 0) *
-                (Number(row.raw?.actualRate || row.raw?.rate) || 0)
-            : Math.max(0, Number(row.debit) || 0);
-          const rowDebit = isEntryRow
-            ? Math.max(
-                0,
-                Number(rowData.billAmount || 0) - cd + gst,
-              )
-            : grossAmount;
-          const claimCredit =
-            claims +
-            bankCharges +
-            (Number(rowData.secondClaim) || 0) +
-            (Number(rowData.otherCharges) || 0);
-          const rowCredit = isEntryRow
-            ? claimCredit + (Number(rowData.paymentTdsAmount) || 0)
-            : displayCredit;
-          saudaDebitTotal += rowDebit;
-          saudaCreditTotal += rowCredit;
-          saudaPaidTotal += rowData.paidAmount;
+              saudaCdTotal += cd;
+              ledgerGstDebitTotal += Number(gst) || 0;
+              saudaQualityClaimsTotal += claims;
+              saudaBankChargesTotal += bankCharges;
+            }
 
-          const formattedCredit = Number(rowCredit.toFixed(2));
-          const formattedDebit = Number(rowDebit.toFixed(2));
-          ledgerDebitTotal += formattedDebit;
-          ledgerCreditTotal += formattedCredit;
-          const entryDate = isEntryRow
-            ? row.raw?.loadingDate || row.raw?.unloadingDate || row.date
-            : row.date;
-          const formatReportDate = (date) =>
-            date ? new Date(date).toLocaleDateString("en-GB") : "-";
-          const loadingDate = isEntryRow ? row.raw?.loadingDate : null;
-          const unloadingDate = isEntryRow ? row.raw?.unloadingDate : null;
-          const mappedLorries = !isEntryRow
-            ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
-            : "";
-          const mappedPaymentCount = (row.raw?.mappings || []).filter(
-            (mapping) => Number(mapping.allocatedAmount) > 0,
-          ).length;
-          const paymentAmountReceived = Number(
-            rowData.paidAmount || row.debit || row.credit || 0,
-          );
-          const paymentAmountLabel = mappedPaymentCount > 1 ? "M" : "S";
-          const formatPdfAmount = (amount) =>
-            `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`;
-          const particulars = [
-            rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
-            mappedLorries || (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
-            !mappedLorries && rowData.billNo !== "-" ? `BILL: ${rowData.billNo}` : "",
-            isEntryRow
-              ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
-              : "",
-            isEntryRow ? "BILL" : "PAYMENT",
-            !isEntryRow && paymentAmountReceived > 0
-              ? `${paymentAmountLabel}- AMOUNT RECEIVED: ${formatPdfAmount(paymentAmountReceived)}`
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" | ");
-          const debitParts = isEntryRow
-            ? [
-                rowData.billAmount > 0
-                  ? `BILL ${formatPdfAmount(rowData.billAmount - cd)}`
-                  : "",
-                gst > 0 ? `GST ${formatPdfAmount(gst)}` : "",
-              ].filter(Boolean)
-            : [];
-          const creditParts = isEntryRow
-            ? [
-                claims > 0 ? `CLAIM ${formatPdfAmount(claims)}` : "",
-                Number(rowData.secondClaim) > 0
-                  ? `2ND CLAIM ${formatPdfAmount(rowData.secondClaim)}`
-                  : "",
-                Number(rowData.otherCharges) > 0
-                  ? `OTHER ${formatPdfAmount(rowData.otherCharges)}`
-                  : "",
-                bankCharges > 0
-                  ? `BANK ${formatPdfAmount(bankCharges)}`
-                  : "",
-                Number(rowData.paymentTdsAmount) > 0
-                  ? `TDS ${formatPdfAmount(rowData.paymentTdsAmount)}`
-                  : "",
-              ].filter(Boolean)
-            : [
-                displayCredit > 0
-                  ? `${row.reference === "Claim" ? "CLAIM" : row.reference === "TDS" ? "TDS" : "PAYMENT"} ${formatPdfAmount(displayCredit)}`
-                  : "",
-              ].filter(Boolean);
+            const grossAmount = isEntryRow
+              ? (Number(row.raw?.unloadingWeight) || 0) > 0
+                ? (Number(row.raw?.unloadingWeight) || 0) *
+                  (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+                : (Number(row.raw?.loadingWeight) || 0) *
+                  (Number(row.raw?.actualRate || row.raw?.rate) || 0)
+              : Math.max(0, Number(row.debit) || 0);
+            const rowDebit = isEntryRow
+              ? Math.max(0, Number(rowData.billAmount || 0) - cd + gst)
+              : grossAmount;
+            const claimCredit =
+              claims +
+              bankCharges +
+              (Number(rowData.secondClaim) || 0) +
+              (Number(rowData.otherCharges) || 0);
+            const rowCredit = isEntryRow
+              ? claimCredit + (Number(rowData.paymentTdsAmount) || 0)
+              : displayCredit;
+            saudaDebitTotal += rowDebit;
+            saudaCreditTotal += rowCredit;
+            saudaPaidTotal += rowData.paidAmount;
 
-          const statusText =
-            Number(row.raw?.unloadingWeight || row.raw?.loadingWeight || 0) === 0
-              ? "UNLOADING 0"
+            const formattedCredit = Number(rowCredit.toFixed(2));
+            const formattedDebit = Number(rowDebit.toFixed(2));
+            ledgerDebitTotal += formattedDebit;
+            ledgerCreditTotal += formattedCredit;
+            const entryDate = isEntryRow
+              ? row.raw?.loadingDate || row.raw?.unloadingDate || row.date
+              : row.date;
+            const formatReportDate = (date) =>
+              date ? new Date(date).toLocaleDateString("en-GB") : "-";
+            const loadingDate = isEntryRow ? row.raw?.loadingDate : null;
+            const unloadingDate = isEntryRow ? row.raw?.unloadingDate : null;
+            const mappedLorries = !isEntryRow
+              ? `PAYMENT ${row.raw?.voucherNumber ? `#${row.raw.voucherNumber}` : ""} BREAKDOWN ${Number(row.mappingIndex || 0) + 1}/${row.raw?.mappings?.length || 1}: LORRY ${rowData.lorryNo}${rowData.billNo !== "-" ? ` / BILL ${rowData.billNo}` : ""}`
               : "";
+            const mappedPaymentCount = (row.raw?.mappings || []).filter(
+              (mapping) => Number(mapping.allocatedAmount) > 0,
+            ).length;
+            const paymentAmountReceived = Number(
+              rowData.paidAmount || row.debit || row.credit || 0,
+            );
+            const paymentAmountLabel = mappedPaymentCount > 1 ? "M" : "S";
+            const formatPdfAmount = (amount) =>
+              `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`;
+            const particulars = [
+              rowData.saudaNo !== "-" ? `SAUDA: ${rowData.saudaNo}` : "",
+              mappedLorries ||
+                (rowData.lorryNo !== "-" ? `LORRY: ${rowData.lorryNo}` : ""),
+              !mappedLorries && rowData.billNo !== "-"
+                ? `BILL: ${rowData.billNo}`
+                : "",
+              isEntryRow
+                ? `${unloadingDate ? "UNLOAD" : "LOAD"}: ${formatReportDate(unloadingDate || loadingDate)}`
+                : "",
+              isEntryRow ? "BILL" : "PAYMENT",
+              !isEntryRow && paymentAmountReceived > 0
+                ? `${paymentAmountLabel}- AMOUNT RECEIVED: ${formatPdfAmount(paymentAmountReceived)}`
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" | ");
+            const debitParts = isEntryRow
+              ? [
+                  rowData.billAmount > 0
+                    ? `BILL ${formatPdfAmount(rowData.billAmount - cd)}`
+                    : "",
+                  gst > 0 ? `GST ${formatPdfAmount(gst)}` : "",
+                ].filter(Boolean)
+              : [];
+            const creditParts = isEntryRow
+              ? [
+                  claims > 0 ? `CLAIM ${formatPdfAmount(claims)}` : "",
+                  Number(rowData.secondClaim) > 0
+                    ? `2ND CLAIM ${formatPdfAmount(rowData.secondClaim)}`
+                    : "",
+                  Number(rowData.otherCharges) > 0
+                    ? `OTHER ${formatPdfAmount(rowData.otherCharges)}`
+                    : "",
+                  bankCharges > 0 ? `BANK ${formatPdfAmount(bankCharges)}` : "",
+                  Number(rowData.paymentTdsAmount) > 0
+                    ? `TDS ${formatPdfAmount(rowData.paymentTdsAmount)}`
+                    : "",
+                ].filter(Boolean)
+              : [
+                  displayCredit > 0
+                    ? `${row.reference === "Claim" ? "CLAIM" : row.reference === "TDS" ? "TDS" : "PAYMENT"} ${formatPdfAmount(displayCredit)}`
+                    : "",
+                ].filter(Boolean);
 
-          tableData.push([
-            entryDate ? new Date(entryDate).toLocaleDateString("en-GB") : "-",
-            `${particulars}${statusText ? ` | ${statusText}` : ""}`,
-            isEntryRow ? "Bill" : "Payment",
-            isEntryRow
-              ? rowData.billNo !== "-"
-                ? rowData.billNo
-                : "-"
-              : row.raw?.voucherNumber || row.voucherNo || "-",
-            debitParts.join("\n"),
-            creditParts.join("\n"),
-          ]);
-        });
+            const statusText =
+              Number(
+                row.raw?.unloadingWeight || row.raw?.loadingWeight || 0,
+              ) === 0
+                ? "UNLOADING 0"
+                : "";
+
+            tableData.push([
+              entryDate ? new Date(entryDate).toLocaleDateString("en-GB") : "-",
+              `${particulars}${statusText ? ` | ${statusText}` : ""}`,
+              isEntryRow ? "Bill" : "Payment",
+              isEntryRow
+                ? rowData.billNo !== "-"
+                  ? rowData.billNo
+                  : "-"
+                : row.raw?.voucherNumber || row.voucherNo || "-",
+              debitParts.join("\n"),
+              creditParts.join("\n"),
+            ]);
+          });
 
         const saudaBalance = Number(saudaDebitTotal.toFixed(2));
         tableData.push([
@@ -1264,7 +1271,9 @@ const ListPaymentReceived = () => {
           data.cell.styles.textColor = [4, 120, 87];
           data.cell.styles.fontStyle = "bold";
         }
-        if (String(data.row.raw?.content || "").startsWith("DIFFERENCE FOR SAUDA")) {
+        if (
+          String(data.row.raw?.content || "").startsWith("DIFFERENCE FOR SAUDA")
+        ) {
           data.cell.styles.fillColor = [254, 249, 195];
           data.cell.styles.fontStyle = "bold";
         }
@@ -1367,12 +1376,9 @@ const ListPaymentReceived = () => {
     doc.setTextColor(30, 41, 59);
 
     const formattedTotalGross = Number(totalGross.toFixed(2));
-    doc.text(
-      "TOTAL DEBIT",
-      margin + summaryWidth / 8,
-      summaryY + 8.5,
-      { align: "center" },
-    );
+    doc.text("TOTAL DEBIT", margin + summaryWidth / 8, summaryY + 8.5, {
+      align: "center",
+    });
     doc.setFont("helvetica", "normal");
     doc.text(
       formattedTotalGross.toLocaleString("en-IN", {
@@ -1388,12 +1394,9 @@ const ListPaymentReceived = () => {
     const formattedTotalGst = Number(totalGstDebit.toFixed(2));
     doc.setTextColor(30, 41, 59);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      "GST (Dr.)",
-      margin + (3 * summaryWidth) / 8,
-      summaryY + 8.5,
-      { align: "center" },
-    );
+    doc.text("GST (Dr.)", margin + (3 * summaryWidth) / 8, summaryY + 8.5, {
+      align: "center",
+    });
     doc.setFont("helvetica", "normal");
     doc.text(
       formattedTotalGst.toLocaleString("en-IN", {
@@ -1407,12 +1410,9 @@ const ListPaymentReceived = () => {
     doc.setFont("helvetica", "bold");
 
     const formattedTotalCredit = Number(totalCredit.toFixed(2));
-    doc.text(
-      "TOTAL CREDIT",
-      margin + (5 * summaryWidth) / 8,
-      summaryY + 8.5,
-      { align: "center" },
-    );
+    doc.text("TOTAL CREDIT", margin + (5 * summaryWidth) / 8, summaryY + 8.5, {
+      align: "center",
+    });
     doc.setFont("helvetica", "normal");
     doc.text(
       formattedTotalCredit.toLocaleString("en-IN", {
@@ -1435,12 +1435,9 @@ const ListPaymentReceived = () => {
       boxHeight,
       "F",
     );
-    doc.text(
-      "DIFFERENCE",
-      margin + (7 * summaryWidth) / 8,
-      summaryY + 8.5,
-      { align: "center" },
-    );
+    doc.text("DIFFERENCE", margin + (7 * summaryWidth) / 8, summaryY + 8.5, {
+      align: "center",
+    });
 
     const differenceText =
       formattedDifference > 0
@@ -1448,12 +1445,9 @@ const ListPaymentReceived = () => {
         : formattedDifference < 0
           ? `${Math.abs(formattedDifference).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Cr`
           : "Rs. 0.00";
-    doc.text(
-      differenceText,
-      margin + (7 * summaryWidth) / 8,
-      summaryY + 17,
-      { align: "center" },
-    );
+    doc.text(differenceText, margin + (7 * summaryWidth) / 8, summaryY + 17, {
+      align: "center",
+    });
     doc.setTextColor(0, 0, 0);
     summaryY += boxHeight + 4;
 
@@ -1554,16 +1548,13 @@ const ListPaymentReceived = () => {
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      "TOTAL OF ALL SAUDA DIFFERENCES",
-      margin + 10,
-      finalSectionY + 5,
-    );
+    doc.text("TOTAL OF ALL SAUDA DIFFERENCES", margin + 10, finalSectionY + 5);
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     const formulaLine1 = `Rs. ${totalGrossNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Debit) - Rs. ${totalCreditNum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Total Credit)`;
-    const formulaLine2 = "Difference is calculated by adding every Sauda difference";
+    const formulaLine2 =
+      "Difference is calculated by adding every Sauda difference";
     const formulaDifference = Math.abs(difference).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -1574,7 +1565,11 @@ const ListPaymentReceived = () => {
     doc.text(formulaLine3, margin + 10, finalSectionY + 35);
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    doc.text("M = Multi Entry    S = Single Entry", margin + 10, finalSectionY + 47);
+    doc.text(
+      "M = Multi Entry    S = Single Entry",
+      margin + 10,
+      finalSectionY + 47,
+    );
 
     try {
       const qrText = encodeURIComponent(
@@ -1918,17 +1913,22 @@ const ListPaymentReceived = () => {
       const sellerCompanyName =
         filters.supplierCompany ||
         selectedOpposingCompany?.label ||
-        (filters.ledgerType === "Buyer" ? selectedOpposingCompany?.label : "") ||
+        (filters.ledgerType === "Buyer"
+          ? selectedOpposingCompany?.label
+          : "") ||
         (filters.ledgerType === "Seller" ? selectedCompany?.label : "");
 
       const sellerCompanyData = sellerCompanies.find(
-        (c) => sellerCompanyName && (
-          c.companyName?.trim().toLowerCase() === sellerCompanyName.trim().toLowerCase() ||
-          (selectedOpposingCompany && c._id === selectedOpposingCompany.value)
-        ),
+        (c) =>
+          sellerCompanyName &&
+          (c.companyName?.trim().toLowerCase() ===
+            sellerCompanyName.trim().toLowerCase() ||
+            (selectedOpposingCompany &&
+              c._id === selectedOpposingCompany.value)),
       );
 
-      const recipientEmail = sellerCompanyData?.email?.trim() ||
+      const recipientEmail =
+        sellerCompanyData?.email?.trim() ||
         sellerCompanies
           .map((company) => company.email?.trim())
           .filter(Boolean)
@@ -1936,7 +1936,9 @@ const ListPaymentReceived = () => {
           .join(",");
 
       if (!recipientEmail) {
-        toast.error("No seller email IDs found. Please configure seller company emails.");
+        toast.error(
+          "No seller email IDs found. Please configure seller company emails.",
+        );
         return;
       }
 
@@ -1956,12 +1958,15 @@ const ListPaymentReceived = () => {
         startDate: filters.startDate,
         endDate: filters.endDate,
         buyerCompany:
-          filters.buyerCompany || selectedCompany?.label || listCompanyPair.buyerCompany,
+          filters.buyerCompany ||
+          selectedCompany?.label ||
+          listCompanyPair.buyerCompany,
         supplierCompany:
           filters.supplierCompany ||
           selectedOpposingCompany?.label ||
           listCompanyPair.supplierCompany ||
-          (sellerCompanyData?.companyName || "All Sellers"),
+          sellerCompanyData?.companyName ||
+          "All Sellers",
       });
 
       toast.success("Email sent successfully!");
@@ -1971,9 +1976,10 @@ const ListPaymentReceived = () => {
         toast.warning(error.message);
       } else {
         const serverMsg = error?.response?.data || error?.message || "";
-        const errorText = typeof serverMsg === "string" && serverMsg.trim()
-          ? serverMsg
-          : "Failed to send email. Please check credentials or try again.";
+        const errorText =
+          typeof serverMsg === "string" && serverMsg.trim()
+            ? serverMsg
+            : "Failed to send email. Please check credentials or try again.";
         toast.error(errorText);
       }
     } finally {
@@ -2052,12 +2058,13 @@ const ListPaymentReceived = () => {
       setSendingEmailIds((prev) => new Set([...prev, row.id]));
 
       const qrCodeUrl = await generateIndividualQRCode(row);
-      const actualVoucherNumber = voucherNumber
-        || row.raw?.voucherNumber
-        || row.raw?.voucherNo
-        || row.voucherNo
-        || row.id
-        || "-";
+      const actualVoucherNumber =
+        voucherNumber ||
+        row.raw?.voucherNumber ||
+        row.raw?.voucherNo ||
+        row.voucherNo ||
+        row.id ||
+        "-";
 
       const blob = await pdf(
         <PaymentVoucherPDF
@@ -2081,7 +2088,8 @@ const ListPaymentReceived = () => {
         reader.readAsDataURL(blob);
       });
 
-      const email = recipientEmail?.trim() || sellerCompany?.email?.trim() || "";
+      const email =
+        recipientEmail?.trim() || sellerCompany?.email?.trim() || "";
       const supplierCompanyName =
         sellerCompany?.companyName || row.supplierCompany || "";
       const buyerCompanyName =
@@ -2106,9 +2114,10 @@ const ListPaymentReceived = () => {
     } catch (error) {
       console.error("Send Individual Email Error:", error);
       const serverMsg = error?.response?.data || error?.message || "";
-      const errorText = typeof serverMsg === "string" && serverMsg.trim()
-        ? serverMsg
-        : "Failed to send email. Please check credentials or try again.";
+      const errorText =
+        typeof serverMsg === "string" && serverMsg.trim()
+          ? serverMsg
+          : "Failed to send email. Please check credentials or try again.";
       toast.error(errorText);
     } finally {
       setSendingEmailIds((prev) => {
@@ -2152,8 +2161,31 @@ const ListPaymentReceived = () => {
       companyId: "",
       supplierCompany: "",
       buyerCompany: "",
+      onlyCredit: false,
     }));
   };
+
+  const renderFirstLoadSkeleton = () => (
+    <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-500">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-28 sm:h-36 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%]" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 sm:gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-36 sm:h-40 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200"
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-300" />
+          </div>
+        ))}
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-80 sm:h-96 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200" />
+
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-[560px] bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200" />
+    </div>
+  );
 
   return (
     <AdminPageShell
@@ -2163,17 +2195,21 @@ const ListPaymentReceived = () => {
       noContentCard
     >
       <div className="relative -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8 min-w-0">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_#f0f9ff_0%,_#f8fafc_45%,_#f1f5f9_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_#ecfdf5_0%,_#f8fafc_50%,_#f1f5f9_100%)]" />
+        <div className="absolute top-20 left-0 -z-10 w-80 h-80 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
+        <div className="absolute top-60 right-10 -z-10 w-72 h-72 rounded-full bg-amber-100/30 blur-3xl pointer-events-none" />
 
-        <div className="max-w-[1600px] mx-auto space-y-5 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
-            <div className="flex items-center gap-2 self-start sm:self-center">
+        <div className="max-w-[1700px] mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
+          <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-end lg:justify-between">
+            <div className="w-full">
+              <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 self-start lg:self-end w-full lg:w-auto justify-start lg:justify-end">
               <button
                 type="button"
                 onClick={handleRefresh}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_2px_8px_rgba(15,23,42,0.05)] hover:bg-white hover:border-slate-300 hover:shadow-[0_4px_14px_rgba(15,23,42,0.08)] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FaSync size={12} className={loading ? "animate-spin" : ""} />
                 Refresh
@@ -2181,41 +2217,46 @@ const ListPaymentReceived = () => {
               <button
                 type="button"
                 onClick={() => navigate("/payments/received/add")}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8f] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#1e3a5f]/10 hover:from-[#172d4d] hover:to-[#254970] active:scale-[0.98] transition-all"
+                className="group inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#065f46] via-[#047857] to-[#059669] text-white font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-emerald-700/15 hover:shadow-xl hover:shadow-emerald-700/25 hover:from-[#044735] hover:via-[#065f46] hover:to-[#047857] active:scale-[0.98] transition-all duration-200"
               >
-                + New Payment
+                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/15 border border-white/20 group-hover:bg-white/25 transition-colors">
+                  +
+                </span>
+                New Payment
               </button>
             </div>
           </div>
 
-          {activeTab === "vouchers" ? (
+          {loading && tallyListRows.length === 0 ? (
+            renderFirstLoadSkeleton()
+          ) : activeTab === "vouchers" ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
                 <MisStatCard
                   icon={<FaChartLine size={18} />}
                   label="Opening balance"
-                  value={`₹ ${stats.openingBalance.toLocaleString("en-IN")}`}
+                  value={`₹ ${Number(stats.openingBalance).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   subValue="Before period"
                   accent="navy"
                 />
                 <MisStatCard
                   icon={<FaMoneyBillWave size={18} />}
                   label="Period Bills (Dr.)"
-                  value={`₹ ${stats.totalBilled.toLocaleString("en-IN")}`}
+                  value={`₹ ${Number(stats.totalBilled).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   subValue="Debit total"
                   accent="rose"
                 />
                 <MisStatCard
                   icon={<FaMoneyBillWave size={18} />}
                   label="Period receipts (Cr.)"
-                  value={`₹ ${stats.totalReceived.toLocaleString("en-IN")}`}
+                  value={`₹ ${Number(stats.totalReceived).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   subValue="Credit total"
                   accent="emerald"
                 />
                 <MisStatCard
                   icon={<FaCheckCircle size={18} />}
                   label="Closing balance"
-                  value={`₹ ${stats.closingBalance.toLocaleString("en-IN")}`}
+                  value={`₹ ${Number(stats.closingBalance).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   subValue="After period"
                   accent="blue"
                 />

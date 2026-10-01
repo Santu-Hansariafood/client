@@ -1,7 +1,7 @@
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 import { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import { FaEnvelope, FaFilePdf, FaEdit, FaTrash, FaCheck } from "react-icons/fa";
+import { FaEnvelope, FaFilePdf, FaEdit, FaTrash, FaCheck, FaBook } from "react-icons/fa";
 import QRCode from "qrcode";
 import { toast } from "react-toastify";
 import PaymentVoucherPDF from "./PaymentVoucherPDF";
@@ -170,27 +170,86 @@ const TallyLedgerBook = ({
 
   if (!rows.length) {
     return (
-      <div className="py-20 px-6 text-center">
-        <p className="text-sm font-bold text-slate-600">{emptyMessage}</p>
+      <div className="relative py-20 sm:py-24 px-6 text-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full bg-emerald-500/5 blur-3xl" />
+        <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 mb-4 shadow-inner">
+          <FaBook size={26} className="text-slate-400" />
+        </div>
+        <h4 className="text-lg font-black text-slate-700 mb-1.5 tracking-tight">
+          No ledger entries found
+        </h4>
+        <p className="text-sm font-medium text-slate-500 max-w-md mx-auto leading-relaxed">
+          {emptyMessage}
+        </p>
       </div>
     );
   }
 
-  const renderAmountCells = (r) => (
-    <>
-      <td className="px-3 py-2 text-right font-black text-[#1e3a5f] border-r border-slate-200 tabular-nums">
-        {r.debit > 0 ? formatLedgerAmount(r.debit) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-bold text-emerald-800 border-r border-slate-200 tabular-nums">
-        {r.credit > 0 ? formatLedgerAmount(r.credit) : ""}
-      </td>
-      <td className="px-3 py-2 text-right font-semibold text-slate-600 border-r border-slate-200 tabular-nums">
-        {r.balance !== 0
-          ? `${formatLedgerAmount(Math.abs(r.balance))} ${r.balance > 0 ? "Dr." : "Cr."}`
-          : "-"}
-      </td>
-    </>
-  );
+  const renderAmountCells = (r) => {
+    const hasDebit = Number(r.debit || 0) > 0;
+    const hasCredit = Number(r.credit || 0) > 0;
+    const balanceVal = Number(r.balance || 0);
+    const isBalanceDr = balanceVal > 0;
+    const isBalanceCr = balanceVal < 0;
+    return (
+      <>
+        <td
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-right font-black tabular-nums border-r border-slate-100 ${
+            hasDebit
+              ? "bg-gradient-to-r from-blue-50/40 to-transparent text-[#172d4f]"
+              : "text-slate-400"
+          }`}
+        >
+          {hasDebit ? (
+            <span className="inline-flex flex-col items-end">
+              <span>{formatLedgerAmount(r.debit)}</span>
+            </span>
+          ) : (
+            <span className="opacity-30">—</span>
+          )}
+        </td>
+        <td
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-right font-black tabular-nums border-r border-slate-100 ${
+            hasCredit
+              ? "bg-gradient-to-r from-emerald-50/50 to-transparent text-[#065f46]"
+              : "text-slate-400"
+          }`}
+        >
+          {hasCredit ? (
+            <span className="inline-flex items-end gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 mb-1.5" />
+              <span>{formatLedgerAmount(r.credit)}</span>
+            </span>
+          ) : (
+            <span className="opacity-30">—</span>
+          )}
+        </td>
+        <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-right font-bold tabular-nums border-r border-slate-100">
+          {balanceVal !== 0 ? (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border font-black tracking-tight ${
+                isBalanceDr
+                  ? "bg-blue-50 text-blue-800 border-blue-200"
+                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isBalanceDr ? "bg-blue-500" : "bg-emerald-500"
+                }`}
+              />
+              <span>{formatLedgerAmount(Math.abs(balanceVal))}</span>
+              <span className="text-[9px] font-black uppercase tracking-wider opacity-80">
+                {isBalanceDr ? "Dr" : "Cr"}
+              </span>
+            </span>
+          ) : (
+            <span className="text-slate-300 font-medium">—</span>
+          )}
+        </td>
+      </>
+    );
+  };
 
   const handleSendClick = (row, buyerCompany, sellerCompany) => {
     if (onSendEmail) {
@@ -215,23 +274,34 @@ const TallyLedgerBook = ({
     const canSendViaIcon = !row.isOpening && hasEmailTarget;
     return (
     <>
-      <td className="px-3 py-2 text-center">
+      <td className="px-3 py-2.5 text-center border-r border-slate-200">
         {!row.isOpening && canShowVoucherActions && (
           <button
             onClick={() => handleDownloadClick(row, buyerCompany, sellerCompany)}
             disabled={qrLoading[row.id]}
-            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Download voucher PDF"
           >
-            {qrLoading[row.id] ? "Preparing..." : <FaFilePdf size={14} />}
+            {qrLoading[row.id] ? (
+              <>
+                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                Prep
+              </>
+            ) : (
+              <>
+                <FaFilePdf size={11} />
+                PDF
+              </>
+            )}
           </button>
         )}
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-2.5 border-r border-slate-200">
         <div className="flex flex-col items-center justify-center gap-1.5">
           {canShowVoucherActions && (
-            <div className="flex items-center justify-center gap-1.5">
-              <span className="max-w-[160px] truncate text-xs text-slate-600">
-                {recipientEmail || "-"}
+            <div className="flex items-center justify-center gap-1.5 w-full max-w-[240px]">
+              <span className="flex-1 truncate text-[10px] font-semibold text-slate-600 px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 max-w-[160px]" title={recipientEmail}>
+                {recipientEmail || "—"}
               </span>
               {canSendViaIcon && (
                 <button
@@ -244,16 +314,14 @@ const TallyLedgerBook = ({
                   title={isEmailSent
                     ? `Already sent${sentAtDate ? ` on ${new Date(sentAtDate).toLocaleString("en-GB")}` : ""} — click to re-send voucher PDF to ${recipientEmail}`
                     : `Click to send voucher PDF to ${recipientEmail}`}
-                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-white shadow transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                  className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-xl text-white shadow-md transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
                     isEmailSent
-                      ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-                      : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                      ? "bg-gradient-to-b from-emerald-500 to-[#047857] shadow-emerald-500/20 hover:shadow-emerald-500/35"
+                      : "bg-gradient-to-b from-indigo-500 to-violet-600 shadow-indigo-500/20 hover:shadow-indigo-500/35"
                   }`}
                 >
                   {isSending ? (
                     <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                  ) : isEmailSent ? (
-                    <FaEnvelope size={11} />
                   ) : (
                     <FaEnvelope size={11} />
                   )}
@@ -262,14 +330,14 @@ const TallyLedgerBook = ({
             </div>
           )}
           {canShowVoucherActions && (
-            <div className="flex items-center justify-center min-h-[28px]">
+            <div className="flex items-center justify-center min-h-[30px]">
               {!row.isOpening && isVoucherRow && hasEmailTarget && (
                 isEmailSent ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded text-[10px] font-black uppercase tracking-wider shadow"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-emerald-500 to-[#047857] text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md shadow-emerald-500/20"
                     title={sentAtDate ? `Sent on ${new Date(sentAtDate).toLocaleString("en-GB")}` : "Email sent successfully"}
                   >
-                    <FaCheck size={10} />
+                    <FaCheck size={9} />
                     Sent
                   </span>
                 ) : (
@@ -279,19 +347,19 @@ const TallyLedgerBook = ({
                     disabled={isSending}
                     aria-label={`Send voucher to ${recipientEmail}`}
                     title={`Send voucher PDF to ${recipientEmail} using the payment email`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-[10px] font-black uppercase tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 shadow-md shadow-indigo-500/15 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSending ? (
                       <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
                     ) : (
-                      <FaEnvelope size={10} />
+                      <FaEnvelope size={9} />
                     )}
-                    {isSending ? "Sending..." : "Send"}
+                    {isSending ? "Sending" : "Send"}
                   </button>
                 )
               )}
               {!row.isOpening && isVoucherRow && !hasEmailTarget && (
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[9px] font-black text-slate-500 uppercase tracking-wider">
                   No Email
                 </span>
               )}
@@ -299,23 +367,25 @@ const TallyLedgerBook = ({
           )}
         </div>
       </td>
-      <td className="px-3 py-2 text-center">
+      <td className="px-3 py-2.5 text-center border-r border-slate-200">
         {!row.isOpening && canShowVoucherActions && row.raw && onEdit && (
           <button
             onClick={() => onEdit(row.raw)}
-            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded text-xs font-bold transition shadow"
+            className="group inline-flex items-center justify-center w-8 h-8 bg-gradient-to-b from-emerald-500 to-[#065f46] hover:from-emerald-600 hover:to-[#047857] text-white rounded-xl text-xs font-black transition-all duration-200 shadow-md shadow-emerald-500/15 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95"
+            title="Edit payment voucher"
           >
-            <FaEdit size={14} />
+            <FaEdit size={12} />
           </button>
         )}
       </td>
-      <td className="px-3 py-2 text-center">
+      <td className="px-3 py-2.5 text-center">
         {!row.isOpening && canShowVoucherActions && row.raw && onDelete && (
           <button
             onClick={() => onDelete(row.raw._id)}
-            className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded text-xs font-bold transition shadow"
+            className="group inline-flex items-center justify-center w-8 h-8 bg-gradient-to-b from-rose-500 to-red-700 hover:from-rose-600 hover:to-red-800 text-white rounded-xl text-xs font-black transition-all duration-200 shadow-md shadow-rose-500/15 hover:shadow-lg hover:shadow-rose-500/25 active:scale-95"
+            title="Delete payment voucher"
           >
-            <FaTrash size={14} />
+            <FaTrash size={12} />
           </button>
         )}
       </td>
@@ -329,149 +399,197 @@ const TallyLedgerBook = ({
     ));
 
   return (
-    <div className="overflow-x-auto border border-slate-300 bg-[#fffef8] shadow-inner">
-      <table className="w-full min-w-[1250px] border-collapse text-left">
-        <thead>
-          <tr className="bg-[#1e3a5f] text-white">
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px]">
-              Date
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] min-w-[260px]">
-              Particulars
-            </th>
-            {showCompanyColumns && (
-              <>
-                <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
-                  Buyer Co.
-                </th>
-                <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
-                  Seller Co.
-                </th>
-              </>
-            )}
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[72px]">
-              Vch
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Debit (Dr.)
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-              Credit (Cr.)
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
-              Balance
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-center">
-              Download
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[220px] text-center">
-              Recipient Email
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[80px] text-center">
-              Edit
-            </th>
-            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[80px] text-center">
-              Delete
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, idx) => {
-            const breakdown = row.breakdown || [];
-            const paymentAllocations = row.paymentAllocations || [];
-            const hasBreakdown = breakdown.length > 0;
-            const hasPaymentAllocations = paymentAllocations.length > 0;
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#065f46] via-[#047857] to-amber-500" />
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1350px] border-collapse text-left">
+          <thead>
+            <tr className="bg-gradient-to-r from-slate-900 via-[#0f2a45] to-[#1e3a5f] text-white">
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[105px] sticky left-0 bg-[#0f2a45] z-10">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-amber-400" />
+                  Date
+                </span>
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 min-w-[280px]">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-amber-400" />
+                  Particulars
+                </span>
+              </th>
+              {showCompanyColumns && (
+                <>
+                  <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[130px]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-blue-400" />
+                      Buyer Co.
+                    </span>
+                  </th>
+                  <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[130px]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-purple-400" />
+                      Seller Co.
+                    </span>
+                  </th>
+                </>
+              )}
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[75px] text-center">
+                Vch
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[110px] text-right">
+                <span className="text-blue-200">Debit (Dr.)</span>
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[110px] text-right">
+                <span className="text-emerald-300">Credit (Cr.)</span>
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[115px] text-right">
+                Balance
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[95px] text-center">
+                <FaFilePdf size={10} className="inline mr-1.5 text-blue-300" />
+                Down
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[230px] text-center">
+                <FaEnvelope size={10} className="inline mr-1.5 text-indigo-300" />
+                Recipient Email
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] border-r border-white/10 w-[70px] text-center">
+                Edit
+              </th>
+              <th className="px-3 sm:px-4 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.08em] w-[70px] text-center">
+                Del
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => {
+              const breakdown = row.breakdown || [];
+              const paymentAllocations = row.paymentAllocations || [];
+              const hasBreakdown = breakdown.length > 0;
+              const hasPaymentAllocations = paymentAllocations.length > 0;
 
-            const buyerCompany = buyerCompanies.find(
-              (c) =>
-                normalizeValue(c.companyName) ===
-                normalizeValue(row.buyerCompany),
-            );
-            const sellerCompany = sellerCompanies.find(
-              (c) =>
-                normalizeValue(getCompanyName(c)) ===
-                normalizeValue(row.supplierCompany),
-            );
+              const buyerCompany = buyerCompanies.find(
+                (c) =>
+                  normalizeValue(c.companyName) ===
+                  normalizeValue(row.buyerCompany),
+              );
+              const sellerCompany = sellerCompanies.find(
+                (c) =>
+                  normalizeValue(getCompanyName(c)) ===
+                  normalizeValue(row.supplierCompany),
+              );
 
-            const baseRowClass = [
-              "border-b border-slate-200 text-[11px]",
-              row.isOpening
-                ? "bg-green-50/80 font-bold"
-                : row.raw?.uiType === "entry" && row.raw?.isRejected
-                  ? "bg-red-50 text-red-700"
-                : "hover:bg-sky-50/50",
-              !row.isOpening && !row.raw?.isRejected && idx % 2 === 0 ? "bg-white" : "",
-              !row.isOpening && !row.raw?.isRejected && idx % 2 === 1 ? "bg-slate-50/40" : "",
-            ].join(" ");
+              const baseRowClass = [
+                "group border-b border-slate-100 text-[11px] transition-colors duration-150",
+                row.isOpening
+                  ? "bg-gradient-to-r from-emerald-50/90 via-green-50/70 to-emerald-50/90 font-bold"
+                  : row.raw?.uiType === "entry" && row.raw?.isRejected
+                    ? "bg-gradient-to-r from-red-50 via-rose-50/80 to-red-50 text-red-700 border-b-2 border-red-200/70"
+                  : idx % 2 === 0
+                    ? "bg-white hover:bg-gradient-to-r hover:from-sky-50/40 hover:via-sky-50/20 hover:to-sky-50/40"
+                    : "bg-gradient-to-r from-slate-50/30 via-white to-slate-50/30 hover:from-sky-50/40 hover:via-sky-50/20 hover:to-sky-50/40",
+              ].join(" ");
 
-            const subRowBg = idx % 2 === 0 ? "bg-amber-50/20" : "bg-slate-50/30";
-            const displayDate = row.unloadingDate || row.date;
+              const subRowBg = idx % 2 === 0 ? "bg-amber-50/30" : "bg-slate-50/40";
+              const displayDate = row.unloadingDate || row.date;
 
-            return (
-              <>
-                <tr key={`m-${row.id || idx}`} className={baseRowClass}>
-                  <td className="px-3 py-2 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
-                    {displayDate
-                      ? new Date(displayDate).toLocaleDateString("en-GB")
-                      : "—"}
-                    {row.unloadingDate &&
-                      row.loadingDate &&
-                      row.unloadingDate !== row.loadingDate && (
-                        <div className="text-[9px] font-normal text-slate-500">
-                          Load:{" "}
-                          {new Date(row.loadingDate).toLocaleDateString(
-                            "en-GB",
-                          )}
+              return (
+                <>
+                  <tr key={`m-${row.id || idx}`} className={baseRowClass}>
+                    <td className={`px-3 sm:px-4 py-2.5 sm:py-3 font-bold text-slate-800 border-r border-slate-100 whitespace-nowrap sticky left-0 z-[1] ${row.isOpening ? "bg-gradient-to-r from-emerald-50/95 via-green-50/80 to-emerald-50/95" : row.raw?.isRejected ? "bg-rose-50" : idx % 2 === 0 ? "bg-white group-hover:bg-sky-50/40" : "bg-slate-50/30 group-hover:bg-sky-50/40"}`}>
+                      {displayDate
+                        ? new Date(displayDate).toLocaleDateString("en-GB")
+                        : "—"}
+                      {row.unloadingDate &&
+                        row.loadingDate &&
+                        row.unloadingDate !== row.loadingDate && (
+                          <div className="text-[9px] font-semibold text-slate-500 mt-0.5">
+                            <span className="inline-flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-slate-400" />
+                              Load:{" "}
+                              {new Date(row.loadingDate).toLocaleDateString(
+                                "en-GB",
+                              )}
+                            </span>
+                          </div>
+                        )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 border-r border-slate-100 leading-snug max-w-md">
+                      <div
+                        className={`font-bold uppercase tracking-wide text-[10.5px] ${row.raw?.uiType === "entry" && row.raw?.isRejected ? "text-red-700" : row.isOpening ? "text-emerald-800" : "text-slate-800"}`}
+                      >
+                        {row.particulars}
+                        {row.raw?.uiType === "entry" && row.raw?.isRejected && (
+                          <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-100 border border-red-200 text-red-700 text-[8.5px] font-black uppercase tracking-wider">
+                            Rejected
+                          </span>
+                        )}
+                      </div>
+                      {row.reference && (
+                        <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200/70 text-[9px] font-black text-amber-800 uppercase tracking-wider">
+                          <span className="w-1 h-1 rounded-full bg-amber-500" />
+                          {row.reference}
                         </div>
                       )}
-                  </td>
-                  <td className="px-3 py-2 border-r border-slate-200 leading-snug max-w-md">
-                    <div
-                      className={`font-semibold uppercase text-[10px] ${row.raw?.uiType === "entry" && row.raw?.isRejected ? "text-red-700" : "text-slate-800"}`}
-                    >
-                      {row.particulars}
-                      {row.raw?.uiType === "entry" && row.raw?.isRejected ? " (REJECTED LORRY)" : ""}
-                    </div>
-                    {row.reference && (
-                      <div className="text-[9px] font-bold text-amber-700 mt-0.5">
-                        Reference: {row.reference}
-                      </div>
+                      {row.isPaymentRow && row.voucherNo && (
+                        <div className="text-[9.5px] font-bold text-indigo-700 mt-1 inline-flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                          Vch #{row.voucherNo}
+                          {row.paymentMode ? ` · ${row.paymentMode}` : ""}
+                        </div>
+                      )}
+                      {row.raw?.uiType === "entry" && row.weight > 0 && (
+                        <div className="text-[9.5px] font-bold text-emerald-700 mt-1 inline-flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          {row.isUnloading ? "Unloaded" : "Loaded"}:{" "}
+                          <span className="tabular-nums">{Number(row.weight).toFixed(3)}T</span>
+                          {" @ "}
+                          <span className="tabular-nums">₹{Number(row.rate).toFixed(2)}</span>
+                          {row.billNumber ? (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-black">
+                              Bill {row.billNumber}
+                            </span>
+                          ) : ""}
+                        </div>
+                      )}
+                      {(row.generalRemarks || row.remarks) && (
+                        <div className="text-[9px] italic text-slate-500 mt-1 pl-2 border-l-2 border-slate-200">
+                          {row.generalRemarks || row.remarks}
+                        </div>
+                      )}
+                    </td>
+                    {showCompanyColumns && (
+                      <>
+                        <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] font-bold text-slate-600 uppercase border-r border-slate-100 truncate max-w-[130px]">
+                          <span className="inline-block px-2 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700 truncate max-w-full">
+                            {row.buyerCompany || "—"}
+                          </span>
+                        </td>
+                        <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] font-bold text-slate-600 uppercase border-r border-slate-100 truncate max-w-[130px]">
+                          <span className="inline-block px-2 py-1 rounded-md bg-purple-50 border border-purple-100 text-purple-700 truncate max-w-full">
+                            {row.supplierCompany || "—"}
+                          </span>
+                        </td>
+                      </>
                     )}
-                    {row.isPaymentRow && row.voucherNo && (
-                      <div className="text-[9px] font-bold text-indigo-600 mt-0.5">
-                        Vch #{row.voucherNo} · {row.paymentMode || ""}
-                      </div>
-                    )}
-                    {row.raw?.uiType === "entry" && row.weight > 0 && (
-                      <div className="text-[9px] font-bold text-emerald-700 mt-0.5">
-                        {row.isUnloading ? "Unloaded:" : "Loaded:"}{" "}
-                        {Number(row.weight).toFixed(3)}T @ ₹
-                        {Number(row.rate).toFixed(2)}
-                        {row.billNumber ? ` · Bill ${row.billNumber}` : ""}
-                      </div>
-                    )}
-                    {(row.generalRemarks || row.remarks) && (
-                      <div className="text-[9px] italic text-slate-500 mt-0.5">
-                        Note: {row.generalRemarks || row.remarks}
-                      </div>
-                    )}
-                  </td>
-                  {showCompanyColumns && (
-                    <>
-                      <td className="px-3 py-2 text-[10px] font-bold text-slate-600 uppercase border-r border-slate-200 truncate max-w-[120px]">
-                        {row.buyerCompany || "—"}
-                      </td>
-                      <td className="px-3 py-2 text-[10px] font-bold text-slate-600 uppercase border-r border-slate-200 truncate max-w-[120px]">
-                        {row.supplierCompany || "—"}
-                      </td>
-                    </>
-                  )}
-                  <td className="px-3 py-2 text-[9px] font-black text-slate-500 uppercase border-r border-slate-200">
-                    {row.vchType}
-                  </td>
-                  {renderAmountCells(row)}
-                  {renderActionCells(row, buyerCompany, sellerCompany)}
-                </tr>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 border-r border-slate-100 text-center">
+                      <span
+                        className={`inline-flex items-center justify-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                          row.vchType === "Bill"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : row.vchType === "PYT" || row.vchType === "CR"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : row.vchType === "BRK"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-slate-50 text-slate-600 border-slate-200"
+                        }`}
+                      >
+                        {row.vchType}
+                      </span>
+                    </td>
+                    {renderAmountCells(row)}
+                    {renderActionCells(row, buyerCompany, sellerCompany)}
+                  </tr>
 
                 {hasBreakdown &&
                   breakdown.map((item, bIdx) => {
@@ -607,6 +725,7 @@ const TallyLedgerBook = ({
           </tfoot>
         )}
       </table>
+      </div>
     </div>
   );
 };

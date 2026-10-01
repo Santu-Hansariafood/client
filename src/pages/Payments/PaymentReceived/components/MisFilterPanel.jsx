@@ -175,7 +175,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
               Sauda no.
@@ -214,6 +214,45 @@ const MisFilterPanel = ({
               }}
               className="!h-12 !rounded-xl"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              Entry type
+            </label>
+            <button
+              type="button"
+              onClick={() => onFilterChange("onlyCredit", !filters.onlyCredit)}
+              className={`w-full h-12 px-4 rounded-xl border-2 text-sm font-bold transition-all duration-200 flex items-center justify-between ${
+                filters.onlyCredit
+                  ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-500 text-emerald-800 shadow-lg shadow-emerald-500/15"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
+                    filters.onlyCredit
+                      ? "bg-emerald-500 text-white"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  Cr
+                </span>
+                <span>Only Credit (Cr.)</span>
+              </span>
+              <span
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  filters.onlyCredit ? "bg-emerald-500" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    filters.onlyCredit ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </span>
+            </button>
           </div>
         </div>
       </div>
