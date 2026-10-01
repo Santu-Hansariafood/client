@@ -10,48 +10,52 @@ const DateRangeSelector = ({
     className = "" 
 }) => {
     return (
-        <div className={`flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all group hover:border-slate-300 focus-within:ring-4 focus-within:ring-slate-900/5 focus-within:border-slate-900 ${className}`}>
-            <div className="flex items-center gap-2 flex-1">
-                <FaCalendarAlt className={`transition-colors ${startDate ? 'text-slate-900' : 'text-slate-400'}`} size={14} />
-                <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 leading-none">From</span>
+        <div className={`group relative flex items-stretch gap-0 rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 hover:border-slate-300 hover:shadow-[0_2px_10px_rgba(15,23,42,0.06)] focus-within:ring-2 focus-within:ring-emerald-500/15 focus-within:border-emerald-500/60 ${className}`}>
+            <div className="flex items-center gap-2.5 flex-1 px-3.5 py-2.5 border-r border-slate-100">
+                <div className={`flex items-center justify-center w-8 h-8 shrink-0 rounded-xl transition-colors ${startDate ? 'bg-emerald-500/10 text-emerald-700' : 'bg-slate-50 text-slate-400'}`}>
+                    <FaCalendarAlt size={13} />
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 leading-none mb-1">From</span>
                     <input
                         type="date"
                         value={startDate || ''}
                         onChange={(e) => onStartDateChange(e.target.value)}
-                        className={`text-sm font-medium outline-none bg-transparent cursor-pointer h-6 ${!startDate ? 'text-slate-400' : 'text-slate-900'}`}
+                        className={`text-[12.5px] font-bold outline-none bg-transparent cursor-pointer h-5 w-full min-w-0 tabular-nums ${!startDate ? 'text-slate-400' : 'text-slate-800'}`}
                         title="From Date"
                     />
                 </div>
             </div>
             
-            <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
-                    <FaArrowRight className="text-slate-300 group-hover:text-slate-400 transition-colors" size={10} />
+            <div className="flex items-center justify-center px-1">
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 ${startDate && endDate ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20' : 'bg-slate-50 text-slate-300 group-hover:bg-slate-100 group-hover:text-slate-400'}`}>
+                    <FaArrowRight size={9} />
                 </div>
             </div>
             
-            <div className="flex items-center gap-2 flex-1">
-                <div className="flex flex-col items-end text-right">
-                    <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 leading-none">To</span>
+            <div className="flex items-center gap-2.5 flex-1 px-3.5 py-2.5 flex-row-reverse border-l border-slate-100">
+                <div className={`flex items-center justify-center w-8 h-8 shrink-0 rounded-xl transition-colors ${endDate ? 'bg-blue-500/10 text-blue-700' : 'bg-slate-50 text-slate-400'}`}>
+                    <FaCalendarAlt size={13} />
+                </div>
+                <div className="flex flex-col min-w-0 flex-1 items-end">
+                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 leading-none mb-1">To</span>
                     <input
                         type="date"
                         value={endDate || ''}
                         onChange={(e) => onEndDateChange(e.target.value)}
-                        className={`text-sm font-medium outline-none bg-transparent cursor-pointer h-6 text-right ${!endDate ? 'text-slate-400' : 'text-slate-900'}`}
+                        className={`text-[12.5px] font-bold outline-none bg-transparent cursor-pointer h-5 w-full min-w-0 text-right tabular-nums ${!endDate ? 'text-slate-400' : 'text-slate-800'}`}
                         title="To Date"
                     />
                 </div>
-                <FaCalendarAlt className={`transition-colors ${endDate ? 'text-slate-900' : 'text-slate-400'}`} size={14} />
             </div>
 
             {onClear && (startDate || endDate) && (
                 <button 
                     onClick={onClear}
-                    className="ml-2 p-1.5 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-rose-500 text-white shadow-md shadow-rose-500/30 hover:bg-rose-600 hover:scale-110 transition-all duration-200 z-10"
                     title="Clear Dates"
                 >
-                    <FaTimes size={10} />
+                    <FaTimes size={9} />
                 </button>
             )}
         </div>
