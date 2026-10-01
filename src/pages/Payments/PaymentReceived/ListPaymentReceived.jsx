@@ -21,7 +21,7 @@ const MisStatCard = lazy(() => import("./components/MisStatCard"));
 const MisFilterPanel = lazy(() => import("./components/MisFilterPanel"));
 const MisVoucherLedger = lazy(() => import("./components/MisVoucherLedger"));
 const MisLorryLedger = lazy(() => import("./components/MisLorryLedger"));
-const MisPageHeader = lazy(() => import("./components/MisPageHeader"));
+// const MisPageHeader = lazy(() => import("./components/MisPageHeader"));
 const AdminPageShell = lazy(
   () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
@@ -2201,9 +2201,9 @@ const ListPaymentReceived = () => {
 
         <div className="max-w-[1700px] mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
           <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-end lg:justify-between">
-            <div className="w-full">
+            {/* <div className="w-full">
               <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
-            </div>
+            </div> */}
             <div className="flex items-center gap-2 sm:gap-3 self-start lg:self-end w-full lg:w-auto justify-start lg:justify-end">
               <button
                 type="button"
