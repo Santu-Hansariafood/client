@@ -14,20 +14,15 @@ const FinanceReportFilters = ({
   onConsigneeChange,
   onExport,
 }) => (
-  <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-    <div className="mb-5">
+  <section className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+    <div className="mb-4">
       <div>
-        <h2 className="text-lg font-bold text-slate-800">
-          Sauda Report Filters
-        </h2>
-        <p className="text-sm text-slate-500">
-          View financed Saudas by date range and consignee
-        </p>
+        <h2 className="text-base font-semibold text-slate-800">Filters</h2>
       </div>
     </div>
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] xl:items-end">
       <div className="min-w-0">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">
+        <label className="mb-2 block text-sm font-medium text-slate-600">
           From Date
         </label>
         <div className="[&>div]:!max-w-none">
@@ -35,7 +30,7 @@ const FinanceReportFilters = ({
         </div>
       </div>
       <div className="min-w-0">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">
+        <label className="mb-2 block text-sm font-medium text-slate-600">
           To Date
         </label>
         <div className="[&>div]:!max-w-none">
@@ -56,19 +51,19 @@ const FinanceReportFilters = ({
         type="button"
         onClick={() => onExport("pdf")}
         disabled={Boolean(exportingFormat) || loading}
-        className="inline-flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <FaFilePdf size={14} />
-        {exportingFormat === "pdf" ? "Preparing PDF..." : ""}
+        {exportingFormat === "pdf" ? "Preparing PDF..." : "PDF"}
       </button>
       <button
         type="button"
         onClick={() => onExport("excel")}
         disabled={Boolean(exportingFormat) || loading}
-        className="inline-flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-emerald-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <FaFileExcel size={14} />
-        {exportingFormat === "excel" ? "Preparing Excel..." : ""}
+        {exportingFormat === "excel" ? "Preparing Excel..." : "Excel"}
       </button>
     </div>
   </section>

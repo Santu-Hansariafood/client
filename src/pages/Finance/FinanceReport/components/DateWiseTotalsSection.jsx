@@ -14,7 +14,7 @@ const DateWiseTotalsSection = ({
   onSelectAdjustment,
   onClearAdjustment,
 }) => (
-  <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
+  <section className="bg-white py-2">
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h2 className="text-lg font-bold text-slate-800">Date-wise Totals</h2>

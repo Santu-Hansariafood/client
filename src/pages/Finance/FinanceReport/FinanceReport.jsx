@@ -12,6 +12,7 @@ import {
   FaUniversity,
   FaSave,
   FaEdit,
+  FaChevronDown,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { pdf } from "@react-pdf/renderer";
@@ -598,12 +599,14 @@ const FinanceReport = () => {
         ? rows.map((row, index) => (index === 0 ? nextRow : row))
         : [nextRow],
     );
-    requestAnimationFrame(() =>
-      adjustmentLookupRef.current?.scrollIntoView({
+    requestAnimationFrame(() => {
+      if (!adjustmentLookupRef.current) return;
+      adjustmentLookupRef.current.open = true;
+      adjustmentLookupRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
-      }),
-    );
+      });
+    });
   };
 
   const removeSaudaRow = (id) => {
@@ -1082,70 +1085,92 @@ const FinanceReport = () => {
             onPageChange={setPage}
           />
 
-          <section
+          <details
             ref={adjustmentLookupRef}
-            className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6"
+            className="border-y border-slate-200 bg-white"
           >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">
-                  Buying vs Selling Adjustment Lookup
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Compare buying and selling quantities for the selected Sauda
-                </p>
-                <p className="mt-1 text-xs font-semibold text-emerald-700">
-                  Consignee: {selectedConsignee || "All consignees"}
-                </p>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-sm font-semibold text-slate-800 sm:px-6">
+              <span>Sauda adjustments</span>
+              <span className="text-xs font-normal text-slate-500">
+                {adjustedSaudasTotal} saved
+              </span>
+              <FaChevronDown
+                aria-hidden="true"
+                className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                size={13}
+              />
+            </summary>
+            <section className="space-y-4 px-4 pb-5 sm:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-800">
+                    Buying vs selling
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Consignee: {selectedConsignee || "All consignees"}
+                  </p>
+                </div>
+                <Buttons
+                  label="Add Sauda"
+                  onClick={addSaudaRow}
+                  size="sm"
+                  icon={<FaPlus />}
+                />
               </div>
-              <Buttons
-                label="Add Sauda"
-                onClick={addSaudaRow}
-                size="sm"
-                icon={<FaPlus />}
+              <div className="overflow-x-auto">
+                <Tables
+                  headers={[
+                    "Seller Sauda No(s)",
+                    "Seller Company / Consignee",
+                    "Buyer / Seller Sauda Mapping",
+                    "Adjustment Date",
+                    "Combined Buying Quantity",
+                    "Combined Adjusted Quantity",
+                    "Combined Pending Quantity",
+                    "Adjustment Status",
+                    "Actions",
+                  ]}
+                  rows={saudaLookupRows}
+                />
+              </div>
+              <AdjustedSaudasSection
+                rows={paginatedAdjustmentRows}
+                total={adjustedSaudasTotal}
+                page={adjustedSaudasPage}
+                itemsPerPage={itemsPerPage}
+                adjustedQuantityByBuyerSauda={adjustedQuantityByBuyerSauda}
+                formatDate={formatDate}
+                formatNumber={formatNumber}
+                getAdjustmentStatus={getAdjustmentStatus}
+                onPageChange={setAdjustedSaudasPage}
+                onAdjust={adjustEqualityRow}
               />
-            </div>
-            <div className="overflow-x-auto">
-              <Tables
-                headers={[
-                  "Seller Sauda No(s)",
-                  "Seller Company / Consignee",
-                  "Buyer / Seller Sauda Mapping",
-                  "Adjustment Date",
-                  "Combined Buying Quantity",
-                  "Combined Adjusted Quantity",
-                  "Combined Pending Quantity",
-                  "Adjustment Status",
-                  "Actions",
-                ]}
-                rows={saudaLookupRows}
-              />
-            </div>
-            <AdjustedSaudasSection
-              rows={paginatedAdjustmentRows}
-              total={adjustedSaudasTotal}
-              page={adjustedSaudasPage}
-              itemsPerPage={itemsPerPage}
-              adjustedQuantityByBuyerSauda={adjustedQuantityByBuyerSauda}
-              formatDate={formatDate}
-              formatNumber={formatNumber}
-              getAdjustmentStatus={getAdjustmentStatus}
-              onPageChange={setAdjustedSaudasPage}
-              onAdjust={adjustEqualityRow}
-            />
-          </section>
+            </section>
+          </details>
 
-          <DateWiseTotalsSection
-            dateTotals={selectedDateTotals}
-            partyTotals={selectedPartyTotals}
-            saudaDetails={selectedSaudaDetails}
-            adjustments={selectedAdjustments}
-            selectedAdjustment={selectedAdjustment}
-            formatDate={formatDate}
-            formatNumber={formatNumber}
-            onSelectAdjustment={setSelectedAdjustment}
-            onClearAdjustment={() => setSelectedAdjustment(null)}
-          />
+          <details className="border-b border-slate-200 bg-white">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-sm font-semibold text-slate-800 sm:px-6">
+              <span>Totals and transaction details</span>
+              <FaChevronDown
+                aria-hidden="true"
+                className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                size={13}
+              />
+            </summary>
+            <div className="px-4 pb-5 sm:px-6">
+              <DateWiseTotalsSection
+                dateTotals={selectedDateTotals}
+                partyTotals={selectedPartyTotals}
+                saudaDetails={selectedSaudaDetails}
+                adjustments={selectedAdjustments}
+                selectedAdjustment={selectedAdjustment}
+                formatDate={formatDate}
+                formatNumber={formatNumber}
+                onSelectAdjustment={setSelectedAdjustment}
+                onClearAdjustment={() => setSelectedAdjustment(null)}
+              />
+            </div>
+          </details>
         </div>
       </AdminPageShell>
     </Suspense>
