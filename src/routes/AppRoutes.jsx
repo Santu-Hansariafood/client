@@ -505,8 +505,6 @@ const AppRoutes = ({ hydrated }) => {
     }
   }, [hydrated, isAuthenticated, userRole, navigate, location.pathname]);
 
-  if (!hydrated) return null;
-
   return (
     <Routes>
       <Route
