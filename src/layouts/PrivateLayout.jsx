@@ -9,7 +9,7 @@ import AIAgent from "../components/AIAgent/AIAgent";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 import Loading from "../common/Loading/Loading";
-import MobileBottomNav from "../common/MobileBottomNav/MobileBottomNav";
+// import MobileBottomNav from "../common/MobileBottomNav/MobileBottomNav";
 
 const PageLoader = () => (
   <Loading/>
@@ -74,7 +74,7 @@ const PrivateLayout = () => {
         />
       )}
 
-      {(userRole === "Buyer" || userRole === "Seller") && <MobileBottomNav />}
+      {/* {(userRole === "Buyer" || userRole === "Seller") && <MobileBottomNav />} */}
       {userRole === "Admin" && <AIAgent />}
       {userRole === "Employee" && <AIAgent />}
     </div>
