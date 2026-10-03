@@ -253,8 +253,6 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    user.otp = undefined;
-    user.otpExpires = undefined;
     user.otpVerifiedAt = new Date();
     user.otpVerified = true;
     await user.save();
@@ -367,11 +365,17 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
+    if (user.otpVerified !== true) {
+      return res.status(400).json({
+        message: "OTP must be verified before resetting the password.",
+      });
+    }
+
     user.password = newPassword;
     user.passwordChangedAt = new Date();
     user.otp = undefined;
     user.otpExpires = undefined;
-    user.otpVerified = undefined;
+    user.otpVerified = false;
     user.otpVerifiedAt = undefined;
     await user.save();
 
