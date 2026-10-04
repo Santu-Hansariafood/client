@@ -273,12 +273,18 @@ const FinanceReport = () => {
                     ? row.manualAdjustment || row.buyerQuantity || ""
                     : currentAdjustment || row.manualAdjustment || "",
                 ),
-                pendingQuantity: currentRow?.buyerSaudaNo
-                  ? Math.abs(purchaseQuantity - effectiveAdjustment)
-                  : Math.max(0, purchaseQuantity - effectiveAdjustment),
+                pendingQuantity: Math.max(
+                  0,
+                  purchaseQuantity - effectiveAdjustment,
+                ),
                 status:
                   details.length === values.length
-                    ? getAdjustmentStatus(purchaseQuantity, effectiveAdjustment)
+                    ? getAdjustmentStatus(
+                        purchaseQuantity,
+                        currentRow?.buyerSaudaNo
+                          ? currentRow.buyerQuantity
+                          : effectiveAdjustment,
+                      )
                     : "Some Sauda not found",
               },
         ),
@@ -813,7 +819,7 @@ const FinanceReport = () => {
   });
 
   const saudaLookupRows = saudaRows.map((row) => [
-    <div key={`lookup-${row.id}`} className="flex min-w-[310px] flex-col gap-2">
+    <div key={`lookup-${row.id}`} className="min-w-[230px]">
       <DataDropdown
         options={(row.saudaOptions || []).map((option) => ({
           value: option.saudaNo,
@@ -853,6 +859,8 @@ const FinanceReport = () => {
           }
         }}
       />
+    </div>,
+    <div key={`seller-company-${row.id}`} className="min-w-[210px] space-y-2">
       <DataDropdown
         options={sellerCompanyOptions}
         selectedOptions={row.sellerCompany}
@@ -888,13 +896,44 @@ const FinanceReport = () => {
           }
         }}
       />
+      <div className="text-xs text-slate-500">
+        Consignee: {row.consignee || "-"}
+      </div>
+      <button
+        type="button"
+        onClick={() =>
+          lookupSauda(
+            row.id,
+            row.saudaNo,
+            row.sellerCompany,
+            row.manualAdjustment,
+          )
+        }
+        className="h-9 w-full rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+      >
+        Check quantity
+      </button>
+    </div>,
+    row.buyerSaudaNo || "-",
+    row.buyerCompany || "-",
+    row.buyerQuantity === null || row.buyerQuantity === undefined
+      ? "-"
+      : `${formatNumber(row.buyerQuantity)} Tons`,
+    row.purchaseQuantity === null
+      ? "-"
+      : `${formatNumber(row.purchaseQuantity)} Tons`,
+    `${formatNumber(
+      (row.saudaDetails || []).reduce(
+        (total, detail) => total + Number(detail.adjustmentQuantity || 0),
+        0,
+      ),
+    )} Tons`,
+    <div key={`wanted-adjustment-${row.id}`} className="min-w-[190px]">
       <input
         type="number"
         min="0"
         step="0.01"
         value={row.manualAdjustment}
-        disabled={Boolean(row.buyerSaudaNo)}
-        title={row.buyerSaudaNo ? "Uses the buyer Sauda quantity" : undefined}
         onChange={(event) =>
           setSaudaRows((rows) =>
             rows.map((item) =>
@@ -911,13 +950,15 @@ const FinanceReport = () => {
                       pendingQuantity:
                         item.purchaseQuantity === null
                           ? null
-                          : Math.abs(purchaseQuantity - manualAdjustment),
+                          : Math.max(0, purchaseQuantity - manualAdjustment),
                       status:
                         item.purchaseQuantity === null
                           ? ""
                           : getAdjustmentStatus(
                               purchaseQuantity,
-                              manualAdjustment,
+                              item.buyerSaudaNo
+                                ? item.buyerQuantity
+                                : manualAdjustment,
                             ),
                     };
                   })()
@@ -925,105 +966,11 @@ const FinanceReport = () => {
             ),
           )
         }
-        placeholder="Selling / adjusted quantity (Tons)"
+        aria-label={`Wanted adjusted quantity for ${row.buyerSaudaNo || row.saudaNo || "Sauda"}`}
+        placeholder="Wanted adjusted quantity (Tons)"
         className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            lookupSauda(
-              row.id,
-              row.saudaNo,
-              row.sellerCompany,
-              row.manualAdjustment,
-            )
-          }
-          className="h-9 flex-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
-        >
-          Check quantity
-        </button>
-        <button
-          type="button"
-          onClick={() => saveAdjustment(row)}
-          title={
-            row.buyerSaudaNo && row.status !== "Equal"
-              ? "Add seller Saudas until their combined quantity matches the buyer Sauda"
-              : row.saudaDetails?.some((detail) => detail.adjustmentId)
-                ? "Update adjustment"
-                : "Save adjustment"
-          }
-          className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={
-            row.pendingQuantity === null ||
-            !row.manualAdjustment ||
-            (row.buyerSaudaNo && row.status !== "Equal")
-          }
-        >
-          {row.saudaDetails?.some((detail) => detail.adjustmentId) ? (
-            <FaEdit size={12} />
-          ) : (
-            <FaSave size={12} />
-          )}
-        </button>
-        {row.saudaDetails?.some((detail) => detail.adjustmentId) && (
-          <button
-            type="button"
-            onClick={() => deleteAdjustment(row)}
-            title="Delete saved adjustment"
-            className="inline-flex h-9 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-          >
-            <FaTrash size={12} />
-          </button>
-        )}
-      </div>
     </div>,
-    <div key={`details-${row.id}`} className="min-w-[210px] space-y-1 text-xs">
-      <div>
-        <span className="font-bold text-slate-500">Company:</span>{" "}
-        {row.sellerCompany || "-"}
-      </div>
-      <div>
-        <span className="font-bold text-slate-500">Consignee:</span>{" "}
-        {row.consignee || "-"}
-      </div>
-      {row.buyerSaudaNo && (
-        <div>
-          <span className="font-bold text-slate-500">Buyer Sauda:</span>{" "}
-          {row.buyerSaudaNo}
-        </div>
-      )}
-      {row.buyerCompany && (
-        <div>
-          <span className="font-bold text-slate-500">Buyer Company:</span>{" "}
-          {row.buyerCompany || "-"}
-        </div>
-      )}
-    </div>,
-    <div
-      key={`selected-saudas-${row.id}`}
-      className="min-w-[190px] space-y-1 text-xs font-semibold"
-    >
-      {row.buyerSaudaNo ? (
-        <>
-          <div>Buyer: {row.buyerSaudaNo}</div>
-          <div className="font-medium text-slate-600">
-            Seller: {(row.saudaNos || []).join(", ") || "-"}
-          </div>
-        </>
-      ) : (row.saudaNos || []).length ? (
-        row.saudaNos.join(", ")
-      ) : (
-        "-"
-      )}
-    </div>,
-    formatDate(row.adjustmentDate),
-    row.purchaseQuantity === null
-      ? "-"
-      : `${formatNumber(row.purchaseQuantity)} Tons`,
-    row.manualAdjustment
-      ? `${formatNumber(row.manualAdjustment)} Tons`
-      : "0 Tons",
     row.pendingQuantity === null
       ? "-"
       : `${formatNumber(row.pendingQuantity)} Tons`,
@@ -1039,14 +986,45 @@ const FinanceReport = () => {
     >
       {row.status || "Enter Sauda No"}
     </span>,
-    <div key={`remove-${row.id}`} className="flex gap-1">
+    <div key={`actions-${row.id}`} className="flex min-w-[150px] flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => saveAdjustment(row)}
+        disabled={
+          row.pendingQuantity === null ||
+          !row.manualAdjustment ||
+          (row.buyerSaudaNo && row.status !== "Equal")
+        }
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {row.saudaDetails?.some((detail) => detail.adjustmentId) ? (
+          <FaEdit size={12} />
+        ) : (
+          <FaSave size={12} />
+        )}
+        {row.saudaDetails?.some((detail) => detail.adjustmentId)
+          ? "Update adjustment"
+          : "Save adjustment"}
+      </button>
+      {row.saudaDetails?.some((detail) => detail.adjustmentId) && (
+        <button
+          type="button"
+          onClick={() => deleteAdjustment(row)}
+          title="Delete saved adjustment"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-600 hover:bg-red-100"
+        >
+          <FaTrash size={12} />
+          Delete
+        </button>
+      )}
       <button
         type="button"
         onClick={() => removeSaudaRow(row.id)}
         title="Remove Sauda row"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+        className="inline-flex h-8 items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:bg-slate-100"
       >
         <FaTrash size={12} />
+        Remove row
       </button>
     </div>,
   ]);
@@ -1121,12 +1099,14 @@ const FinanceReport = () => {
                 <Tables
                   headers={[
                     "Seller Sauda No(s)",
-                    "Seller Company / Consignee",
-                    "Buyer / Seller Sauda Mapping",
-                    "Adjustment Date",
-                    "Combined Buying Quantity",
-                    "Combined Adjusted Quantity",
-                    "Combined Pending Quantity",
+                    "Seller Company",
+                    "Buyer Sauda No",
+                    "Buyer Company",
+                    "Buyer Order Quantity",
+                    "Seller Order Quantity",
+                    "Adjusted Quantity",
+                    "Wanted Adjusted Quantity",
+                    "Pending Quantity",
                     "Adjustment Status",
                     "Actions",
                   ]}
