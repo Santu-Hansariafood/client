@@ -110,14 +110,12 @@ router.get("/pending-options", async (req, res) => {
       .filter(Boolean)
       .sort((first, second) => first.localeCompare(second));
 
-    if (!selectedCompany) {
-      return res.json({ sellerCompanies, saudaNumbers: [] });
-    }
-
-    const companyRegex = new RegExp(
-      `^${selectedCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-      "i",
-    );
+    const companyRegex = selectedCompany
+      ? new RegExp(
+          `^${selectedCompany.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i",
+        )
+      : null;
     const consigneeRegex = selectedConsignee
       ? new RegExp(
           `^${selectedConsignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
@@ -125,28 +123,44 @@ router.get("/pending-options", async (req, res) => {
         )
       : null;
     const saudaNumbers = await SelfOrder.find({
-      supplierCompany: companyRegex,
+      supplierCompany: companyRegex || { $in: sellerCompanies },
       ...(consigneeRegex ? { consignee: consigneeRegex } : {}),
     })
-      .select("saudaNo poDate consignee quantity")
+      .select("saudaNo poDate consignee quantity supplierCompany buyerCompany")
       .sort({ poDate: -1, saudaNo: -1 })
       .lean();
 
     const adjustmentTotals = await FinanceAdjustment.aggregate([
-      { $match: { sellerCompany: companyRegex } },
-      { $group: { _id: { $toLower: "$saudaNo" }, quantity: { $sum: "$adjustmentQuantity" } } },
+      {
+        $match: selectedCompany
+          ? { sellerCompany: companyRegex }
+          : { sellerCompany: { $in: sellerCompanies } },
+      },
+      {
+        $group: {
+          _id: {
+            saudaNo: { $toLower: "$saudaNo" },
+            sellerCompany: { $toLower: "$sellerCompany" },
+          },
+          quantity: { $sum: "$adjustmentQuantity" },
+        },
+      },
     ]);
     const adjustedQuantityBySauda = new Map(
-      adjustmentTotals.map((item) => [String(item._id), Number(item.quantity || 0)]),
+      adjustmentTotals.map((item) => [
+        `${String(item._id.saudaNo)}|${String(item._id.sellerCompany)}`,
+        Number(item.quantity || 0),
+      ]),
     );
 
     const uniqueSaudaNumbers = [];
     const seenSaudaNumbers = new Set();
     saudaNumbers.forEach((item) => {
-      const key = String(item.saudaNo || "").toLowerCase();
+      const key = `${String(item.saudaNo || "").toLowerCase()}|${String(item.supplierCompany || "").toLowerCase()}`;
+      const saudaNo = String(item.saudaNo || "").toLowerCase();
       const adjustedQuantity = adjustedQuantityBySauda.get(key) || 0;
       if (
-        key &&
+        saudaNo &&
         !seenSaudaNumbers.has(key) &&
         adjustedQuantity < Number(item.quantity || 0) - 0.01
       ) {
@@ -155,6 +169,8 @@ router.get("/pending-options", async (req, res) => {
           saudaNo: item.saudaNo,
           poDate: item.poDate,
           consignee: item.consignee || "",
+          sellerCompany: item.supplierCompany || "",
+          buyerCompany: item.buyerCompany || "",
         });
       }
     });

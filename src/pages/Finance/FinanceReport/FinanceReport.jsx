@@ -259,7 +259,8 @@ const FinanceReport = () => {
             ? row
             : {
                 ...row,
-                sellerCompany: company,
+                sellerCompany: company || details[0]?.supplierCompany || "",
+                buyerCompany: details[0]?.buyerCompany || row.buyerCompany || "",
                 saudaNo: values.join(", "),
                 saudaNos: values,
                 saudaDetails: details,
@@ -301,10 +302,9 @@ const FinanceReport = () => {
 
   const loadSaudaOptions = async (
     rowId,
-    sellerCompany,
+    sellerCompany = "",
     consignee = selectedConsignee,
   ) => {
-    if (!sellerCompany) return;
     try {
       const response = await api.get("/financers/pending-options", {
         params: { sellerCompany, consignee: consignee || undefined },
@@ -344,22 +344,21 @@ const FinanceReport = () => {
 
   useEffect(() => {
     saudaRows.forEach((row) => {
-      if (row.sellerCompany) {
-        loadSaudaOptions(
-          row.id,
-          row.sellerCompany,
-          row.buyerSaudaNo ? row.consignee : selectedConsignee,
-        );
-      }
+      loadSaudaOptions(
+        row.id,
+        row.sellerCompany,
+        row.buyerSaudaNo ? row.consignee : selectedConsignee,
+      );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConsignee]);
 
   const addSaudaRow = () => {
+    const id = Date.now() + saudaRows.length;
     setSaudaRows((rows) => [
       ...rows,
       {
-        id: Date.now() + rows.length,
+        id,
         saudaNo: "",
         saudaNos: [],
         buyerSaudaNo: "",
@@ -375,6 +374,7 @@ const FinanceReport = () => {
         status: "",
       },
     ]);
+    loadSaudaOptions(id, "", selectedConsignee);
   };
 
   const saveAdjustment = async (row) => {
@@ -823,21 +823,62 @@ const FinanceReport = () => {
       <DataDropdown
         options={(row.saudaOptions || []).map((option) => ({
           value: option.saudaNo,
-          label: `${option.saudaNo} - ${formatDate(option.poDate)}`,
+          label: `${option.saudaNo} - ${option.sellerCompany || "Seller company"} / ${option.buyerCompany || "Buyer company"} - ${formatDate(option.poDate)}`,
+          ...option,
         }))}
         selectedOptions={row.saudaNos}
         isMulti
         isClearable
         disableSorting
-        isDisabled={!row.sellerCompany || row.saudaOptions.length === 0}
+        isDisabled={row.saudaOptions.length === 0}
         placeholder="Select one or more Saudas"
         onChange={(options) => {
           const saudaNos = (options || []).map((option) => option.value);
+          const selectedOptions = options || [];
+          const sellerCompany =
+            selectedOptions.length &&
+            selectedOptions.every(
+              (option) =>
+                String(option.sellerCompany || "").toLowerCase() ===
+                String(selectedOptions[0].sellerCompany || "").toLowerCase(),
+            )
+              ? selectedOptions[0].sellerCompany || ""
+              : "";
+          const buyerCompany =
+            selectedOptions.length &&
+            selectedOptions.every(
+              (option) =>
+                String(option.buyerCompany || "").toLowerCase() ===
+                String(selectedOptions[0].buyerCompany || "").toLowerCase(),
+            )
+              ? selectedOptions[0].buyerCompany || ""
+              : "";
+          if (
+            selectedOptions.length &&
+            !sellerCompany &&
+            selectedOptions.some((option) => option.sellerCompany)
+          ) {
+            toast.error("Select seller Saudas from one seller company at a time");
+            return;
+          }
+          const buyerCompanies = new Set(
+            selectedOptions
+              .map((option) => String(option.buyerCompany || "").trim().toLowerCase())
+              .filter(Boolean),
+          );
+          if (buyerCompanies.size > 1) {
+            toast.error("Select seller Saudas from one buyer company at a time");
+            return;
+          }
           setSaudaRows((rows) =>
             rows.map((item) =>
               item.id === row.id
                 ? {
                     ...item,
+                    sellerCompany: sellerCompany || item.sellerCompany,
+                    buyerCompany: selectedOptions.length
+                      ? buyerCompany
+                      : item.buyerCompany,
                     saudaNo: saudaNos.join(", "),
                     saudaNos,
                     saudaDetails: [],
@@ -849,12 +890,14 @@ const FinanceReport = () => {
                 : item,
             ),
           );
-          if (saudaNos.length && row.sellerCompany) {
+          if (saudaNos.length && (sellerCompany || row.sellerCompany)) {
             lookupSauda(
-              row.id,
-              saudaNos,
-              row.sellerCompany,
-              row.manualAdjustment,
+                row.id,
+                saudaNos,
+                sellerCompany || row.sellerCompany,
+                row.manualAdjustment,
+                row.buyerSaudaNo,
+                buyerCompany,
             );
           }
         }}
@@ -887,13 +930,11 @@ const FinanceReport = () => {
                 : item,
             ),
           );
-          if (company) {
-            loadSaudaOptions(
-              row.id,
-              company,
-              row.buyerSaudaNo ? row.consignee : selectedConsignee,
-            );
-          }
+          loadSaudaOptions(
+            row.id,
+            company,
+            row.buyerSaudaNo ? row.consignee : selectedConsignee,
+          );
         }}
       />
       <div className="text-xs text-slate-500">
