@@ -171,6 +171,8 @@ router.get("/pending-options", async (req, res) => {
           consignee: item.consignee || "",
           sellerCompany: item.supplierCompany || "",
           buyerCompany: item.buyerCompany || "",
+          quantity: Number(item.quantity || 0),
+          adjustedQuantity,
         });
       }
     });
@@ -467,13 +469,16 @@ router.get("/report", async (req, res) => {
       adjustmentDateFilter.$lte = endOfDay;
     }
     const adjustmentQuery = {
-      ...(rawSaudaNos.length
+      ...(rawSaudaNos.length && !buyerSaudaNo
         ? {
             saudaNo: { $in: rawSaudaNos },
             sellerCompany: { $regex: `^${escapedSellerCompany}$`, $options: "i" },
-            ...(buyerSaudaNo
-              ? { buyerSaudaNo, ...(buyerCompany ? { buyerCompany } : {}) }
-              : {}),
+          }
+        : {}),
+      ...(buyerSaudaNo
+        ? {
+            buyerSaudaNo,
+            ...(buyerCompany ? { buyerCompany } : {}),
           }
         : {}),
       ...(Object.keys(adjustmentDateFilter).length ? { adjustmentDate: adjustmentDateFilter } : {}),
@@ -562,6 +567,28 @@ router.get("/report", async (req, res) => {
         { $sort: { _id: 1 } },
       ]),
     ]);
+    const sellerAdjustmentTotals = rawSaudaNos.length && sellerCompany
+      ? await FinanceAdjustment.aggregate([
+          {
+            $match: {
+              saudaNo: { $in: rawSaudaNos },
+              sellerCompany: {
+                $regex: `^${escapedSellerCompany}$`,
+                $options: "i",
+              },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                saudaNo: { $toLower: "$saudaNo" },
+                sellerCompany: { $toLower: "$sellerCompany" },
+              },
+              quantity: { $sum: "$adjustmentQuantity" },
+            },
+          },
+        ])
+      : [];
     const totalsSaudaNos = dateWiseSaudas.flatMap((item) => item.saudaNos || []).filter(Boolean);
     const totalsLoadedBySauda = await LoadingEntry.aggregate([
       { $match: { saudaNo: { $in: totalsSaudaNos } } },
@@ -793,6 +820,11 @@ router.get("/report", async (req, res) => {
       adjustments: enrichedAdjustments.filter((adjustment) =>
         reportAdjustmentIds.has(String(adjustment._id)),
       ),
+      sellerAdjustmentTotals: sellerAdjustmentTotals.map((item) => ({
+        saudaNo: item._id.saudaNo,
+        sellerCompany: item._id.sellerCompany,
+        adjustmentQuantity: Number(item.quantity || 0),
+      })),
       adjustedSaudas,
       adjustedSaudasTotal,
       adjustmentPage,

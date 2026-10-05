@@ -41,8 +41,44 @@ const getAdjustmentStatus = (buyingQuantity, sellingQuantity) =>
     ? "Equal"
     : "Not Equal";
 
-const getQuantityDifference = (firstQuantity, secondQuantity) =>
-  Math.abs(Number(firstQuantity || 0) - Number(secondQuantity || 0));
+const getAdjustmentGroupQuantity = (row, detail) =>
+  row.adjustmentMode === "edit"
+    ? (detail.adjustmentRecords || [])
+        .filter(
+          (record) => record.adjustmentGroupId === row.adjustmentGroupId,
+        )
+        .reduce(
+          (total, record) => total + Number(record.adjustmentQuantity || 0),
+          0,
+        )
+    : 0;
+
+const getAvailableAdjustmentQuantity = (row) => {
+  const sellerAvailable = (row.saudaDetails || []).reduce(
+    (total, detail) =>
+      total +
+      Number(detail.availableQuantity || 0) +
+      getAdjustmentGroupQuantity(row, detail),
+    0,
+  );
+  if (row.buyerQuantity === null || row.buyerQuantity === undefined) {
+    return sellerAvailable;
+  }
+  const existingGroupQuantity =
+    row.adjustmentMode === "edit"
+      ? (row.saudaDetails || []).reduce(
+          (total, detail) => total + getAdjustmentGroupQuantity(row, detail),
+          0,
+        )
+      : 0;
+  const buyerAvailable = Math.max(
+    0,
+    Number(row.buyerQuantity || 0) -
+      Number(row.buyerAdjustedQuantity || 0) +
+      existingGroupQuantity,
+  );
+  return Math.min(sellerAvailable, buyerAvailable);
+};
 
 const formatNumber = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -90,9 +126,12 @@ const FinanceReport = () => {
       buyerSaudaNo: "",
       buyerCompany: "",
       buyerQuantity: null,
+      buyerAdjustedQuantity: 0,
       sellerCompany: "",
       saudaOptions: [],
       manualAdjustment: "",
+      adjustmentMode: "new",
+      adjustmentGroupId: "",
       saudaDetails: [],
       purchaseQuantity: null,
       consignee: "",
@@ -172,8 +211,22 @@ const FinanceReport = () => {
     manualAdjustment,
     buyerSaudaNoOverride,
     buyerCompanyOverride,
+    adjustmentModeOverride,
+    adjustmentGroupIdOverride,
+    buyerQuantityOverride,
   ) => {
-    const currentRow = saudaRows.find((row) => row.id === rowId);
+    const currentRow = {
+      ...(saudaRows.find((row) => row.id === rowId) || {}),
+      ...(buyerQuantityOverride !== undefined
+        ? { buyerQuantity: buyerQuantityOverride }
+        : {}),
+      ...(adjustmentModeOverride
+        ? {
+            adjustmentMode: adjustmentModeOverride,
+            adjustmentGroupId: adjustmentGroupIdOverride || "",
+          }
+        : {}),
+    };
     const buyerSaudaNo = buyerSaudaNoOverride ?? currentRow?.buyerSaudaNo ?? "";
     const buyerCompany = buyerCompanyOverride ?? currentRow?.buyerCompany ?? "";
     const values = (Array.isArray(saudaNos) ? saudaNos : [saudaNos])
@@ -211,6 +264,21 @@ const FinanceReport = () => {
       });
       const adjustments = response.data?.adjustments || [];
       const matches = response.data?.data || [];
+      const sellerAdjustmentTotals = response.data?.sellerAdjustmentTotals || [];
+      const buyerAdjustedQuantity = buyerSaudaNo
+        ? adjustments
+            .filter(
+              (item) =>
+                String(item.buyerSaudaNo || "").toLowerCase() ===
+                  buyerSaudaNo.toLowerCase() &&
+                String(item.buyerCompany || "").toLowerCase() ===
+                  buyerCompany.toLowerCase(),
+            )
+            .reduce(
+              (total, item) => total + Number(item.adjustmentQuantity || 0),
+              0,
+            )
+        : 0;
       const details = values
         .map((saudaNo) => {
           const match = matches.find(
@@ -229,16 +297,57 @@ const FinanceReport = () => {
                 String(item.buyerCompany || "").toLowerCase() ===
                   buyerCompany.toLowerCase()),
           );
+          const adjustmentRecords = adjustments.filter(
+            (item) =>
+              String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
+              String(item.sellerCompany).toLowerCase() ===
+                company.toLowerCase() &&
+              (!buyerSaudaNo ||
+                String(item.buyerSaudaNo || "").toLowerCase() ===
+                  buyerSaudaNo.toLowerCase()) &&
+              (!buyerCompany ||
+                String(item.buyerCompany || "").toLowerCase() ===
+                  buyerCompany.toLowerCase()),
+          );
+          const selectedOption = currentRow?.saudaOptions?.find(
+            (option) =>
+              String(option.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
+              String(option.sellerCompany || "").toLowerCase() ===
+                company.toLowerCase(),
+          );
+          const sellerAdjustedQuantity =
+            Number(
+              sellerAdjustmentTotals.find(
+                (item) =>
+                  String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
+                  String(item.sellerCompany || "").toLowerCase() ===
+                    company.toLowerCase(),
+              )?.adjustmentQuantity,
+            ) || Number(selectedOption?.adjustedQuantity || 0);
           return match
             ? {
                 ...match,
                 adjustmentId: adjustment?._id || "",
                 adjustmentDate: adjustment?.adjustmentDate || "",
-                adjustmentQuantity: Number(adjustment?.adjustmentQuantity || 0),
+                adjustmentRecords,
+                adjustmentQuantity: adjustmentRecords.reduce(
+                  (total, item) =>
+                    total + Number(item.adjustmentQuantity || 0),
+                  0,
+                ),
+                previouslyAdjustedQuantity: sellerAdjustedQuantity,
+                availableQuantity: Math.max(
+                  0,
+                  Number(match.quantity || 0) - sellerAdjustedQuantity,
+                ),
                 pendingQuantity: Math.max(
                   0,
                   Number(match.quantity || 0) -
-                    Number(adjustment?.adjustmentQuantity || 0),
+                    adjustmentRecords.reduce(
+                      (total, item) =>
+                        total + Number(item.adjustmentQuantity || 0),
+                      0,
+                    ),
                 ),
               }
             : null;
@@ -255,12 +364,41 @@ const FinanceReport = () => {
       const effectiveAdjustment = currentRow?.buyerSaudaNo
         ? Number(currentRow.manualAdjustment || currentRow.buyerQuantity || 0)
         : currentAdjustment || Number(currentRow?.manualAdjustment || 0);
-      const wantedAdjustment = currentRow?.buyerSaudaNo
-        ? getAdjustmentStatus(purchaseQuantity, currentRow.buyerQuantity) ===
-          "Equal"
-          ? Number(currentRow.buyerQuantity || 0)
-          : getQuantityDifference(purchaseQuantity, currentRow.buyerQuantity)
-        : currentAdjustment || Number(currentRow?.manualAdjustment || 0);
+      const editedGroupQuantity =
+        currentRow?.adjustmentMode === "edit"
+          ? adjustments
+              .filter(
+                (item) =>
+                  item.adjustmentGroupId === currentRow.adjustmentGroupId,
+              )
+              .reduce(
+                (total, item) =>
+                  total + Number(item.adjustmentQuantity || 0),
+                0,
+              )
+          : 0;
+      const sellerAvailableQuantity = details.reduce(
+        (total, item) =>
+          total +
+          Number(item.availableQuantity || 0) +
+          getAdjustmentGroupQuantity(currentRow || {}, item),
+        0,
+      );
+      const availableForAdjustment = buyerSaudaNo
+        ? Math.min(
+            Math.max(
+              0,
+              Number(currentRow?.buyerQuantity || 0) -
+                buyerAdjustedQuantity +
+                editedGroupQuantity,
+            ),
+            sellerAvailableQuantity,
+          )
+        : sellerAvailableQuantity;
+      const wantedAdjustment =
+        currentRow?.adjustmentMode === "edit"
+          ? editedGroupQuantity
+          : availableForAdjustment;
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id !== rowId
@@ -272,15 +410,18 @@ const FinanceReport = () => {
                 saudaNo: values.join(", "),
                 saudaNos: values,
                 saudaDetails: details,
+                buyerAdjustedQuantity,
+                availableAdjustmentQuantity: availableForAdjustment,
                 saudaDate: details[0]?.poDate || null,
                 purchaseQuantity,
                 consignee: details[0]?.consignee || "",
                 adjustmentId: "",
                 adjustmentDate: details[0]?.adjustmentDate || "",
                 manualAdjustment: String(wantedAdjustment || ""),
-                pendingQuantity: row.buyerSaudaNo
-                  ? getQuantityDifference(purchaseQuantity, row.buyerQuantity)
-                  : Math.max(0, purchaseQuantity - effectiveAdjustment),
+                pendingQuantity: Math.max(
+                  0,
+                  availableForAdjustment - wantedAdjustment,
+                ),
                 status:
                   details.length === values.length
                     ? getAdjustmentStatus(
@@ -333,6 +474,7 @@ const FinanceReport = () => {
                 purchaseQuantity: null,
                 consignee: row.buyerSaudaNo ? row.consignee : "",
                 pendingQuantity: null,
+                availableAdjustmentQuantity: null,
                 status: "",
               }
             : row,
@@ -367,9 +509,12 @@ const FinanceReport = () => {
         buyerSaudaNo: "",
         buyerCompany: "",
         buyerQuantity: null,
+        buyerAdjustedQuantity: 0,
         sellerCompany: "",
         saudaOptions: [],
         manualAdjustment: "",
+        adjustmentMode: "new",
+        adjustmentGroupId: "",
         purchaseQuantity: null,
         consignee: "",
         pendingQuantity: null,
@@ -411,12 +556,8 @@ const FinanceReport = () => {
       toast.error("Check the selected seller Saudas before saving");
       return;
     }
-    if (
-      adjustmentQuantity > Number(row.purchaseQuantity) + 0.01 ||
-      (row.buyerSaudaNo &&
-        adjustmentQuantity > Number(row.buyerQuantity || 0) + 0.01)
-    ) {
-      toast.error("Adjusted quantity cannot exceed the buying quantity");
+    if (adjustmentQuantity > getAvailableAdjustmentQuantity(row) + 0.01) {
+      toast.error("Adjustment quantity cannot exceed the available quantity");
       return;
     }
     if (
@@ -430,11 +571,27 @@ const FinanceReport = () => {
     }
     try {
       const adjustmentGroupId =
-        row.adjustmentGroupId || `${Date.now()}-${row.id}`;
+        row.adjustmentMode === "edit" && row.adjustmentGroupId
+          ? row.adjustmentGroupId
+          : `${Date.now()}-${row.id}`;
       let remainingAdjustment = adjustmentQuantity;
       for (const detail of row.saudaDetails) {
         const quantity = Number(detail.quantity || 0);
-        const allocatedAdjustment = Math.min(quantity, remainingAdjustment);
+        const groupRecords = (detail.adjustmentRecords || []).filter(
+          (record) =>
+            row.adjustmentMode === "edit" &&
+            record.adjustmentGroupId === row.adjustmentGroupId,
+        );
+        const groupQuantity = groupRecords.reduce(
+          (total, record) => total + Number(record.adjustmentQuantity || 0),
+          0,
+        );
+        const sellerAvailable =
+          Number(detail.availableQuantity || 0) + groupQuantity;
+        const allocatedAdjustment = Math.min(
+          sellerAvailable,
+          remainingAdjustment,
+        );
         const payload = {
           saudaNo: detail.saudaNo,
           adjustmentGroupId,
@@ -448,18 +605,39 @@ const FinanceReport = () => {
           sellerCompany: row.sellerCompany,
           consignee: detail.consignee || row.consignee,
           purchaseQuantity: quantity,
-          pendingQuantity: Math.max(0, quantity - allocatedAdjustment),
+          pendingQuantity: Math.max(
+            0,
+            quantity -
+              (Number(detail.previouslyAdjustedQuantity || 0) -
+                groupQuantity +
+                allocatedAdjustment),
+          ),
           adjustmentQuantity: allocatedAdjustment,
         };
-        if (detail.adjustmentId && allocatedAdjustment) {
-          await api.put(
-            `/financers/adjustments/${detail.adjustmentId}`,
-            payload,
-          );
-        } else if (!detail.adjustmentId && allocatedAdjustment) {
+        if (row.adjustmentMode === "edit") {
+          if (allocatedAdjustment && groupRecords.length) {
+            await api.put(
+              `/financers/adjustments/${groupRecords[0]._id}`,
+              payload,
+            );
+            await Promise.all(
+              groupRecords
+                .slice(1)
+                .map((record) =>
+                  api.delete(`/financers/adjustments/${record._id}`),
+                ),
+            );
+          } else if (allocatedAdjustment) {
+            await api.post("/financers/adjustments", payload);
+          } else {
+            await Promise.all(
+              groupRecords.map((record) =>
+                api.delete(`/financers/adjustments/${record._id}`),
+              ),
+            );
+          }
+        } else if (allocatedAdjustment) {
           await api.post("/financers/adjustments", payload);
-        } else if (detail.adjustmentId && !allocatedAdjustment) {
-          await api.delete(`/financers/adjustments/${detail.adjustmentId}`);
         }
         remainingAdjustment = Math.max(
           0,
@@ -471,7 +649,8 @@ const FinanceReport = () => {
           item.id === row.id
             ? {
                 ...item,
-                adjustmentGroupId,
+                adjustmentMode: "new",
+                adjustmentGroupId: "",
                 adjustmentDate: new Date().toISOString(),
                 status: getAdjustmentStatus(
                   item.purchaseQuantity,
@@ -490,6 +669,7 @@ const FinanceReport = () => {
         row.manualAdjustment,
         row.buyerSaudaNo,
         row.buyerCompany,
+        "new",
       );
       toast.success("Adjustment saved");
       await loadReport();
@@ -500,7 +680,13 @@ const FinanceReport = () => {
 
   const deleteAdjustment = async (row) => {
     const adjustmentIds = (row.saudaDetails || [])
-      .map((detail) => detail.adjustmentId)
+      .flatMap((detail) => detail.adjustmentRecords || [])
+      .filter(
+        (record) =>
+          row.adjustmentMode === "edit" &&
+          record.adjustmentGroupId === row.adjustmentGroupId,
+      )
+      .map((record) => record._id)
       .filter(Boolean);
     if (!adjustmentIds.length) {
       toast.error("No saved adjustments found for this Sauda selection");
@@ -510,6 +696,13 @@ const FinanceReport = () => {
       await Promise.all(
         adjustmentIds.map((id) => api.delete(`/financers/adjustments/${id}`)),
       );
+      setSaudaRows((rows) =>
+        rows.map((item) =>
+          item.id === row.id
+            ? { ...item, adjustmentMode: "new", adjustmentGroupId: "" }
+            : item,
+        ),
+      );
       await lookupSauda(
         row.id,
         row.saudaNos,
@@ -517,6 +710,7 @@ const FinanceReport = () => {
         row.manualAdjustment,
         row.buyerSaudaNo,
         row.buyerCompany,
+        "new",
       );
       toast.success("Adjustment deleted");
       await loadReport();
@@ -553,13 +747,14 @@ const FinanceReport = () => {
         buyerQuantity: adjustment.buyerSaudaNo
           ? Number(adjustment.buyerQuantity || 0)
           : null,
+        buyerAdjustedQuantity: 0,
         sellerCompany,
         saudaOptions: rows[0]?.saudaOptions || [],
         manualAdjustment: String(
-          adjustment.buyerSaudaNo
-            ? adjustment.buyerQuantity || 0
-            : adjustment.adjustmentQuantity || 0,
+          adjustment.adjustmentQuantity || 0,
         ),
+        adjustmentMode: "edit",
+        adjustmentGroupId: adjustment.adjustmentGroupId || "",
         purchaseQuantity: Number(adjustment.purchaseQuantity || 0),
         consignee: adjustment.consignee || "",
         pendingQuantity: Math.abs(
@@ -582,6 +777,11 @@ const FinanceReport = () => {
         : adjustment.adjustmentQuantity,
       adjustment.buyerSaudaNo || "",
       adjustment.buyerCompany || "",
+      "edit",
+      adjustment.adjustmentGroupId || "",
+      adjustment.buyerSaudaNo
+        ? Number(adjustment.buyerQuantity || 0)
+        : null,
     );
   };
 
@@ -594,9 +794,12 @@ const FinanceReport = () => {
       buyerSaudaNo: order.saudaNo || "",
       buyerCompany: order.buyerCompany || "",
       buyerQuantity: Number(order.quantity || 0),
+      buyerAdjustedQuantity: 0,
       sellerCompany: "",
       saudaOptions: [],
       manualAdjustment: String(order.quantity || ""),
+      adjustmentMode: "new",
+      adjustmentGroupId: "",
       purchaseQuantity: null,
       consignee: order.consignee || "",
       pendingQuantity: null,
@@ -629,12 +832,16 @@ const FinanceReport = () => {
               buyerSaudaNo: "",
               buyerCompany: "",
               buyerQuantity: null,
+              buyerAdjustedQuantity: 0,
               sellerCompany: "",
               saudaOptions: [],
               manualAdjustment: "",
+              adjustmentMode: "new",
+              adjustmentGroupId: "",
               purchaseQuantity: null,
               consignee: "",
               pendingQuantity: null,
+              availableAdjustmentQuantity: null,
               saudaDetails: [],
               status: "",
             },
@@ -887,6 +1094,7 @@ const FinanceReport = () => {
                     saudaDetails: [],
                     purchaseQuantity: null,
                     pendingQuantity: null,
+                    availableAdjustmentQuantity: null,
                     manualAdjustment: "",
                     status: "",
                   }
@@ -927,6 +1135,7 @@ const FinanceReport = () => {
                     purchaseQuantity: null,
                     consignee: item.buyerSaudaNo ? item.consignee : "",
                     pendingQuantity: null,
+                    availableAdjustmentQuantity: null,
                     saudaDetails: [],
                     status: "",
                   }
@@ -976,6 +1185,7 @@ const FinanceReport = () => {
       <input
         type="number"
         min="0"
+        max={getAvailableAdjustmentQuantity(row)}
         step="0.01"
         value={row.manualAdjustment}
         onChange={(event) =>
@@ -994,15 +1204,11 @@ const FinanceReport = () => {
                       pendingQuantity:
                         item.purchaseQuantity === null
                           ? null
-                          : item.buyerSaudaNo
-                            ? getQuantityDifference(
-                                purchaseQuantity,
-                                item.buyerQuantity,
-                              )
-                            : Math.max(
-                                0,
-                                purchaseQuantity - manualAdjustment,
-                              ),
+                          : Math.max(
+                              0,
+                              getAvailableAdjustmentQuantity(item) -
+                                manualAdjustment,
+                            ),
                       status:
                         item.purchaseQuantity === null
                           ? ""
@@ -1049,16 +1255,20 @@ const FinanceReport = () => {
         }
         className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {row.saudaDetails?.some((detail) => detail.adjustmentId) ? (
+        {row.adjustmentMode === "edit" ? (
           <FaEdit size={12} />
         ) : (
           <FaSave size={12} />
         )}
-        {row.saudaDetails?.some((detail) => detail.adjustmentId)
+        {row.adjustmentMode === "edit"
           ? "Update adjustment"
-          : "Save adjustment"}
+          : row.saudaDetails?.some(
+                (detail) => detail.previouslyAdjustedQuantity > 0,
+              )
+            ? "Save another adjustment"
+            : "Save adjustment"}
       </button>
-      {row.saudaDetails?.some((detail) => detail.adjustmentId) && (
+      {row.adjustmentMode === "edit" && (
         <button
           type="button"
           onClick={() => deleteAdjustment(row)}
@@ -1152,14 +1362,35 @@ const FinanceReport = () => {
                   const row = saudaRows[index];
                   const buyerKey = `${String(row.buyerSaudaNo || "").toLowerCase()}|${String(row.buyerCompany || "").toLowerCase()}`;
                   const previouslyAdjusted =
-                    adjustedQuantityByBuyerSauda.get(buyerKey) || 0;
+                    Number(row.buyerAdjustedQuantity) ||
+                    adjustedQuantityByBuyerSauda.get(buyerKey) ||
+                    0;
                   const availableToAdjust =
                     row.buyerQuantity === null
                       ? null
                       : Math.max(
                           0,
-                          Number(row.buyerQuantity || 0) - previouslyAdjusted,
+                          Number(row.buyerQuantity || 0) -
+                            previouslyAdjusted +
+                            (row.adjustmentMode === "edit"
+                              ? (row.saudaDetails || []).reduce(
+                                  (total, detail) =>
+                                    total +
+                                    getAdjustmentGroupQuantity(row, detail),
+                                  0,
+                                )
+                              : 0),
                         );
+                  const sellerAvailableToAdjust =
+                    row.saudaDetails?.length
+                      ? (row.saudaDetails || []).reduce(
+                          (total, detail) =>
+                            total +
+                            Number(detail.availableQuantity || 0) +
+                            getAdjustmentGroupQuantity(row, detail),
+                          0,
+                        )
+                      : null;
 
                   return (
                     <section
@@ -1242,6 +1473,16 @@ const FinanceReport = () => {
                             </div>
                             <div className="mt-1 text-sm font-bold text-slate-800">
                               {fields[5]}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-emerald-50/60 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-emerald-700">
+                              Seller Quantity Available
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-emerald-800">
+                              {sellerAvailableToAdjust === null
+                                ? "-"
+                                : `${formatNumber(sellerAvailableToAdjust)} Tons`}
                             </div>
                           </div>
                           <label className="block text-xs font-semibold text-slate-600">
