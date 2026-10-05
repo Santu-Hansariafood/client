@@ -29,7 +29,6 @@ import Buttons from "../../../common/Buttons/Buttons";
 const AdminPageShell = lazy(
   () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
-const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
@@ -41,6 +40,9 @@ const getAdjustmentStatus = (buyingQuantity, sellingQuantity) =>
   Math.abs(Number(buyingQuantity || 0) - Number(sellingQuantity || 0)) < 0.01
     ? "Equal"
     : "Not Equal";
+
+const getQuantityDifference = (firstQuantity, secondQuantity) =>
+  Math.abs(Number(firstQuantity || 0) - Number(secondQuantity || 0));
 
 const formatNumber = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -253,6 +255,12 @@ const FinanceReport = () => {
       const effectiveAdjustment = currentRow?.buyerSaudaNo
         ? Number(currentRow.manualAdjustment || currentRow.buyerQuantity || 0)
         : currentAdjustment || Number(currentRow?.manualAdjustment || 0);
+      const wantedAdjustment = currentRow?.buyerSaudaNo
+        ? getAdjustmentStatus(purchaseQuantity, currentRow.buyerQuantity) ===
+          "Equal"
+          ? Number(currentRow.buyerQuantity || 0)
+          : getQuantityDifference(purchaseQuantity, currentRow.buyerQuantity)
+        : currentAdjustment || Number(currentRow?.manualAdjustment || 0);
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id !== rowId
@@ -269,15 +277,10 @@ const FinanceReport = () => {
                 consignee: details[0]?.consignee || "",
                 adjustmentId: "",
                 adjustmentDate: details[0]?.adjustmentDate || "",
-                manualAdjustment: String(
-                  row.buyerSaudaNo
-                    ? row.manualAdjustment || row.buyerQuantity || ""
-                    : currentAdjustment || row.manualAdjustment || "",
-                ),
-                pendingQuantity: Math.max(
-                  0,
-                  purchaseQuantity - effectiveAdjustment,
-                ),
+                manualAdjustment: String(wantedAdjustment || ""),
+                pendingQuantity: row.buyerSaudaNo
+                  ? getQuantityDifference(purchaseQuantity, row.buyerQuantity)
+                  : Math.max(0, purchaseQuantity - effectiveAdjustment),
                 status:
                   details.length === values.length
                     ? getAdjustmentStatus(
@@ -991,7 +994,15 @@ const FinanceReport = () => {
                       pendingQuantity:
                         item.purchaseQuantity === null
                           ? null
-                          : Math.max(0, purchaseQuantity - manualAdjustment),
+                          : item.buyerSaudaNo
+                            ? getQuantityDifference(
+                                purchaseQuantity,
+                                item.buyerQuantity,
+                              )
+                            : Math.max(
+                                0,
+                                purchaseQuantity - manualAdjustment,
+                              ),
                       status:
                         item.purchaseQuantity === null
                           ? ""
@@ -1007,8 +1018,8 @@ const FinanceReport = () => {
             ),
           )
         }
-        aria-label={`Wanted adjusted quantity for ${row.buyerSaudaNo || row.saudaNo || "Sauda"}`}
-        placeholder="Wanted adjusted quantity (Tons)"
+        aria-label={`Quantity to adjust for ${row.buyerSaudaNo || row.saudaNo || "Sauda"}`}
+        placeholder="Enter quantity (Tons)"
         className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
     </div>,
@@ -1136,23 +1147,129 @@ const FinanceReport = () => {
                   icon={<FaPlus />}
                 />
               </div>
-              <div className="overflow-x-auto">
-                <Tables
-                  headers={[
-                    "Seller Sauda No(s)",
-                    "Seller Company",
-                    "Buyer Sauda No",
-                    "Buyer Company",
-                    "Buyer Order Quantity",
-                    "Seller Order Quantity",
-                    "Adjusted Quantity",
-                    "Wanted Adjusted Quantity",
-                    "Pending Quantity",
-                    "Adjustment Status",
-                    "Actions",
-                  ]}
-                  rows={saudaLookupRows}
-                />
+              <div className="space-y-4">
+                {saudaLookupRows.map((fields, index) => {
+                  const row = saudaRows[index];
+                  const buyerKey = `${String(row.buyerSaudaNo || "").toLowerCase()}|${String(row.buyerCompany || "").toLowerCase()}`;
+                  const previouslyAdjusted =
+                    adjustedQuantityByBuyerSauda.get(buyerKey) || 0;
+                  const availableToAdjust =
+                    row.buyerQuantity === null
+                      ? null
+                      : Math.max(
+                          0,
+                          Number(row.buyerQuantity || 0) - previouslyAdjusted,
+                        );
+
+                  return (
+                    <section
+                      key={`adjustment-form-${row.id}`}
+                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+                    >
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-slate-800">
+                          Sauda adjustment
+                        </h3>
+                        <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                          Adjust as: Buying
+                        </span>
+                      </div>
+
+                      <div className="mb-5">
+                        <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                          1. Buying details
+                        </h4>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Buying Sauda No
+                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800">
+                              {fields[2]}
+                            </div>
+                          </label>
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Buying Company
+                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800">
+                              {fields[3]}
+                            </div>
+                          </label>
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Buying Sauda Quantity
+                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800">
+                              {fields[4]}
+                            </div>
+                          </label>
+                        </div>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg border border-slate-200 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-slate-500">
+                              Past Adjustments
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-slate-800">
+                              {row.buyerSaudaNo
+                                ? `${formatNumber(previouslyAdjusted)} Tons`
+                                : "-"}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-emerald-700">
+                              Available to Adjust
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-emerald-800">
+                              {availableToAdjust === null
+                                ? "-"
+                                : `${formatNumber(availableToAdjust)} Tons`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                          2. Select seller Sauda and adjust
+                        </h4>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Seller Company
+                            <div className="mt-1">{fields[1]}</div>
+                          </label>
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Adjust Sauda No(s)
+                            <div className="mt-1">{fields[0]}</div>
+                          </label>
+                          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-slate-500">
+                              Selected Seller Quantity
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-slate-800">
+                              {fields[5]}
+                            </div>
+                          </div>
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Quantity to Adjust (Tons)
+                            <div className="mt-1">{fields[7]}</div>
+                          </label>
+                          <div className="rounded-lg bg-amber-50/60 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-amber-700">
+                              Pending Quantity
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-amber-800">
+                              {fields[8]}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+                            <div className="text-xs font-semibold text-slate-500">
+                              Status
+                            </div>
+                            <div className="mt-1 text-sm">{fields[9]}</div>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          {fields[10]}
+                        </div>
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
               <AdjustedSaudasSection
                 rows={paginatedAdjustmentRows}
