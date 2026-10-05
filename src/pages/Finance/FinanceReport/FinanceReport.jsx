@@ -41,6 +41,9 @@ const getAdjustmentStatus = (buyingQuantity, sellingQuantity) =>
     ? "Equal"
     : "Not Equal";
 
+const getQuantityDifference = (firstQuantity, secondQuantity) =>
+  Math.abs(Number(firstQuantity || 0) - Number(secondQuantity || 0));
+
 const getAdjustmentGroupQuantity = (row, detail) =>
   row.adjustmentMode === "edit"
     ? (detail.adjustmentRecords || [])
@@ -395,10 +398,18 @@ const FinanceReport = () => {
             sellerAvailableQuantity,
           )
         : sellerAvailableQuantity;
+      const quantityDifference = getQuantityDifference(
+        currentRow?.buyerQuantity,
+        purchaseQuantity,
+      );
       const wantedAdjustment =
         currentRow?.adjustmentMode === "edit"
           ? editedGroupQuantity
-          : availableForAdjustment;
+          : currentRow?.buyerSaudaNo &&
+              getAdjustmentStatus(purchaseQuantity, currentRow.buyerQuantity) !==
+                "Equal"
+            ? Math.min(quantityDifference, availableForAdjustment)
+            : availableForAdjustment;
       setSaudaRows((rows) =>
         rows.map((row) =>
           row.id !== rowId
@@ -558,15 +569,6 @@ const FinanceReport = () => {
     }
     if (adjustmentQuantity > getAvailableAdjustmentQuantity(row) + 0.01) {
       toast.error("Adjustment quantity cannot exceed the available quantity");
-      return;
-    }
-    if (
-      row.buyerSaudaNo &&
-      getAdjustmentStatus(row.purchaseQuantity, row.buyerQuantity) !== "Equal"
-    ) {
-      toast.error(
-        "Add seller Saudas until their combined quantity matches the buyer Sauda",
-      );
       return;
     }
     try {
@@ -1228,6 +1230,19 @@ const FinanceReport = () => {
         placeholder="Enter quantity (Tons)"
         className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
+      {row.buyerSaudaNo &&
+        row.purchaseQuantity !== null &&
+        row.status === "Not Equal" && (
+          <p className="mt-1 text-xs font-semibold text-amber-700">
+            {Number(row.buyerQuantity) > Number(row.purchaseQuantity)
+              ? "+"
+              : "-"}
+            {formatNumber(
+              getQuantityDifference(row.buyerQuantity, row.purchaseQuantity),
+            )}{" "}
+            Tons to adjust
+          </p>
+        )}
     </div>,
     row.pendingQuantity === null
       ? "-"
@@ -1242,7 +1257,15 @@ const FinanceReport = () => {
             : "text-slate-500"
       }
     >
-      {row.status || "Enter Sauda No"}
+      {row.status === "Not Equal" && row.buyerSaudaNo
+        ? `Not Equal - ${
+            Number(row.buyerQuantity) > Number(row.purchaseQuantity)
+              ? "+"
+              : "-"
+          }${formatNumber(
+            getQuantityDifference(row.buyerQuantity, row.purchaseQuantity),
+          )} Tons`
+        : row.status || "Enter Sauda No"}
     </span>,
     <div key={`actions-${row.id}`} className="flex min-w-[150px] flex-col gap-2">
       <button
@@ -1251,7 +1274,7 @@ const FinanceReport = () => {
         disabled={
           row.pendingQuantity === null ||
           !row.manualAdjustment ||
-          (row.buyerSaudaNo && row.status !== "Equal")
+          Number(row.manualAdjustment) > getAvailableAdjustmentQuantity(row)
         }
         className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
       >

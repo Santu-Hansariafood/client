@@ -24,10 +24,8 @@ const AUTH_EXEMPT_PATHS = [
 const RETRY_DELAYS = [400, 800];
 const MAX_RETRIES = 2;
 
-let refreshPromise = null;
-
 const clearStoredAuth = () => {
-  ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => {
+  ["isAuthenticated", "mobile", "userRole", "token", "refreshToken", "user", "loginDate"].forEach((key) => {
     try {
       sessionStorage.removeItem(key);
     } catch {
@@ -60,18 +58,6 @@ const shouldHandleUnauthorized = (error) => {
 
   const requestUrl = String(error.config?.url || "");
   return !AUTH_EXEMPT_PATHS.some((path) => requestUrl.includes(path));
-};
-
-const refreshSession = () => {
-  if (!refreshPromise) {
-    refreshPromise = instance
-      .post("/auth/refresh-token", null, { skipAuthRefresh: true })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
 };
 
 const createPendingRequest = () => {
@@ -262,27 +248,7 @@ instance.interceptors.response.use(
       }
     }
 
-    if (shouldHandleUnauthorized(error) && !error.config?.skipAuthRefresh) {
-      const requestConfig = error.config;
-
-      if (!requestConfig?._authRetry) {
-        requestConfig._authRetry = true;
-        return refreshSession()
-          .then(() => instance(requestConfig))
-          .catch((refreshError) => {
-            if (
-              refreshError.response?.status === 401 ||
-              refreshError.response?.status === 403
-            ) {
-              clearStoredAuth();
-              if (typeof window !== "undefined") {
-                window.location.href = "/login";
-              }
-            }
-            return Promise.reject(refreshError);
-          });
-      }
-
+    if (shouldHandleUnauthorized(error)) {
       clearStoredAuth();
       if (typeof window !== "undefined") {
         window.location.href = "/login";

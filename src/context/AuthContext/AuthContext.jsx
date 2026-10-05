@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../../utils/apiClient/apiClient";
 
 const getPrimaryStorage = () => {
   try {
@@ -87,17 +86,19 @@ const removePersistedValue = (key) => {
   }
 };
 
-const isTokenExpired = (token) => {
-  if (!token) return true;
+const getTokenExpiry = (token) => {
+  if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    if (payload.exp && Date.now() >= payload.exp * 1000) {
-      return true;
-    }
-    return false;
+    return Number.isFinite(payload.exp) ? payload.exp * 1000 : null;
   } catch {
-    return true;
+    return null;
   }
+};
+
+const isTokenExpired = (token) => {
+  const expiresAt = getTokenExpiry(token);
+  return expiresAt === null || Date.now() >= expiresAt;
 };
 
 const AuthContext = createContext();
@@ -217,56 +218,48 @@ export const AuthProvider = ({ children }) => {
     ].forEach((key) => removePersistedValue(key));
   }, []);
 
-  const validateSession = useCallback(async () => {
-    try {
-      const persistedAuth = readPersistedValue("isAuthenticated", "false");
-      if (persistedAuth !== "true") {
-        setSessionLoaded(true);
-        return;
-      }
-
-      const storedToken = readPersistedValue("token", "");
-      const storedRefresh = readPersistedValue("refreshToken", "");
-
-      if (storedToken && !isTokenExpired(storedToken)) {
-        setSessionLoaded(true);
-        return;
-      }
-
-      if (storedRefresh && !isTokenExpired(storedRefresh)) {
-        try {
-          const response = await api.post("/auth/refresh-token", null, {
-            skipAuthRefresh: true,
-          });
-          const data = response?.data || response;
-          if (data?.token) {
-            setToken(data.token);
-            writePersistedValue("token", data.token);
-            if (data?.role) {
-              setUserRole(data.role);
-              writePersistedValue("userRole", data.role);
-            }
-            if (data?.mobile) {
-              setMobile(data.mobile);
-              writePersistedValue("mobile", data.mobile);
-            }
-            setIsAuthenticated(true);
-            writePersistedValue("isAuthenticated", "true");
-          }
-        } catch (refreshErr) {
-          // refresh failed; session interceptor will redirect if needed
-        }
-      }
-    } catch (err) {
-      // ignore validate errors; fall through to sessionLoaded below
-    } finally {
-      setSessionLoaded(true);
+  const validateSession = useCallback(() => {
+    const persistedAuth = readPersistedValue("isAuthenticated", "false");
+    if (
+      persistedAuth === "true" &&
+      isTokenExpired(readPersistedValue("token", ""))
+    ) {
+      logout();
     }
-  }, []);
+    setSessionLoaded(true);
+  }, [logout]);
 
   useEffect(() => {
     validateSession();
   }, [validateSession]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const storedToken = token || readPersistedValue("token", "");
+    const expiresAt = getTokenExpiry(storedToken);
+    const expireSession = () => logout();
+    if (expiresAt === null || Date.now() >= expiresAt) {
+      expireSession();
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(
+      expireSession,
+      expiresAt - Date.now(),
+    );
+    const checkExpiry = () => {
+      if (Date.now() >= expiresAt) expireSession();
+    };
+    window.addEventListener("focus", checkExpiry);
+    document.addEventListener("visibilitychange", checkExpiry);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("focus", checkExpiry);
+      document.removeEventListener("visibilitychange", checkExpiry);
+    };
+  }, [isAuthenticated, token, logout]);
 
   const synchronizeAuthState = useCallback((event) => {
     if (event.key === "isAuthenticated") {

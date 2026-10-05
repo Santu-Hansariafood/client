@@ -49,7 +49,7 @@ axios.interceptors.request.use((config) => {
 });
 
 const handleLogout = () => {
-  ["isAuthenticated", "mobile", "userRole", "token", "user", "loginDate"].forEach((key) => {
+  ["isAuthenticated", "mobile", "userRole", "token", "refreshToken", "user", "loginDate"].forEach((key) => {
     try {
       sessionStorage.removeItem(key);
     } catch {
@@ -74,20 +74,6 @@ const authExemptPaths = [
   "/auth/logout",
 ];
 
-let refreshPromise = null;
-
-const refreshSession = () => {
-  if (!refreshPromise) {
-    refreshPromise = axios
-      .post("auth/refresh-token", null, { skipAuthRefresh: true })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-};
-
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -97,16 +83,6 @@ axios.interceptors.response.use(
     const isAuthRequest = authExemptPaths.some((path) => requestUrl.includes(path));
 
     if (error.response?.status === 401 && isAuthenticated && !isAuthRequest && !requestConfig?.skipAuthRefresh) {
-      if (!requestConfig?._authRetry) {
-        requestConfig._authRetry = true;
-        return refreshSession()
-          .then(() => axios(requestConfig))
-          .catch((refreshError) => {
-            handleLogout();
-            return Promise.reject(refreshError);
-          });
-      }
-
       handleLogout();
     }
     return Promise.reject(error);
