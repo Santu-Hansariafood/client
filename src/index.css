@@ -27,6 +27,89 @@
   }
 }
 
+@layer components {
+  .admin-chart-card {
+    --scroll-shift: 0px;
+    --scroll-tilt: 0deg;
+    --scroll-turn: 0deg;
+    --scroll-scale: 1;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgb(203 213 225 / 0.8);
+    border-radius: 1.25rem;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 58%, #ecfdf5 100%);
+    box-shadow:
+      0 4px 8px rgb(15 23 42 / 0.04),
+      0 18px 36px -22px rgb(15 23 42 / 0.3),
+      inset 0 1px 0 rgb(255 255 255 / 0.95);
+    transform:
+      perspective(1400px)
+      translate3d(0, var(--scroll-shift), 0)
+      rotateX(var(--scroll-tilt))
+      rotateY(var(--scroll-turn))
+      scale(var(--scroll-scale));
+    transform-style: preserve-3d;
+    transition:
+      transform 140ms cubic-bezier(0.2, 0.75, 0.25, 1),
+      box-shadow 250ms ease,
+      border-color 250ms ease;
+    will-change: transform;
+  }
+
+  .admin-chart-card::before {
+    position: absolute;
+    z-index: 1;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #34d399, #60a5fa, transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  .admin-chart-card:hover {
+    border-color: rgb(110 231 183 / 0.8);
+    box-shadow:
+      0 8px 16px rgb(15 23 42 / 0.06),
+      0 28px 54px -24px rgb(5 150 105 / 0.32),
+      inset 0 1px 0 rgb(255 255 255 / 0.95);
+  }
+
+  .admin-chart-card__glow {
+    position: absolute;
+    top: -7rem;
+    right: -4rem;
+    width: 17rem;
+    height: 17rem;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgb(52 211 153 / 0.12), transparent 68%);
+    filter: blur(8px);
+    pointer-events: none;
+    transform: translateZ(8px);
+  }
+
+  .admin-chart-card__content {
+    position: relative;
+    z-index: 2;
+    transform-style: preserve-3d;
+  }
+
+  .admin-chart-card__title {
+    position: relative;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgb(226 232 240 / 0.8);
+    padding: 0.25rem 0 0.75rem;
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transform: translateZ(28px);
+  }
+
+  .admin-chart-card__plot {
+    position: relative;
+    transform: translateZ(12px);
+  }
+}
+
 @layer utilities {
   @keyframes pageTitleIn {
     0% {
@@ -242,6 +325,12 @@
     .animate-shake {
       animation: none !important;
       transition: none !important;
+    }
+
+    .admin-chart-card {
+      transform: none !important;
+      transition: none !important;
+      will-change: auto;
     }
   }
 }

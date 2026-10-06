@@ -35,6 +35,44 @@ const AdminAnalysisSection = () => {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const reportRef = useRef(null);
+  const chartStackRef = useRef(null);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return undefined;
+
+    let frameId;
+
+    const updateParallax = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const viewportCenter = window.innerHeight / 2;
+        chartStackRef.current
+          ?.querySelectorAll("[data-parallax-chart]")
+          .forEach((chart, index) => {
+            const chartCenter = chart.getBoundingClientRect().top + chart.offsetHeight / 2;
+            const progress = Math.max(
+              -1,
+              Math.min(1, (chartCenter - viewportCenter) / viewportCenter),
+            );
+            chart.style.setProperty("--scroll-shift", `${progress * -28}px`);
+            chart.style.setProperty("--scroll-tilt", `${progress * -5}deg`);
+            chart.style.setProperty("--scroll-turn", `${(index % 2 ? 1 : -1) * progress * 1.5}deg`);
+            chart.style.setProperty("--scroll-scale", `${1 - Math.abs(progress) * 0.012}`);
+          });
+      });
+    };
+
+    updateParallax();
+    window.addEventListener("scroll", updateParallax, { passive: true });
+    window.addEventListener("resize", updateParallax);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener("scroll", updateParallax);
+      window.removeEventListener("resize", updateParallax);
+    };
+  }, []);
 
   const loadCompanies = async () => {
     try {
@@ -151,7 +189,7 @@ const AdminAnalysisSection = () => {
               {[['Saudas', report?.summary?.saudas], ['Sauda value', money(report?.summary?.value)], ['Quantity', tons(report?.summary?.quantity)], ['Loaded weight', tons(report?.summary?.loadedWeight)], ['Unloading', tons(report?.summary?.unloadingWeight)], ['Rejected lorries', report?.summary?.rejectedLorries], ['Total works', report?.summary?.totalWorks]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</p><p className="mt-2 text-xl font-black text-slate-900">{value || 0}</p></div>)}
             </div>
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><FaBrain className="mt-0.5 shrink-0 text-emerald-600" /><span>{report?.insights}</span></div>
-            <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div ref={chartStackRef} className="mt-6 grid grid-cols-1 gap-6 sm:gap-8">
               <Chart title="Monthly sauda value & quantity"><ResponsiveContainer width="100%" height={280}><LineChart data={monthly}><CartesianGrid stroke="#cbd5e1" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#64748b" /><YAxis yAxisId="left" stroke="#64748b" /><YAxis yAxisId="right" orientation="right" stroke="#64748b" /><Tooltip formatter={chartValue} /><Legend /><Line yAxisId="left" type="monotone" dataKey="value" name="Value" stroke="#059669" strokeWidth={3} /><Line yAxisId="right" type="monotone" dataKey="quantity" name="Quantity" stroke="#2563eb" strokeWidth={3} /></LineChart></ResponsiveContainer></Chart>
               <Chart title="Commodity value distribution"><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={report?.commodityStats || []} dataKey="value" nameKey="commodity" cx="50%" cy="50%" outerRadius={95} label={(item) => item.commodity}>{(report?.commodityStats || []).map((item, index) => <Cell key={item.commodity} fill={COLORS[index % COLORS.length]} />)}</Pie><Tooltip formatter={(value) => money(value)} /><Legend /></PieChart></ResponsiveContainer></Chart>
               <Chart title="Loading, unloading & payments by month"><ResponsiveContainer width="100%" height={280}><BarChart data={monthly}><CartesianGrid stroke="#cbd5e1" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#64748b" /><YAxis stroke="#64748b" /><Tooltip /><Legend /><Bar dataKey="loadedWeight" name="Loading (tons)" fill="#f59e0b" radius={[5, 5, 0, 0]} /><Bar dataKey="unloadingWeight" name="Unloading (tons)" fill="#0f766e" radius={[5, 5, 0, 0]} /><Bar dataKey="payments" name="Payments" fill="#7c3aed" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></Chart>
@@ -164,6 +202,14 @@ const AdminAnalysisSection = () => {
   );
 };
 
-const Chart = ({ title, children }) => <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h3 className="mb-2 text-sm font-bold text-slate-800">{title}</h3>{children}</div>;
+const Chart = ({ title, children }) => (
+  <article data-parallax-chart className="admin-chart-card">
+    <div className="admin-chart-card__glow" aria-hidden="true" />
+    <div className="admin-chart-card__content">
+      <h3 className="admin-chart-card__title">{title}</h3>
+      <div className="admin-chart-card__plot">{children}</div>
+    </div>
+  </article>
+);
 
 export default AdminAnalysisSection;
