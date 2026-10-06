@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, memo } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, memo } from "react";
 import {
   FaChartLine,
   FaChartBar,
@@ -65,6 +65,7 @@ const CHART_CARDS = [
     label: "Commodity",
     accent: "from-emerald-500 to-cyan-600",
     ring: "ring-emerald-100/80",
+    parallax: true,
     Component: CommodityPieChart,
     props: () => ({ apiUrl: "/loading-entries" }),
   },
@@ -73,6 +74,7 @@ const CHART_CARDS = [
     label: "Sauda",
     accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
+    parallax: true,
     Component: SaudaChart,
     props: (chartType) => ({ apiUrl: "/self-order", chartType }),
   },
@@ -81,6 +83,7 @@ const CHART_CARDS = [
     label: "Sauda mix",
     accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
+    parallax: true,
     Component: SaudaChart,
     props: () => ({ apiUrl: "/self-order", chartType: "pie" }),
   },
@@ -89,6 +92,7 @@ const CHART_CARDS = [
     label: "Bids",
     accent: "from-green-500 to-orange-600",
     ring: "ring-green-100/80",
+    parallax: true,
     Component: BidChart,
     props: (chartType) => ({ apiUrl: "/bids", chartType }),
   },
@@ -97,6 +101,7 @@ const CHART_CARDS = [
     label: "Bid mix",
     accent: "from-green-500 to-orange-600",
     ring: "ring-green-100/80",
+    parallax: true,
     Component: BidChart,
     props: () => ({ apiUrl: "/bids", chartType: "pie" }),
   },
@@ -105,6 +110,7 @@ const CHART_CARDS = [
     label: "Agents",
     accent: "from-indigo-500 to-violet-600",
     ring: "ring-indigo-100/80",
+    parallax: true,
     Component: AgentSaudaChart,
     props: (chartType, agentSaudas) => ({ data: agentSaudas, chartType }),
   },
@@ -113,13 +119,15 @@ const CHART_CARDS = [
     label: "Agent mix",
     accent: "from-indigo-500 to-violet-600",
     ring: "ring-indigo-100/80",
+    parallax: true,
     Component: AgentSaudaChart,
     props: (_, agentSaudas) => ({ data: agentSaudas, chartType: "pie" }),
   },
 ];
 
-const ChartCard = memo(({ featured, label, accent, ring, children }) => (
+const ChartCard = memo(({ featured, label, accent, ring, parallax, children }) => (
   <article
+    data-market-parallax={parallax ? "" : undefined}
     className={[
       "relative min-w-0 flex flex-col",
       "rounded-2xl sm:rounded-[1.75rem] lg:rounded-[2rem]",
@@ -130,6 +138,7 @@ const ChartCard = memo(({ featured, label, accent, ring, children }) => (
       "hover:shadow-[0_16px_48px_rgba(79,70,229,0.12)] hover:border-indigo-200/60",
       "group overflow-hidden",
       featured ? "lg:col-span-2" : "",
+      parallax ? "market-parallax-card" : "",
       ring,
       "ring-1",
     ].join(" ")}
@@ -162,6 +171,46 @@ ChartCard.displayName = "ChartCard";
 const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseWorks = [] }) => {
   const [chartType, setChartType] = useState("line");
   const [viewMode, setViewMode] = useState("grid");
+  const chartGridRef = useRef(null);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return undefined;
+
+    let frameId;
+    const updateParallax = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const viewportCenter = window.innerHeight / 2;
+        chartGridRef.current
+          ?.querySelectorAll("[data-market-parallax]")
+          .forEach((card) => {
+            const rect = card.getBoundingClientRect();
+            const cardCenter = rect.top + rect.height / 2;
+            const progress = Math.max(
+              -1,
+              Math.min(1, (cardCenter - viewportCenter) / viewportCenter),
+            );
+            card.style.setProperty("--market-parallax-y", `${progress * -12}px`);
+            card.style.setProperty("--market-parallax-tilt", `${progress * -2}deg`);
+            card.style.setProperty(
+              "--market-parallax-scale",
+              `${1 - Math.abs(progress) * 0.006}`,
+            );
+          });
+      });
+    };
+
+    updateParallax();
+    window.addEventListener("scroll", updateParallax, { passive: true });
+    window.addEventListener("resize", updateParallax);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener("scroll", updateParallax);
+      window.removeEventListener("resize", updateParallax);
+    };
+  }, [viewMode]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -265,6 +314,7 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
 
         {/* Chart grid */}
         <div
+          ref={chartGridRef}
           className={[
             "grid w-full min-w-0 transition-all duration-500",
             viewMode === "grid"
@@ -273,13 +323,14 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
           ].join(" ")}
         >
           {CHART_CARDS.map(
-            ({ id, featured, label, accent, ring, Component, props }) => (
+            ({ id, featured, label, accent, ring, parallax, Component, props }) => (
               <ChartCard
                 key={id}
                 featured={featured && viewMode === "grid"}
                 label={label}
                 accent={accent}
                 ring={ring}
+                parallax={parallax}
               >
                 <Component {...props(chartType, agentSaudas, dateWiseWorks, employeeWiseWorks)} />
               </ChartCard>

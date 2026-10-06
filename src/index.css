@@ -28,6 +28,30 @@
 }
 
 @layer components {
+  .dashboard-chart-stage {
+    isolation: isolate;
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+
+  .dashboard-chart-stage::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    border-radius: inherit;
+    background-image:
+      radial-gradient(ellipse at 50% 100%, rgb(148 163 184 / 0.13), transparent 68%),
+      linear-gradient(rgb(148 163 184 / 0.08) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 32px;
+    content: "";
+    pointer-events: none;
+  }
+
+  .dashboard-chart-stage > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .admin-chart-card {
     --scroll-shift: 0px;
     --scroll-tilt: 0deg;
@@ -111,6 +135,23 @@
 }
 
 @layer utilities {
+  .market-parallax-card {
+    --market-parallax-y: 0px;
+    --market-parallax-tilt: 0deg;
+    --market-parallax-scale: 1;
+    transform:
+      perspective(1400px)
+      translate3d(0, var(--market-parallax-y), 0)
+      rotateX(var(--market-parallax-tilt))
+      scale(var(--market-parallax-scale));
+    transform-style: preserve-3d;
+    transition:
+      transform 140ms cubic-bezier(0.2, 0.75, 0.25, 1),
+      box-shadow 250ms ease,
+      border-color 250ms ease;
+    will-change: transform;
+  }
+
   @keyframes pageTitleIn {
     0% {
       opacity: 0;
@@ -328,6 +369,12 @@
     }
 
     .admin-chart-card {
+      transform: none !important;
+      transition: none !important;
+      will-change: auto;
+    }
+
+    .market-parallax-card {
       transform: none !important;
       transition: none !important;
       will-change: auto;

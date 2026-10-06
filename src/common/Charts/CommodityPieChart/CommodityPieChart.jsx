@@ -18,7 +18,10 @@ import {
   ChartSkeleton,
   ChartEmptyState,
 } from "../chartLayoutShared";
-import { useResponsiveChartConfig } from "../modernBarChartShared";
+import {
+  darkenHexColor,
+  useResponsiveChartConfig,
+} from "../modernBarChartShared";
 
 const COLORS = [
   "#3b82f6",
@@ -169,7 +172,7 @@ const CommodityPieChart = ({ apiUrl }) => {
         icon={FaBalanceScale}
       />
 
-      <div className={`${CHART_AREA_CLASS} rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
+      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
         {!data.length ? (
           <ChartEmptyState
             title="No commodity data available"
@@ -194,6 +197,25 @@ const CommodityPieChart = ({ apiUrl }) => {
                     </feMerge>
                   </filter>
                 </defs>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="48%"
+                  innerRadius={radius.inner}
+                  outerRadius={radius.outer}
+                  paddingAngle={data.length > 6 ? 3 : 5}
+                  dataKey="value"
+                  isAnimationActive={false}
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={`commodity-pie-depth-${entry.name}`}
+                      fill={darkenHexColor(COLORS[index % COLORS.length])}
+                      stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
+                      strokeWidth={1}
+                    />
+                  ))}
+                </Pie>
                 <Pie
                   data={data}
                   cx="50%"

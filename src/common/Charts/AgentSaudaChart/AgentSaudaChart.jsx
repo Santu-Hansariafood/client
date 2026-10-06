@@ -24,6 +24,8 @@ import {
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
+  ExtrudedBarShape,
+  darkenHexColor,
 } from "../modernBarChartShared";
 import {
   CHART_AREA_CLASS,
@@ -112,6 +114,25 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           </defs>
           <Pie
             data={chartData}
+              cx="50%"
+              cy="54%"
+              innerRadius="48%"
+              outerRadius="78%"
+              paddingAngle={10}
+              dataKey="value"
+              isAnimationActive={false}
+            >
+              {chartData.map((_, index) => (
+                <Cell
+                  key={`pie-depth-${index}`}
+                  fill={darkenHexColor(COLORS[index % COLORS.length])}
+                  stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
+                  strokeWidth={1}
+                />
+              ))}
+            </Pie>
+            <Pie
+              data={chartData}
             cx="50%"
             cy="50%"
             innerRadius="48%"
@@ -196,6 +217,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           <Bar
             dataKey="tons"
             radius={[14, 14, 4, 4]}
+            shape={<ExtrudedBarShape />}
             {...MODERN_BAR_ANIMATION}
           >
             {chartData.map((_, index) => (
@@ -285,7 +307,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
         subtitle="Volume metrics by representative"
       />
 
-      <div className={CHART_AREA_CLASS}>
+      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage`}>
         {!chartData.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">

@@ -149,6 +149,55 @@ export const modernActiveBar = (fillUrl) => ({
   filter: "brightness(1.12) drop-shadow(0 4px 8px rgba(0,0,0,0.12))",
 });
 
+export const ExtrudedBarShape = ({ x, y, width, height, fill }) => {
+  if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
+    return null;
+  }
+
+  const depth = Math.min(7, width * 0.18, height * 0.18);
+  const right = x + width;
+  const bottom = y + height;
+
+  return (
+    <g>
+      <path
+        d={`M ${right} ${y} L ${right + depth} ${y - depth} L ${right + depth} ${bottom - depth} L ${right} ${bottom} Z`}
+        fill={fill}
+        opacity={0.58}
+      />
+      <path
+        d={`M ${x} ${y} L ${x + depth} ${y - depth} L ${right + depth} ${y - depth} L ${right} ${y} Z`}
+        fill={fill}
+        opacity={0.82}
+      />
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={Math.min(8, width / 2)}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+export const darkenHexColor = (color, factor = 0.62) => {
+  const hex = color.replace("#", "");
+  if (!/^[\da-f]{3}$|^[\da-f]{6}$/i.test(hex)) return color;
+  const normalized = hex.length === 3
+    ? hex.split("").map((digit) => digit + digit).join("")
+    : hex;
+  const channels = normalized.match(/.{2}/g);
+  return `#${channels
+    .map((channel) =>
+      Math.round(parseInt(channel, 16) * factor)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+};
+
 export const BAR_SERIES_THEMES = {
   emerald: {
     gradientId: "modernBarEmerald",

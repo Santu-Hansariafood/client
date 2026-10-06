@@ -26,6 +26,8 @@ import {
   MODERN_AREA_ANIMATION,
   modernActiveBar,
   useResponsiveChartConfig,
+  ExtrudedBarShape,
+  darkenHexColor,
 } from "../modernBarChartShared";
 import {
   CHART_AREA_CLASS,
@@ -284,6 +286,25 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           </defs>
           <Pie
             data={pieData}
+              cx="50%"
+              cy="49%"
+              innerRadius={radius.inner}
+              outerRadius={radius.outer}
+              paddingAngle={pieData.length > 6 ? 3 : 5}
+              dataKey="value"
+              isAnimationActive={false}
+            >
+              {pieData.map((entry, index) => (
+                <Cell
+                  key={`sauda-pie-depth-${entry.name}`}
+                  fill={darkenHexColor(COLORS[index % COLORS.length])}
+                  stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
+                  strokeWidth={1}
+                />
+              ))}
+            </Pie>
+            <Pie
+              data={pieData}
             cx="50%"
             cy="45%"
             innerRadius={radius.inner}
@@ -368,6 +389,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             fill={`url(#${theme.gradientId})`}
             radius={[10, 10, 2, 2]}
             filter="url(#saudaBarShadow)"
+            shape={<ExtrudedBarShape />}
             {...MODERN_BAR_ANIMATION}
             activeBar={modernActiveBar(`url(#${theme.gradientId})`)}
           />
@@ -445,7 +467,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         )}
       </ChartPanelHeader>
 
-      <div className={`${CHART_AREA_CLASS} rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
+      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
         {error ? (
           <ChartEmptyState
             title="Unable to load sauda activity"
