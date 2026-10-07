@@ -2290,9 +2290,9 @@ router.get("/suggestions", async (req, res) => {
 });
 
 const getLoadingEntriesExportData = async (params) => {
-  const search = (params.search || "").trim();
-  const saudaNo = (params.saudaNo || "").trim();
-  const lorryNumber = (params.lorryNumber || "").trim();
+  const search = String(params.search || "").trim();
+  const saudaNo = String(params.saudaNo || "").trim();
+  const lorryNumber = String(params.lorryNumber || "").trim();
   const { startDate, endDate, role, mobile } = params;
   const roleQuery = {};
 
@@ -2367,16 +2367,29 @@ const getLoadingEntriesExportData = async (params) => {
     andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
   const baseQuery =
     Object.keys(roleQuery).length > 0 ? roleQuery : {};
+  const compareValues = (left, right) => {
+    if (left == null) return right == null ? 0 : 1;
+    if (right == null) return -1;
+    return left < right ? -1 : left > right ? 1 : 0;
+  };
+  const compareEntries = (left, right) =>
+    compareValues(left.loadingNo, right.loadingNo) ||
+    compareValues(
+      left.loadingDate ? new Date(left.loadingDate).getTime() : null,
+      right.loadingDate ? new Date(right.loadingDate).getTime() : null,
+    ) ||
+    compareValues(
+      left.createdAt ? new Date(left.createdAt).getTime() : null,
+      right.createdAt ? new Date(right.createdAt).getTime() : null,
+    );
   const items = await LoadingEntry.find(finalQuery)
-    .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
-    .allowDiskUse(true)
     .populate("supplier", "sellerName")
     .lean();
+  items.sort(compareEntries);
   const allBaseItems = await LoadingEntry.find(baseQuery)
-    .select("_id")
-    .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
-    .allowDiskUse(true)
+    .select("_id loadingNo loadingDate createdAt")
     .lean();
+  allBaseItems.sort(compareEntries);
   const idToSlNo = {};
   allBaseItems.forEach((item, index) => {
     idToSlNo[item._id.toString()] = index + 1;

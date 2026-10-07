@@ -69,6 +69,22 @@ const validateExportFile = async (blob, signature, fileType) => {
   }
 };
 
+const getExportErrorMessage = async (error, fallbackMessage) => {
+  const responseData = error.response?.data;
+  if (responseData instanceof Blob) {
+    try {
+      const response = JSON.parse(await responseData.text());
+      if (response.message) return response.message;
+    } catch {
+      // Use the request error when the server response is not JSON.
+    }
+  } else if (responseData?.message) {
+    return responseData.message;
+  }
+
+  return error.message || fallbackMessage;
+};
+
 const downloadExportFile = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1184,7 +1200,7 @@ const ListLoadingEntry = () => {
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
       console.error("Excel export failed:", error);
-      toast.error(error.message || "Failed to download Excel file.");
+      toast.error(await getExportErrorMessage(error, "Failed to download Excel file."));
     } finally {
       setExporting(false);
     }
@@ -1222,7 +1238,7 @@ const ListLoadingEntry = () => {
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
       console.error("PDF export failed:", error);
-      toast.error(error.message || "Failed to download PDF report.");
+      toast.error(await getExportErrorMessage(error, "Failed to download PDF report."));
     } finally {
       setExporting(false);
     }
