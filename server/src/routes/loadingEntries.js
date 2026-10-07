@@ -2369,11 +2369,13 @@ const getLoadingEntriesExportData = async (params) => {
     Object.keys(roleQuery).length > 0 ? roleQuery : {};
   const items = await LoadingEntry.find(finalQuery)
     .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
+    .allowDiskUse(true)
     .populate("supplier", "sellerName")
     .lean();
   const allBaseItems = await LoadingEntry.find(baseQuery)
     .select("_id")
     .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
+    .allowDiskUse(true)
     .lean();
   const idToSlNo = {};
   allBaseItems.forEach((item, index) => {
