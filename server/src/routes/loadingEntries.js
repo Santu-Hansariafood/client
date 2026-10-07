@@ -2289,132 +2289,124 @@ router.get("/suggestions", async (req, res) => {
   }
 });
 
+const getLoadingEntriesExportData = async (params) => {
+  const search = (params.search || "").trim();
+  const saudaNo = (params.saudaNo || "").trim();
+  const lorryNumber = (params.lorryNumber || "").trim();
+  const { startDate, endDate, role, mobile } = params;
+  const roleQuery = {};
+
+  if (role === "Seller" && mobile) {
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": String(mobile),
+    }).lean();
+    if (!seller) {
+      const error = new Error("Access denied");
+      error.statusCode = 403;
+      throw error;
+    }
+    roleQuery.supplier = seller._id;
+  } else if (role === "Buyer" && mobile) {
+    const buyer = await Buyer.findOne({
+      mobile: { $regex: new RegExp(escapeRegex(String(mobile)) + "$") },
+    }).lean();
+
+    if (buyer) {
+      const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+      if (buyer.name) companyNames.push(buyer.name);
+
+      if (companyNames.length) {
+        const companyRegexes = companyNames.map(
+          (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+        );
+        roleQuery.$or = [
+          { buyerCompany: { $in: companyRegexes } },
+          { consignee: { $in: companyRegexes } },
+        ];
+      }
+    }
+  }
+
+  const andParts = [];
+  if (Object.keys(roleQuery).length > 0) andParts.push(roleQuery);
+  if (search) {
+    const searchRegex = new RegExp(escapeRegex(search), "i");
+    andParts.push({
+      $or: [
+        { supplierCompany: { $regex: searchRegex } },
+        { consignee: { $regex: searchRegex } },
+        { saudaNo: { $regex: searchRegex } },
+        { lorryNumber: { $regex: searchRegex } },
+        { billNumber: { $regex: searchRegex } },
+        { commodity: { $regex: searchRegex } },
+      ],
+    });
+  }
+  if (saudaNo) {
+    andParts.push({
+      saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") },
+    });
+  }
+  if (lorryNumber) {
+    andParts.push({
+      lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") },
+    });
+  }
+  if (startDate || endDate) {
+    const dateFilter = {};
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.$lte = end;
+    }
+    andParts.push({ loadingDate: dateFilter });
+  }
+
+  const finalQuery =
+    andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+  const baseQuery =
+    Object.keys(roleQuery).length > 0 ? roleQuery : {};
+  const items = await LoadingEntry.find(finalQuery)
+    .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
+    .populate("supplier", "sellerName")
+    .lean();
+  const allBaseItems = await LoadingEntry.find(baseQuery)
+    .select("_id")
+    .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
+    .lean();
+  const idToSlNo = {};
+  allBaseItems.forEach((item, index) => {
+    idToSlNo[item._id.toString()] = index + 1;
+  });
+
+  const saudaNos = [...new Set(items.map((item) => item.saudaNo).filter(Boolean))];
+  const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
+    .select(
+      "saudaNo buyerCompany paymentTerms rate buyerBrokerage quantity pendingQuantity",
+    )
+    .lean();
+  const saudaData = selfOrders.reduce((acc, order) => {
+    acc[order.saudaNo] = {
+      buyerCompany: order.buyerCompany,
+      paymentTerms: order.paymentTerms,
+      rate: order.rate || 0,
+      buyerBrokerageRate: order.buyerBrokerage?.brokerageBuyer || 0,
+      sellerBrokerageRate: order.buyerBrokerage?.brokerageSupplier || 0,
+      totalQuantity: order.quantity || 0,
+      pendingQuantity: order.pendingQuantity || 0,
+    };
+    return acc;
+  }, {});
+
+  return { items, idToSlNo, saudaData };
+};
+
 router.get("/export/excel", async (req, res) => {
   try {
-    const search = (req.query.search || "").trim();
-    const saudaNo = (req.query.saudaNo || "").trim();
-    const lorryNumber = (req.query.lorryNumber || "").trim();
-    const startDate = req.query.startDate;
-    const endDate = req.query.endDate;
-    const role = req.query.role;
-    const mobile = req.query.mobile;
-
-    let query = {};
-
-    if (role === "Seller" && mobile) {
-      const seller = await Seller.findOne({
-        "phoneNumbers.value": String(mobile),
-      }).lean();
-      if (seller) {
-        query.supplier = seller._id;
-      } else {
-        return res.status(403).json({ message: "Access denied" });
-      }
-    } else if (role === "Buyer" && mobile) {
-      const buyer = await Buyer.findOne({
-        mobile: { $regex: new RegExp(mobile + "$") },
-      }).lean();
-
-      if (buyer) {
-        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
-        if (buyer.name) companyNames.push(buyer.name);
-
-        if (companyNames.length) {
-          const companyRegexes = companyNames.map(
-            (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
-          );
-          query.$or = [
-            { buyerCompany: { $in: companyRegexes } },
-            { consignee: { $in: companyRegexes } },
-          ];
-        }
-      }
-    }
-
-    const andParts = [];
-    if (Object.keys(query).length > 0) {
-      andParts.push(query);
-    }
-
-    if (search) {
-      const searchRegex = new RegExp(escapeRegex(search), "i");
-      andParts.push({
-        $or: [
-          { supplierCompany: { $regex: searchRegex } },
-          { consignee: { $regex: searchRegex } },
-          { saudaNo: { $regex: searchRegex } },
-          { lorryNumber: { $regex: searchRegex } },
-          { billNumber: { $regex: searchRegex } },
-          { commodity: { $regex: searchRegex } },
-        ],
-      });
-    }
-
-    if (saudaNo) {
-      andParts.push({
-        saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") },
-      });
-    }
-
-    if (lorryNumber) {
-      andParts.push({
-        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") },
-      });
-    }
-
-    if (startDate || endDate) {
-      const dateFilter = {};
-      if (startDate) dateFilter.$gte = new Date(startDate);
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.$lte = end;
-      }
-      andParts.push({ loadingDate: dateFilter });
-    }
-
-    const finalQuery =
-      andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
-
-    const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
-      .populate("supplier", "sellerName")
-      .lean();
-
-    const baseAndParts = [];
-    if (Object.keys(query).length > 0) {
-      baseAndParts.push(query);
-    }
-    const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
-
-    const allBaseItems = await LoadingEntry.find(baseQuery)
-      .select("_id")
-      .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
-      .lean();
-
-    const idToSlNo = {};
-    allBaseItems.forEach((item, index) => {
-      idToSlNo[item._id.toString()] = index + 1;
-    });
-
-    const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
-    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select(
-        "saudaNo buyerCompany paymentTerms rate buyerBrokerage quantity pendingQuantity",
-      )
-      .lean();
-    const saudaData = selfOrders.reduce((acc, so) => {
-      acc[so.saudaNo] = {
-        buyerCompany: so.buyerCompany,
-        paymentTerms: so.paymentTerms,
-        rate: so.rate || 0,
-        buyerBrokerageRate: so.buyerBrokerage?.brokerageBuyer || 0,
-        sellerBrokerageRate: so.buyerBrokerage?.brokerageSupplier || 0,
-        totalQuantity: so.quantity || 0,
-        pendingQuantity: so.pendingQuantity || 0,
-      };
-      return acc;
-    }, {});
+    const { items, idToSlNo, saudaData } = await getLoadingEntriesExportData(
+      req.query,
+    );
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Loading Entries");
@@ -2534,14 +2526,127 @@ router.get("/export/excel", async (req, res) => {
     );
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=LoadingEntries.xlsx",
+      'attachment; filename="LoadingEntries.xlsx"',
     );
-
-    await workbook.xlsx.write(res);
-    res.end();
+    res.setHeader("Cache-Control", "no-store");
+    const file = await workbook.xlsx.writeBuffer();
+    res.send(Buffer.from(file));
   } catch (error) {
     console.error("Export Excel Error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
+  }
+});
+
+router.get("/export/pdf", async (req, res) => {
+  try {
+    const { items, idToSlNo, saudaData } = await getLoadingEntriesExportData(
+      req.query,
+    );
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+    const generatedAt = new Date().toLocaleString("en-IN");
+    const totalLoadingWeight = items.reduce(
+      (total, item) => total + (Number(item.loadingWeight) || 0),
+      0,
+    );
+    const totalUnloadingWeight = items.reduce(
+      (total, item) => total + (Number(item.unloadingWeight) || 0),
+      0,
+    );
+    const rows = items.map((item) => [
+      idToSlNo[item._id.toString()] || "-",
+      item.loadingNo || "-",
+      item.loadingDate
+        ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+        : "N/A",
+      item.saudaNo || "N/A",
+      item.lorryNumber || "N/A",
+      item.supplierCompany || item.supplier?.sellerName || "N/A",
+      item.buyerCompany || saudaData[item.saudaNo]?.buyerCompany || "N/A",
+      item.consignee || "N/A",
+      item.commodity || "N/A",
+      `${(Number(item.unloadingWeight) || 0).toFixed(2)} T`,
+      item.billNumber || "N/A",
+      item.sellerBillNo || "N/A",
+      `${item.creatorMobile || "N/A"} (${item.entryByRole || "Admin"})`,
+    ]);
+
+    doc.setProperties({ title: "Loading Entries Report" });
+    autoTable(doc, {
+      head: [[
+        "Sl No",
+        "Loading No",
+        "Loading Date",
+        "Sauda No",
+        "Lorry No",
+        "Seller",
+        "Buyer",
+        "Consignee",
+        "Commodity",
+        "Unloading Wt",
+        "Bill No",
+        "Seller Bill No",
+        "Entered By",
+      ]],
+      body: rows,
+      startY: 35,
+      margin: { left: margin, right: margin, bottom: 14 },
+      theme: "grid",
+      styles: {
+        font: "helvetica",
+        fontSize: 6.5,
+        cellPadding: 1.8,
+        overflow: "ellipsize",
+        textColor: [45, 55, 72],
+        lineColor: [220, 226, 232],
+      },
+      headStyles: {
+        fillColor: [5, 120, 90],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 7,
+      },
+      alternateRowStyles: { fillColor: [245, 249, 247] },
+      didDrawPage: () => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(5, 120, 90);
+        doc.text("LOADING ENTRIES REPORT", margin, 15);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(90);
+        doc.text(`Generated: ${generatedAt}`, margin, 22);
+        doc.text(
+          `Entries: ${items.length}  |  Loading weight: ${totalLoadingWeight.toFixed(2)} T  |  Unloading weight: ${totalUnloadingWeight.toFixed(2)} T`,
+          margin,
+          28,
+        );
+        doc.setFontSize(7);
+        doc.text(
+          `Page ${doc.internal.getCurrentPageInfo().pageNumber}`,
+          pageWidth - margin,
+          doc.internal.pageSize.getHeight() - 6,
+          { align: "right" },
+        );
+      },
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="LoadingEntries.pdf"',
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.send(Buffer.from(doc.output("arraybuffer")));
+  } catch (error) {
+    console.error("Export PDF Error:", error);
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 

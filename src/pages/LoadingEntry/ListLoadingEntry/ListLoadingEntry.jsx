@@ -20,8 +20,6 @@ import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { FaClipboardList } from "react-icons/fa";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
@@ -49,6 +47,26 @@ const DATE_FORMAT_OPTIONS = {
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
+};
+const EXCEL_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+const validateExportFile = async (blob, signature, fileType) => {
+  if (!(blob instanceof Blob)) {
+    throw new Error(`The server did not return a ${fileType} file.`);
+  }
+
+  const fileSignature = await blob.slice(0, signature.length).text();
+  if (fileSignature !== signature) {
+    let message = `The server returned an invalid ${fileType} file.`;
+    try {
+      const response = JSON.parse(await blob.text());
+      if (response.message) message = response.message;
+    } catch {
+      // Keep the file validation message when the response is not JSON.
+    }
+    throw new Error(message);
+  }
 };
 
 const formatDate = (date) => {
@@ -1134,97 +1152,59 @@ const ListLoadingEntry = () => {
           mobile: mobile,
         },
         responseType: "blob",
+        skipCache: true,
         timeout: 60000,
       });
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+      await validateExportFile(response.data, "PK\u0003\u0004", "Excel");
       const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`;
-      await downloadFile(blob, fileName);
+      await downloadFile(response.data, fileName, EXCEL_MIME_TYPE);
 
       toast.dismiss(toastId);
       toast.success("Excel file downloaded successfully");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
-      toast.error("Failed to download Excel file. Please try again.");
+      console.error("Excel export failed:", error);
+      toast.error(error.message || "Failed to download Excel file.");
     } finally {
       setExporting(false);
     }
   }, [filters, userRole, mobile, exporting, loadingEntries.length]);
 
-  const handleDownloadPDFReport = useCallback(() => {
-    if (loadingEntries.length === 0) return;
+  const handleDownloadPDFReport = useCallback(async () => {
+    if (exporting || loadingEntries.length === 0) return;
 
-    const doc = new jsPDF("landscape");
-    const tableColumn = [
-      "Sl No",
-      "Loading No",
-      "Date",
-      "Sauda No",
-      "Lorry No",
-      "Seller",
-      "Buyer",
-      "Consignee",
-      "Commodity",
-      "Unloading Weight",
-      "Brokerage",
-      "Bill No",
-      "Seller Bill No",
-      "Entered By",
-    ];
+    let toastId;
+    try {
+      setExporting(true);
+      toastId = toast.loading("Preparing PDF report...");
+      const response = await api.get("/loading-entries/export/pdf", {
+        params: {
+          search: filters.search,
+          saudaNo: filters.saudaNo,
+          lorryNumber: filters.lorryNumber,
+          role: userRole,
+          mobile,
+        },
+        responseType: "blob",
+        skipCache: true,
+        timeout: 60000,
+      });
 
-    const tableRows = loadingEntries.map((entry) => {
-      const slNo = entry.loadingNo;
-      const brokerageRate = brokerageMap[entry.saudaNo] || 0;
-      const totalBrokerage = (
-        (entry.unloadingWeight || 0) * brokerageRate
-      ).toFixed(2);
+      await validateExportFile(response.data, "%PDF-", "PDF");
+      const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`;
+      await downloadFile(response.data, fileName, "application/pdf");
 
-      return [
-        slNo,
-        entry.loadingNo || "-",
-        formatDate(entry.loadingDate),
-        entry.saudaNo,
-        entry.lorryNumber,
-        entry.supplierCompany,
-        buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
-        entry.consignee,
-        entry.commodity,
-        `${(entry.unloadingWeight || 0).toFixed(2)} T`,
-        `₹ ${totalBrokerage}`,
-        entry.billNumber || "N/A",
-        entry.sellerBillNo || "N/A",
-        `${entry.creatorMobile || "N/A"} (${entry.entryByRole || "Admin"})`,
-      ];
-    });
-
-    doc.setFontSize(20);
-    doc.setTextColor(5, 150, 105);
-    doc.text("LOADING ENTRIES REPORT", 14, 22);
-
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 30);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      theme: "grid",
-      headStyles: { fillColor: [5, 150, 105], fontSize: 8 },
-      styles: { fontSize: 7, cellPadding: 2 },
-    });
-
-    doc.save(`LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
-  }, [
-    loadingEntries,
-    totalItems,
-    currentPage,
-    itemsPerPage,
-    buyerMap,
-    brokerageMap,
-  ]);
+      toast.dismiss(toastId);
+      toast.success("PDF report downloaded successfully");
+    } catch (error) {
+      if (toastId) toast.dismiss(toastId);
+      console.error("PDF export failed:", error);
+      toast.error(error.message || "Failed to download PDF report.");
+    } finally {
+      setExporting(false);
+    }
+  }, [filters, userRole, mobile, exporting, loadingEntries.length]);
 
   const headers = useMemo(
     () => [
@@ -1434,12 +1414,12 @@ const ListLoadingEntry = () => {
               <div className="flex gap-2 w-full md:w-auto">
                 <button
                   onClick={handleDownloadPDFReport}
-                  disabled={loadingEntries.length === 0}
+                  disabled={exporting || loadingEntries.length === 0}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   aria-label="Download PDF Report"
                 >
                   <MdPictureAsPdf size={20} />
-                  Download PDF
+                  {exporting ? "Preparing..." : "Download PDF"}
                 </button>
                 <button
                   onClick={handleDownloadExcel}
