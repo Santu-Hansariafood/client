@@ -7,7 +7,7 @@ function makeKey(req) {
 
 export function cache(ttlSeconds = 30) {
   return (req, res, next) => {
-    if (req.method !== "GET") return next();
+    if (req.method !== "GET" || req.path.includes("/export/")) return next();
     const key = makeKey(req);
     const cached = store.get(key);
     const now = Date.now();

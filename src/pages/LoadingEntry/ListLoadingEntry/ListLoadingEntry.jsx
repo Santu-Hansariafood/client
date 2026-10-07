@@ -69,6 +69,22 @@ const validateExportFile = async (blob, signature, fileType) => {
   }
 };
 
+const downloadExportFile = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+};
+
 const formatDate = (date) => {
   if (!date) return "N/A";
   try {
@@ -1158,7 +1174,10 @@ const ListLoadingEntry = () => {
 
       await validateExportFile(response.data, "PK\u0003\u0004", "Excel");
       const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`;
-      await downloadFile(response.data, fileName, EXCEL_MIME_TYPE);
+      downloadExportFile(
+        new Blob([response.data], { type: EXCEL_MIME_TYPE }),
+        fileName,
+      );
 
       toast.dismiss(toastId);
       toast.success("Excel file downloaded successfully");
@@ -1193,7 +1212,10 @@ const ListLoadingEntry = () => {
 
       await validateExportFile(response.data, "%PDF-", "PDF");
       const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`;
-      await downloadFile(response.data, fileName, "application/pdf");
+      downloadExportFile(
+        new Blob([response.data], { type: "application/pdf" }),
+        fileName,
+      );
 
       toast.dismiss(toastId);
       toast.success("PDF report downloaded successfully");
