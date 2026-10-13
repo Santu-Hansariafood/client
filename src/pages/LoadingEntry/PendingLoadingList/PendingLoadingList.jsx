@@ -35,6 +35,18 @@ const formatDate = (date) => {
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
 };
 
+const toDateBoundary = (date, endOfDay = false) => {
+  if (!date) return undefined;
+  const boundary = new Date(date);
+  boundary.setHours(
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0,
+  );
+  return boundary.toISOString();
+};
+
 const normalizeText = (value) =>
   String(value ?? "")
     .trim()
@@ -113,8 +125,8 @@ const PendingLoadingList = () => {
         userRole,
         mobile,
         search: searchInput || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: toDateBoundary(startDate),
+        endDate: toDateBoundary(endDate, true),
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
         status: "active",
@@ -216,8 +228,8 @@ const PendingLoadingList = () => {
         userRole,
         mobile,
         search: searchInput || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: toDateBoundary(startDate),
+        endDate: toDateBoundary(endDate, true),
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
       };

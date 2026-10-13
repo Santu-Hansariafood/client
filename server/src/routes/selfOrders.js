@@ -18,6 +18,23 @@ const router = Router();
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const getPendingSaudaDateQuery = (startDate, endDate) => {
+  const dateFilter = {};
+  if (startDate) dateFilter.$gte = new Date(startDate);
+  if (endDate) dateFilter.$lte = new Date(endDate);
+  return {
+    $or: [
+      { poDate: dateFilter },
+      {
+        $and: [
+          { poDate: { $in: [null] } },
+          { createdAt: dateFilter },
+        ],
+      },
+    ],
+  };
+};
+
 const getSellerBrokerage = async (supplierId, commodityName) => {
   if (!supplierId || !commodityName) return 0;
   try {
@@ -982,22 +999,8 @@ router.get("/pending/list", async (req, res) => {
     }
 
     if (startDate || endDate) {
-      const dateFilter = {};
-      if (startDate) {
-        dateFilter.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.$lte = end;
-      }
-
-      const dateQuery = {
-        $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
-      };
-
       if (!query.$and) query.$and = [];
-      query.$and.push(dateQuery);
+      query.$and.push(getPendingSaudaDateQuery(startDate, endDate));
     }
 
     const pipeline = [
@@ -1142,22 +1145,8 @@ router.get("/pending/export/excel", async (req, res) => {
     }
 
     if (startDate || endDate) {
-      const dateFilter = {};
-      if (startDate) {
-        dateFilter.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.$lte = end;
-      }
-
-      const dateQuery = {
-        $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
-      };
-
       if (!query.$and) query.$and = [];
-      query.$and.push(dateQuery);
+      query.$and.push(getPendingSaudaDateQuery(startDate, endDate));
     }
 
     const pipeline = [
@@ -1262,20 +1251,14 @@ router.get("/pending/export/excel", async (req, res) => {
 
     items.forEach((item, index) => {
       const quantity = item.quantity || 0;
-      let pendingQuantity = item.pendingQuantity;
-      if (
-        (pendingQuantity === undefined ||
-          pendingQuantity === null ||
-          (pendingQuantity === 0 && item.status === "active")) &&
-        item.status !== "closed"
-      ) {
-        pendingQuantity = quantity;
-      } else {
-        pendingQuantity = Number(pendingQuantity || 0);
-      }
-      const loadedQuantity = item.totalUnloadingWeight || 0;
+      const pendingQuantity =
+        item.pendingQuantity === undefined || item.pendingQuantity === null
+          ? quantity
+          : Number(item.pendingQuantity);
+      const loadedQuantity = quantity - pendingQuantity;
+      const unloadingWeight = item.totalUnloadingWeight || 0;
       const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
-      const loadedBrokerage = loadedQuantity * brokerageRate;
+      const loadedBrokerage = unloadingWeight * brokerageRate;
       const pendingBrokerage = pendingQuantity * brokerageRate;
 
       totals.totalQuantity += quantity;
