@@ -355,8 +355,10 @@ router.get("/report", async (req, res) => {
         {
           $group: {
             _id: {
-              saudaNo: "$buyerSaudaNo",
-              buyerCompany: { $toLower: "$buyerCompany" },
+              saudaNo: { $toLower: "$buyerSaudaNo" },
+              buyerCompany: {
+                $toLower: { $ifNull: ["$buyerCompany", ""] },
+              },
             },
             quantity: { $sum: "$adjustmentQuantity" },
           },
@@ -364,14 +366,20 @@ router.get("/report", async (req, res) => {
       ]);
       const totalsByBuyerSauda = new Map(
         buyerAdjustmentTotals.map((item) => [
-          `${String(item._id.saudaNo).toLowerCase()}|${String(item._id.buyerCompany).toLowerCase()}`,
+          `${item._id.saudaNo}|${item._id.buyerCompany}`,
           Number(item.quantity || 0),
         ]),
       );
-      const mappedBuyerSaudas = [...new Set(buyerAdjustmentTotals.map((item) => item._id.saudaNo))];
+      const mappedBuyerSaudas = [
+        ...new Set(buyerAdjustmentTotals.map((item) => item._id.saudaNo)),
+      ];
       if (mappedBuyerSaudas.length) {
         const mappedOrders = await SelfOrder.find({
-          saudaNo: { $in: mappedBuyerSaudas },
+          saudaNo: {
+            $in: mappedBuyerSaudas.map(
+              (saudaNo) => new RegExp(`^${saudaNo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+            ),
+          },
           $or: [
             { companyId: { $in: scopedCompanyIds } },
             ...(legacyCompanyNameQuery ? [legacyCompanyNameQuery] : []),
@@ -385,9 +393,8 @@ router.get("/report", async (req, res) => {
               const adjustedQuantity = totalsByBuyerSauda.get(
                 `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
               ) || 0;
-              return (
-                Math.abs(Number(order.quantity || 0) - adjustedQuantity) < 0.01
-              );
+              const quantity = Number(order.quantity || 0);
+              return quantity > 0 && adjustedQuantity >= quantity - 0.01;
             },
           );
         if (fullyAdjustedBuyerOrders.length) {
