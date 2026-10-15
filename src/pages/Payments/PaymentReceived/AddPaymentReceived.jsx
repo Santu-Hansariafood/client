@@ -344,18 +344,21 @@ const AddPaymentReceived = () => {
     [],
   );
 
-  const collectUniqueCompanyNames = (ledgerList) => {
-    const names = new Set();
-    ledgerList.forEach((ledger) => {
-      (ledger.companies || []).forEach((c) => {
-        const name = getCompanyNameFromRef(c);
-        if (name) names.add(name);
+  const collectUniqueCompanyNames = useCallback(
+    (ledgerList) => {
+      const names = new Set();
+      ledgerList.forEach((ledger) => {
+        (ledger.companies || []).forEach((c) => {
+          const name = getCompanyNameFromRef(c);
+          if (name) names.add(name);
+        });
       });
-    });
-    return Array.from(names)
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ value: name, label: name }));
-  };
+      return Array.from(names)
+        .sort((a, b) => a.localeCompare(b))
+        .map((name) => ({ value: name, label: name }));
+    },
+    [],
+  );
 
   const primaryCompanyOptions = useMemo(() => {
     if (formData.ledgerType === "Seller") {
@@ -365,7 +368,41 @@ const AddPaymentReceived = () => {
       value: c._id,
       label: c.companyName,
     }));
-  }, [formData.ledgerType, allCompanies, opposingLedgers]);
+  }, [
+    formData.ledgerType,
+    allCompanies,
+    opposingLedgers,
+    collectUniqueCompanyNames,
+  ]);
+
+  const sellerCompanyOptions = useMemo(() => {
+    const options = [
+      ...sellerCompanies
+        .filter((company) => company.companyName)
+        .map((company) => ({
+          value: company.companyName,
+          label: company.companyName,
+        })),
+      ...(formData.ledgerType === "Seller"
+        ? []
+        : collectUniqueCompanyNames(opposingLedgers)),
+      ...buyerSellerOptions,
+    ];
+    const seen = new Set();
+
+    return options.filter((option) => {
+      const key = String(option.label || "").trim().toLocaleLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [
+    sellerCompanies,
+    formData.ledgerType,
+    opposingLedgers,
+    buyerSellerOptions,
+    collectUniqueCompanyNames,
+  ]);
 
   const selectedCompanyOption = useMemo(() => {
     if (!formData.companyId) return null;
@@ -609,38 +646,27 @@ const AddPaymentReceived = () => {
   ]);
 
   const opposingCompanyOptions = useMemo(() => {
-    const sellerNames = collectUniqueCompanyNames(opposingLedgers);
     const buyerOptions = allCompanies.map((c) => ({
       value: c._id,
       label: c.companyName,
     }));
 
-    if (
-      companyPair.buyerCompany &&
-      formData.ledgerType !== "Seller" &&
-      buyerSellerOptions.length > 0
-    ) {
-      return buyerSellerOptions;
-    }
-
     if (formData.ledgerType === "Seller") {
       return buyerOptions;
     }
     if (formData.ledgerType === "Buyer") {
-      return sellerNames;
+      return sellerCompanyOptions;
     }
     const seen = new Set();
-    return [...sellerNames, ...buyerOptions].filter((opt) => {
+    return [...sellerCompanyOptions, ...buyerOptions].filter((opt) => {
       if (seen.has(opt.label)) return false;
       seen.add(opt.label);
       return true;
     });
   }, [
     formData.ledgerType,
-    opposingLedgers,
     allCompanies,
-    companyPair.buyerCompany,
-    buyerSellerOptions,
+    sellerCompanyOptions,
   ]);
 
   useEffect(() => {
