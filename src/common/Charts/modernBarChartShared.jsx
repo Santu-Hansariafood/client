@@ -6,12 +6,12 @@ export const MODERN_CHART_MARGIN = { top: 18, right: 16, left: 0, bottom: 10 };
 export const MODERN_CHART_MARGIN_MOBILE = { top: 14, right: 10, left: -6, bottom: 6 };
 
 export const MODERN_AXIS_TICK = {
-  fill: "#64748b",
+  fill: "#5f6f68",
   fontSize: 11,
   fontWeight: 700,
 };
 export const MODERN_AXIS_TICK_MOBILE = {
-  fill: "#94a3b8",
+  fill: "#8a968f",
   fontSize: 10,
   fontWeight: 700,
 };
@@ -19,12 +19,12 @@ export const MODERN_AXIS_TICK_MOBILE = {
 export const MODERN_GRID_PROPS = {
   strokeDasharray: "6 10",
   vertical: false,
-  stroke: "#e2e8f0",
-  strokeOpacity: 0.55,
+  stroke: "#e0d8c6",
+  strokeOpacity: 0.7,
 };
 
 export const MODERN_BAR_CURSOR = {
-  fill: "rgba(16, 185, 129, 0.08)",
+  fill: "rgba(201, 162, 39, 0.10)",
   radius: 12,
 };
 
@@ -143,7 +143,7 @@ export const MultiBarGradientDefs = ({ idPrefix, colors }) => (
 
 export const modernActiveBar = (fillUrl) => ({
   fill: fillUrl,
-  stroke: "rgba(255,255,255,0.95)",
+  stroke: "rgba(255, 254, 251, 0.95)",
   strokeWidth: 3,
   radius: [14, 14, 4, 4],
   filter: "brightness(1.12) drop-shadow(0 4px 8px rgba(0,0,0,0.12))",
@@ -198,59 +198,60 @@ export const darkenHexColor = (color, factor = 0.62) => {
     .join("")}`;
 };
 
+/** Luxury series themes — deep emerald, gold and teal tones. */
 export const BAR_SERIES_THEMES = {
   emerald: {
     gradientId: "modernBarEmerald",
-    top: "#34d399",
-    mid: "#10b981",
-    bottom: "#047857",
+    top: "#0f8a6c",
+    mid: "#065f46",
+    bottom: "#04392c",
   },
   green: {
     gradientId: "modernBarAmber",
-    top: "#fcd34d",
-    mid: "#f59e0b",
-    bottom: "#d97706",
+    top: "#e6cf86",
+    mid: "#c9a227",
+    bottom: "#b8860b",
   },
   blue: {
     gradientId: "modernBarBlue",
-    top: "#60a5fa",
-    mid: "#3b82f6",
-    bottom: "#1d4ed8",
+    top: "#12a594",
+    mid: "#0d7a68",
+    bottom: "#065f46",
   },
   indigo: {
     gradientId: "modernBarIndigo",
-    top: "#818cf8",
-    mid: "#6366f1",
-    bottom: "#4338ca",
+    top: "#0f8a6c",
+    mid: "#065f46",
+    bottom: "#04392c",
   },
   pending: {
     gradientId: "modernBarPending",
-    top: "#fde68a",
-    mid: "#fbbf24",
-    bottom: "#d97706",
+    top: "#e6cf86",
+    mid: "#c9a227",
+    bottom: "#b8860b",
   },
   received: {
     gradientId: "modernBarReceived",
-    top: "#6ee7b7",
-    mid: "#10b981",
-    bottom: "#047857",
+    top: "#0f8a6c",
+    mid: "#065f46",
+    bottom: "#04392c",
   },
   purple: {
     gradientId: "modernBarPurple",
-    top: "#a78bfa",
-    mid: "#8b5cf6",
-    bottom: "#7c3aed",
+    top: "#12a594",
+    mid: "#0d7a68",
+    bottom: "#065f46",
   },
   red: {
     gradientId: "modernBarRed",
-    top: "#fca5a5",
-    mid: "#ef4444",
-    bottom: "#dc2626",
+    top: "#e6cf86",
+    mid: "#c9a227",
+    bottom: "#b8860b",
   },
   cyan: {
     gradientId: "modernBarCyan",
-    top: "#67e8f9",
-    mid: "#06b6d4",
-    bottom: "#0e7490",
+    top: "#12a594",
+    mid: "#0d7a68",
+    bottom: "#065f46",
   },
 };
