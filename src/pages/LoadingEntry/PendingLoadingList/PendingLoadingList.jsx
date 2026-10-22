@@ -491,7 +491,7 @@ const PendingLoadingList = () => {
       item.saudaNo || "N/A",
       <span
         key={`seller-co-${item._id}`}
-        className="font-semibold text-slate-700"
+        className="font-semibold text-lux-ink"
       >
         {item.supplierCompany || "N/A"}
       </span>,
@@ -502,28 +502,28 @@ const PendingLoadingList = () => {
       quantity,
       <span
         key={`pending-${item._id}`}
-        className={`${pendingQuantity < 0 ? "text-rose-600" : "text-green-600"} font-bold`}
+        className={`${pendingQuantity < 0 ? "text-rose-600" : "text-emerald-700"} font-bold`}
       >
         {pendingQuantity.toFixed(2)}
       </span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
       <div key={`brokerage-${item._id}`} className="flex flex-col text-xs">
-        <span className="text-slate-600 font-medium">
+        <span className="text-lux-muted font-medium">
           Total: ₹{totalBrokerage}
         </span>
-        <span className="text-emerald-600">
+        <span className="text-lux-emerald">
           Loaded: ₹{loadedBrokerage} (On {unloadingWeight.toFixed(2)}T)
         </span>
-        <span className="text-green-600">Pending: ₹{pendingBrokerage}</span>
+        <span className="text-lux-emerald">Pending: ₹{pendingBrokerage}</span>
       </div>,
       item.paymentTerms || "N/A",
       <span
         key={`status-${item._id}`}
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+        className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
           isClosed
-            ? "bg-red-100 text-red-700"
-            : "bg-emerald-100 text-emerald-700"
+            ? "border-rose-200 bg-rose-100 text-rose-700"
+            : "border-emerald-200 bg-emerald-100 text-emerald-700"
         }`}
       >
         {isClosed ? "Closed" : "Active"}
@@ -547,17 +547,17 @@ const PendingLoadingList = () => {
         icon={FaTruckLoading}
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-xl p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <FaSearch className="text-emerald-600" />
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#ece4d2]">
+              <div className="w-10 h-10 rounded-xl bg-lux-ivory flex items-center justify-center">
+                <FaSearch className="text-lux-emerald" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">
+                <h3 className="font-serif font-semibold text-lux-ink">
                   Filter & Search
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-lux-muted">
                   Filter pending sauda with independent responsive fields
                 </p>
               </div>
@@ -565,26 +565,26 @@ const PendingLoadingList = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                    <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
                     Search
                   </label>
                   <div className="relative">
-                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-lux-muted" />
                     <input
                       type="text"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder="Enter search term..."
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-[#e4dbc6] bg-lux-cream focus:border-lux-emerald focus:ring-4 focus:ring-lux-gold/20 outline-none transition-all duration-200"
                     />
                   </div>
                 </div>
                 {userRole !== "Seller" && (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                      <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                        <span className="w-2 h-2 rounded-full bg-lux-emerald"></span>
                         Seller Company
                       </label>
                       <DataDropdown
@@ -603,8 +603,8 @@ const PendingLoadingList = () => {
                     userRole === "Seller" ? "sm:col-span-1 xl:col-span-3" : ""
                   }
                 >
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                    <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
                     Buyer Company
                   </label>
                   <DataDropdown
@@ -620,8 +620,8 @@ const PendingLoadingList = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-fuchsia-500"></span>
+                  <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                    <span className="w-2 h-2 rounded-full bg-lux-emerald"></span>
                     Start Date
                   </label>
                   <DateSelector
@@ -630,25 +630,25 @@ const PendingLoadingList = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                    <span className="w-2 h-2 rounded-full bg-lux-emerald"></span>
                     End Date
                   </label>
                   <DateSelector selectedDate={endDate} onChange={setEndDate} />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[#ece4d2]">
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="flex-1 min-w-[160px] px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all duration-200 border-2 border-slate-200 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 >
                   Clear All
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadExcel}
-                  className="flex-1 min-w-[160px] px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
                 >
                   <FaDownload />
                   Export Excel
@@ -657,7 +657,7 @@ const PendingLoadingList = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 overflow-hidden">
+          <div className="lux-card p-3 sm:p-4 overflow-hidden">
             {loading ? (
               <Loading />
             ) : data.length > 0 ? (
@@ -675,7 +675,7 @@ const PendingLoadingList = () => {
                 </div>
               </>
             ) : (
-              <div className="py-20 text-center text-slate-500 font-medium">
+              <div className="py-20 text-center text-lux-muted font-medium">
                 No pending entries found matching your criteria.
               </div>
             )}

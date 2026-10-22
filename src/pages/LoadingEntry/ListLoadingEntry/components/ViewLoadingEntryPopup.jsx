@@ -54,7 +54,7 @@ const DocumentCard = ({ label, url, color }) => {
     <div className="space-y-3 group">
       <div className="flex items-center justify-between">
         <h4
-          className={`text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3`}
+          className={`text-xs font-black uppercase tracking-[0.2em] text-lux-ink flex items-center gap-3`}
         >
           <span
             className={`w-2 h-2 rounded-full bg-${color}-500 animate-pulse`}
@@ -66,7 +66,7 @@ const DocumentCard = ({ label, url, color }) => {
             <button
               type="button"
               onClick={(e) => handlePrint(absUrl, e)}
-              className="text-[9px] font-black text-sky-600 uppercase tracking-widest px-2 py-0.5 rounded bg-sky-50 hover:text-sky-700 hover:bg-sky-100 transition inline-flex items-center gap-1"
+              className="text-[9px] font-black text-lux-emerald uppercase tracking-widest px-2 py-0.5 rounded bg-lux-ivory hover:text-lux-deep hover:bg-white transition inline-flex items-center gap-1"
               title="Print PDF"
             >
               <FaPrint size={10} /> Print
@@ -76,14 +76,14 @@ const DocumentCard = ({ label, url, color }) => {
             href={absUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 hover:text-emerald-600 hover:bg-emerald-50 transition"
+            className="text-[9px] font-black text-lux-muted uppercase tracking-widest px-2 py-0.5 rounded bg-lux-ivory hover:text-lux-emerald hover:bg-white transition"
           >
             Open
           </a>
         </div>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[260px]">
+      <div className="relative rounded-2xl overflow-hidden border border-[#ece4d2] shadow-sm group-hover:shadow-xl transition-all duration-500 bg-lux-ivory flex items-center justify-center min-h-[260px]">
         {isPdfUrl(absUrl) ? (
           <a
             href={absUrl}
@@ -91,14 +91,14 @@ const DocumentCard = ({ label, url, color }) => {
             rel="noopener noreferrer"
             className="group/btn flex flex-col items-center gap-4 p-8 text-center"
           >
-            <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
               <FaFileAlt size={28} />
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">
+              <p className="text-sm font-black text-lux-ink uppercase tracking-tight mb-1">
                 View PDF Document
               </p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-lux-muted uppercase tracking-widest">
                 Opens in new tab
               </p>
             </div>
@@ -125,14 +125,14 @@ const DocumentCard = ({ label, url, color }) => {
             rel="noopener noreferrer"
             className="group/btn flex flex-col items-center gap-4 p-8 text-center"
           >
-            <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
               <FaFileAlt size={28} />
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">
+              <p className="text-sm font-black text-lux-ink uppercase tracking-tight mb-1">
                 View Document
               </p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-lux-muted uppercase tracking-widest">
                 Opens in new tab
               </p>
             </div>
@@ -172,9 +172,9 @@ const DocumentsSection = ({ entry }) => {
   if (attachments.length === 0) return null;
 
   return (
-    <div className="border-t border-slate-100 pt-6 mt-6">
-      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-3">
-        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+    <div className="border-t border-[#ece4d2] pt-6 mt-6">
+      <h3 className="font-serif text-sm font-semibold text-lux-muted uppercase tracking-widest mb-5 flex items-center gap-3">
+        <span className="w-2 h-2 rounded-full bg-lux-gold animate-pulse" />
         Uploaded Documents ({attachments.length})
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -202,100 +202,100 @@ const ViewLoadingEntryPopup = ({
     <div className="space-y-6 p-2">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+          <h4 className="font-serif text-sm font-semibold text-lux-muted uppercase tracking-wider border-b border-[#ece4d2] pb-1">
             Basic Info
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-slate-500">Loading Date:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Loading Date:</span>
+            <span className="font-semibold text-lux-ink">
               {formatDate(selectedEntry.loadingDate)}
             </span>
-            <span className="text-slate-500">Sauda No:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Sauda No:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.saudaNo}
             </span>
-            <span className="text-slate-500">Seller:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Seller:</span>
+            <span className="font-semibold text-lux-ink">
               {sellerMap[selectedEntry.supplier] || "N/A"}
             </span>
-            <span className="text-slate-500">Payment Terms:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Payment Terms:</span>
+            <span className="font-semibold text-lux-ink">
               {paymentTermsMap[selectedEntry.saudaNo] || "N/A"}
             </span>
-            <span className="text-slate-500">Commodity:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Commodity:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.commodity || "N/A"}
             </span>
-            <span className="text-slate-500">Due Date:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Due Date:</span>
+            <span className="font-semibold text-lux-ink">
               {formatDate(selectedEntry.dueDate)}
             </span>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+          <h4 className="font-serif text-sm font-semibold text-lux-muted uppercase tracking-wider border-b border-[#ece4d2] pb-1">
             Transport Details
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-slate-500">Lorry No:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Lorry No:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.lorryNumber}
             </span>
-            <span className="text-slate-500">Transporter:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Transporter:</span>
+            <span className="font-semibold text-lux-ink">
               {transporterMap[selectedEntry.transporterId] ||
                 selectedEntry.addedTransport ||
                 "N/A"}
             </span>
-            <span className="text-slate-500">Driver Name:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Driver Name:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.driverName || "N/A"}
             </span>
-            <span className="text-slate-500">Driver Phone:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Driver Phone:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.driverPhoneNumber || "N/A"}
             </span>
-            <span className="text-slate-500">Loading From:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Loading From:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.loadingFrom || "N/A"}
             </span>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+          <h4 className="font-serif text-sm font-semibold text-lux-muted uppercase tracking-wider border-b border-[#ece4d2] pb-1">
             Weight & Billing
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-slate-500">Loading Wt:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Loading Wt:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.loadingWeight} Tons
             </span>
-            <span className="text-slate-500">Unloading Wt:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Unloading Wt:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.unloadingWeight || 0} Tons
             </span>
-            <span className="text-slate-500">Bags:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Bags:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.bags || "N/A"}
             </span>
-            <span className="text-slate-500">Bill No:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Bill No:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.billNumber || "N/A"}
             </span>
-            <span className="text-slate-500">Seller Bill No:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Seller Bill No:</span>
+            <span className="font-semibold text-lux-ink">
               {selectedEntry.sellerBillNo || "N/A"}
             </span>
-            <span className="text-slate-500">Bill Date:</span>
-            <span className="font-semibold text-slate-800">
+            <span className="text-lux-muted">Bill Date:</span>
+            <span className="font-semibold text-lux-ink">
               {formatDate(selectedEntry.dateOfIssue)}
             </span>
-            <span className="text-slate-500">Entered By:</span>
-            <span className="font-semibold text-slate-800 flex flex-col">
+            <span className="text-lux-muted">Entered By:</span>
+            <span className="font-semibold text-lux-ink flex flex-col">
               <span>{selectedEntry.creatorMobile || "N/A"}</span>
-              <span className="text-[10px] text-slate-400 uppercase">
+              <span className="text-[10px] text-lux-muted uppercase">
                 ({selectedEntry.entryByRole || "Admin"})
               </span>
             </span>
@@ -303,38 +303,38 @@ const ViewLoadingEntryPopup = ({
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+          <h4 className="font-serif text-sm font-semibold text-lux-muted uppercase tracking-wider border-b border-[#ece4d2] pb-1">
             Financial Summary
           </h4>
-          <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-slate-500">Freight Rate:</span>
-            <span className="font-bold text-slate-800">
+          <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-lux-ivory rounded-xl border border-[#ece4d2]">
+            <span className="text-lux-muted">Freight Rate:</span>
+            <span className="font-bold text-lux-ink">
               ₹ {selectedEntry.freightRate}
             </span>
-            <span className="text-slate-500">Total Freight:</span>
-            <span className="font-bold text-slate-800">
+            <span className="text-lux-muted">Total Freight:</span>
+            <span className="font-bold text-lux-ink">
               ₹ {selectedEntry.totalFreight}
             </span>
-            <span className="text-slate-500">Advance:</span>
-            <span className="font-bold text-emerald-600">
+            <span className="text-lux-muted">Advance:</span>
+            <span className="font-bold text-lux-emerald">
               ₹ {selectedEntry.advance}
             </span>
-            <span className="text-slate-500">Balance Due:</span>
-            <span className="font-bold text-green-600">
+            <span className="text-lux-muted">Balance Due:</span>
+            <span className="font-bold text-lux-emerald">
               ₹ {selectedEntry.balance}
             </span>
-            <span className="text-slate-500">Buyer Brokerage:</span>
-            <span className="font-bold text-slate-800">
+            <span className="text-lux-muted">Buyer Brokerage:</span>
+            <span className="font-bold text-lux-ink">
               ₹ {selectedEntry.buyerBrokerage || 0}
             </span>
-            <span className="text-slate-500">Seller Brokerage:</span>
-            <span className="font-bold text-slate-800">
+            <span className="text-lux-muted">Seller Brokerage:</span>
+            <span className="font-bold text-lux-ink">
               ₹ {selectedEntry.sellerBrokerage || 0}
             </span>
             {selectedEntry.isRejected && (
               <>
-                <span className="text-slate-500 col-span-1">Status:</span>
-                <span className="font-bold text-red-700 bg-red-100 rounded px-2 py-0.5 inline-block text-right">
+                <span className="text-lux-muted col-span-1">Status:</span>
+                <span className="font-bold text-rose-700 bg-rose-100 rounded px-2 py-0.5 inline-block text-right">
                   REJECTED
                 </span>
               </>
@@ -345,10 +345,10 @@ const ViewLoadingEntryPopup = ({
 
       <DocumentsSection entry={selectedEntry} />
 
-      <div className="flex justify-end pt-4 border-t">
+      <div className="flex justify-end pt-4 border-t border-[#ece4d2]">
         <button
           onClick={onClose}
-          className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
+          className="px-6 py-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft font-bold ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
         >
           Close
         </button>

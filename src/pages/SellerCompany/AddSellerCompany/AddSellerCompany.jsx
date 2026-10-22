@@ -248,12 +248,12 @@ const AddSellerCompany = () => {
         icon={FaBuilding}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="w-full bg-white rounded-2xl border border-green-200/60 shadow-lg p-4 sm:p-6 md:p-8">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label
-                  className="text-slate-700 font-semibold"
+                  className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                   htmlFor="companyName"
                 >
                   Company Name
@@ -269,7 +269,7 @@ const AddSellerCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-slate-700 font-semibold" htmlFor="gstNo">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted" htmlFor="gstNo">
                   GST No
                 </label>
                 <DataInput
@@ -283,7 +283,7 @@ const AddSellerCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-slate-700 font-semibold" htmlFor="panNo">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted" htmlFor="panNo">
                   PAN No
                 </label>
                 <DataInput
@@ -304,7 +304,7 @@ const AddSellerCompany = () => {
               </div>
               <div>
                 <label
-                  className="text-slate-700 font-semibold"
+                  className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                   htmlFor="address"
                 >
                   Address
@@ -320,7 +320,7 @@ const AddSellerCompany = () => {
               </div>
               <div>
                 <label
-                  className="text-slate-700 font-semibold"
+                  className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                   htmlFor="mobileNo"
                 >
                   Mobile Number
@@ -336,7 +336,7 @@ const AddSellerCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-slate-700 font-semibold" htmlFor="email">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted" htmlFor="email">
                   Email Address
                 </label>
                 <DataInput
@@ -351,7 +351,7 @@ const AddSellerCompany = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-slate-700 font-semibold" htmlFor="state">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted" htmlFor="state">
                   Select State
                 </label>
                 <DataDropdown
@@ -367,7 +367,7 @@ const AddSellerCompany = () => {
               </div>
               <div>
                 <label
-                  className="text-slate-700 font-semibold"
+                  className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                   htmlFor="district"
                 >
                   Select District
@@ -381,7 +381,7 @@ const AddSellerCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-slate-700 font-semibold" htmlFor="pinNo">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted" htmlFor="pinNo">
                   PIN No
                 </label>
                 <DataInput
@@ -397,7 +397,7 @@ const AddSellerCompany = () => {
               </div>
               <div>
                 <label
-                  className="text-slate-700 font-semibold"
+                  className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                   htmlFor="aadhaarNo"
                 >
                   Aadhaar No/Director
@@ -414,18 +414,18 @@ const AddSellerCompany = () => {
                 />
               </div>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">
+            <h3 className="mb-2 font-serif text-base font-semibold text-lux-ink sm:text-lg">
               Bank Details
             </h3>
             {bankDetails.map((bank, index) => (
               <div
                 key={bank.id}
-                className="mb-4 border border-slate-200 p-4 rounded-xl bg-slate-50/40"
+                className="mb-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label
-                      className="text-slate-700 font-semibold"
+                      className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                       htmlFor={`accountHolderName-${bank.id}`}
                     >
                       Account Holder Name
@@ -446,7 +446,7 @@ const AddSellerCompany = () => {
                   </div>
                   <div>
                     <label
-                      className="text-slate-700 font-semibold"
+                      className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                       htmlFor={`accountNumber-${bank.id}`}
                     >
                       Bank Account Number
@@ -467,7 +467,7 @@ const AddSellerCompany = () => {
                   </div>
                   <div>
                     <label
-                      className="text-slate-700 font-semibold"
+                      className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                       htmlFor={`ifscCode-${bank.id}`}
                     >
                       IFSC Code
@@ -490,7 +490,7 @@ const AddSellerCompany = () => {
                   </div>
                   <div>
                     <label
-                      className="text-slate-700 font-semibold"
+                      className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                       htmlFor={`bankName-${bank.id}`}
                     >
                       Bank Name
@@ -505,7 +505,7 @@ const AddSellerCompany = () => {
                   </div>
                   <div>
                     <label
-                      className="text-slate-700 font-semibold"
+                      className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
                       htmlFor={`branchName-${bank.id}`}
                     >
                       Branch Name
@@ -538,7 +538,7 @@ const AddSellerCompany = () => {
                 size="sm"
               />
             </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-2 mt-6 text-slate-800">
+            <h3 className="mb-2 mt-6 font-serif text-base font-semibold text-lux-ink sm:text-lg">
               Upload KYC Documents
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -586,7 +586,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="text-slate-700 font-semibold">MSME</label>
+              <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">MSME</label>
               <div className="flex items-center space-x-4 mt-2">
                 <label className="flex items-center space-x-2">
                   <input
@@ -594,7 +594,7 @@ const AddSellerCompany = () => {
                     name="msme"
                     value="yes"
                     onChange={() => setMsme(true)}
-                    className="form-radio text-blue-600"
+                    className="form-radio text-lux-emerald"
                   />
                   <span>Yes</span>
                 </label>
@@ -604,7 +604,7 @@ const AddSellerCompany = () => {
                     name="msme"
                     value="no"
                     onChange={() => setMsme(false)}
-                    className="form-radio text-blue-600"
+                    className="form-radio text-lux-emerald"
                   />
                   <span>No</span>
                 </label>

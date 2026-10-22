@@ -175,16 +175,16 @@ const ListSoudabook = () => {
         subtitle="Review your completed Saudas"
         icon={FaBook}
       >
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+            className="rounded-xl border border-[#ece4d2] bg-lux-ivory px-4 py-2 text-lux-ink transition hover:bg-lux-cream"
           >
             Back
           </button>
           <button
             onClick={exportExcel}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition"
+            className="rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-2 text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5"
             title="Export to Excel"
           >
             Export Excel
@@ -193,7 +193,7 @@ const ListSoudabook = () => {
         {loading ? (
           <Loading />
         ) : error ? (
-          <div className="text-red-500 text-center p-4">{error}</div>
+          <div className="text-rose-500 text-center p-4">{error}</div>
         ) : (
           <>
             <Tables headers={headers} rows={rows} />

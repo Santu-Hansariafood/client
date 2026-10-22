@@ -356,16 +356,16 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-md w-full sm:w-3/4 lg:w-2/3 max-h-screen overflow-auto relative">
+      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-[#062e25]/70 backdrop-blur-sm animate-modal-backdrop p-0 sm:p-4">
+        <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream p-4 sm:p-8 shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop">
           <button
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-2xl text-lux-muted transition hover:bg-[#f2eee2] hover:text-lux-ink active:scale-90"
             onClick={onClose}
           >
             ✖
           </button>
 
-          <h2 className="text-2xl font-bold mb-4 text-center">
+          <h2 className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink text-center mb-4 sm:text-lg md:text-xl">
             Edit Company Details
           </h2>
 
@@ -438,8 +438,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 placeholder="Select Consignees"
               />
 
-              <div className="col-span-2">
-                <div className="flex gap-2">
+              <div className="sm:col-span-2">
+                <div className="flex flex-wrap gap-2">
                   <DataDropdown
                     options={commodityOptions}
                     selectedOptions={selectedCommodityToAdd}
@@ -450,7 +450,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   <button
                     type="button"
                     onClick={handleAddCommodity}
-                    className="bg-emerald-700 text-white px-4 py-2 rounded"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                   >
                     Add
                   </button>
@@ -459,17 +459,17 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 {commodityEntries.map((entry, commodityIndex) => (
                   <div
                     key={commodityIndex}
-                    className="border p-4 mt-3 rounded relative"
+                    className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 mt-3 relative"
                   >
                     <button
                       type="button"
                       onClick={() => handleRemoveCommodity(commodityIndex)}
-                      className="absolute right-2 top-2 text-red-500"
+                      className="absolute right-3 top-3 text-rose-500 hover:text-rose-600"
                     >
                       ✖
                     </button>
 
-                    <p className="font-semibold">
+                    <p className="font-serif font-semibold text-lux-ink">
                       {getCommodityLabel(entry.commodityId)}
                     </p>
 
@@ -483,14 +483,14 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
                     {(entry.parameters || []).map((param, paramIndex) => (
                       <div key={paramIndex} className="mt-2">
-                        <p className="font-medium text-sm">{param.label}</p>
+                        <p className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">{param.label}</p>
 
                         {param.values.map((val, vIndex) => (
                           <div
                             key={vIndex}
-                            className="border p-3 mt-2 rounded-md bg-gray-50 space-y-2"
+                            className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-3 mt-2 space-y-2"
                           >
-                            <div className="flex gap-2 items-center">
+                            <div className="flex items-center gap-2 min-w-0">
                               <div className="flex-1">
                                 <DataInput
                                   placeholder="Base Value"
@@ -540,7 +540,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                       return updated;
                                     });
                                   }}
-                                  className="text-red-500 hover:text-red-700 text-sm"
+                                  className="text-rose-500 hover:text-rose-600 text-sm"
                                 >
                                   ✕
                                 </button>
@@ -548,7 +548,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <label className="text-xs">Claim Ratio</label>
+                              <label className="lux-eyebrow">Claim Ratio</label>
                               <DataInput
                                 placeholder="1"
                                 value={val.claimRatioLeft}
@@ -563,7 +563,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                                   });
                                 }}
                               />
-                              <span className="text-lg font-bold">:</span>
+                              <span className="text-lg font-bold text-lux-ink">:</span>
                               <DataInput
                                 placeholder="20"
                                 value={val.claimRatioRight}
@@ -603,7 +603,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                               return updated;
                             });
                           }}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm mt-2"
+                          className="inline-flex items-center gap-1 text-lux-emerald hover:text-lux-deep text-sm font-semibold mt-2"
                         >
                           <span className="text-lg">+</span> Add More
                         </button>
@@ -618,7 +618,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-green-500 text-white px-6 py-2 rounded"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
               >
                 Update
               </button>

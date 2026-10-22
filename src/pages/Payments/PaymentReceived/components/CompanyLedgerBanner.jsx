@@ -17,71 +17,71 @@ const CompanyLedgerBanner = ({
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl border px-4 py-3 sm:px-5 sm:py-4 shadow-sm ${
+      className={`rounded-2xl border px-4 py-3 shadow-sm sm:px-5 sm:py-4 ${
         mappingActive
-          ? "border-[#1e3a5f]/40 bg-gradient-to-r from-[#eef4ff] via-white to-[#fff8ed] ring-2 ring-[#1e3a5f]/10"
-          : "border-[#1e3a5f]/25 bg-gradient-to-r from-[#f8fafc] via-white to-[#f0f9ff]"
+          ? "border-lux-gold/40 bg-gradient-to-r from-lux-ivory via-lux-cream to-[#fff8ed] ring-2 ring-lux-gold/10"
+          : "border-[#ece4d2] bg-lux-ivory"
       }`}
     >
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-lux-emerald to-lux-deep px-3 py-1.5 text-lux-gold-soft shadow-sm ring-1 ring-lux-gold/30">
           <span className="text-[9px] font-black uppercase opacity-80">
             Buyer
           </span>
-          <span className="text-xs sm:text-sm font-black uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">
+          <span className="truncate max-w-[160px] text-xs font-black uppercase tracking-tight sm:max-w-none sm:text-sm">
             {buyerCompany}
           </span>
         </div>
-        <FaArrowRight className="text-slate-400 shrink-0" size={12} />
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500 text-white shadow-sm">
+        <FaArrowRight className="shrink-0 text-lux-muted" size={12} />
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1.5 text-emerald-700 shadow-sm">
           <span className="text-[9px] font-black uppercase opacity-80">
             Seller
           </span>
-          <span className="text-xs sm:text-sm font-black uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">
+          <span className="truncate max-w-[160px] text-xs font-black uppercase tracking-tight sm:max-w-none sm:text-sm">
             {supplierCompany || (buyerOnly ? "Select seller below" : "—")}
           </span>
         </div>
       </div>
       {subtitle && (
-        <p className="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+        <p className="lux-eyebrow mt-2 tracking-wide">
           {subtitle}
         </p>
       )}
       {showTotals && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-6 bg-white/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 shadow-inner sm:gap-6">
           <div className="flex flex-col gap-1 min-w-[150px]">
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <span className="lux-eyebrow flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
               {mappingActive && buyerCompany && supplierCompany
                 ? "Credit balance (Cr.)"
                 : isAdvance
                   ? "Advance · Cr."
                   : "Payment Received (Cr.)"}
             </span>
-            <span className="text-xl font-black text-emerald-700 tabular-nums tracking-tight">
+            <span className="font-serif text-xl font-semibold text-lux-ink tabular-nums tracking-tight">
               {formatLedgerAmount(creditEntryTotal)}
             </span>
           </div>
 
-          <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+          <div className="h-10 w-px bg-[#ece4d2] hidden md:block"></div>
 
           <div className="flex flex-col gap-1 min-w-[150px]">
-            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+            <span className="lux-eyebrow flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
               Lorry Bill (Dr.)
             </span>
-            <span className="text-xl font-black text-rose-700 tabular-nums tracking-tight">
+            <span className="font-serif text-xl font-semibold text-rose-700 tabular-nums tracking-tight">
               {formatLedgerAmount(debitToSeller)}
             </span>
           </div>
 
-          <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+          <div className="h-10 w-px bg-[#ece4d2] hidden md:block"></div>
 
-          <div className="flex flex-col gap-1 min-w-[150px] bg-[#1e3a5f] p-3 rounded-xl shadow-lg shadow-blue-100">
-            <span className="text-[9px] font-black text-blue-200 uppercase tracking-widest">
+          <div className="flex min-w-[150px] flex-col gap-1 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep p-3 text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30">
+            <span className="lux-eyebrow text-lux-gold-soft">
               {isAdvance ? "Cr. Balance Left" : "Net Cr. Remaining"}
             </span>
-            <span className="text-xl font-black text-white tabular-nums tracking-tight">
+            <span className="font-serif text-xl font-semibold text-lux-gold-soft tabular-nums tracking-tight">
               {formatLedgerAmount(creditBalanceRemaining)}
             </span>
           </div>

@@ -169,14 +169,14 @@ const ViewBidPopup = ({ bidId, onClose }) => {
   if (!bidId) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-800/60 backdrop-blur-sm flex justify-center items-center p-4 z-[9999]">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-green-800 uppercase tracking-tight">
+    <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-[#062e25]/70 p-0 backdrop-blur-sm animate-modal-backdrop sm:items-center sm:p-4">
+      <div className="relative flex max-h-[94vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-cream/95 px-6 py-4 backdrop-blur-xl">
+          <h2 className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink sm:text-lg md:text-xl">
             {bidDetails?.type || "Bid"} Details
           </h2>
           <button
-            className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all duration-200"
+            className="group inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lux-muted transition-all duration-300 hover:scale-105 hover:bg-[#f2eee2] hover:text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
             onClick={onClose}
             aria-label="Close"
           >
@@ -184,57 +184,57 @@ const ViewBidPopup = ({ bidId, onClose }) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-6">
           {loading ? (
             <Loading />
           ) : error ? (
             <div className="py-10 text-center">
-              <div className="bg-rose-50 text-rose-600 p-4 rounded-xl border border-rose-100 mb-4">
+              <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
                 {error}
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 font-medium"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
               >
                 Go Back
               </button>
             </div>
           ) : bidDetails ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Group</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="lux-eyebrow block">Group</span>
+                  <span className="font-semibold text-lux-ink">
                     {bidDetails.group || "N/A"}
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Commodity</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="lux-eyebrow block">Commodity</span>
+                  <span className="font-semibold text-lux-ink">
                     {bidDetails.commodity || "N/A"}
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Origin</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="lux-eyebrow block">Origin</span>
+                  <span className="font-semibold text-lux-ink">
                     {bidDetails.origin || "N/A"}
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Consignee</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="lux-eyebrow block">Consignee</span>
+                  <span className="font-semibold text-lux-ink">
                     {bidDetails.consignee || "N/A"}
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Quantity</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="lux-eyebrow block">Quantity</span>
+                  <span className="font-semibold text-lux-ink">
                     {bidDetails.quantity || 0} TONS
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-gray-500 block">Rate</span>
-                  <span className="font-semibold text-emerald-600 text-base">
+                  <span className="lux-eyebrow block">Rate</span>
+                  <span className="font-serif text-base font-semibold text-lux-emerald">
                     ₹{bidDetails.rate || 0}
                   </span>
                 </div>
@@ -242,8 +242,8 @@ const ViewBidPopup = ({ bidId, onClose }) => {
 
               {bidDetails.parameters &&
                 Object.keys(bidDetails.parameters).length > 0 && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                  <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+                    <h3 className="lux-eyebrow mb-3">
                       Quality Parameters
                     </h3>
                     <div className="space-y-3">
@@ -251,28 +251,28 @@ const ViewBidPopup = ({ bidId, onClose }) => {
                         ([key, vals]) => (
                           <div
                             key={key}
-                            className="bg-white p-3 rounded-lg border border-gray-200"
+                            className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-3"
                           >
-                            <span className="text-gray-600 text-xs font-semibold block mb-2">
+                            <span className="mb-2 block text-xs font-semibold text-lux-muted">
                               {key}
                             </span>
                             <div className="grid grid-cols-2 gap-2">
                               {vals?.baseValue && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-500 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-lux-muted">
                                     Base
                                   </span>
-                                  <span className="font-bold text-gray-900 text-xs">
+                                  <span className="text-xs font-bold text-lux-ink">
                                     {vals.baseValue}
                                   </span>
                                 </div>
                               )}
                               {vals?.maxValue && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-500 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-lux-muted">
                                     Max
                                   </span>
-                                  <span className="font-bold text-gray-900 text-xs">
+                                  <span className="text-xs font-bold text-lux-ink">
                                     {vals.maxValue}
                                   </span>
                                 </div>
@@ -285,39 +285,39 @@ const ViewBidPopup = ({ bidId, onClose }) => {
                   </div>
                 )}
 
-              <div className="grid grid-cols-2 gap-4 text-sm pt-2">
-                <div className="p-3 rounded-xl border border-gray-100 bg-emerald-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">
+              <div className="grid grid-cols-2 gap-4 pt-2 text-sm">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
+                  <span className="lux-eyebrow mb-1 block">
                     Bid Date
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-lux-ink">
                     {bidDetails.bidDate
                       ? new Date(bidDetails.bidDate).toLocaleDateString("en-GB")
                       : "N/A"}
                   </span>
                 </div>
-                <div className="p-3 rounded-xl border border-gray-100 bg-emerald-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
+                  <span className="lux-eyebrow mb-1 block">
                     Time Range
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-lux-ink">
                     {bidDetails.startTime || "00:00"} -{" "}
                     {bidDetails.endTime || "00:00"}
                   </span>
                 </div>
-                <div className="p-3 rounded-xl border border-gray-100 bg-blue-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
+                  <span className="lux-eyebrow mb-1 block">
                     Payment Terms
                   </span>
-                  <span className="font-medium text-blue-700">
+                  <span className="font-medium text-lux-emerald">
                     {bidDetails.paymentTerms || 0} Days
                   </span>
                 </div>
-                <div className="p-3 rounded-xl border border-gray-100 bg-blue-50/30">
-                  <span className="text-gray-500 text-xs block mb-1">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
+                  <span className="lux-eyebrow mb-1 block">
                     Delivery
                   </span>
-                  <span className="font-medium text-blue-700">
+                  <span className="font-medium text-lux-emerald">
                     {bidDetails.delivery || 0} Days
                   </span>
                 </div>
@@ -325,10 +325,10 @@ const ViewBidPopup = ({ bidId, onClose }) => {
 
               {/* Notes */}
               <div className="pt-2">
-                <span className="text-gray-500 text-xs block mb-1 uppercase font-bold tracking-wider">
+                <span className="lux-eyebrow mb-1 block">
                   Notes
                 </span>
-                <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-xl border border-dashed border-gray-200 italic">
+                <p className="rounded-2xl border border-dashed border-[#e4dbc6] bg-lux-ivory p-3 text-sm italic text-lux-muted">
                   {bidDetails.notes || "No additional notes provided."}
                 </p>
               </div>
@@ -337,19 +337,19 @@ const ViewBidPopup = ({ bidId, onClose }) => {
         </div>
 
         {!loading && !error && bidDetails && (
-          <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+          <div className="border-t border-[#ece4d2] bg-lux-ivory/60 p-6">
             <button
               onClick={generatePDF}
               disabled={isGeneratingPDF}
-              className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-white transition-all duration-300 shadow-lg shadow-green-200/50 ${
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold text-lux-gold-soft shadow-lg transition-all duration-300 ${
                 isGeneratingPDF
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 active:scale-[0.98]"
+                  ? "cursor-not-allowed bg-lux-muted"
+                  : "bg-gradient-to-br from-lux-emerald to-lux-deep ring-1 ring-lux-gold/30 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98]"
               }`}
             >
               {isGeneratingPDF ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   <span>Generating...</span>
                 </>
               ) : (

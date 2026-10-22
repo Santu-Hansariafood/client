@@ -412,13 +412,13 @@ const ParticipateBidAdmin = () => {
     return paginatedData.map((bid, index) => [
       (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
       <div key={`date-${bid.bidId}`} className="flex flex-col">
-        <span className="font-bold text-slate-700">
+        <span className="font-bold text-lux-ink">
           {new Date(bid.date).toLocaleDateString("en-IN", {
             day: "2-digit",
             month: "short",
           })}
         </span>
-        <span className="text-[10px] text-slate-400 font-medium uppercase">
+        <span className="text-[10px] font-medium uppercase text-lux-muted">
           {new Date(bid.date).toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
@@ -427,7 +427,7 @@ const ParticipateBidAdmin = () => {
       </div>,
       <span
         key={`group-${bid.bidId}`}
-        className="font-black text-emerald-700 uppercase tracking-tighter"
+        className="font-serif font-black uppercase tracking-tight text-lux-emerald"
       >
         {bid.group}
       </span>,
@@ -436,53 +436,53 @@ const ParticipateBidAdmin = () => {
           key={`consignee-${bid.bidId}`}
           type="button"
           onClick={() => openConsigneeSellers(bid.consignee)}
-          className="font-bold text-left text-emerald-700 underline decoration-dotted underline-offset-4 hover:text-emerald-900"
+          className="text-left font-semibold text-lux-emerald underline decoration-dotted underline-offset-4 hover:text-lux-deep"
           title="View top sellers for this consignee"
         >
           {bid.consignee}
         </button>
       ) : (
-        <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">
+        <span key={`consignee-${bid.bidId}`} className="font-bold text-lux-ink">
           {bid.consignee}
         </span>
       ),
       bid.origin,
-      <span key={`commodity-${bid.bidId}`} className="font-bold text-slate-600">
+      <span key={`commodity-${bid.bidId}`} className="font-bold text-lux-muted">
         {bid.commodity}
       </span>,
       <div key={`sellers-${bid.bidId}`} className="max-w-[150px]">
-        <p className="text-xs font-medium text-slate-600 truncate">
+        <p className="truncate text-xs font-medium text-lux-muted">
           {Array.from(bid.sellers || []).join(", ") || "N/A"}
         </p>
       </div>,
-      <span key={`bidqty-${bid.bidId}`} className="font-black text-slate-900">
+      <span key={`bidqty-${bid.bidId}`} className="font-black text-lux-ink">
         {bid.quantity} T
       </span>,
       <span
         key={`bidrate-${bid.bidId}`}
-        className="font-black text-emerald-600"
+        className="font-black text-lux-emerald"
       >
         ₹{bid.rates}
       </span>,
-      <span key={`partyqty-${bid.bidId}`} className="font-bold text-blue-600">
+      <span key={`partyqty-${bid.bidId}`} className="font-bold text-lux-emerald">
         {bid.quantities} T
       </span>,
-      <span key={`partyrate-${bid.bidId}`} className="font-bold text-blue-600">
+      <span key={`partyrate-${bid.bidId}`} className="font-bold text-lux-emerald">
         ₹{bid.rate}
       </span>,
       <div key={`status-${bid.bidId}`} className="flex flex-col gap-1">
         {bid.pendingCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-green-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-800 shadow-sm">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
             {bid.pendingCount} Pending
           </span>
         ) : bid.completedCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-emerald-200">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 shadow-sm">
             <FaCheckCircle size={10} />
             Complete
           </span>
         ) : (
-          <span className="text-[10px] font-bold text-slate-400 uppercase">
+          <span className="text-[10px] font-bold uppercase text-lux-muted">
             No Activity
           </span>
         )}
@@ -491,13 +491,12 @@ const ParticipateBidAdmin = () => {
         key={bid.bidId}
         type="button"
         onClick={() => setSelectedBidId(bid.bidId)}
-        className="group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all duration-300 shadow-sm overflow-hidden"
+        className="group relative flex items-center gap-2 overflow-hidden rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-lux-emerald shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <span className="relative z-10 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+        <span className="relative z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
           <FaUsers
             size={12}
-            className="group-hover:scale-110 transition-transform"
+            className="transition-transform group-hover:scale-110"
           />
           {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
         </span>
@@ -535,78 +534,78 @@ const ParticipateBidAdmin = () => {
         icon={FaUsers}
         noContentCard
       >
-        <div className="max-w-[1600px] mx-auto space-y-8 p-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-6 rounded-[2rem] shadow border">
+        <div className="mx-auto w-full max-w-7xl space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="lux-card lux-gold-top w-full p-4 sm:p-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                   <FaGavel />
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold uppercase text-emerald-600">
+                  <p className="lux-eyebrow text-lux-emerald">
                     Bids
                   </p>
 
-                  <p className="text-3xl font-black">{stats.totalBidsToday}</p>
+                  <p className="font-serif text-3xl font-black text-lux-ink">{stats.totalBidsToday}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[2rem] shadow border">
+            <div className="lux-card lux-gold-top w-full p-4 sm:p-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                   <FaHandshake />
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold uppercase text-blue-600">
+                  <p className="lux-eyebrow text-lux-emerald">
                     Participations
                   </p>
 
-                  <p className="text-3xl font-black">
+                  <p className="font-serif text-3xl font-black text-lux-ink">
                     {stats.totalParticipationsToday}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[2rem] shadow border">
+            <div className="lux-card lux-gold-top w-full p-4 sm:p-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-green-500 text-white flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                   <FaCheckCircle />
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold uppercase text-green-600">
+                  <p className="lux-eyebrow text-lux-emerald">
                     Accepted Qty
                   </p>
 
-                  <p className="text-3xl font-black">
+                  <p className="font-serif text-3xl font-black text-lux-ink">
                     {stats.totalAcceptedQty.toFixed(2)} T
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[2rem] shadow border">
+            <div className="lux-card lux-gold-top w-full p-4 sm:p-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-slate-700 text-white flex items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                   <FaFilter />
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold uppercase text-slate-600">
+                  <p className="lux-eyebrow text-lux-emerald">
                     Filtered
                   </p>
 
-                  <p className="text-3xl font-black">{stats.filteredResults}</p>
+                  <p className="font-serif text-3xl font-black text-lux-ink">{stats.filteredResults}</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex flex-col xl:flex-row gap-4 bg-white p-4 rounded-[2rem] shadow border">
-            <div className="flex-1 flex flex-col sm:flex-row gap-4">
+          <div className="lux-card flex flex-col gap-4 p-4 sm:p-5 xl:flex-row">
+            <div className="flex flex-1 flex-col gap-4 sm:flex-row">
               <div className="flex-1">
                 <SearchBox
                   placeholder="Search by consignee, commodity..."
@@ -626,7 +625,7 @@ const ParticipateBidAdmin = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate(-1)}
-                  className="px-5 py-2.5 rounded-2xl bg-slate-100 font-bold"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 >
                   <FaArrowLeft />
                 </button>
@@ -638,7 +637,7 @@ const ParticipateBidAdmin = () => {
                       setSelectedGroup(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="px-4 py-2.5 rounded-2xl border"
+                    className="rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 text-lux-ink shadow-sm outline-none focus:ring-2 focus:ring-lux-gold/50"
                   >
                     <option value="All">All Groups</option>
 
@@ -710,7 +709,7 @@ const ParticipateBidAdmin = () => {
                       type="button"
                       onClick={loadMoreConsigneeSellers}
                       disabled={consigneeSellersLoading}
-                      className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
                     >
                       {consigneeSellersLoading ? "Loading..." : "Show more"}
                     </button>
@@ -724,13 +723,13 @@ const ParticipateBidAdmin = () => {
             <Loading />
           ) : (
             <div className="space-y-6">
-              <div className="rounded-[2rem] bg-white border shadow overflow-hidden">
+              <div className="lux-card overflow-hidden p-4 sm:p-6">
                 <div className="p-2">
                   <Tables headers={headers} rows={rows} />
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-[2rem] border shadow flex justify-center">
+              <div className="flex justify-center rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-6">
                 <Pagination
                   currentPage={currentPage}
                   totalItems={totalItems}

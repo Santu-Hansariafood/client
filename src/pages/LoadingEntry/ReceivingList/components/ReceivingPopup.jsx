@@ -359,13 +359,13 @@ const ReceivingPopup = ({
             onClick={handlePrint}
             title="Print Report"
             aria-label="Print Report"
-            className="flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-900 text-white hover:bg-black transition-all duration-300 shadow-xl shadow-slate-200 border border-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-400/20 active:scale-95 group"
+            className="group flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lux-gold/30 active:scale-95 sm:h-12 sm:w-12"
           >
             <FaPrint className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         }
       >
-        <div className="p-4 sm:p-8 space-y-10">
+        <div className="space-y-6 sm:space-y-8">
           {(userRole === "Admin" || userRole === "Employee") && (
             <SendReportSection
               sellerCompanies={sellerCompanies}

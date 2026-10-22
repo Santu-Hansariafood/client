@@ -347,20 +347,20 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
   return (
     <Suspense fallback={<Loading />}>
       <div
-        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#062e25]/70 backdrop-blur-sm animate-modal-backdrop"
         onClick={handleBackdropClick}
       >
-        <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="bg-lux-cream w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-pop-in">
+          <div className="p-4 sm:p-6 border-b border-[#ece4d2] flex items-center justify-between bg-lux-ivory">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-lux-emerald to-lux-deep rounded-2xl flex items-center justify-center text-lux-gold-soft shadow-lg">
                 <FaFilePdf size={20} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900 italic tracking-tight">
+                <h3 className="font-serif text-xl font-semibold text-lux-ink tracking-tight">
                   Details of {saudaNo}
                 </h3>
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-widest">
+                <p className="lux-eyebrow">
                   Sauda MIS Report
                 </p>
               </div>
@@ -369,21 +369,21 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
               {data && !loading && !error && (
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg"
+                  className="flex items-center gap-2 bg-gradient-to-br from-lux-emerald to-lux-deep hover:from-lux-deep hover:to-lux-night text-lux-gold-soft px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ring-1 ring-lux-gold/30"
                 >
                   <FaPrint /> Export PDF
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 rounded-xl transition-all"
+                className="p-3 bg-lux-cream border border-[#e4dbc6] text-lux-muted hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 rounded-xl transition-all"
               >
                 <FaTimes size={18} />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-8">
             {loading ? (
               <Loading />
             ) : error ? (
@@ -392,16 +392,16 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                   <FaExclamationTriangle size={32} />
                 </div>
                 <div className="space-y-2">
-                  <h4 className="text-lg font-black text-slate-900">
+                  <h4 className="font-serif text-lg font-semibold text-lux-ink">
                     Oops! Something went wrong
                   </h4>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                  <p className="text-sm text-lux-muted max-w-xs mx-auto">
                     {error}
                   </p>
                 </div>
                 <button
                   onClick={fetchDetails}
-                  className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                  className="px-8 py-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-2xl text-xs font-black uppercase tracking-widest hover:from-lux-deep hover:to-lux-night transition-all shadow-xl"
                 >
                   Try Again
                 </button>
@@ -409,25 +409,25 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
             ) : data ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                  <div className="space-y-4 bg-lux-ivory p-6 rounded-3xl border border-[#ece4d2]">
                     <div className="flex items-center gap-3">
-                      <FaBuilding className="text-slate-400" />
+                      <FaBuilding className="text-lux-muted" />
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow">
                           Buyer
                         </p>
-                        <p className="font-bold text-slate-800 uppercase">
+                        <p className="font-bold text-lux-ink uppercase">
                           {data.order?.buyerCompany || "N/A"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <FaUserTie className="text-slate-400" />
+                      <FaUserTie className="text-lux-muted" />
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow">
                           Seller
                         </p>
-                        <p className="font-bold text-slate-800 uppercase">
+                        <p className="font-bold text-lux-ink uppercase">
                           {data.order?.supplier?.sellerName ||
                             data.order?.supplierCompany ||
                             "N/A"}
@@ -435,25 +435,25 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <FaArrowDown className="text-slate-400" />
+                      <FaArrowDown className="text-lux-muted" />
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow">
                           Consignee
                         </p>
-                        <p className="font-bold text-slate-800 uppercase">
+                        <p className="font-bold text-lux-ink uppercase">
                           {data.order?.consignee || "-"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4 bg-slate-900 p-6 rounded-3xl text-white shadow-xl shadow-slate-200">
+                  <div className="space-y-4 bg-gradient-to-br from-lux-emerald via-lux-deep to-lux-emerald p-6 rounded-3xl text-lux-cream shadow-xl shadow-lux-emerald/20">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow text-lux-gold-soft/70">
                           Sauda Date
                         </p>
-                        <p className="text-lg font-black italic tracking-tighter">
+                        <p className="font-serif text-lg font-semibold tracking-tight">
                           {data.order?.date
                             ? new Date(data.order.date).toLocaleDateString(
                                 "en-GB",
@@ -461,97 +461,97 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                             : "N/A"}
                         </p>
                       </div>
-                      <FaCalendarAlt className="text-slate-700" size={24} />
+                      <FaCalendarAlt className="text-lux-gold-soft/40" size={24} />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow text-lux-gold-soft/70">
                           Quantity
                         </p>
-                        <p className="text-lg font-black italic tracking-tighter">
+                        <p className="font-serif text-lg font-semibold tracking-tight">
                           {data.order?.quantity?.toLocaleString() || "0"}{" "}
                           {data.order?.unit || "Ton"}
                         </p>
                       </div>
-                      <FaBox className="text-slate-700" size={24} />
+                      <FaBox className="text-lux-gold-soft/40" size={24} />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="lux-eyebrow text-lux-gold-soft/70">
                           Rate
                         </p>
-                        <p className="text-lg font-black italic tracking-tighter">
+                        <p className="font-serif text-lg font-semibold tracking-tight">
                           Rs. {data.order?.rate?.toLocaleString() || "0"}
                         </p>
                       </div>
-                      <FaChartLine className="text-slate-700" size={24} />
+                      <FaChartLine className="text-lux-gold-soft/40" size={24} />
                     </div>
                   </div>
                 </div>
 
-                <div className="border border-slate-200 rounded-3xl overflow-hidden shadow-sm bg-white">
+                <div className="border border-[#ece4d2] rounded-3xl overflow-hidden shadow-sm bg-lux-cream">
                   {consolidatedData.length > 0 ? (
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">
+                        <tr className="bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald text-lux-gold-soft font-serif border-b border-[#ece4d2]">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest">
                             Date
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest">
                             Bill No.
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest">
                             L.No.
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest text-right">
                             L.Wt
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest">
                             Un.Dt
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest text-right">
                             Un.Wt
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest text-right">
                             Amount
                           </th>
-                          <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">
+                          <th className="px-4 py-3 text-[10px] font-black text-lux-gold-soft tracking-widest text-right">
                             Balance
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-[#ece4d2]">
                         {consolidatedData.map((item, idx) => (
                           <React.Fragment key={idx}>
                             {item.type === "loading" ? (
-                              <tr className="hover:bg-slate-50 transition-colors">
-                                <td className="px-4 py-4 text-xs font-bold text-slate-600">
+                              <tr className="odd:bg-lux-cream even:bg-[#f2eee2]/50 hover:bg-lux-ivory transition-colors">
+                                <td className="px-4 py-4 text-xs font-bold text-lux-muted">
                                   {new Date(item.date).toLocaleDateString(
                                     "en-GB",
                                   )}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-black text-slate-900">
+                                <td className="px-4 py-4 text-xs font-black text-lux-ink">
                                   {item.billNo}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-bold text-slate-600">
+                                <td className="px-4 py-4 text-xs font-bold text-lux-muted">
                                   {item.lNo}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">
+                                <td className="px-4 py-4 text-xs font-black text-lux-ink text-right">
                                   {item.lWt.toFixed(3)}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-bold text-slate-600">
+                                <td className="px-4 py-4 text-xs font-bold text-lux-muted">
                                   {item.unDt}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">
+                                <td className="px-4 py-4 text-xs font-black text-lux-ink text-right">
                                   {item.unWt.toFixed(3)}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">
+                                <td className="px-4 py-4 text-xs font-black text-lux-ink text-right italic">
                                   Rs.{" "}
                                   {item.amount.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                   })}
                                 </td>
-                                <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">
+                                <td className="px-4 py-4 text-xs font-black text-lux-ink text-right italic">
                                   Rs.{" "}
                                   {item.balance.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
@@ -563,7 +563,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                 <td colSpan={6} className="px-4 py-3">
                                   <div className="flex items-center gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                                    <p className="text-[11px] font-bold text-slate-600 italic">
+                                    <p className="text-[11px] font-bold text-lux-muted italic">
                                       {new Date(item.date).toLocaleDateString(
                                         "en-GB",
                                       )}{" "}
@@ -571,7 +571,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                       {item.amount.toLocaleString()}/- by{" "}
                                       {item.mode}
                                       {item.remarks && (
-                                        <span className="text-slate-400 ml-1">
+                                        <span className="text-lux-muted/70 ml-1">
                                           [{item.remarks}]
                                         </span>
                                       )}
@@ -594,10 +594,10 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                     </table>
                   ) : (
                     <div className="py-20 flex flex-col items-center justify-center text-center gap-4">
-                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                      <div className="w-16 h-16 bg-lux-ivory rounded-full flex items-center justify-center text-lux-gold">
                         <FaBox size={24} />
                       </div>
-                      <p className="text-slate-400 font-bold uppercase tracking-widest">
+                      <p className="text-lux-muted font-bold uppercase tracking-widest">
                         No entries or payments found for this Sauda.
                       </p>
                     </div>

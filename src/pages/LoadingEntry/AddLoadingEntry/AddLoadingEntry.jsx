@@ -78,26 +78,26 @@ const SearchFiltersCard = ({
       : Boolean(selectedGroup?.value || saudaSearch.trim());
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-emerald-50/30 shadow-lg p-4 sm:p-6">
+    <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
       {loading ? (
         <Loading />
       ) : (
         <div className="space-y-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              <p className="lux-eyebrow text-lux-muted">
                 Search Filters
               </p>
-              <h3 className="text-lg font-bold text-slate-800 mt-1">
+              <h3 className="font-serif text-lg font-semibold text-lux-ink mt-1">
                 Find sauda entries quickly and add loading details smoothly
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-lux-gold/30 bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-emerald">
                 Results: {resultCount}
               </span>
               {userRole !== "Seller" && (
-                <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                <span className="inline-flex items-center rounded-full border border-lux-gold/30 bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-emerald">
                   Group first, then company
                 </span>
               )}
@@ -112,7 +112,7 @@ const SearchFiltersCard = ({
               {userRole !== "Seller" && (
                 <>
                   <div>
-                    <label className="block mb-1 text-sm font-semibold text-slate-700">
+                    <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                       Group
                     </label>
                     <DataDropdown
@@ -123,12 +123,12 @@ const SearchFiltersCard = ({
                       isMulti={false}
                       isClearable
                     />
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-lux-muted">
                       Start by selecting the buyer group.
                     </p>
                   </div>
                   <div>
-                    <label className="block mb-1 text-sm font-semibold text-slate-700">
+                    <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                       Buyer Company
                     </label>
                     <DataDropdown
@@ -140,14 +140,14 @@ const SearchFiltersCard = ({
                       isClearable
                       disabled={!selectedGroup}
                     />
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-lux-muted">
                       Shows company names only, single select.
                     </p>
                   </div>
                 </>
               )}
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Consignee
                 </label>
                 <DataDropdown
@@ -165,7 +165,7 @@ const SearchFiltersCard = ({
                 />
               </div>
               <div className="relative">
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Sauda No
                 </label>
                 <input
@@ -180,11 +180,11 @@ const SearchFiltersCard = ({
                     setTimeout(() => setIsSaudaSuggestOpen(false), 120);
                   }}
                   placeholder="Search by Sauda No"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition shadow-sm"
+                  className="w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald outline-none transition shadow-sm"
                 />
 
                 {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 mt-1 w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream shadow-xl overflow-hidden max-h-64 overflow-y-auto">
                     {saudaSuggestions.map((o) => (
                       <button
                         key={String(o.saudaNo)}
@@ -193,13 +193,13 @@ const SearchFiltersCard = ({
                           e.preventDefault();
                           handleSaudaSelection(o);
                         }}
-                        className="w-full text-left px-3 py-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-b-0"
+                        className="w-full text-left px-3 py-3 hover:bg-lux-ivory transition border-b border-[#ece4d2] last:border-b-0"
                       >
-                        <div className="text-sm font-semibold text-slate-800">
+                        <div className="text-sm font-semibold text-lux-ink">
                           Sauda: {o.saudaNo}
                           {o._count > 1 ? ` (${o._count})` : ""}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-lux-muted">
                           {capitalizeWords(o.consignee)}
                         </div>
                       </button>
@@ -211,7 +211,7 @@ const SearchFiltersCard = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Seller Name
                 </label>
                 <DataDropdown
@@ -236,7 +236,7 @@ const SearchFiltersCard = ({
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Seller Company
                 </label>
                 <DataDropdown
@@ -256,14 +256,14 @@ const SearchFiltersCard = ({
             <button
               onClick={handleSearch}
               disabled={!canSearch}
-              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Search Loading Entries
             </button>
             <button
               type="button"
               onClick={handleClearFilters}
-              className="w-full sm:w-auto px-5 py-2.5 bg-white text-slate-700 rounded-xl shadow-sm hover:bg-slate-50 transition font-semibold border border-slate-200"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg active:scale-[0.97]"
             >
               Clear Filters
             </button>
@@ -286,21 +286,21 @@ const OrdersTableCard = ({
   const closedCount = orders.length - activeCount;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+    <div className="lux-card overflow-hidden w-full p-3 sm:p-4">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <p className="lux-eyebrow text-lux-muted">
             Loading Search Results
           </p>
-          <h3 className="text-lg font-bold text-slate-800 mt-1">
+          <h3 className="font-serif text-lg font-semibold text-lux-ink mt-1">
             Matched Sauda Entries
           </h3>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+          <span className="inline-flex items-center rounded-full border border-lux-gold/30 bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-emerald">
             Total: {orders.length}
           </span>
-          <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+          <span className="inline-flex items-center rounded-full border border-lux-gold/30 bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-emerald">
             Active: {activeCount}
           </span>
           <span className="inline-flex items-center rounded-full border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
@@ -345,10 +345,10 @@ const OrdersTableCard = ({
               order.pendingQuantity,
               <span
                 key={`status-${order._id}`}
-                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                   isClosed
-                    ? "bg-red-100 text-red-700"
-                    : "bg-emerald-100 text-emerald-700"
+                    ? "border-rose-200 bg-rose-50 text-rose-600"
+                    : "border-lux-gold/30 bg-lux-ivory text-lux-emerald"
                 }`}
               >
                 {isClosed ? "Closed" : "Active"}
@@ -361,7 +361,7 @@ const OrdersTableCard = ({
                   <>
                     <button
                       onClick={() => handleOpenPopup(order)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-lux-ivory text-lux-emerald rounded-lg border border-lux-gold/30 hover:bg-white transition text-xs font-bold whitespace-nowrap"
                       title="Add Loading Entry"
                     >
                       <FaPlus /> Add Loading Entry
@@ -369,7 +369,7 @@ const OrdersTableCard = ({
                     {(userRole === "Admin" || userRole === "Employee") && (
                       <button
                         onClick={() => toggleSaudaStatus(order)}
-                        className="px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-xs font-bold"
+                        className="px-2.5 py-1.5 bg-lux-ivory text-lux-emerald rounded-lg border border-lux-gold/30 hover:bg-white transition text-xs font-bold"
                         title="Close Sauda"
                       >
                         Close
@@ -379,13 +379,13 @@ const OrdersTableCard = ({
                 ) : (userRole === "Admin" || userRole === "Employee") ? (
                   <button
                     onClick={() => toggleSaudaStatus(order)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-lux-ivory text-lux-muted rounded-lg border border-[#ece4d2] hover:bg-white transition text-xs font-bold"
                     title="Reopen Sauda"
                   >
                     Reopen
                   </button>
                 ) : (
-                  <span className="text-xs font-bold text-slate-400 italic px-3 py-1.5">
+                  <span className="text-xs font-bold text-lux-muted italic px-3 py-1.5">
                     Closed
                   </span>
                 )}
@@ -394,7 +394,7 @@ const OrdersTableCard = ({
           })}
         />
       ) : (
-        <div className="py-10 text-center text-slate-500 font-medium">
+        <div className="py-10 text-center text-lux-muted font-medium">
           No results found. Please adjust your filters.
         </div>
       )}
@@ -911,7 +911,7 @@ const AddLoadingEntry = () => {
     userRole !== "Seller"
   ) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-slate-500 font-medium">
+      <div className="flex items-center justify-center min-h-[60vh] text-lux-muted font-medium">
         You do not have permission to access this page.
       </div>
     );
@@ -967,7 +967,7 @@ const AddLoadingEntry = () => {
                 {selectedSummary.map((item) => (
                   <span
                     key={item}
-                    className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                    className="inline-flex items-center rounded-full border border-lux-gold/30 bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-emerald"
                   >
                     {item}
                   </span>
@@ -990,19 +990,19 @@ const AddLoadingEntry = () => {
               <button
                 type="button"
                 onClick={handleBackToAdd}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-bold"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-lux-cream text-lux-emerald border border-[#e4dbc6] hover:bg-white font-bold shadow-sm transition"
               >
                 <FaArrowLeft /> Back
               </button>
-              <h2 className="text-xl font-extrabold text-slate-800">
+              <h2 className="font-serif text-xl font-semibold text-lux-ink">
                 Edit Loading Entry
               </h2>
             </div>
 
-            <div className="space-y-6 p-4 rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="space-y-6 p-4 rounded-3xl lux-card w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Loading Date
                   </label>
                   <DateSelector
@@ -1018,7 +1018,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Unloading Date
                   </label>
                   <DateSelector
@@ -1040,7 +1040,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Due Date
                   </label>
                   <DateSelector
@@ -1056,7 +1056,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Loading From
                   </label>
                   <DataDropdown
@@ -1079,7 +1079,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Lorry Number
                   </label>
                   <DataInput
@@ -1093,7 +1093,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Bags
                   </label>
                   <DataInput
@@ -1105,7 +1105,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Loading Weight (Tons)
                   </label>
                   <DataInput
@@ -1120,7 +1120,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Unloading Weight (Tons)
                   </label>
                   <input
@@ -1141,7 +1141,7 @@ const AddLoadingEntry = () => {
                         });
                       }
                     }}
-                    className={`w-full px-3 py-2 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition text-sm ${
+                    className={`w-full px-3 py-2 rounded-xl border border-[#e4dbc6] bg-lux-cream shadow-sm focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald outline-none transition text-sm ${
                       editingEntry.loadingWeight &&
                       editingEntry.unloadingWeight &&
                       parseFloat(editingEntry.unloadingWeight) >
@@ -1162,7 +1162,7 @@ const AddLoadingEntry = () => {
                     )}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Freight Rate
                   </label>
                   <DataInput
@@ -1177,7 +1177,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Advance
                   </label>
                   <DataInput
@@ -1192,7 +1192,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Bill Number
                   </label>
                   <DataInput
@@ -1206,7 +1206,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Seller Bill No
                   </label>
                   <DataInput
@@ -1220,7 +1220,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Driver Name
                   </label>
                   <DataInput
@@ -1234,7 +1234,7 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-xs font-bold text-lux-muted uppercase font-serif">
                     Driver Phone
                   </label>
                   <DataInput
@@ -1249,17 +1249,17 @@ const AddLoadingEntry = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#ece4d2]">
                 <button
                   onClick={handleBackToAdd}
-                  className="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-6 py-2.5 text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg active:scale-[0.97] font-bold"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateEditingEntry}
                   disabled={isSaving}
-                  className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold shadow-md shadow-emerald-100"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? "Saving..." : "Update Entry"}
                 </button>
@@ -1274,26 +1274,26 @@ const AddLoadingEntry = () => {
               <button
                 type="button"
                 onClick={handleBackToList}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-bold"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-lux-cream text-lux-emerald border border-[#e4dbc6] hover:bg-white font-bold shadow-sm transition"
               >
                 <FaArrowLeft /> Back
               </button>
-              <h2 className="text-xl font-extrabold text-slate-800">
+              <h2 className="font-serif text-xl font-semibold text-lux-ink">
                 Add Loading Entry - Sauda: {selectedOrder.saudaNo}
               </h2>
             </div>
 
-            <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
-                <div className="bg-white p-3 rounded-xl border border-slate-200">
-                  <p className="text-slate-500 font-medium">Total Quantity</p>
-                  <p className="font-bold text-slate-800 text-lg">
+            <div className="space-y-6 rounded-3xl lux-card w-full p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-lux-ivory rounded-2xl text-sm border border-[#ece4d2] shadow-inner">
+                <div className="bg-lux-cream p-3 rounded-xl border border-[#e4dbc6]">
+                  <p className="text-lux-muted font-medium">Total Quantity</p>
+                  <p className="font-serif font-bold text-lux-ink text-lg">
                     {(selectedOrder.quantity || 0).toFixed(2)} Tons
                   </p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-slate-200">
-                  <p className="text-slate-500 font-medium">Already Loaded</p>
-                  <p className="font-bold text-slate-800 text-lg">
+                <div className="bg-lux-cream p-3 rounded-xl border border-[#e4dbc6]">
+                  <p className="text-lux-muted font-medium">Already Loaded</p>
+                  <p className="font-serif font-bold text-lux-ink text-lg">
                     {(
                       (selectedOrder.quantity || 0) -
                       (selectedOrder.pendingQuantity || 0)
@@ -1301,19 +1301,19 @@ const AddLoadingEntry = () => {
                     Tons
                   </p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-emerald-100">
-                  <p className="text-emerald-600 font-medium">
+                <div className="bg-lux-cream p-3 rounded-xl border border-lux-gold/30">
+                  <p className="text-lux-emerald font-medium">
                     Currently Adding
                   </p>
-                  <p className="font-bold text-emerald-700 text-lg">
+                  <p className="font-serif font-bold text-lux-emerald text-lg">
                     {calculateTotalLoadingWeight().toFixed(2)} Tons
                   </p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-green-100">
-                  <p className="text-green-600 font-medium">
+                <div className="bg-lux-cream p-3 rounded-xl border border-lux-gold/30">
+                  <p className="text-lux-emerald font-medium">
                     Remaining Pending
                   </p>
-                  <p className="font-bold text-green-700 text-lg">
+                  <p className="font-serif font-bold text-lux-emerald text-lg">
                     {Math.max(
                       0,
                       (selectedOrder.pendingQuantity || 0) -
@@ -1327,58 +1327,58 @@ const AddLoadingEntry = () => {
               <div className="space-y-4">
                 {existingEntries.length > 0 && (
                   <div className="space-y-4 mb-8">
-                    <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
-                      <span className="w-2 h-6 bg-green-500 rounded-full"></span>
+                    <h3 className="font-serif text-lg font-semibold text-lux-ink flex items-center gap-2 px-2">
+                      <span className="w-2 h-6 bg-lux-gold rounded-full"></span>
                       Previous Loading History ({existingEntries.length})
                     </h3>
                     <div className="grid grid-cols-1 gap-3">
                       {existingEntries.map((entry, idx) => (
                         <div
                           key={`history-${idx}`}
-                          className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap gap-4 items-center justify-between opacity-80"
+                          className="p-4 bg-lux-ivory border border-[#ece4d2] rounded-2xl flex flex-wrap gap-4 items-center justify-between opacity-80"
                         >
                           <div className="flex gap-4 items-center">
-                            <span className="text-xs font-bold text-slate-400">
+                            <span className="text-xs font-bold text-lux-muted">
                               #{idx + 1}
                             </span>
                             <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                              <p className="text-[10px] uppercase font-bold text-lux-muted">
                                 Date
                               </p>
-                              <p className="text-sm font-bold text-slate-600">
+                              <p className="text-sm font-bold text-lux-ink">
                                 {formatDate(entry.loadingDate)}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                              <p className="text-[10px] uppercase font-bold text-lux-muted">
                                 Lorry
                               </p>
-                              <p className="text-sm font-bold text-slate-600">
+                              <p className="text-sm font-bold text-lux-ink">
                                 {entry.lorryNumber}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                              <p className="text-[10px] uppercase font-bold text-lux-muted">
                                 Weight
                               </p>
-                              <p className="text-sm font-bold text-emerald-600">
+                              <p className="text-sm font-bold text-lux-emerald">
                                 {entry.loadingWeight} /{" "}
                                 {entry.unloadingWeight || 0} T
                               </p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                              <p className="text-[10px] uppercase font-bold text-lux-muted">
                                 Bill No
                               </p>
-                              <p className="text-sm font-bold text-slate-600">
+                              <p className="text-sm font-bold text-lux-ink">
                                 {entry.billNumber || "N/A"}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                              <p className="text-[10px] uppercase font-bold text-lux-muted">
                                 Seller Bill No
                               </p>
-                              <p className="text-sm font-bold text-slate-600">
+                              <p className="text-sm font-bold text-lux-ink">
                                 {entry.sellerBillNo || "N/A"}
                               </p>
                             </div>
@@ -1389,7 +1389,7 @@ const AddLoadingEntry = () => {
                               <>
                                 <button
                                   onClick={() => handleEditHistoryEntry(entry)}
-                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                  className="p-2 text-lux-emerald hover:bg-lux-ivory rounded-lg transition"
                                   title="Edit Entry"
                                 >
                                   <FaEdit />
@@ -1407,7 +1407,7 @@ const AddLoadingEntry = () => {
                             )}
                             <button
                               onClick={() => handleDownloadPDF(entry)}
-                              className="p-2 text-slate-500 hover:text-emerald-600 transition"
+                              className="p-2 text-lux-muted hover:text-lux-emerald transition"
                               title="Download PDF"
                             >
                               <FaDownload />
@@ -1419,16 +1419,16 @@ const AddLoadingEntry = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/40 to-teal-50/30 px-4 py-4 shadow-sm">
+                <div className="flex flex-col gap-2 rounded-2xl border border-lux-gold/30 bg-gradient-to-r from-lux-cream via-lux-ivory to-lux-cream px-4 py-4 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-sm ring-1 ring-lux-gold/30">
                       <FaTruckLoading className="text-lg" />
                     </span>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">
+                      <h3 className="font-serif text-lg font-semibold text-lux-ink">
                         New Loading Entry
                       </h3>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-lux-muted">
                         Add lorry details clearly and keep each loading record
                         easy to review.
                       </p>
@@ -1439,20 +1439,20 @@ const AddLoadingEntry = () => {
                 {loadingEntries.map((entry, index) => (
                   <div
                     key={index}
-                    className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-lg"
+                    className="relative overflow-hidden rounded-3xl lux-card w-full transition-all hover:shadow-lg"
                   >
-                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald" />
                     <div className="p-4 sm:p-5 space-y-6">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-[#ece4d2] pb-4">
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow-sm">
+                          <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft font-bold text-sm shadow-sm ring-1 ring-lux-gold/30">
                             {index + 1}
                           </span>
                           <div>
-                            <h4 className="font-bold text-slate-800">
+                            <h4 className="font-serif font-bold text-lux-ink">
                               Loading Specification
                             </h4>
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-xs text-lux-muted mt-0.5">
                               Enter transport, quantity and billing details for
                               this lorry.
                             </p>
@@ -1461,7 +1461,7 @@ const AddLoadingEntry = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleDownloadPDF(entry)}
-                            className="flex items-center gap-2 px-3 py-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
+                            className="flex items-center gap-2 px-3 py-2 text-lux-emerald bg-lux-ivory hover:bg-white rounded-xl transition text-sm font-bold border border-lux-gold/30"
                             title="Download Lorry Challan"
                           >
                             <FaDownload /> Challan
@@ -1469,7 +1469,7 @@ const AddLoadingEntry = () => {
                           {loadingEntries.length > 1 && (
                             <button
                               onClick={() => handleRemoveEntry(index)}
-                              className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
+                              className="p-2.5 text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-100"
                               title="Remove Entry"
                             >
                               <FaTrash />
@@ -1478,18 +1478,18 @@ const AddLoadingEntry = () => {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+                      <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory/50 p-5">
                         <div className="flex items-center justify-between gap-3 mb-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
+                          <p className="text-xs font-bold uppercase tracking-widest text-lux-emerald">
                             Basic Details
                           </p>
-                          <span className="inline-flex items-center rounded-full bg-white border border-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
+                          <span className="inline-flex items-center rounded-full bg-lux-cream border border-lux-gold/30 px-3 py-1 text-[10px] font-bold text-lux-emerald shadow-sm">
                             LORRY #{index + 1}
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Loading Date
                             </label>
                             <DateSelector
@@ -1500,7 +1500,7 @@ const AddLoadingEntry = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Unloading Date
                             </label>
                             <DateSelector
@@ -1511,7 +1511,7 @@ const AddLoadingEntry = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Loading From
                             </label>
                             <DataDropdown
@@ -1534,20 +1534,20 @@ const AddLoadingEntry = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Delivery Date
                             </label>
-                            <div className="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 cursor-not-allowed shadow-inner">
+                            <div className="px-4 py-2.5 bg-lux-ivory border border-[#e4dbc6] rounded-xl text-sm font-semibold text-lux-muted cursor-not-allowed shadow-inner">
                               {entry.deliveryDate
                                 ? formatDate(entry.deliveryDate)
                                 : "N/A"}
                             </div>
-                            <p className="text-[9px] text-slate-400 italic">
+                            <p className="text-[9px] text-lux-muted italic">
                               Auto-filled from Sauda
                             </p>
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Lorry Number
                             </label>
                             <DataInput
@@ -1560,11 +1560,11 @@ const AddLoadingEntry = () => {
                                 )
                               }
                               placeholder="e.g. RJ 14 GA 1234"
-                              className="bg-white"
+                              className="bg-lux-cream"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                               Bags Count
                             </label>
                             <DataInput
@@ -1574,20 +1574,20 @@ const AddLoadingEntry = () => {
                                 handleEntryChange(index, "bags", e.target.value)
                               }
                               placeholder="No. of bags"
-                              className="bg-white"
+                              className="bg-lux-cream"
                             />
                           </div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-5">
+                        <div className="rounded-2xl border border-[#e4dbc6] bg-lux-cream p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-lux-emerald mb-5">
                             Weight & Brokerage
                           </p>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Loading Wt
                               </label>
                               <DataInput
@@ -1601,11 +1601,11 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="0.00"
-                                className="bg-white border-blue-100 focus:border-blue-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Unloading Wt
                               </label>
                               <DataInput
@@ -1619,30 +1619,30 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="0.00"
-                                className="bg-white border-blue-100 focus:border-blue-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
-                            <div className="col-span-2 mt-2 p-3 bg-white rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                            <div className="col-span-2 mt-2 p-3 bg-lux-cream rounded-xl border border-[#e4dbc6] flex justify-between items-center shadow-sm">
                               <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                <p className="text-[10px] font-bold text-lux-muted uppercase">
                                   Buyer Brokerage
                                 </p>
-                                <p className="text-sm font-bold text-blue-700">
+                                <p className="text-sm font-bold text-lux-emerald">
                                   ₹{entry.buyerBrokerage || 0}
                                 </p>
                               </div>
-                              <div className="w-px h-8 bg-blue-100"></div>
+                              <div className="w-px h-8 bg-[#e4dbc6]"></div>
                               <div className="text-right">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                <p className="text-[10px] font-bold text-lux-muted uppercase">
                                   Seller Brokerage
                                 </p>
-                                <p className="text-sm font-bold text-blue-700">
+                                <p className="text-sm font-bold text-lux-emerald">
                                   ₹{entry.sellerBrokerage || 0}
                                 </p>
                               </div>
                             </div>
                             <div className="col-span-2 space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Due Date
                               </label>
                               <DateSelector
@@ -1651,20 +1651,20 @@ const AddLoadingEntry = () => {
                                   handleEntryChange(index, "dueDate", date)
                                 }
                               />
-                              <p className="text-[9px] text-slate-400 italic">
+                              <p className="text-[9px] text-lux-muted italic">
                                 Auto-calculated from unloading date + payment terms. You can edit it.
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border border-green-100 bg-green-50/30 p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-green-600 mb-5">
+                        <div className="rounded-2xl border border-[#e4dbc6] bg-lux-cream p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-lux-emerald mb-5">
                             Billing Details
                           </p>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Bill Number
                               </label>
                               <DataInput
@@ -1677,11 +1677,11 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Invoice no."
-                                className="bg-white border-green-100 focus:border-green-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Seller Bill No
                               </label>
                               <DataInput
@@ -1694,11 +1694,11 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Seller invoice no."
-                                className="bg-white border-green-100 focus:border-green-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Issue Date
                               </label>
                               <DateSelector
@@ -1710,13 +1710,13 @@ const AddLoadingEntry = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-5">
+                        <div className="rounded-2xl border border-[#e4dbc6] bg-lux-cream p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-lux-emerald mb-5">
                             Transport & Freight
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Transporter
                               </label>
                               <DataDropdown
@@ -1741,7 +1741,7 @@ const AddLoadingEntry = () => {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Freight Rate
                               </label>
                               <DataInput
@@ -1755,11 +1755,11 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Rs. per ton"
-                                className="bg-white border-purple-100 focus:border-purple-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Driver Name
                               </label>
                               <DataInput
@@ -1772,11 +1772,11 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Driver name"
-                                className="bg-white border-purple-100 focus:border-purple-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <label className="block text-[10px] font-bold text-lux-muted uppercase tracking-wider">
                                 Driver Mobile
                               </label>
                               <DataInput
@@ -1789,24 +1789,24 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Phone number"
-                                className="bg-white border-purple-100 focus:border-purple-400"
+                                className="bg-lux-cream border-[#e4dbc6] focus:border-lux-emerald"
                               />
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/30 p-5">
-                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-[#ece4d2] bg-lux-ivory/30 p-5">
+                        <div className="rounded-2xl border border-[#e4dbc6] bg-lux-cream px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-lux-muted uppercase font-bold tracking-widest mb-1">
                             Total Freight
                           </p>
-                          <p className="font-bold text-slate-800 text-xl">
+                          <p className="font-serif font-bold text-lux-ink text-xl">
                             ₹ {Number(entry.totalFreight).toFixed(2)}
                           </p>
                         </div>
-                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                        <div className="rounded-2xl border border-lux-gold/30 bg-lux-cream px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-lux-muted uppercase font-bold tracking-widest mb-1">
                             Advance Amount
                           </p>
                           <div className="max-w-[120px]">
@@ -1824,11 +1824,11 @@ const AddLoadingEntry = () => {
                             />
                           </div>
                         </div>
-                        <div className="rounded-2xl border border-green-100 bg-green-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                        <div className="rounded-2xl border border-lux-gold/30 bg-lux-cream px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-lux-muted uppercase font-bold tracking-widest mb-1">
                             Balance Due
                           </p>
-                          <p className="font-bold text-green-600 text-xl">
+                          <p className="font-serif font-bold text-lux-emerald text-xl">
                             ₹ {Number(entry.balance).toFixed(2)}
                           </p>
                         </div>
@@ -1838,24 +1838,24 @@ const AddLoadingEntry = () => {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-[#ece4d2]">
                 <button
                   onClick={handleAddMore}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-slate-800 text-white rounded-2xl hover:bg-slate-900 transition-all font-bold shadow-lg shadow-slate-200 active:scale-95"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-2xl hover:-translate-y-0.5 transition-all font-bold shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 active:scale-95"
                 >
                   <FaPlus /> Add More Lorry
                 </button>
                 <div className="flex gap-3 w-full sm:w-auto">
                   <button
                     onClick={handleBackToList}
-                    className="flex-1 sm:flex-none px-8 py-3 bg-white text-slate-600 rounded-2xl hover:bg-slate-50 transition font-bold border border-slate-200"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-8 py-3 bg-lux-cream text-lux-emerald rounded-2xl hover:bg-white transition font-bold border border-[#e4dbc6] shadow-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEntries}
                     disabled={isSaving}
-                    className="flex-1 sm:flex-none px-12 py-3 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all font-bold shadow-lg shadow-emerald-200 disabled:opacity-50 active:scale-95"
+                    className="flex-1 sm:flex-none px-12 py-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-2xl hover:-translate-y-0.5 transition-all font-bold shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 disabled:opacity-50 active:scale-95"
                   >
                     {isSaving ? "Saving..." : "Save All Lorry"}
                   </button>

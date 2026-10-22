@@ -580,33 +580,33 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     <Suspense fallback={<Loading />}>
       <ScrollToTop />
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-[#062e25]/70 backdrop-blur-sm animate-modal-backdrop p-0 sm:p-4"
         role="presentation"
         onClick={handleClose}
       >
         <div
           ref={dialogPanelRef}
-          className="relative w-full max-w-5xl mx-auto rounded-3xl bg-white/95 shadow-2xl border border-slate-200/80 max-h-[92vh] flex flex-col overflow-hidden"
+          className="relative flex w-full max-w-5xl max-h-[94vh] flex-col overflow-hidden rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop"
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-buyer-title"
           onClick={(e) => e.stopPropagation()}
         >
           {referenceDataLoading && <Loading />}
-          <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent rounded-t-3xl shrink-0">
+          <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-cream/95 px-4 py-4 backdrop-blur-xl sm:px-6">
             <div>
               <h2
                 id="edit-buyer-title"
-                className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight"
+                className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink sm:text-lg md:text-xl"
               >
                 Edit Buyer
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              <p className="text-xs sm:text-sm text-lux-muted mt-0.5">
                 Update buyer profile, access and contact details.
               </p>
             </div>
             <button
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm transition disabled:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl text-lux-muted transition hover:bg-[#f2eee2] hover:text-lux-ink active:scale-90 disabled:opacity-50"
               onClick={handleClose}
               title="Close"
               type="button"
@@ -619,29 +619,29 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
           {referenceDataError && (
             <div
-              className="mx-6 mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900"
+              className="mx-6 mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800"
               role="alert"
             >
               {referenceDataError}
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-7 pb-6 pt-4 bg-gradient-to-b from-white via-white to-slate-50/40">
+          <div className="flex-1 overflow-y-auto px-4 py-5 text-lux-muted sm:px-6 sm:py-6 md:px-8">
             <form
               onSubmit={handleSubmit}
               className={`space-y-6 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
             >
-              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/35 px-4 py-3 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5">
+                <p className="lux-eyebrow">
                   Buyer Profile Desk
                 </p>
-                <p className="text-sm font-semibold text-slate-800 mt-1">
+                <p className="text-sm font-semibold text-lux-ink mt-1">
                   Keep buyer details accurate for smoother bidding operations.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Buyer Name
                   </label>
                   <DataInput
@@ -655,7 +655,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Company
                   </label>
                   <DataDropdown
@@ -669,7 +669,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Group
                   </label>
                   <DataDropdown
@@ -685,19 +685,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 space-y-3 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-serif text-xs font-bold uppercase tracking-widest text-lux-ink">
                     Contact Details
                   </h3>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-lux-muted">
                     Add multiple mobiles and emails if needed
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-[11px] font-medium text-slate-600 mb-1">
+                    <p className="lux-eyebrow mb-1">
                       Mobile Numbers
                     </p>
                     {(formData.mobile || []).map((number, index) => (
@@ -721,14 +721,14 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     <button
                       type="button"
                       onClick={() => addField("mobile")}
-                      className="mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                      className="mt-1 text-[11px] font-semibold text-lux-emerald hover:text-lux-deep"
                     >
                       + Add mobile
                     </button>
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-medium text-slate-600 mb-1">
+                    <p className="lux-eyebrow mb-1">
                       Email Addresses
                     </p>
                     {(formData.email || []).map((email, index) => (
@@ -753,7 +753,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     <button
                       type="button"
                       onClick={() => addField("email")}
-                      className="mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                      className="mt-1 text-[11px] font-semibold text-lux-emerald hover:text-lux-deep"
                     >
                       + Add email
                     </button>
@@ -761,9 +761,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <label className="text-xs font-semibold tracking-wide text-slate-600">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+                <div className="space-y-2 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5 shadow-sm">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Commodities
                   </label>
                   <DataDropdown
@@ -786,7 +786,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
                     return (
                       <div key={cid} className="mt-3">
-                        <label className="block text-xs font-semibold tracking-wide text-slate-600 mb-1">
+                        <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                           Brokerage for {label}
                         </label>
                         <DataInput
@@ -801,17 +801,17 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   })}
                 </div>
 
-                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <label className="text-xs font-semibold tracking-wide text-slate-600">
+                <div className="space-y-2 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5 shadow-sm">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Consignee Access
                   </label>
                   <div className="space-y-2">
                     {(formData.consignee || []).map((consignee, index) => (
                       <div
                         key={`${consignee.value}-${index}`}
-                        className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 border border-slate-100"
+                        className="flex items-center justify-between gap-2 rounded-2xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5"
                       >
-                        <span className="text-sm text-slate-700">
+                        <span className="text-sm text-lux-ink">
                           {consignee.label ||
                             allConsignees.find(
                               (a) =>
@@ -845,9 +845,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-200 mt-2">
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <div className="flex flex-col gap-3 border-t border-[#ece4d2] pt-3 mt-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-[11px] text-lux-muted">
+                  <span className="h-2 w-2 rounded-full bg-lux-emerald" />
                   <span>Buyer status</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -856,7 +856,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     value={formData.status || "Active"}
                     onChange={handleChange}
                     disabled={referenceDataLoading || isSubmitting}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white disabled:opacity-60"
+                    className="rounded-xl border border-[#e6dcc4] bg-lux-cream px-3 py-1.5 text-sm text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-gold/40 disabled:opacity-60"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -865,7 +865,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <button
                     type="submit"
                     disabled={referenceDataLoading || isSubmitting}
-                    className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:pointer-events-none"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                   >
                     {isSubmitting ? "Saving…" : "Save changes"}
                   </button>

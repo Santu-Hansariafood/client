@@ -300,17 +300,17 @@ const EditSellerCompany = () => {
       subtitle={`Updating details for ${companyInfo.companyName}`}
       icon={FaBuilding}
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-5xl">
         <button
           onClick={() => navigate("/seller-company/list")}
-          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold mb-6 transition-colors"
+          className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-lux-muted transition-colors hover:text-lux-emerald"
         >
           <FaArrowLeft size={12} />
           Back to List
         </button>
 
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
-          <h3 className="text-xl font-black text-slate-800 mb-6 uppercase tracking-tight">
+        <div className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-6 lg:p-8">
+          <h3 className="mb-6 font-serif text-lg font-semibold text-lux-ink uppercase tracking-tight sm:text-xl">
             Company Information
           </h3>
 
@@ -409,13 +409,13 @@ const EditSellerCompany = () => {
             />
           </div>
 
-          <h3 className="text-xl font-black text-slate-800 mb-6 uppercase tracking-tight">
+          <h3 className="mb-6 font-serif text-lg font-semibold text-lux-ink uppercase tracking-tight sm:text-xl">
             Bank Details
           </h3>
           {bankDetails.map((bank, index) => (
             <div
               key={bank.id}
-              className="mb-6 bg-slate-50/50 border border-slate-100 p-6 rounded-2xl shadow-sm"
+              className="mb-6 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <DataInput
@@ -489,7 +489,7 @@ const EditSellerCompany = () => {
             />
           </div>
 
-          <h3 className="text-xl font-black text-slate-800 mt-12 mb-6 uppercase tracking-tight">
+          <h3 className="mb-6 mt-12 font-serif text-lg font-semibold text-lux-ink uppercase tracking-tight sm:text-xl">
             Upload Documents
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -516,7 +516,7 @@ const EditSellerCompany = () => {
           </div>
 
           <div className="mb-8">
-            <label className="text-lg font-black text-slate-800 uppercase tracking-tight">
+            <label className="font-serif text-lg font-semibold text-lux-ink uppercase tracking-tight">
               MSME Status
             </label>
             <div className="flex items-center space-x-4 mt-4">
@@ -527,9 +527,9 @@ const EditSellerCompany = () => {
                   value="yes"
                   onChange={() => setMsme(true)}
                   checked={msme === true}
-                  className="form-radio text-emerald-600"
+                  className="form-radio text-lux-emerald"
                 />
-                <span className="ml-2 font-bold text-slate-700">Yes</span>
+                <span className="ml-2 font-bold text-lux-ink">Yes</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -538,9 +538,9 @@ const EditSellerCompany = () => {
                   value="no"
                   onChange={() => setMsme(false)}
                   checked={msme === false}
-                  className="form-radio text-emerald-600"
+                  className="form-radio text-lux-emerald"
                 />
-                <span className="ml-2 font-bold text-slate-700">No</span>
+                <span className="ml-2 font-bold text-lux-ink">No</span>
               </label>
             </div>
             {msme && (
@@ -561,7 +561,7 @@ const EditSellerCompany = () => {
             )}
           </div>
 
-          <div className="mt-12 flex justify-end gap-3 pt-6 border-t border-slate-100">
+          <div className="mt-12 flex flex-col gap-3 border-t border-[#ece4d2] pt-6 sm:flex-row sm:justify-end">
             <Buttons
               label="Cancel"
               onClick={() => navigate("/seller-company/list")}

@@ -8,19 +8,19 @@ const DataSafety = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-20 px-6">
+    <div className="lux-canvas min-h-screen py-20 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <h1 className="text-5xl font-bold text-green-700 mb-4">
+          <h1 className="font-serif text-5xl font-bold text-lux-emerald mb-4">
             Data Safety & Privacy Disclosure
           </h1>
 
-          <p className="text-gray-600 text-lg">
+          <p className="text-lux-muted text-lg">
             Hansaria Food Private Limited
           </p>
         </div>
 
-        <div className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-xl rounded-3xl p-10 md:p-14">
+        <div className="lux-card lux-gold-top p-6 sm:p-10 md:p-14">
 
           <Section title="1. Overview">
             This Data Safety disclosure explains how Hansaria Food Private Limited (&quot;Company&quot;, &quot;we&quot;, &quot;our&quot;, &quot;us&quot;) collects, processes, stores, and protects user data. This page is designed in compliance with Google Play policies and applicable Indian laws including the Digital Personal Data Protection Act, 2023.
@@ -141,7 +141,7 @@ const DataSafety = () => {
             Email:{" "}
             <a
               href="mailto:info@hansariafood.com"
-              className="text-green-700 font-semibold hover:underline"
+              className="text-lux-emerald font-semibold hover:underline"
             >
               info@hansariafood.com
             </a>
@@ -152,7 +152,7 @@ const DataSafety = () => {
         <div className="text-center mt-14">
           <Link
             to="/"
-            className="inline-flex items-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-green-700 hover:scale-105 transition"
+            className="inline-flex items-center gap-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft px-8 py-4 rounded-full text-lg font-semibold ring-1 ring-lux-gold/30 shadow-lg hover:-translate-y-0.5 transition"
           >
             <FaArrowLeft />
             Back to Home
@@ -165,9 +165,9 @@ const DataSafety = () => {
 
 const Section = ({ title, children }) => {
   return (
-    <div className="mb-8 p-6 rounded-xl border border-gray-200 bg-white/70 hover:shadow-md transition">
-      <h2 className="text-xl font-semibold text-gray-800 mb-3">{title}</h2>
-      <div className="text-gray-700 leading-relaxed">{children}</div>
+    <div className="mb-8 p-4 sm:p-6 rounded-2xl border border-[#ece4d2] bg-lux-ivory hover:shadow-md transition">
+      <h2 className="font-serif text-xl font-semibold text-lux-ink mb-3">{title}</h2>
+      <div className="text-lux-muted leading-relaxed">{children}</div>
     </div>
   );
 };

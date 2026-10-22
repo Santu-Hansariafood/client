@@ -169,15 +169,16 @@ const ListConsignee = () => {
         icon={FaTruck}
         noContentCard
       >
-        <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full overflow-hidden">
           <div className="mb-4">
-            <div className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400">
+            <div className="flex w-full max-w-md items-center rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 shadow-sm transition focus-within:border-lux-gold focus-within:ring-2 focus-within:ring-lux-gold/40">
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by name / phone / gst..."
-                className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+                className="w-full min-w-0 bg-transparent px-3 py-2 text-lux-ink placeholder:text-lux-muted focus:outline-none"
               />
             </div>
           </div>
@@ -186,7 +187,7 @@ const ListConsignee = () => {
             <Loading />
           ) : (
             <>
-              <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1 px-1">
+              <div className="overflow-x-auto rounded-2xl border border-[#ece4d2]">
                 <Tables
                   headers={[
                     "Sl No",
@@ -218,6 +219,7 @@ const ListConsignee = () => {
               </div>
             </>
           )}
+          </div>
         </div>
         <PopupBox
           isOpen={isViewPopupOpen}
@@ -291,7 +293,7 @@ const ListConsignee = () => {
           <button
             type="button"
             onClick={submitDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg mt-4 hover:bg-red-600"
+            className="mt-4 rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-rose-600 active:scale-[0.97]"
           >
             Confirm Delete
           </button>

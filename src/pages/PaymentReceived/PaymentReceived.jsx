@@ -62,26 +62,26 @@ const PaymentReceived = () => {
       icon={FaClipboardList}
       noContentCard
     >
-      <div className="max-w-[1700px] mx-auto space-y-8 p-4 sm:p-6 lg:p-10">
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
+      <div className="mx-auto w-full max-w-6xl space-y-6 animate-slide-up sm:space-y-8">
+        <div className="lux-card lux-gold-top group relative w-full overflow-hidden p-4 sm:p-6 lg:p-8">
           <div className="relative space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <FaClipboardList className="text-2xl text-white" />
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40 sm:h-16 sm:w-16">
+                  <FaClipboardList className="text-2xl text-lux-gold-soft" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800">
+                  <h2 className="font-serif text-2xl font-semibold text-lux-ink">
                     Payment Received
                   </h2>
-                  <p className="text-slate-500 text-sm font-semibold">
+                  <p className="text-sm font-semibold text-lux-muted">
                     Next Voucher Number: {nextVoucherNumber}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleAddNew}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-[0.15em] hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center gap-3"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
               >
                 <FaPlus size={16} />
                 Add New Payment

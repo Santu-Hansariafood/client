@@ -488,40 +488,40 @@ ${pdfSection}
 
         if (userRole === "Seller") {
           return [
-            <span key={`sl-${item._id}`} className="font-black text-slate-400">
+            <span key={`sl-${item._id}`} className="font-black text-lux-muted">
               {slNo}
             </span>,
-            <span key={`date-${item._id}`} className="font-bold text-slate-600">
+            <span key={`date-${item._id}`} className="font-bold text-lux-muted">
               {formattedDate}
             </span>,
             <span
               key={`sauda-${item._id}`}
-              className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+              className="rounded-lg border border-[#e6dcc4] bg-lux-ivory px-2 py-1 font-black text-lux-emerald"
             >
               {item.saudaNo || "N/A"}
             </span>,
             <span
               key={`supplier-${item._id}`}
-              className="font-bold text-slate-800"
+              className="font-bold text-lux-ink"
             >
               {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
             </span>,
             <span
               key={`buyer-${item._id}`}
-              className="font-medium text-slate-600"
+              className="font-medium text-lux-muted"
             >
               {item.buyerCompany || "N/A"}
             </span>,
             getConsigneeDisplay(item) || "N/A",
-            <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+            <span key={`comm-${item._id}`} className="font-bold text-lux-ink">
               {item.commodity || "N/A"}
             </span>,
-            <span key={`qty-${item._id}`} className="font-black text-slate-900">
+            <span key={`qty-${item._id}`} className="font-black text-lux-ink">
               {item.quantity || "0"}
             </span>,
             <span
               key={`rate-${item._id}`}
-              className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+              className="rounded-lg border border-[#e6dcc4] bg-lux-ivory px-2 py-1 font-black text-lux-emerald"
             >
               ₹{item.rate || "0"}
             </span>,
@@ -531,7 +531,7 @@ ${pdfSection}
             >
               <button
                 onClick={() => handleView(item)}
-                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-200"
+                className="rounded-xl border border-[#e4dbc6] bg-lux-cream p-2 text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 title="View Details"
               >
                 <AiOutlineEye size={18} />
@@ -547,7 +547,7 @@ ${pdfSection}
                 qualityParameterData={qualityParameterData}
                 button={
                   <button
-                    className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                    className="rounded-xl border border-[#e4dbc6] bg-lux-ivory p-2 text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                     title="Download Sauda"
                   >
                     <FaDownload size={16} />
@@ -560,7 +560,7 @@ ${pdfSection}
 
         return [
           <div className="flex items-center gap-2" key={`sl-${item._id}`}>
-            <span className="font-black text-slate-400">{displaySlNo}</span>
+            <span className="font-black text-lux-muted">{displaySlNo}</span>
             <DownloadSauda
               data={{ ...item, consignee: getConsigneeDisplay(item) }}
               consigneeData={consigneeData}
@@ -572,7 +572,7 @@ ${pdfSection}
               qualityParameterData={qualityParameterData}
               button={
                 <button
-                  className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#e4dbc6] bg-lux-ivory text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                   title="Download Sauda"
                 >
                   <FaDownload size={14} />
@@ -581,34 +581,34 @@ ${pdfSection}
             />
           </div>,
 
-          <span key={`date-${item._id}`} className="font-bold text-slate-600">
+          <span key={`date-${item._id}`} className="font-bold text-lux-muted">
             {formattedDate}
           </span>,
           <span
             key={`sauda-${item._id}`}
-            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            className="rounded-lg border border-[#e6dcc4] bg-lux-ivory px-2 py-1 font-black text-lux-emerald"
           >
             {item.saudaNo || "N/A"}
           </span>,
           <span
             key={`po-${item._id}`}
-            className="font-bold text-slate-700 uppercase tracking-tight"
+            className="font-bold uppercase tracking-tight text-lux-ink"
           >
             {item.poNumber || "N/A"}
           </span>,
-          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">
+          <span key={`buyer-${item._id}`} className="font-bold text-lux-ink">
             {item.buyerCompany || "N/A"}
           </span>,
 
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
-              <span className="font-medium text-slate-600">
+              <span className="font-medium text-lux-muted">
                 {item.buyerMobile || "N/A"}
               </span>
               {item.buyerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "buyer")}
-                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                  className="rounded-lg p-1.5 text-lux-emerald transition-colors hover:bg-lux-ivory"
                   title="Share on WhatsApp"
                 >
                   <FaWhatsapp size={20} />
@@ -618,25 +618,25 @@ ${pdfSection}
           ) : null,
 
           getConsigneeDisplay(item) || "N/A",
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+          <span key={`comm-${item._id}`} className="font-bold text-lux-ink">
             {item.commodity || "N/A"}
           </span>,
-          <span key={`qty-${item._id}`} className="font-black text-slate-900">
+          <span key={`qty-${item._id}`} className="font-black text-lux-ink">
             {item.quantity || "0"}
           </span>,
           <span
             key={`rate-${item._id}`}
-            className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            className="rounded-lg border border-[#e6dcc4] bg-lux-ivory px-2 py-1 font-black text-lux-emerald"
           >
             ₹{item.rate || "0"}
           </span>,
 
-          <span key={`seller-${item._id}`} className="font-bold text-slate-800">
+          <span key={`seller-${item._id}`} className="font-bold text-lux-ink">
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
           </span>,
           <span
             key={`seller-company-${item._id}`}
-            className="font-bold text-slate-800"
+            className="font-bold text-lux-ink"
           >
             {item.supplierCompany || "N/A"}
           </span>,
@@ -646,13 +646,13 @@ ${pdfSection}
               className="flex items-center gap-2"
               key={`seller-mob-${item._id}`}
             >
-              <span className="font-medium text-slate-600">
+              <span className="font-medium text-lux-muted">
                 {item.sellerMobile || "N/A"}
               </span>
               {item.sellerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "seller")}
-                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                  className="rounded-lg p-1.5 text-lux-emerald transition-colors hover:bg-lux-ivory"
                   title="Share on WhatsApp"
                 >
                   <FaWhatsapp size={20} />
@@ -666,11 +666,11 @@ ${pdfSection}
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>
               {item.whatsappSent ? (
-                <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 shadow-sm">
                   Sent
                 </span>
               ) : (
-                <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                <span className="inline-flex items-center rounded-full border border-[#e6dcc4] bg-[#f2eee2] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-muted shadow-sm">
                   Pending
                 </span>
               )}
@@ -760,14 +760,9 @@ ${pdfSection}
         icon={FaClipboardList}
         noContentCard
       >
-        <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
-          <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/20 blur-[120px] rounded-full animate-pulse delay-700" />
-          </div>
-
-          <div className="max-w-full space-y-6 animate-fade-in-up">
-            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+        <div className="relative min-h-screen overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-7xl space-y-6 animate-fade-in-up">
+            <div className="lux-card lux-gold-top w-full p-6 sm:p-8">
               <SelfOrderSearchBar
                 onBack={() => navigate(-1)}
                 searchInput={searchInput}
@@ -781,11 +776,11 @@ ${pdfSection}
               />
             </div>
 
-            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-4 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+            <div className="lux-card w-full p-4 sm:p-8">
               {loading || (data.length === 0 && lookupsLoading) ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-4">
-                  <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                <div className="flex flex-col items-center justify-center gap-4 py-24">
+                  <div className="h-12 w-12 animate-spin rounded-full border-4 border-lux-emerald border-t-transparent" />
+                  <p className="lux-eyebrow">
                     Synchronizing Data...
                   </p>
                 </div>
@@ -794,28 +789,28 @@ ${pdfSection}
                   <SelfOrderTable headers={headers} rows={rows} />
 
                   {data.length === 0 && (
-                    <div className="py-24 text-center flex flex-col items-center justify-center gap-6">
-                      <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 shadow-inner">
+                    <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[#ece4d2] bg-lux-ivory text-lux-gold-soft shadow-inner">
                         <FaClipboardList size={40} />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                        <h3 className="font-serif text-xl font-black tracking-tight text-lux-ink">
                           No orders found
                         </h3>
-                        <p className="text-sm text-slate-400 font-medium">
+                        <p className="text-sm font-medium text-lux-muted">
                           Try adjusting your filters or search terms
                         </p>
                       </div>
                       <button
                         onClick={handleClearFilters}
-                        className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                        className="rounded-2xl border border-[#e4dbc6] bg-lux-cream px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                       >
                         Clear all filters
                       </button>
                     </div>
                   )}
 
-                  <div className="mt-8 border-t border-slate-100 pt-8">
+                  <div className="mt-8 border-t border-[#ece4d2] pt-8">
                     <Pagination
                       currentPage={currentPage}
                       totalItems={totalItems}
@@ -856,27 +851,27 @@ const SelfOrderSearchBar = ({
   onClearFilters,
 }) => {
   return (
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={onBack}
-          className="px-6 py-2.5 rounded-2xl bg-white text-slate-600 text-xs font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+          className="rounded-2xl border border-[#e4dbc6] bg-lux-cream px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg active:scale-95"
         >
           Back
         </button>
         <button
           onClick={onDownloadExcel}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95"
+          className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep px-6 py-2.5 text-xs font-black uppercase tracking-widest text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
         >
           <FaDownload size={14} />
           <span>Export Excel</span>
         </button>
 
-        <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
+        <div className="mx-2 hidden h-10 w-[1px] bg-[#ece4d2] sm:block" />
 
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+            <span className="lux-eyebrow mb-1 ml-1">
               Start Date
             </span>
             <DateSelector
@@ -885,7 +880,7 @@ const SelfOrderSearchBar = ({
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+            <span className="lux-eyebrow mb-1 ml-1">
               End Date
             </span>
             <DateSelector selectedDate={endDate} onChange={onEndDateChange} />
@@ -893,7 +888,7 @@ const SelfOrderSearchBar = ({
           {(startDate || endDate || searchInput) && (
             <button
               onClick={onClearFilters}
-              className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
+              className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-2 text-rose-600 shadow-sm transition-all hover:bg-rose-100"
               title="Clear all filters"
             >
               <FaTimes size={16} />
@@ -903,17 +898,17 @@ const SelfOrderSearchBar = ({
       </div>
 
       <div className="w-full lg:max-w-md">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <div className="group relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
             <AiOutlineSearch
               size={20}
-              className="text-slate-400 group-focus-within:text-emerald-600 transition-colors"
+              className="text-lux-muted transition-colors group-focus-within:text-lux-emerald"
             />
           </div>
           <input
             type="text"
             placeholder="Search by Sauda, PO, Buyer, or Commodity..."
-            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all"
+            className="w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream py-3 pl-11 pr-4 text-sm font-medium text-lux-ink placeholder-lux-muted transition-all focus:border-lux-emerald focus:outline-none focus:ring-4 focus:ring-lux-gold/20"
             value={searchInput}
             onChange={onSearchChange}
           />
@@ -925,7 +920,7 @@ const SelfOrderSearchBar = ({
 
 const SelfOrderTable = ({ headers, rows }) => {
   return (
-    <div className="rounded-[1.5rem] overflow-hidden border border-slate-100">
+    <div className="overflow-hidden rounded-2xl border border-[#ece4d2]">
       <Tables headers={headers} rows={rows} />
     </div>
   );

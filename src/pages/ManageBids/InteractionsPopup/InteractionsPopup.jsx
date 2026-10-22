@@ -192,21 +192,21 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="px-6 py-6 sm:px-8 flex justify-between items-center border-b border-slate-100 bg-slate-50/50">
+    <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-[#062e25]/70 p-0 backdrop-blur-sm animate-modal-backdrop sm:items-center sm:p-4">
+      <div className="relative flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-cream/95 px-4 py-4 backdrop-blur-xl sm:px-6">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h2 className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink sm:text-lg md:text-xl">
               Bid Interactions
             </h2>
-            <p className="text-sm font-semibold text-emerald-600 mt-1 uppercase tracking-widest flex items-center gap-2">
+            <p className="lux-eyebrow mt-1 flex items-center gap-2">
               <FaHistory className="text-xs" /> Participant Review History
             </p>
           </div>
           <button
             onClick={onClose}
             aria-label="Close popup"
-            className="group inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all duration-300 shadow-sm"
+            className="group inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lux-muted transition-all duration-300 hover:scale-105 hover:bg-[#f2eee2] hover:text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
           >
             <span className="text-2xl font-bold group-hover:scale-110 transition-transform">
               &times;
@@ -214,25 +214,25 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 text-lux-muted sm:px-6 sm:py-6 md:px-8">
           {!canInteract && (
-            <div className="rounded-3xl border border-green-200 bg-green-50 p-4 flex items-center gap-3 text-green-700">
+            <div className="flex items-center gap-3 rounded-2xl border border-[#e6dcc4] bg-lux-ivory p-4 text-lux-emerald">
               <FaHistory className="text-lg" />
               <p className="text-sm font-bold uppercase tracking-wider">
                 Viewing Historical Records — Interactions Disabled
               </p>
             </div>
           )}
-          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-slate-50/50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 shadow-sm sm:p-5">
             <div className="flex items-start gap-4">
-              <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-200 flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                 <FaCheckCircle className="text-lg" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">
-                  Review & Acceptance
+                <h3 className="font-serif text-lg font-semibold text-lux-ink">
+                  Review &amp; Acceptance
                 </h3>
-                <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                <p className="mt-1 text-sm leading-relaxed text-lux-muted">
                   Compare participant offers side-by-side, add internal notes,
                   and finalize the bid by accepting or rejecting proposals.
                 </p>
@@ -244,13 +244,13 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
             <Loading />
           ) : interactions.length === 0 ? (
             <div className="py-24 text-center">
-              <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6 shadow-inner">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-[#ece4d2] bg-lux-ivory text-lux-gold-soft">
                 <FaHistory size={40} />
               </div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">
+              <h3 className="font-serif text-xl font-semibold tracking-tight text-lux-ink">
                 No interactions found
               </h3>
-              <p className="text-sm text-slate-400 font-medium mt-1">
+              <p className="mt-1 text-sm font-medium text-lux-muted">
                 Wait for participants to place their bids
               </p>
             </div>
@@ -365,10 +365,10 @@ const InteractionCard = ({
     <div
       className={`group overflow-hidden rounded-[2rem] border-2 transition-all duration-300 shadow-sm hover:shadow-xl ${
         interaction.status === "accepted"
-          ? "border-emerald-200 bg-emerald-50/20"
+          ? "border-emerald-200 bg-emerald-50/30"
           : interaction.status === "rejected"
-            ? "border-rose-100 bg-rose-50/20"
-            : "border-slate-100 bg-white hover:border-emerald-200"
+            ? "border-rose-200 bg-rose-50/30"
+            : "border-[#ece4d2] bg-lux-cream hover:border-[#e6dcc4]"
       }`}
     >
       <div
@@ -377,27 +377,27 @@ const InteractionCard = ({
             ? "border-emerald-100 bg-emerald-50/50"
             : interaction.status === "rejected"
               ? "border-rose-50 bg-rose-50/50"
-              : "border-slate-50 bg-slate-50/30"
+              : "border-[#ece4d2] bg-lux-ivory/60"
         }`}
       >
         <div className="flex items-center gap-3">
           <div
             className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-sm ${
               interaction.status === "accepted"
-                ? "bg-emerald-600 text-white"
+                ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/40"
                 : interaction.status === "rejected"
                   ? "bg-rose-500 text-white"
-                  : "bg-white text-slate-400 border border-slate-200"
+                  : "border border-[#e4dbc6] bg-lux-cream text-lux-muted"
             }`}
           >
             <FaBuilding className="text-lg" />
           </div>
           <div>
-            <h4 className="text-base font-black text-slate-800 leading-tight">
+            <h4 className="font-serif text-base font-semibold leading-tight text-lux-ink">
               {partyName}
             </h4>
             {actorRole !== "Buyer" && (
-              <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mt-0.5">
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-lux-muted">
                 <FaPhoneAlt className="text-[10px]" /> {interaction.mobile}
               </p>
             )}
@@ -406,7 +406,7 @@ const InteractionCard = ({
 
         <div className="flex items-center gap-2">
           {isRevised && interaction.status === "pending" && (
-            <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-200 shadow-sm animate-pulse">
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 shadow-sm animate-pulse">
               Revised
             </span>
           )}
@@ -416,7 +416,7 @@ const InteractionCard = ({
                 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                 : interaction.status === "rejected"
                   ? "bg-rose-100 text-rose-700 border-rose-200"
-                  : "bg-slate-100 text-slate-600 border-slate-200"
+                  : "border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"
             }`}
           >
             {interaction.status || "Pending"}
@@ -424,42 +424,42 @@ const InteractionCard = ({
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="space-y-6 p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaRupeeSign className="text-emerald-500" /> Proposed Rate
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaRupeeSign className="text-lux-emerald" /> Proposed Rate
             </p>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">
+            <p className="font-serif text-2xl font-black tracking-tight text-lux-ink">
               ₹{interaction.rate}
             </p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaWeightHanging className="text-emerald-500" /> Proposed Qty
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaWeightHanging className="text-lux-emerald" /> Proposed Qty
             </p>
-            <p className="text-2xl font-black text-slate-800 tracking-tight">
+            <p className="font-serif text-2xl font-black tracking-tight text-lux-ink">
               {interaction.quantity}{" "}
-              <span className="text-sm font-bold text-slate-400">Tons</span>
+              <span className="text-sm font-bold text-lux-muted">Tons</span>
             </p>
           </div>
           <div className="space-y-1 lg:col-span-2">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaRegClock className="text-emerald-500" /> Interaction Time
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaRegClock className="text-lux-emerald" /> Interaction Time
             </p>
-            <p className="text-sm font-bold text-slate-700 mt-1.5 flex items-center gap-2">
-              <span className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+            <p className="mt-1.5 flex items-center gap-2 text-sm font-bold text-lux-ink">
+              <span className="rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-1">
                 {interactionTime}
               </span>
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-5 border-y border-slate-50">
+        <div className="grid grid-cols-1 gap-6 border-y border-[#ece4d2] py-5 sm:grid-cols-3">
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaCalendarAlt className="text-blue-500" /> Expected Delivery
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaCalendarAlt className="text-lux-emerald" /> Expected Delivery
             </p>
-            <p className="text-sm font-bold text-slate-700">
+            <p className="text-sm font-bold text-lux-ink">
               {interaction.deliveryDate
                 ? new Date(interaction.deliveryDate).toLocaleDateString(
                     "en-IN",
@@ -469,76 +469,70 @@ const InteractionCard = ({
             </p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaCreditCard className="text-green-500" /> Payment Terms
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaCreditCard className="text-lux-emerald" /> Payment Terms
             </p>
-            <p className="text-sm font-bold text-slate-700">
+            <p className="text-sm font-bold text-lux-ink">
               {interaction.paymentTerms || "N/A"}
             </p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <FaMapMarkerAlt className="text-rose-500" /> Loading From
+            <p className="lux-eyebrow flex items-center gap-1.5">
+              <FaMapMarkerAlt className="text-lux-emerald" /> Loading From
             </p>
-            <p className="text-sm font-bold text-slate-700">
+            <p className="text-sm font-bold text-lux-ink">
               {interaction.loadingFrom || "N/A"}
             </p>
           </div>
         </div>
 
         {interaction.remarks && (
-          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-2">
-              <FaStickyNote className="text-emerald-500" /> Seller Remarks
+          <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+            <p className="lux-eyebrow mb-2 flex items-center gap-1.5">
+              <FaStickyNote className="text-lux-emerald" /> Seller Remarks
             </p>
-            <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
+            <p className="text-sm font-medium italic leading-relaxed text-lux-muted">
               &quot;{interaction.remarks}&quot;
             </p>
           </div>
         )}
 
         {(interaction.status === "accepted" || hasAcceptedValues) && (
-          <div className="rounded-3xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50/50 via-white to-white p-5 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.2em] flex items-center gap-2">
+          <div className="rounded-3xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50/50 via-white to-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600">
                 <FaCheckCircle className="text-sm" /> Final Accepted Details
               </p>
-              <div className="h-px flex-1 mx-4 bg-emerald-100/50" />
+              <div className="mx-4 h-px flex-1 bg-emerald-100/50" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm">
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                  Rate
-                </p>
-                <p className="text-xl font-black text-emerald-700 mt-1">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-emerald-100 bg-lux-cream p-4 shadow-sm">
+                <p className="lux-eyebrow text-emerald-600">Rate</p>
+                <p className="mt-1 font-serif text-xl font-black text-emerald-700">
                   ₹{interaction.acceptedRate || interaction.rate}
                 </p>
               </div>
-              <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm">
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                  Quantity
-                </p>
-                <p className="text-xl font-black text-emerald-700 mt-1">
+              <div className="rounded-2xl border border-emerald-100 bg-lux-cream p-4 shadow-sm">
+                <p className="lux-eyebrow text-emerald-600">Quantity</p>
+                <p className="mt-1 font-serif text-xl font-black text-emerald-700">
                   {interaction.acceptedQuantity || interaction.quantity}{" "}
                   <span className="text-xs">Tons</span>
                 </p>
               </div>
-              <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm">
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                  Accepted At
-                </p>
-                <p className="text-sm font-black text-emerald-700 mt-1.5">
+              <div className="rounded-2xl border border-emerald-100 bg-lux-cream p-4 shadow-sm">
+                <p className="lux-eyebrow text-emerald-600">Accepted At</p>
+                <p className="mt-1.5 text-sm font-black text-emerald-700">
                   {acceptedTime}
                 </p>
               </div>
             </div>
             {interaction.adminNotes && (
-              <div className="mt-4 p-3 bg-emerald-50/30 rounded-xl border border-emerald-100/50">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">
+              <div className="mt-4 rounded-xl border border-emerald-100/50 bg-emerald-50/30 p-3">
+                <p className="lux-eyebrow mb-1 text-emerald-600">
                   Internal Notes
                 </p>
-                <p className="text-sm font-medium text-slate-700 italic">
+                <p className="text-sm font-medium italic text-lux-ink">
                   &quot;{interaction.adminNotes}&quot;
                 </p>
               </div>
@@ -548,28 +542,28 @@ const InteractionCard = ({
 
         {interaction.status === "pending" && isReviewer && (
           <div className="space-y-6 pt-4">
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 space-y-5">
+            <div className="space-y-5 rounded-3xl border border-[#ece4d2] bg-lux-ivory p-6">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-200">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
                   <FaCheckCircle />
                 </div>
-                <h5 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                <h5 className="font-serif text-sm font-black uppercase tracking-widest text-lux-ink">
                   Acceptance Proposal
                 </h5>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                  <label className="lux-eyebrow ml-1 block">
                     Acceptance Rate (₹)
                   </label>
-                  <div className="relative group">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+                  <div className="group relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lux-muted transition-colors group-focus-within:text-lux-emerald">
                       ₹
                     </span>
                     <input
                       type="number"
-                      className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                      className="w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream py-3 pl-8 pr-4 font-bold text-lux-ink shadow-sm outline-none transition-all focus:border-lux-emerald focus:ring-4 focus:ring-lux-gold/20 disabled:bg-lux-ivory disabled:text-lux-muted"
                       value={acceptedRate}
                       onChange={(e) => setAcceptedRate(e.target.value)}
                       placeholder="Rate"
@@ -578,12 +572,12 @@ const InteractionCard = ({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                  <label className="lux-eyebrow ml-1 block">
                     Acceptance Qty (Tons)
                   </label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                    className="w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 font-bold text-lux-ink shadow-sm outline-none transition-all focus:border-lux-emerald focus:ring-4 focus:ring-lux-gold/20 disabled:bg-lux-ivory disabled:text-lux-muted"
                     value={acceptedQuantity}
                     onChange={(e) => setAcceptedQuantity(e.target.value)}
                     placeholder="Quantity"
@@ -591,12 +585,12 @@ const InteractionCard = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                  <label className="lux-eyebrow ml-1 block">
                     Accepted Time
                   </label>
                   <input
                     type="datetime-local"
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                    className="w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 font-bold text-lux-ink shadow-sm outline-none transition-all focus:border-lux-emerald focus:ring-4 focus:ring-lux-gold/20 disabled:bg-lux-ivory disabled:text-lux-muted"
                     value={acceptedAt}
                     onChange={(e) => setAcceptedAt(e.target.value)}
                     disabled={!canInteract}
@@ -605,11 +599,9 @@ const InteractionCard = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                  Review Notes
-                </label>
+                <label className="lux-eyebrow ml-1 block">Review Notes</label>
                 <textarea
-                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700 shadow-sm min-h-[100px] disabled:bg-slate-50 disabled:text-slate-400"
+                  className="min-h-[100px] w-full rounded-2xl border border-[#e4dbc6] bg-lux-cream p-4 font-medium text-lux-ink shadow-sm outline-none transition-all focus:border-lux-emerald focus:ring-4 focus:ring-lux-gold/20 disabled:bg-lux-ivory disabled:text-lux-muted"
                   placeholder="Share feedback or internal reasoning for this decision..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -622,21 +614,21 @@ const InteractionCard = ({
               <button
                 onClick={() => handleSave("accepted")}
                 disabled={!canInteract}
-                className="px-8 py-3.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-200 font-black text-sm uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep px-8 py-3.5 text-sm font-black uppercase tracking-widest text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
               >
                 <FaCheckCircle /> Accept Proposal
               </button>
               <button
                 onClick={() => handleSave("rejected")}
                 disabled={!canInteract}
-                className="px-8 py-3.5 bg-white text-rose-600 border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+                className="inline-flex items-center gap-2 rounded-2xl border-2 border-rose-200 bg-lux-cream px-8 py-3.5 text-sm font-black uppercase tracking-widest text-rose-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-rose-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
               >
                 <FaTimesCircle /> Reject
               </button>
               <button
                 onClick={() => onDelete(interaction._id)}
                 disabled={!canInteract}
-                className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-transparent hover:border-rose-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-2xl border border-transparent p-3.5 text-lux-muted shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 disabled:pointer-events-none disabled:opacity-60"
                 title="Delete Interaction"
               >
                 <FaTrashAlt />
@@ -650,14 +642,14 @@ const InteractionCard = ({
             <button
               onClick={() => onStatusChange(interaction._id, "pending", notes)}
               disabled={!canInteract}
-              className="px-8 py-3.5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-8 py-3.5 text-sm font-black uppercase tracking-widest text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-100 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
             >
               <FaHistory className="text-xs" /> Reopen Interaction
             </button>
             <button
               onClick={() => onDelete(interaction._id)}
               disabled={!canInteract}
-              className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-slate-100 hover:border-rose-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-2xl border border-[#e4dbc6] p-3.5 text-lux-muted shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 disabled:pointer-events-none disabled:opacity-60"
               title="Delete Interaction"
             >
               <FaTrashAlt />
@@ -670,7 +662,7 @@ const InteractionCard = ({
             <button
               onClick={() => onDelete(interaction._id)}
               disabled={!canInteract}
-              className="px-5 py-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-slate-100 hover:border-rose-100 text-xs font-bold uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#e4dbc6] px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-muted shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 disabled:pointer-events-none disabled:opacity-60"
             >
               <FaTrashAlt className="text-[10px]" /> Remove Record
             </button>

@@ -75,23 +75,23 @@ const buildRows = (data = [], currentPage = 1, itemsPerPage = 10) =>
     </div>,
     <span
       key={`commodity-${item._id || index}`}
-      className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-100"
+      className="inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
     >
       {item.commodity || "N/A"}
     </span>,
-    <span key={`quantity-${item._id || index}`} className="font-semibold text-slate-700">
+    <span key={`quantity-${item._id || index}`} className="font-semibold text-lux-ink">
       {formatWeight(item.quantity)}
     </span>,
-    <span key={`rate-${item._id || index}`} className="font-semibold text-slate-700">
+    <span key={`rate-${item._id || index}`} className="font-semibold text-lux-ink">
       {formatRate(item.rate)}
     </span>,
     item.lorryNumber || "-",
     formatDisplayDate(item.loadingDate),
-    <span key={`loading-${item._id || index}`} className="font-semibold text-blue-700">
+    <span key={`loading-${item._id || index}`} className="font-semibold text-lux-emerald">
       {formatWeight(item.loadingWeight)}
     </span>,
     formatDisplayDate(item.unloadingDate),
-    <span key={`unloading-${item._id || index}`} className="font-semibold text-violet-700">
+    <span key={`unloading-${item._id || index}`} className="font-semibold text-lux-ink">
       {formatWeight(item.unloadingWeight)}
     </span>,
   ]);
@@ -310,7 +310,7 @@ const PartyReportPage = ({ partyType }) => {
         subtitle="These reports are available only to admin users."
         icon={FaShieldAlt}
       >
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-800">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-100 px-5 py-4 text-sm font-medium text-emerald-700">
           Only admin can access buyer and seller sauda reports.
         </div>
       </AdminPageShell>
@@ -325,43 +325,43 @@ const PartyReportPage = ({ partyType }) => {
       onRefresh={fetchPartyOptions}
     >
       <Suspense fallback={<Loading />}>
-        <div className="mb-6 rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-5 shadow-sm">
+        <div className="lux-card lux-gold-top mb-6 p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-                <FaShieldAlt className="text-emerald-400" />
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#e6dcc4] bg-lux-cream px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-lux-emerald">
+                <FaShieldAlt className="text-lux-gold" />
                 Admin Only
               </div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-900">
+              <h2 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink">
                 {isBuyer ? "Buyer Side Report Center" : "Seller Side Report Center"}
               </h2>
-              <p className="mt-2 max-w-3xl text-sm font-medium text-slate-600">
+              <p className="mt-2 max-w-3xl text-sm font-medium text-lux-muted">
                 Select the {partyLabel.toLowerCase()}, choose the report type, apply a start and end date, and generate export-ready PDF or Excel files.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[420px]">
-              <div className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-lux-muted">
                   Total Records
                 </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
+                <div className="mt-2 font-serif text-2xl font-semibold text-lux-ink">
                   {summary.totalRecords || totalItems || 0}
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-lux-muted">
                   Total Loading
                 </div>
-                <div className="mt-2 text-2xl font-black text-blue-700">
+                <div className="mt-2 font-serif text-2xl font-semibold text-lux-emerald">
                   {formatWeight(summary.totalLoadingWeight)}
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-sm">
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-lux-muted">
                   Total Unloading
                 </div>
-                <div className="mt-2 text-2xl font-black text-violet-700">
+                <div className="mt-2 font-serif text-2xl font-semibold text-lux-ink">
                   {formatWeight(summary.totalUnloadingWeight)}
                 </div>
               </div>
@@ -369,14 +369,14 @@ const PartyReportPage = ({ partyType }) => {
           </div>
         </div>
 
-        <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="lux-card mb-6 p-4 sm:p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lux-ivory text-lux-emerald ring-1 ring-lux-gold/40">
               <FaFilter />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Report Filters</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="font-serif text-lg font-semibold text-lux-ink">Report Filters</h3>
+              <p className="text-sm text-lux-muted">
                 Start with party selection, then choose the report window and export format.
               </p>
             </div>
@@ -386,7 +386,7 @@ const PartyReportPage = ({ partyType }) => {
             <Loading />
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <DataDropdown
                   label={partyLabel}
                   options={partyOptions}
@@ -405,14 +405,14 @@ const PartyReportPage = ({ partyType }) => {
                 />
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Start Date
                   </label>
                   <DateSelector selectedDate={startDate} onChange={setStartDate} />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     End Date
                   </label>
                   <DateSelector selectedDate={endDate} onChange={setEndDate} />
@@ -423,7 +423,7 @@ const PartyReportPage = ({ partyType }) => {
                 <button
                   type="button"
                   onClick={handleGenerateReport}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
                 >
                   <FaCalendarAlt />
                   Generate Report
@@ -432,7 +432,7 @@ const PartyReportPage = ({ partyType }) => {
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 >
                   Clear Filters
                 </button>
@@ -441,7 +441,7 @@ const PartyReportPage = ({ partyType }) => {
                   type="button"
                   onClick={() => handleExport("excel")}
                   disabled={exporting || !appliedFilters}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-100 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:pointer-events-none disabled:opacity-60"
                 >
                   <FaFileExcel />
                   Excel
@@ -451,7 +451,7 @@ const PartyReportPage = ({ partyType }) => {
                   type="button"
                   onClick={() => handleExport("pdf")}
                   disabled={exporting || !appliedFilters}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-rose-600/20 transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-500 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-600 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
                 >
                   <FaFilePdf />
                   PDF
@@ -461,15 +461,15 @@ const PartyReportPage = ({ partyType }) => {
           )}
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
+          <div className="lux-card lux-card-hover p-5">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-lux-ivory text-lux-emerald ring-1 ring-lux-gold/40">
               <FaBoxes />
             </div>
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-lux-muted">
               Current Report
             </div>
-            <div className="mt-2 text-lg font-black text-slate-900">
+            <div className="mt-2 font-serif text-lg font-semibold text-lux-ink">
               {appliedFilters
                 ? REPORT_OPTIONS.find(
                     (option) => option.value === appliedFilters.reportType,
@@ -478,26 +478,26 @@ const PartyReportPage = ({ partyType }) => {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+          <div className="lux-card lux-card-hover p-5">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-lux-ivory text-lux-emerald ring-1 ring-lux-gold/40">
               <FaTruck />
             </div>
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-lux-muted">
               Selected Party
             </div>
-            <div className="mt-2 text-lg font-black text-slate-900">
+            <div className="mt-2 font-serif text-lg font-semibold text-lux-ink">
               {appliedFilters?.party?.label || "Select a party"}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+          <div className="lux-card lux-card-hover p-5">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-lux-ivory text-lux-emerald ring-1 ring-lux-gold/40">
               <FaTruckLoading />
             </div>
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-lux-muted">
               Date Window
             </div>
-            <div className="mt-2 text-lg font-black text-slate-900">
+            <div className="mt-2 font-serif text-lg font-semibold text-lux-ink">
               {appliedFilters
                 ? `${formatDisplayDate(appliedFilters.startDate)} to ${formatDisplayDate(appliedFilters.endDate)}`
                 : "Choose a range"}
@@ -505,11 +505,11 @@ const PartyReportPage = ({ partyType }) => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="lux-card p-4 sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-black text-slate-900">Report Preview</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="font-serif text-lg font-semibold text-lux-ink">Report Preview</h3>
+              <p className="text-sm text-lux-muted">
                 Review the generated rows before downloading the final file.
               </p>
             </div>

@@ -141,9 +141,9 @@ const EditCommodity = () => {
         {isFetching ? (
             <Loading />
         ) : (
-          <div className="container mx-auto max-w-4xl">
-            <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-green-200/80">
-              <div className="flex items-center mb-8">
+          <div className="mx-auto w-full max-w-5xl">
+            <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
+              <div className="flex flex-wrap items-center gap-3 mb-8">
                 <Buttons
                   label="Back"
                   onClick={() => navigate("/commodity/list")}
@@ -152,12 +152,12 @@ const EditCommodity = () => {
                   icon={<FaArrowLeft />}
                   className="mr-4"
                 />
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                <h2 className="font-serif text-xl sm:text-2xl font-semibold text-lux-ink">
                   Edit Commodity
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                 <DataInput
                   placeholder="Enter commodity name"
                   value={commodityName}
@@ -176,7 +176,7 @@ const EditCommodity = () => {
 
               <button
                 onClick={handleAddField}
-                className="mt-4 text-green-700 flex items-center space-x-2"
+                className="mt-4 flex items-center gap-2 font-semibold text-lux-emerald hover:text-lux-deep"
               >
                 <AiOutlinePlus size={20} />
                 <span className="font-medium">Add Quality Parameter</span>
@@ -185,7 +185,7 @@ const EditCommodity = () => {
               {extraFields.map((field, index) => (
                 <div
                   key={index}
-                  className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
+                  className="mt-4 grid grid-cols-1 gap-4 items-center rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:grid-cols-3"
                 >
                   <DataDropdown
                     options={getFilteredOptions(index)}
@@ -198,7 +198,7 @@ const EditCommodity = () => {
                   <div className="col-span-2 flex justify-end">
                     <button
                       onClick={() => handleRemoveField(index)}
-                      className="text-red-500 flex items-center space-x-2"
+                      className="flex items-center gap-2 text-rose-500 hover:text-rose-600"
                     >
                       <AiOutlineMinus size={20} />
                       <span>Remove</span>
@@ -207,7 +207,7 @@ const EditCommodity = () => {
                 </div>
               ))}
 
-              <div className="flex justify-end gap-4 mt-8">
+              <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <Buttons
                   label="Cancel"
                   onClick={() => navigate("/commodity/list")}

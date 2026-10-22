@@ -228,69 +228,69 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
         <Loading />
       ) : (
         <div className="space-y-6" ref={reportRef}>
-          <div className="flex justify-end gap-3 no-print">
+          <div className="no-print flex flex-wrap justify-end gap-3">
             <button
               onClick={generatePDF}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
             >
               <FaFilePdf size={14} />
               Export PDF
             </button>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-slate-200"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
               <FaPrint size={14} />
               Print
             </button>
           </div>
 
-          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:gap-5 sm:p-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Buyer
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-lux-ink">
                 {sauda.buyerCompany || "N/A"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Seller
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-lux-ink">
                 {sauda.sellerCompany || "N/A"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Consignee
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-lux-ink">
                 {lorries[0]?.consigneeName || "N/A"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Sauda Date
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-lux-ink">
                 {new Date(sauda.createdAt).toLocaleDateString()}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Quantity
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-lux-ink">
                 {sauda.quantity || 0} {sauda.unit || "Ton"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-lux-muted">
                 Rate
               </p>
-              <p className="text-sm font-black text-emerald-600">
+              <p className="text-sm font-black text-lux-emerald">
                 Rs. {sauda.rate || 0}
               </p>
             </div>
@@ -304,23 +304,23 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                 return (
                   <div
                     key={lorry._id}
-                    className="border border-slate-100 rounded-3xl overflow-hidden shadow-sm"
+                    className="overflow-hidden rounded-2xl border border-[#ece4d2] shadow-sm"
                   >
-                    <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-ivory px-4 py-4 sm:px-6">
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-xs font-black">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-700">
                           {idx + 1}
                         </span>
-                        <h5 className="text-xs font-black text-slate-700 uppercase tracking-widest">
+                        <h5 className="text-xs font-black uppercase tracking-widest text-lux-ink">
                           Lorry: {lorry.lorryNumber}
                         </h5>
                       </div>
                       {balance <= 0 ? (
-                        <div className="flex items-center gap-2 text-emerald-600 text-[10px] font-black uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
                           <FaCheckCircle /> Fully Paid
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-green-600 text-[10px] font-black uppercase tracking-widest bg-green-50 px-3 py-1 rounded-full">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#e6dcc4] bg-lux-cream px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-emerald">
                           <FaTimesCircle /> Pending: Rs.{" "}
                           {balance.toLocaleString()}
                         </div>
@@ -330,59 +330,59 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-white">
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                          <tr className="bg-lux-cream">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2]">
                               Date
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2]">
                               Bill No
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2]">
                               L. No
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 text-center">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2] text-center">
                               R.Wt
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 text-center">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2] text-center">
                               Un. Qty
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 text-center">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2] text-center">
                               Un. Wt
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 text-right">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2] text-right">
                               Amount
                             </th>
-                            <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 text-right">
+                            <th className="px-6 py-4 text-[9px] font-black text-lux-muted uppercase tracking-widest border-b border-[#ece4d2] text-right">
                               Balance
                             </th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="bg-white group">
-                            <td className="px-6 py-4 text-[11px] font-bold text-slate-600">
+                          <tr className="bg-lux-cream group">
+                            <td className="px-6 py-4 text-[11px] font-bold text-lux-muted">
                               {new Date(lorry.loadingDate).toLocaleDateString()}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-black text-slate-800">
+                            <td className="px-6 py-4 text-[11px] font-black text-lux-ink">
                               {lorry.billNo || "-"}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-black text-emerald-600">
+                            <td className="px-6 py-4 text-[11px] font-black text-lux-emerald">
                               {lorry.lorryNumber}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-bold text-slate-600 text-center">
+                            <td className="px-6 py-4 text-[11px] font-bold text-lux-muted text-center">
                               {(lorry.loadingWeight || 0).toFixed(3)}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-bold text-slate-600 text-center">
+                            <td className="px-6 py-4 text-[11px] font-bold text-lux-muted text-center">
                               {lorry.unloadingDate
                                 ? `${new Date(lorry.unloadingDate).getDate()}/${new Date(lorry.unloadingDate).getMonth() + 1}`
                                 : "-"}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-bold text-slate-600 text-center">
+                            <td className="px-6 py-4 text-[11px] font-bold text-lux-muted text-center">
                               {(lorry.unloadingWeight || 0).toFixed(3)}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-black text-slate-900 text-right">
+                            <td className="px-6 py-4 text-[11px] font-black text-lux-ink text-right">
                               Rs. {netAmount.toLocaleString()}
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-black text-slate-900 text-right bg-slate-50/50">
+                            <td className="px-6 py-4 text-[11px] font-black text-lux-ink text-right bg-lux-ivory">
                               Rs. {balance.toLocaleString()}
                             </td>
                           </tr>
@@ -391,10 +391,10 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                     </div>
 
                     {lorryPayments.length > 0 && (
-                      <div className="bg-slate-50/30 p-6 border-t border-slate-50 space-y-4">
+                      <div className="space-y-4 border-t border-[#ece4d2] bg-lux-ivory p-4 sm:p-6">
                         <div className="flex items-center gap-2">
-                          <FaHistory className="text-slate-300" size={12} />
-                          <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <FaHistory className="text-lux-muted" size={12} />
+                          <h6 className="text-[10px] font-black uppercase tracking-widest text-lux-muted">
                             Payment History for this Lorry
                           </h6>
                         </div>
@@ -406,22 +406,22 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                             return (
                               <div
                                 key={p._id}
-                                className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm gap-3"
+                                className="flex flex-col justify-between gap-3 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 shadow-sm md:flex-row md:items-center"
                               >
                                 <div className="flex items-center gap-4">
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                  <div className="h-2 w-2 rounded-full bg-lux-emerald" />
                                   <div className="space-y-1">
-                                    <p className="text-xs font-black text-slate-800">
+                                    <p className="text-xs font-black text-lux-ink">
                                       {new Date(p.date).toLocaleDateString()} —
                                       Payment made:{" "}
-                                      <span className="text-emerald-600">
+                                      <span className="text-lux-emerald">
                                         Rs.{" "}
                                         {mapping?.allocatedAmount?.toLocaleString() ||
                                           0}
                                         /-
                                       </span>
                                     </p>
-                                    <p className="text-[10px] font-medium text-slate-500 italic">
+                                    <p className="text-[10px] font-medium italic text-lux-muted">
                                       via {p.paymentMode}{" "}
                                       {p.remarks ? `· ${p.remarks}` : ""}
                                     </p>
@@ -431,14 +431,14 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                             );
                           })}
                         </div>
-                        <div className="pt-4 flex justify-end border-t border-slate-100">
-                          <p className="text-sm font-black text-slate-800">
+                        <div className="flex justify-end border-t border-[#ece4d2] pt-4">
+                          <p className="text-sm font-black text-lux-ink">
                             Final Balance:{" "}
                             <span
                               className={
                                 balance <= 0
-                                  ? "text-emerald-600"
-                                  : "text-green-600"
+                                  ? "text-lux-emerald"
+                                  : "text-lux-emerald"
                               }
                             >
                               {balance <= 0
@@ -453,8 +453,8 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                 );
               })
             ) : (
-              <div className="text-center py-20 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
-                <p className="text-slate-400 font-bold">
+              <div className="rounded-2xl border border-dashed border-[#e6dcc4] bg-lux-ivory py-20 text-center">
+                <p className="font-bold text-lux-muted">
                   No lorry entries found for this Sauda.
                 </p>
               </div>

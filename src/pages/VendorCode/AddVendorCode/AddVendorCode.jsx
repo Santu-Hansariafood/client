@@ -140,31 +140,31 @@ const AddVendorCode = () => {
       icon={FaBarcode}
       noContentCard
     >
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex justify-between items-center gap-4 mb-2">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
+        <div className="mb-2 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-slate-600 rounded-xl font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e2d9c5] bg-lux-cream px-4 py-2 text-sm font-semibold text-lux-ink shadow-sm transition-all hover:bg-[#f5f0e4]"
           >
             <FaArrowLeft /> Back
           </button>
           <button
             onClick={() => navigate("/vendor-code/list")}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-semibold shadow-sm border border-emerald-100 hover:bg-emerald-100 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#ece4d2] bg-lux-ivory px-4 py-2 text-sm font-semibold text-lux-emerald shadow-sm transition-all hover:bg-[#efe9d8]"
           >
             <FaList /> View List
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-2">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold text-lg">
+                <div className="flex items-center gap-3 pb-3 border-b border-[#ece4d2] mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                     1
                   </div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                  <h2 className="font-serif text-lg font-bold uppercase tracking-tight text-lux-ink">
                     Buyer Selection
                   </h2>
                 </div>
@@ -197,11 +197,11 @@ const AddVendorCode = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-2">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600 font-bold text-lg">
+                <div className="flex items-center gap-3 pb-3 border-b border-[#ece4d2] mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                     2
                   </div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                  <h2 className="font-serif text-lg font-bold uppercase tracking-tight text-lux-ink">
                     Seller Selection
                   </h2>
                 </div>
@@ -217,26 +217,25 @@ const AddVendorCode = () => {
             </div>
 
             {isReady && (
-              <div className="mt-10 pt-10 border-t border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
-                <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-8">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 font-bold text-lg">
+              <div className="mt-10 pt-10 border-t border-[#ece4d2] animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="flex items-center gap-3 pb-4 border-b border-[#ece4d2] mb-8">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                     3
                   </div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                  <h2 className="font-serif text-lg font-bold uppercase tracking-tight text-lux-ink">
                     Assign Vendor Code
                   </h2>
                 </div>
-                <div className="max-w-md bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                <div className="max-w-md rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6">
                   <DataInput
                     label="Vendor Code"
                     value={form.vendorCode}
                     onChange={handleVendorCodeChange}
                     placeholder="E.G. VEND001"
-                    className="bg-white shadow-sm"
                     required
                   />
-                  <div className="flex items-start gap-2 mt-3 text-slate-400">
-                    <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded font-bold mt-0.5">
+                  <div className="flex items-start gap-2 mt-3 text-lux-muted">
+                    <span className="text-[10px] bg-lux-emerald/10 text-lux-emerald px-1.5 py-0.5 rounded font-bold mt-0.5">
                       INFO
                     </span>
                     <p className="text-xs">
@@ -249,14 +248,14 @@ const AddVendorCode = () => {
             )}
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex flex-col pt-2 sm:flex-row sm:justify-end">
             <button
               type="submit"
               disabled={loading || !isReady || !form.vendorCode}
-              className={`flex items-center gap-3 px-10 py-4 rounded-2xl font-bold text-white shadow-xl transition-all duration-300 ${
+              className={`flex items-center justify-center gap-3 px-8 py-3 rounded-xl font-bold text-white shadow-xl transition-all duration-300 ${
                 loading || !isReady || !form.vendorCode
-                  ? "bg-slate-300 cursor-not-allowed translate-y-0"
-                  : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:shadow-emerald-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                  ? "bg-lux-muted/40 cursor-not-allowed translate-y-0"
+                  : "bg-gradient-to-r from-lux-emerald to-lux-deep hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
               }`}
             >
               {loading ? (

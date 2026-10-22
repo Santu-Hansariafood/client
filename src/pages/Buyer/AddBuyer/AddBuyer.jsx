@@ -280,10 +280,10 @@ const AddBuyer = () => {
         icon={FaUserPlus}
         noContentCard
       >
-        <div className="max-w-4xl mx-auto">
-          <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-green-200/80 rounded-2xl shadow-lg bg-white">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
             {successMessage && (
-              <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
+              <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-100 px-4 py-3 text-center font-semibold text-emerald-700 animate-fade-in">
                 {successMessage}
               </div>
             )}
@@ -291,7 +291,7 @@ const AddBuyer = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="name"
                   >
                     {buyerLabels.title_name}
@@ -302,7 +302,7 @@ const AddBuyer = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-2xl border-[#e6dcc4] focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/40"
                   />
                   {errors.name && (
                     <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -310,7 +310,7 @@ const AddBuyer = () => {
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="companyName"
                   >
                     {buyerLabels.company_name_title}
@@ -329,7 +329,7 @@ const AddBuyer = () => {
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="group"
                   >
                     {buyerLabels.company_name}
@@ -347,7 +347,7 @@ const AddBuyer = () => {
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="password"
                   >
                     {buyerLabels.password_title}
@@ -361,11 +361,11 @@ const AddBuyer = () => {
                     required
                     minLength="4"
                     maxLength="25"
-                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-2xl border-[#e6dcc4] focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/40"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-800 mb-2 font-medium">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     {buyerLabels.mobile_title}
                   </label>
                   {formData.mobile.map((mobile, index) => (
@@ -379,13 +379,13 @@ const AddBuyer = () => {
                         required
                         maxLength="10"
                         minLength="10"
-                        className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        className="flex-1 rounded-2xl border-[#e6dcc4] focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/40"
                       />
                       {formData.mobile.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveField("mobile", index)}
-                          className="text-red-500 hover:text-red-700 transition"
+                          className="text-rose-500 hover:text-rose-600 transition"
                         >
                           <FaTrash />
                         </button>
@@ -395,7 +395,7 @@ const AddBuyer = () => {
                   <button
                     type="button"
                     onClick={() => handleAddField("mobile")}
-                    className="text-blue-600 flex items-center mt-2 hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 font-semibold text-lux-emerald hover:text-lux-deep transition"
                   >
                     <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
                   </button>
@@ -404,7 +404,7 @@ const AddBuyer = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-gray-800 mb-2 font-medium">
+                  <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     {buyerLabels.email_title}
                   </label>
                   {formData.email.map((email, index) => (
@@ -416,13 +416,13 @@ const AddBuyer = () => {
                         value={email}
                         onChange={(e) => handleInputChange(e, index, "email")}
                         required
-                        className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        className="flex-1 rounded-2xl border-[#e6dcc4] focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/40"
                       />
                       {formData.email.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveField("email", index)}
-                          className="text-red-500 hover:text-red-700 transition"
+                          className="text-rose-500 hover:text-rose-600 transition"
                         >
                           <FaTrash />
                         </button>
@@ -432,7 +432,7 @@ const AddBuyer = () => {
                   <button
                     type="button"
                     onClick={() => handleAddField("email")}
-                    className="text-blue-600 flex items-center mt-2 hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 font-semibold text-lux-emerald hover:text-lux-deep transition"
                   >
                     <FaPlus className="mr-1" /> {buyerLabels.add_email}
                   </button>
@@ -442,7 +442,7 @@ const AddBuyer = () => {
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="commodity"
                   >
                     {buyerLabels.commodity_title}
@@ -460,7 +460,7 @@ const AddBuyer = () => {
                   />
                   {formData.commodity.map((commodity) => (
                     <div key={commodity.value} className="mt-4">
-                      <label className="block text-gray-700 mb-2">
+                      <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                         {buyerLabels.brokerage_per_ton_title} {commodity.label}
                       </label>
                       <DataInput
@@ -471,14 +471,14 @@ const AddBuyer = () => {
                         onChange={(e) =>
                           handleBrokerageChange(e, commodity.value)
                         }
-                        className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        className="w-full rounded-2xl border-[#e6dcc4] focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/40"
                       />
                     </div>
                   ))}
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="consignee"
                   >
                     {buyerLabels.consignee_title}
@@ -497,7 +497,7 @@ const AddBuyer = () => {
                 </div>
                 <div>
                   <label
-                    className="block text-gray-800 mb-2 font-medium"
+                    className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif"
                     htmlFor="status"
                   >
                     {buyerLabels.status_title}
@@ -520,7 +520,7 @@ const AddBuyer = () => {
                   type="submit"
                   variant="primary"
                   size="md"
-                  className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                 />
               </div>
             </form>

@@ -179,8 +179,8 @@ const ListCompany = () => {
         icon={FaBuilding}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white border border-green-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
             <div className="mb-4">
               <SearchBox
                 placeholder="Search by company name..."
@@ -189,11 +189,11 @@ const ListCompany = () => {
                 returnQuery
               />
             </div>
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
+            <div className="overflow-x-auto rounded-2xl border border-[#ece4d2]">
               {loading ? (
                 <Loading />
               ) : rows.length === 0 ? (
-                <div className="p-4 text-center text-slate-500">
+                <div className="p-4 text-center text-lux-muted">
                   No companies found.
                 </div>
               ) : (
@@ -254,7 +254,7 @@ const ListCompany = () => {
                   <strong>Group:</strong> {selectedCompany.group}
                 </p>
 
-                <h4 className="mt-4 font-semibold">Commodities:</h4>
+                <h4 className="mt-4 font-serif font-semibold text-lux-ink">Commodities:</h4>
 
                 <ul>
                   {(selectedCompany.commodities || []).map((commodity) => (

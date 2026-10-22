@@ -5,16 +5,18 @@ const BidHistory = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex items-center justify-center">
-      <div className="w-full max-w-3xl">
-        <div className="bg-white shadow-lg rounded-2xl p-5 sm:p-8 text-center mb-5">
-          <h2 className="text-2xl font-semibold mb-3">Bid History</h2>
-          <p className="text-gray-600 mb-6">
+    <div className="lux-canvas flex min-h-screen items-center justify-center p-4 sm:p-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="lux-card lux-gold-top mb-5 p-5 text-center sm:p-8">
+          <h2 className="mb-3 font-serif text-2xl font-semibold text-lux-ink">
+            Bid History
+          </h2>
+          <p className="mb-6 text-lux-muted">
             Playing zone while this page goes live.
           </p>
           <button
             onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
           >
             Go Back
           </button>

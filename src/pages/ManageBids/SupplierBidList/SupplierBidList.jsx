@@ -477,31 +477,31 @@ const SupplierBidList = () => {
     return (
       <div
         key={bid._id}
-        className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-100/80 hover:-translate-y-0.5"
+        className="group overflow-hidden rounded-2xl border border-[#ece4d2] bg-lux-cream shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
       >
         <div className="p-4 sm:p-5">
-          <div className="flex justify-between items-start gap-2">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider flex items-center gap-1.5">
-                <FaLayerGroup className="text-emerald-600" />
+              <p className="lux-eyebrow flex items-center gap-1.5 truncate">
+                <FaLayerGroup className="text-lux-emerald" />
                 {bid.group}
               </p>
-              <h3 className="text-base sm:text-lg font-bold text-slate-800 mt-0.5 sm:mt-1 truncate">
+              <h3 className="mt-0.5 truncate font-serif text-base font-bold text-lux-ink sm:mt-1 sm:text-lg">
                 {bid.consignee}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 truncate flex items-center gap-1.5">
-                <FaBoxOpen className="text-sky-600 shrink-0" />
+              <p className="flex items-center gap-1.5 truncate text-xs text-lux-muted sm:text-sm">
+                <FaBoxOpen className="shrink-0 text-lux-emerald" />
                 {bid.commodity} - {bid.origin}
               </p>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                <p className="text-[11px] sm:text-sm font-semibold text-red-600 flex items-center gap-1.5">
-                  <FaClock className="text-red-500" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 sm:text-sm">
+                  <FaClock className="text-rose-500" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-600" />
                   Ends: {bid.endTime} {!isClosed && `• ${countdownText}`}
                 </p>
                 {!isClosed && (
-                  <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-                    <FaUsers className="text-[10px] text-indigo-500" />
+                  <p className="inline-flex items-center gap-1 rounded-md border border-[#e6dcc4] bg-lux-ivory px-2 py-0.5 text-[10px] font-semibold text-lux-muted sm:text-xs">
+                    <FaUsers className="text-[10px] text-lux-emerald" />
                     Interactions: {participantCount}
                   </p>
                 )}
@@ -509,12 +509,12 @@ const SupplierBidList = () => {
             </div>
             {isParticipated && (
               <div
-                className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex flex-col items-end gap-0.5 whitespace-nowrap shadow-sm ${
+                className={`flex flex-col items-end gap-0.5 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-bold shadow-sm sm:px-3 sm:text-xs ${
                   participationStatus === "accepted"
-                    ? "bg-green-100 text-green-700 ring-1 ring-green-200"
+                    ? "border border-emerald-200 bg-emerald-100 text-emerald-700"
                     : participationStatus === "rejected"
-                      ? "bg-red-100 text-red-700 ring-1 ring-red-200"
-                      : "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                      ? "border border-rose-200 bg-rose-100 text-rose-700"
+                      : "border border-[#e6dcc4] bg-lux-cream text-lux-emerald"
                 }`}
               >
                 <span className="inline-flex items-center gap-1 sm:gap-1.5">
@@ -529,7 +529,7 @@ const SupplierBidList = () => {
                     participationStatus.slice(1)}
                 </span>
                 {participationStatus === "accepted" && acceptedTimestamp && (
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-green-600 leading-tight text-right">
+                  <span className="text-right text-[9px] font-semibold leading-tight text-emerald-600 sm:text-[10px]">
                     {formatDate(acceptedTimestamp)} • {formatTime(acceptedTimestamp)}
                   </span>
                 )}
@@ -537,55 +537,55 @@ const SupplierBidList = () => {
             )}
           </div>
 
-          <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                <FaWeightHanging className="text-emerald-600" />
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4">
+            <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 transition-all duration-300 hover:shadow-sm">
+              <p className="lux-eyebrow inline-flex items-center gap-1.5">
+                <FaWeightHanging className="text-lux-emerald" />
                 Quantity
               </p>
-              <p className="text-sm sm:text-base font-bold text-slate-700">
+              <p className="text-sm font-bold text-lux-ink sm:text-base">
                 {bid.quantity}{" "}
-                <span className="text-[10px] sm:text-xs font-normal">Tons</span>
+                <span className="text-[10px] font-normal sm:text-xs">Tons</span>
               </p>
             </div>
             {!isClosed && bid.rate !== null && bid.rate !== undefined && (
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                  <FaGavel className="text-sky-600" />
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 transition-all duration-300 hover:shadow-sm">
+                <p className="lux-eyebrow inline-flex items-center gap-1.5">
+                  <FaGavel className="text-lux-emerald" />
                   Rate
                 </p>
-                <p className="text-sm sm:text-base font-bold text-slate-700">
+                <p className="text-sm font-bold text-lux-ink sm:text-base">
                   {formatBidRate(bid.rate)}
                 </p>
               </div>
             )}
 
-            <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                <FaStar className="text-green-500" />
+            <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 transition-all duration-300 hover:shadow-sm sm:col-span-2">
+              <p className="lux-eyebrow inline-flex items-center gap-1.5">
+                <FaStar className="text-lux-gold" />
                 Quality Parameters
               </p>
-              <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5 leading-tight">
+              <p className="mt-0.5 text-[11px] font-semibold leading-tight text-lux-ink sm:text-sm">
                 {qualityText || "N/A"}
               </p>
             </div>
 
-            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                  <FaBuilding className="text-indigo-600" />
+            <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 transition-all duration-300 hover:shadow-sm">
+                <p className="lux-eyebrow inline-flex items-center gap-1.5">
+                  <FaBuilding className="text-lux-emerald" />
                   Payment Terms
                 </p>
-                <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
+                <p className="mt-0.5 text-[11px] font-semibold text-lux-ink sm:text-sm">
                   {bid.paymentTerms || "N/A"}
                 </p>
               </div>
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                  <FaClock className="text-rose-500" />
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 transition-all duration-300 hover:shadow-sm">
+                <p className="lux-eyebrow inline-flex items-center gap-1.5">
+                  <FaClock className="text-lux-gold" />
                   Expected Delivery
                 </p>
-                <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
+                <p className="mt-0.5 text-[11px] font-semibold text-lux-ink sm:text-sm">
                   {bid.delivery ? `${bid.delivery} Days` : "N/A"}
                 </p>
               </div>
@@ -593,32 +593,32 @@ const SupplierBidList = () => {
 
             {isParticipated && (
               <>
-                <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5">
+                  <p className="lux-eyebrow">
                     Your Rate
                   </p>
-                  <p className="text-sm sm:text-base font-bold text-blue-700">
+                  <p className="text-sm font-bold text-lux-emerald sm:text-base">
                     ₹{participation.rate}
                   </p>
                 </div>
-                <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5">
+                  <p className="lux-eyebrow">
                     Your Quantity
                   </p>
-                  <p className="text-sm sm:text-base font-bold text-blue-700">
+                  <p className="text-sm font-bold text-lux-emerald sm:text-base">
                     {participation.quantity}{" "}
-                    <span className="text-[10px] sm:text-xs font-normal">
+                    <span className="text-[10px] font-normal sm:text-xs">
                       Tons
                     </span>
                   </p>
                 </div>
                 {(participation.deliveryDate || participation.paymentTerms) && (
-                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                      <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                  <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
+                    <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5">
+                      <p className="lux-eyebrow">
                         Expected Delivery Date
                       </p>
-                      <p className="text-[11px] sm:text-sm font-semibold text-blue-700 mt-0.5">
+                      <p className="mt-0.5 text-[11px] font-semibold text-lux-emerald sm:text-sm">
                         {participation.deliveryDate
                           ? new Date(
                               participation.deliveryDate,
@@ -626,61 +626,61 @@ const SupplierBidList = () => {
                           : "N/A"}
                       </p>
                     </div>
-                    <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                      <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                    <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5">
+                      <p className="lux-eyebrow">
                         Your Payment Terms
                       </p>
-                      <p className="text-[11px] sm:text-sm font-semibold text-blue-700 mt-0.5">
+                      <p className="mt-0.5 text-[11px] font-semibold text-lux-emerald sm:text-sm">
                         {participation.paymentTerms || "N/A"}
                       </p>
                     </div>
                   </div>
                 )}
                 {participation?.sellerCompany && (
-                  <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                    <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                  <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-2.5 sm:col-span-2">
+                    <p className="lux-eyebrow">
                       Your Company
                     </p>
-                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-0.5 truncate">
+                    <p className="mt-0.5 truncate text-xs font-semibold text-lux-ink sm:text-sm">
                       {participation.sellerCompany}
                     </p>
                   </div>
                 )}
                 {participationStatus === "accepted" && (
-                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-2.5 sm:col-span-2 sm:grid-cols-4">
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                      <p className="lux-eyebrow text-emerald-600">
                         Accepted Rate
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-green-700">
+                      <p className="text-sm font-bold text-emerald-700 sm:text-base">
                         ₹{participation.acceptedRate ?? participation.rate}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                      <p className="lux-eyebrow text-emerald-600">
                         Accepted Quantity
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-green-700">
+                      <p className="text-sm font-bold text-emerald-700 sm:text-base">
                         {participation.acceptedQuantity ??
                           participation.quantity}{" "}
-                        <span className="text-[10px] sm:text-xs font-normal">
+                        <span className="text-[10px] font-normal sm:text-xs">
                           Tons
                         </span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                      <p className="lux-eyebrow text-emerald-600">
                         Accepted Date
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-green-700">
+                      <p className="text-sm font-bold text-emerald-700 sm:text-base">
                         {formatDate(acceptedTimestamp)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                      <p className="lux-eyebrow text-emerald-600">
                         Accepted Time
                       </p>
-                      <p className="text-sm sm:text-base font-bold text-green-700">
+                      <p className="text-sm font-bold text-emerald-700 sm:text-base">
                         {formatTime(acceptedTimestamp)}
                       </p>
                     </div>
@@ -688,19 +688,19 @@ const SupplierBidList = () => {
                 )}
                 {participationStatus === "rejected" &&
                   String(participation?.adminNotes || "").trim() !== "" && (
-                    <div className="sm:col-span-2 bg-red-50/30 p-2.5 rounded-xl border border-red-100/50">
-                      <p className="text-[10px] sm:text-xs text-red-600 font-medium">
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-2.5 sm:col-span-2">
+                      <p className="lux-eyebrow text-rose-600">
                         Rejection Notes
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold text-red-700 mt-0.5 leading-tight">
+                      <p className="mt-0.5 text-xs font-semibold leading-tight text-rose-700 sm:text-sm">
                         {participation.adminNotes}
                       </p>
                     </div>
                   )}
                 {participationStatus === "pending" && isRevised && (
                   <div className="sm:col-span-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-green-100 text-green-700 ring-1 ring-green-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 sm:text-xs">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                       Revised Participation
                     </span>
                   </div>
@@ -709,16 +709,16 @@ const SupplierBidList = () => {
             )}
           </div>
         </div>
-        <div className="bg-slate-50/70 px-4 sm:px-5 py-3 border-t border-slate-100">
+        <div className="border-t border-[#ece4d2] bg-lux-ivory/60 px-4 py-3 sm:px-5">
           <button
             onClick={() => handleParticipate(bid)}
             disabled={isClosed}
-            className={`w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold rounded-xl py-2.5 sm:py-3 transition-all duration-300 ${
+            className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all duration-300 sm:py-3 sm:text-sm ${
               isClosed
-                ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                ? "cursor-not-allowed border border-[#e4dbc6] bg-lux-ivory text-lux-muted"
                 : isParticipated
-                  ? "bg-gradient-to-r from-blue-50 to-sky-50 text-blue-700 hover:from-blue-100 hover:to-sky-100 border border-blue-200 shadow-sm hover:shadow-md"
-                  : "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 shadow-sm hover:shadow-md"
+                  ? "border border-[#e4dbc6] bg-lux-cream text-lux-emerald shadow-sm hover:-translate-y-0.5 hover:shadow-lg"
+                  : "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 hover:-translate-y-0.5 hover:shadow-xl"
             }`}
           >
             <FaRegHandPointer className="text-base transition-transform group-hover:scale-110" />
@@ -743,28 +743,28 @@ const SupplierBidList = () => {
         icon={FaGavel}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/45 p-4 sm:p-5 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                <p className="lux-eyebrow">
                   Brand Bid Desk
                 </p>
-                <p className="text-sm sm:text-base font-semibold text-slate-800 mt-0.5">
+                <p className="mt-0.5 text-sm font-semibold text-lux-ink sm:text-base">
                   Smart, classy and responsive bidding experience With Hansaria Food Private Limited
                 </p>
               </div>
               {syncTimeText && (
-                <span className="inline-flex items-center w-fit px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-600">
+                <span className="inline-flex w-fit items-center rounded-full border border-[#e6dcc4] bg-lux-ivory px-3 py-1.5 text-xs font-semibold text-lux-muted">
                   Synced {syncTimeText}
                 </span>
               )}
             </div>
           </div>
-          <div className="flex justify-start mb-2">
+          <div className="mb-2 flex justify-start">
             <button
               onClick={() => navigate(-1)}
-              className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              className="group flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
               <FaArrowLeft className="transition-transform group-hover:-translate-x-0.5" />
               Back
@@ -772,62 +772,62 @@ const SupplierBidList = () => {
           </div>
 
           {mappedCommodityText && (
-            <div className="rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-white via-white to-emerald-50/40 px-5 py-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+            <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-5 py-4 shadow-sm">
+              <p className="lux-eyebrow">
                 Mapped Commodities
               </p>
-              <p className="text-sm font-bold text-slate-800 mt-1 leading-relaxed">
+              <p className="mt-1 text-sm font-bold leading-relaxed text-lux-ink">
                 {mappedCommodityText}
               </p>
             </div>
           )}
-          <div className="flex flex-wrap gap-2 sm:gap-3 p-2 bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm">
+          <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-[#ece4d2] bg-lux-cream p-2 shadow-sm sm:gap-3">
             <button
               onClick={() => setActiveTab("active")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
                 activeTab === "active"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
-                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
+                  ? "border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm"
+                  : "border border-transparent text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               }`}
             >
               Active Bids
             </button>
             <button
               onClick={() => setActiveTab("closed")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
                 activeTab === "closed"
-                  ? "bg-rose-50 text-rose-700 border border-rose-200 shadow-sm"
-                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
+                  ? "border border-rose-200 bg-rose-50 text-rose-700 shadow-sm"
+                  : "border border-transparent text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               }`}
             >
               Closed
             </button>
             <button
               onClick={() => setActiveTab("participated")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
                 activeTab === "participated"
-                  ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
-                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
+                  ? "border border-[#e6dcc4] bg-lux-ivory text-lux-emerald shadow-sm"
+                  : "border border-transparent text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               }`}
             >
               Participated
             </button>
             <button
               onClick={() => setActiveTab("accepted")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
                 activeTab === "accepted"
-                  ? "bg-green-50 text-green-700 border border-green-200 shadow-sm"
-                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
+                  ? "border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm"
+                  : "border border-transparent text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               }`}
             >
               Accepted
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
                 activeTab === "rejected"
-                  ? "bg-rose-50 text-rose-600 border border-rose-200 shadow-sm"
-                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
+                  ? "border border-rose-200 bg-rose-50 text-rose-600 shadow-sm"
+                  : "border border-transparent text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               }`}
             >
               Rejected
@@ -837,17 +837,17 @@ const SupplierBidList = () => {
           {loading ? (
             <Loading />
           ) : error ? (
-            <div className="text-center py-12 bg-white rounded-2xl border border-red-200 text-red-600 font-medium">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 py-12 text-center font-medium text-rose-700">
               {error}
             </div>
           ) : bidCount === 0 ? (
             <div className="space-y-4">
-              <div className="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+              <div className="rounded-2xl border border-[#e9e2d3] bg-lux-cream py-10 text-center font-medium text-lux-muted">
                 <p>No {activeTab} bids found for your selected commodities.</p>
                 <button
                   type="button"
                   onClick={() => setShowMindFreshGame((prev) => !prev)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-ivory px-4 py-2 text-sm font-semibold text-lux-emerald transition-colors hover:bg-white"
                 >
                   <FaBrain />
                   {showMindFreshGame ? "Hide Mind Fresh Sudoku" : "Mind Fresh with Sudoku"}
@@ -860,14 +860,14 @@ const SupplierBidList = () => {
           ) : (
             <>
               {(selectedGroupName || selectedCompanyName) && (
-                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5 shadow-sm">
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedGroupName(null);
                       setSelectedCompanyName(null);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                    className="flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                   >
                     <FaArrowLeft />
                     Groups
@@ -876,22 +876,22 @@ const SupplierBidList = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedCompanyName(null)}
-                      className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                      className="rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-sm font-semibold text-lux-ink shadow-sm transition-colors hover:bg-white"
                     >
                       Companies
                     </button>
                   )}
                   {selectedGroupName && (
-                    <span className="px-3 py-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm inline-flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 shadow-sm">
                       <FaLayerGroup className="text-xs" />
                       {selectedGroupName}
                     </span>
                   )}
                   {selectedGroupName && selectedCompanyName && (
-                    <FaChevronRight className="text-slate-400 text-xs" />
+                    <FaChevronRight className="text-xs text-lux-muted" />
                   )}
                   {selectedCompanyName && (
-                    <span className="px-3 py-1.5 text-sm font-semibold text-sky-700 bg-sky-50 rounded-xl border border-sky-200 inline-flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-xl border border-[#e6dcc4] bg-lux-ivory px-3 py-1.5 text-sm font-semibold text-lux-emerald">
                       <FaBuilding className="text-xs" />
                       {selectedCompanyName}
                     </span>
@@ -900,7 +900,7 @@ const SupplierBidList = () => {
               )}
 
               {!selectedGroupName ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {groupIndex.map((g) => (
                     <button
                       key={g.groupName}
@@ -909,38 +909,38 @@ const SupplierBidList = () => {
                         setSelectedGroupName(g.groupName);
                         setSelectedCompanyName(null);
                       }}
-                    className="group text-left bg-gradient-to-br from-white via-white to-emerald-50/40 rounded-2xl border border-emerald-100 p-4 sm:p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                    className="group rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 text-left shadow-lg shadow-emerald-900/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl sm:p-5"
                     >
-                      <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                      <p className="flex items-center gap-2 font-serif text-sm font-bold text-lux-ink transition-colors group-hover:text-lux-emerald">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft">
                           <FaLayerGroup className="text-xs" />
                         </span>
                         {g.groupName}
                       </p>
-                      <p className="text-xs font-semibold text-slate-500 mt-2 flex items-center gap-1.5 flex-wrap">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5">
-                          <FaBuilding className="text-[10px] text-slate-600" />
+                      <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-lux-muted">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#e6dcc4] bg-lux-cream px-2 py-0.5">
+                          <FaBuilding className="text-[10px] text-lux-muted" />
                           {g.companyCount} company(s)
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 text-emerald-700 px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 px-2 py-0.5 text-emerald-700">
                           <FaGavel className="text-[10px]" />
                           {g.bidCount} bid(s)
                         </span>
                         {g.rates && g.rates.length > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100/70 text-green-700 px-2 py-0.5">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 px-2 py-0.5 text-emerald-700">
                             <FaGavel className="text-[10px]" />
                             ₹{g.rates.length === 1 ? g.rates[0] : `${g.rates[0]} - ${g.rates[g.rates.length - 1]}`}
                           </span>
                         )}
                       </p>
                       {g.commodities.length > 0 && (
-                        <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">
-                          <FaBoxOpen className="text-sky-600 shrink-0" />
+                        <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold leading-relaxed text-lux-muted">
+                          <FaBoxOpen className="shrink-0 text-lux-emerald" />
                           {g.commodities.slice(0, 3).join(", ")}
                           {g.commodities.length > 3 ? "…" : ""}
                         </p>
                       )}
-                      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-lux-emerald">
                         Explore group
                         <span className="transition-transform group-hover:translate-x-0.5">→</span>
                       </div>
@@ -949,23 +949,23 @@ const SupplierBidList = () => {
                 </div>
               ) : !selectedCompanyName ? (
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/40 p-4 shadow-lg shadow-emerald-900/5">
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm font-bold text-slate-800 inline-flex items-center gap-2">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                  <div className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 shadow-lg shadow-emerald-900/5">
+                    <div className="mb-4 flex items-center justify-between">
+                      <p className="inline-flex items-center gap-2 font-serif text-sm font-bold text-lux-ink">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft">
                           <FaBuilding className="text-xs" />
                         </span>
                         {selectedGroupName} Companies
                       </p>
-                      <p className="text-xs font-semibold text-slate-500 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 border border-slate-200">
-                        <FaStar className="text-[10px] text-green-500" />
+                      <p className="inline-flex items-center gap-1 rounded-full border border-[#e6dcc4] bg-lux-cream px-2 py-1 text-xs font-semibold text-lux-muted">
+                        <FaStar className="text-[10px] text-lux-gold" />
                         {groupIndex.find(
                           (g) => g.groupName === selectedGroupName,
                         )?.companyCount || 0}{" "}
                         company(s)
                       </p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                       {(
                         groupIndex.find(
                           (g) => g.groupName === selectedGroupName,
@@ -975,34 +975,34 @@ const SupplierBidList = () => {
                           key={c.companyName}
                           type="button"
                           onClick={() => setSelectedCompanyName(c.companyName)}
-                          className="group text-left bg-gradient-to-br from-white via-white to-sky-50/30 rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                          className="group rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
                         >
-                          <p className="text-sm font-bold text-slate-800 group-hover:text-sky-700 transition-colors flex items-center gap-2">
-                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                          <p className="flex items-center gap-2 font-serif text-sm font-bold text-lux-ink transition-colors group-hover:text-lux-emerald">
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft">
                               <FaBuilding className="text-xs" />
                             </span>
                             {c.companyName}
                           </p>
-                          <p className="text-xs font-semibold text-slate-500 mt-2 flex flex-wrap gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-sky-100/70 text-sky-700 px-2 py-0.5">
+                          <p className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-lux-muted">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[#e6dcc4] bg-lux-cream px-2 py-0.5 text-lux-emerald">
                               <FaGavel className="text-[10px]" />
                               {c.bidCount} bid(s)
                             </span>
                             {c.rates && c.rates.length > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 text-emerald-700 px-2 py-0.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 px-2 py-0.5 text-emerald-700">
                                 <FaGavel className="text-[10px]" />
                                 ₹{c.rates.length === 1 ? c.rates[0] : `${c.rates[0]} - ${c.rates[c.rates.length - 1]}`}
                               </span>
                             )}
                           </p>
                           {c.commodities.length > 0 && (
-                            <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">
-                              <FaBoxOpen className="text-indigo-600 shrink-0" />
+                            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold leading-relaxed text-lux-muted">
+                              <FaBoxOpen className="shrink-0 text-lux-emerald" />
                               {c.commodities.slice(0, 3).join(", ")}
                               {c.commodities.length > 3 ? "…" : ""}
                             </p>
                           )}
-                          <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
+                          <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-lux-emerald">
                             View bids
                             <span className="transition-transform group-hover:translate-x-0.5">→</span>
                           </div>
@@ -1013,12 +1013,12 @@ const SupplierBidList = () => {
                 </div>
               ) : displayedBids.length === 0 ? (
                 <div className="space-y-4">
-                  <div className="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+                  <div className="rounded-2xl border border-[#e9e2d3] bg-lux-cream py-10 text-center font-medium text-lux-muted">
                     <p>No {activeTab} bids found for {selectedCompanyName}.</p>
                     <button
                       type="button"
                       onClick={() => setShowMindFreshGame((prev) => !prev)}
-                      className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-ivory px-4 py-2 text-sm font-semibold text-lux-emerald transition-colors hover:bg-white"
                     >
                       <FaBrain />
                       {showMindFreshGame ? "Hide Mind Fresh Sudoku" : "Mind Fresh with Sudoku"}
@@ -1029,7 +1029,7 @@ const SupplierBidList = () => {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {displayedBids.map(renderBidCard)}
                 </div>
               )}
@@ -1044,40 +1044,40 @@ const SupplierBidList = () => {
             title={`Participate in: ${selectedBid.consignee}`}
           >
             <div className="space-y-5 p-1">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {selectedBid.rate !== null && selectedBid.rate !== undefined && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-3 py-2.5">
+                    <p className="lux-eyebrow">
                       Bid Rate
                     </p>
-                    <p className="text-sm font-bold text-slate-800 mt-0.5">
+                    <p className="mt-0.5 text-sm font-bold text-lux-ink">
                       {formatBidRate(selectedBid.rate)}
                     </p>
                   </div>
                 )}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-3 py-2.5">
+                  <p className="lux-eyebrow">
                     Bid Quantity
                   </p>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">{selectedBid.quantity} Tons</p>
+                  <p className="mt-0.5 text-sm font-bold text-lux-ink">{selectedBid.quantity} Tons</p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3">
+                <p className="lux-eyebrow">
                   Submit Your Offer
                 </p>
-                <p className="text-sm font-semibold text-slate-800 mt-1">
+                <p className="mt-1 text-sm font-semibold text-lux-ink">
                   Fill all important details to make your participation stand out.
                 </p>
               </div>
               {Array.isArray(sellerInfo?.companies) &&
                 sellerInfo.companies.filter(Boolean).length > 0 && (
                   <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">
+                    <span className="lux-eyebrow block">
                       Your Company
                     </span>
                     <select
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white shadow-sm"
+                      className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                       value={sellerCompany}
                       onChange={(e) => setSellerCompany(e.target.value)}
                       disabled={
@@ -1098,35 +1098,35 @@ const SupplierBidList = () => {
                   </label>
                 )}
               <label className="block">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="lux-eyebrow block">
                   Your Rate
                 </span>
                 <input
                   type="number"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
+                  className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
                   placeholder="Enter your rate"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="lux-eyebrow block">
                   Your Quantity (Tons)
                 </span>
                 <input
                   type="number"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
+                  className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Enter quantity"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="lux-eyebrow block">
                   Loading From
                 </span>
                 <select
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white shadow-sm"
+                  className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                   value={loadingFrom}
                   onChange={(e) => setLoadingFrom(e.target.value)}
                 >
@@ -1138,26 +1138,26 @@ const SupplierBidList = () => {
                   ))}
                 </select>
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-semibold text-slate-700">
+                  <span className="lux-eyebrow block">
                     Delivery Date
                   </span>
                   <input
                     type="date"
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
+                    className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                     value={deliveryDate}
                     readOnly
                     disabled
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-semibold text-slate-700">
+                  <span className="lux-eyebrow block">
                     Payment Terms
                   </span>
                   <input
                     type="text"
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
+                    className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                     value={paymentTerms}
                     readOnly
                     disabled
@@ -1166,24 +1166,24 @@ const SupplierBidList = () => {
                 </label>
               </div>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="lux-eyebrow block">
                   Finance Required
                 </span>
                 <select
                   value={financeRequired}
                   onChange={(e) => setFinanceRequired(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                 >
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="lux-eyebrow block">
                   Remarks
                 </span>
                 <textarea
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
+                  className="mt-1.5 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink shadow-sm outline-none focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/50"
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="Any additional remarks?"
@@ -1193,13 +1193,13 @@ const SupplierBidList = () => {
               <div className="flex flex-wrap justify-end gap-3 pt-2">
                 <button
                   onClick={() => setIsPopupOpen(false)}
-                  className="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors font-semibold"
+                  className="rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 transition-colors shadow-md hover:shadow-lg font-semibold"
+                  className="rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 font-bold text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
                 >
                   Confirm Participation
                 </button>

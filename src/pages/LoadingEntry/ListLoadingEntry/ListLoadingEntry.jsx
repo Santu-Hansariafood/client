@@ -1289,7 +1289,7 @@ const ListLoadingEntry = () => {
       ).toFixed(2);
 
       return [
-        <span key={`sl-${entry._id}`} className="font-black text-slate-400">
+        <span key={`sl-${entry._id}`} className="font-black text-lux-muted">
           {slNo}
         </span>,
         entry.loadingNo || "-",
@@ -1307,22 +1307,22 @@ const ListLoadingEntry = () => {
           : "0.000",
         <span
           key={`brokerage-${entry._id}`}
-          className="font-bold text-slate-600"
+          className="font-bold text-lux-ink"
         >
           ₹ {totalBrokerage}
         </span>,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
-        <span key={`pending-${entry._id}`} className="font-bold text-green-600">
+        <span key={`pending-${entry._id}`} className="font-bold text-emerald-700">
           {(pendingQuantityMap[entry.saudaNo] || 0).toFixed(2)}
         </span>,
         <span
           key={`status-${entry._id}`}
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
             entry.isRejected
-              ? "bg-red-200 text-red-800"
+              ? "border-rose-200 bg-rose-100 text-rose-700"
               : statusMap[entry.saudaNo] === "closed"
-                ? "bg-red-100 text-red-700"
-                : "bg-emerald-100 text-emerald-700"
+                ? "border-rose-200 bg-rose-100 text-rose-700"
+                : "border-emerald-200 bg-emerald-100 text-emerald-700"
           }`}
         >
           {entry.isRejected
@@ -1343,10 +1343,10 @@ const ListLoadingEntry = () => {
         entry.sellerBillNo || "N/A",
         formatDate(entry.dateOfIssue),
         <div key={`enteredBy-${entry._id}`} className="flex flex-col">
-          <span className="font-semibold text-slate-700">
+          <span className="font-semibold text-lux-ink">
             {entry.creatorMobile || "N/A"}
           </span>
-          <span className="text-[10px] text-slate-400 uppercase font-bold">
+          <span className="text-[10px] text-lux-muted uppercase font-bold">
             {entry.entryByRole || "Admin"}
           </span>
         </div>,
@@ -1354,7 +1354,7 @@ const ListLoadingEntry = () => {
           <button
             onClick={() => handleView(entry)}
             title="View"
-            className="p-1 text-blue-500 hover:bg-blue-100 rounded transition-colors"
+            className="p-1 text-lux-emerald hover:bg-lux-ivory rounded transition-colors"
             aria-label="View entry"
           >
             <MdVisibility size={18} />
@@ -1364,7 +1364,7 @@ const ListLoadingEntry = () => {
               <button
                 onClick={() => handleEdit(entry)}
                 title="Edit"
-                className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
+                className="p-1 text-lux-emerald hover:bg-lux-ivory rounded transition-colors"
                 aria-label="Edit entry"
               >
                 <MdEdit size={18} />
@@ -1372,7 +1372,7 @@ const ListLoadingEntry = () => {
               <button
                 onClick={() => handleDelete(entry._id)}
                 title="Delete"
-                className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+                className="p-1 text-rose-500 hover:bg-rose-50 rounded transition-colors"
                 aria-label="Delete entry"
               >
                 <MdDelete size={18} />
@@ -1384,7 +1384,7 @@ const ListLoadingEntry = () => {
           key={`download-${entry._id}`}
           onClick={() => handleDownload(entry)}
           title="Download PDF"
-          className="p-1 text-purple-500 hover:bg-purple-100 rounded transition-colors flex justify-center"
+          className="p-1 text-lux-gold hover:bg-lux-ivory rounded transition-colors flex justify-center"
           aria-label="Download PDF"
         >
           <MdDownload size={18} />
@@ -1430,19 +1430,19 @@ const ListLoadingEntry = () => {
         icon={FaClipboardList}
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Filters</h3>
+                <h3 className="font-serif text-lg font-semibold text-lux-ink">Filters</h3>
                 {totalItems > 0 && (
-                  <p className="text-sm text-slate-600 mt-1">
+                  <p className="text-sm text-lux-muted mt-1">
                     Showing{" "}
                     {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
                     -{Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
                     {totalItems} entries
                     {hasActiveFilters && (
-                      <span className="ml-2 text-emerald-600 font-medium">
+                      <span className="ml-2 text-lux-emerald font-medium">
                         (filtered)
                       </span>
                     )}
@@ -1453,7 +1453,7 @@ const ListLoadingEntry = () => {
                 <button
                   onClick={handleDownloadPDFReport}
                   disabled={exporting || loadingEntries.length === 0}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#e4dbc6] bg-lux-cream font-bold text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   aria-label="Download PDF Report"
                 >
                   <MdPictureAsPdf size={20} />
@@ -1462,7 +1462,7 @@ const ListLoadingEntry = () => {
                 <button
                   onClick={handleDownloadExcel}
                   disabled={exporting || loadingEntries.length === 0}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   aria-label="Download Excel"
                 >
                   <MdDownload size={20} />
@@ -1499,7 +1499,7 @@ const ListLoadingEntry = () => {
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm text-lux-muted hover:text-lux-ink hover:bg-lux-ivory rounded-lg transition-colors"
                   aria-label="Clear all filters"
                 >
                   Clear All Filters
@@ -1508,20 +1508,20 @@ const ListLoadingEntry = () => {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+          <div className="lux-card p-3 sm:p-4">
             {loading ? (
               <Loading />
             ) : (
               <>
                 {loadingEntries.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-slate-500 text-lg">
+                    <p className="text-lux-muted text-lg">
                       No loading entries found
                     </p>
                     {hasActiveFilters && (
                       <button
                         onClick={clearFilters}
-                        className="mt-4 text-emerald-600 hover:text-emerald-700 font-medium"
+                        className="mt-4 text-lux-emerald hover:text-lux-deep font-medium"
                       >
                         Clear filters to see all entries
                       </button>

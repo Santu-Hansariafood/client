@@ -33,11 +33,11 @@ const AdjustedSaudasSection = ({
         className="min-w-[190px] space-y-1 text-xs"
       >
         <div>
-          <span className="font-bold text-slate-500">Buyer:</span>{" "}
+          <span className="font-bold text-lux-muted">Buyer:</span>{" "}
           {adjustment.buyerSaudaNo || "No buyer Sauda linked"}
         </div>
         <div>
-          <span className="font-bold text-slate-500">Seller(s):</span>{" "}
+          <span className="font-bold text-lux-muted">Seller(s):</span>{" "}
           {[...new Set([
             adjustment.saudaNo,
             ...(adjustment.adjustedWithSaudaNos || []),
@@ -79,7 +79,7 @@ const AdjustedSaudasSection = ({
       isEqual ? (
         <span
           key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
-          className="font-bold text-emerald-600"
+          className="font-bold text-lux-emerald"
         >
           Equal
         </span>
@@ -89,7 +89,7 @@ const AdjustedSaudasSection = ({
           type="button"
           onClick={() => onAdjust(adjustment)}
           title="Load this Sauda for adjustment"
-          className="font-bold text-amber-600 underline decoration-dashed underline-offset-2 hover:text-amber-800"
+          className="font-bold text-amber-600 underline decoration-dashed underline-offset-2 hover:text-amber-800 font-serif"
         >
           Not Equal - Adjust
         </button>
@@ -98,9 +98,11 @@ const AdjustedSaudasSection = ({
   });
 
   return (
-    <div className="mt-6 overflow-x-auto">
+    <div className="lux-card lux-gold-top mt-6 overflow-x-auto p-4 sm:p-6">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h3 className="text-sm font-bold text-slate-700">Adjusted Saudas</h3>
+        <h3 className="font-serif text-sm font-bold text-lux-ink">
+          Adjusted Saudas
+        </h3>
       </div>
       {total > 0 ? (
         <div>
@@ -135,7 +137,7 @@ const AdjustedSaudasSection = ({
           />
         </div>
       ) : (
-        <p className="py-4 text-sm text-slate-500">
+        <p className="py-4 text-sm text-lux-muted">
           No adjusted Saudas match the selected report filters.
         </p>
       )}

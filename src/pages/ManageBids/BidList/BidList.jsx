@@ -485,7 +485,7 @@ const BidList = () => {
     ["Admin", "Employee"].includes(userRole) ? (
       <button
         type="button"
-        className="font-semibold text-left text-emerald-700 underline decoration-dotted underline-offset-4 hover:text-emerald-900"
+        className="font-semibold text-left text-lux-emerald underline decoration-dotted underline-offset-4 hover:text-lux-deep"
         onClick={() => openConsigneeSellers(bid.consignee)}
         title="View top sellers for this consignee"
       >
@@ -505,10 +505,10 @@ const BidList = () => {
     bid.delivery,
     <span
       key={`status-${bid._id}`}
-      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
         bid.status === "active"
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
+          ? "border border-emerald-200 bg-emerald-100 text-emerald-700"
+          : "border border-rose-200 bg-rose-100 text-rose-700"
       }`}
     >
       {bid.status === "active" ? "Active" : "Closed"}
@@ -516,7 +516,7 @@ const BidList = () => {
     <div key={`actions-${bid._id}`} className="flex items-center gap-2">
       <button
         type="button"
-        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-[#e4dbc6] bg-lux-cream text-lux-emerald shadow-sm transition hover:bg-white hover:shadow-lg"
         onClick={() =>
           setEditableRateQuantity({
             id: bid._id,
@@ -530,7 +530,7 @@ const BidList = () => {
       </button>
       <button
         type="button"
-        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-[#e4dbc6] bg-lux-cream text-lux-emerald shadow-sm transition hover:bg-white hover:shadow-lg"
         onClick={() => setSelectedBid(bid)}
         title="View bid"
       >
@@ -539,7 +539,7 @@ const BidList = () => {
       {userRole === "Buyer" && (
         <button
           type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-[#e4dbc6] bg-lux-cream text-lux-emerald shadow-sm transition hover:bg-white hover:shadow-lg"
           onClick={() => navigate(`/confirm-bids/${bid._id}`)}
           title="View bidders"
         >
@@ -549,7 +549,7 @@ const BidList = () => {
       {bid.status === "active" ? (
         <button
           type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-700 border border-red-100 hover:bg-red-100 transition-colors"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-500 text-white shadow-sm transition hover:bg-rose-600 active:scale-[0.97]"
           onClick={() => handleStatusUpdate(bid._id, "closed")}
           title="Stop Bidding"
         >
@@ -558,7 +558,7 @@ const BidList = () => {
       ) : (
         <button
           type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:bg-green-100 transition-colors"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-sm transition hover:-translate-y-0.5"
           onClick={() =>
             setReactivateBid({
               ...bid,
@@ -611,41 +611,41 @@ const BidList = () => {
         icon={FaGavel}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/45 p-4 sm:p-5 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 inline-flex items-center gap-1.5">
+                <p className="lux-eyebrow inline-flex items-center gap-1.5">
                   <FaChartLine />
                   Buyer Bid Desk
                 </p>
-                <p className="text-sm sm:text-base font-semibold text-slate-800 mt-0.5">
+                <p className="mt-0.5 font-serif text-sm font-semibold text-lux-ink sm:text-base">
                   Modern bid tracking for fast buyer decisions
                 </p>
               </div>
-              <div className="inline-flex items-center w-fit px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-600 gap-1.5">
-                <FaClock className="text-emerald-600" />
+              <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#e6dcc4] bg-lux-cream px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-lux-muted">
+                <FaClock className="text-lux-emerald" />
                 Live view
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">
+            <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3">
+                <p className="lux-eyebrow">
                   Active
                 </p>
-                <p className="text-base font-bold text-emerald-800">{tabCounts.active}</p>
+                <p className="font-serif text-xl font-semibold text-lux-ink">{tabCounts.active}</p>
               </div>
-              <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-rose-700 font-semibold">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3">
+                <p className="lux-eyebrow">
                   Closed
                 </p>
-                <p className="text-base font-bold text-rose-800">{tabCounts.closed}</p>
+                <p className="font-serif text-xl font-semibold text-lux-ink">{tabCounts.closed}</p>
               </div>
-              <div className="rounded-xl border border-green-200 bg-green-50/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-green-700 font-semibold">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3">
+                <p className="lux-eyebrow">
                   Previous
                 </p>
-                <p className="text-base font-bold text-green-800">{tabCounts.previous}</p>
+                <p className="font-serif text-xl font-semibold text-lux-ink">{tabCounts.previous}</p>
               </div>
             </div>
           </div>
@@ -653,7 +653,7 @@ const BidList = () => {
             <div className="flex justify-start">
               <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
               >
                 <FaArrowLeft />
                 Back
@@ -661,40 +661,40 @@ const BidList = () => {
             </div>
           )}
           {error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-red-700 font-medium">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-center font-medium text-rose-700">
               {error}
             </div>
           ) : (
             <>
-              <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
-                  <div className="flex flex-wrap gap-2 bg-slate-100 p-1 rounded-xl w-full lg:w-fit">
+              <div className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-3 shadow-sm">
+                <div className="flex flex-col items-stretch justify-between gap-4 lg:flex-row lg:items-center">
+                  <div className="flex w-full flex-wrap gap-2 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-1 lg:w-fit">
                     <button
                       onClick={() => setActiveTab("active")}
-                      className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all sm:px-6 ${
                         activeTab === "active"
-                          ? "bg-white text-emerald-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-lux-cream text-lux-emerald shadow-sm"
+                          : "text-lux-muted hover:text-lux-ink"
                       }`}
                     >
                       Active Bids
                     </button>
                     <button
                       onClick={() => setActiveTab("closed")}
-                      className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all sm:px-6 ${
                         activeTab === "closed"
-                          ? "bg-white text-red-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-lux-cream text-rose-600 shadow-sm"
+                          : "text-lux-muted hover:text-lux-ink"
                       }`}
                     >
                       Closed Bids
                     </button>
                     <button
                       onClick={() => setActiveTab("previous")}
-                      className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all sm:px-6 ${
                         activeTab === "previous"
-                          ? "bg-white text-green-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-lux-cream text-lux-emerald shadow-sm"
+                          : "text-lux-muted hover:text-lux-ink"
                       }`}
                     >
                       Previous Bids
@@ -703,14 +703,14 @@ const BidList = () => {
 
           {userRole === "Buyer" && buyerGroups && buyerGroups.length > 1 && (
             <div className="flex flex-col gap-1.5 w-full sm:w-64">
-              <div className="inline-flex items-center gap-2 text-xs text-slate-500">
-                <FaLayerGroup className="text-emerald-600" />
+              <div className="lux-eyebrow inline-flex items-center gap-2">
+                <FaLayerGroup className="text-lux-emerald" />
                 Filter Your Groups
               </div>
               <select
                 value={selectedFilterGroup}
                 onChange={(e) => setSelectedFilterGroup(e.target.value)}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none h-[42px]"
+                className="h-[42px] w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-sm font-semibold text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
               >
                 <option value="All">All My Groups</option>
                 {buyerGroups.map((group) => (
@@ -723,8 +723,8 @@ const BidList = () => {
           )}
 
                   <div className="w-full lg:w-auto">
-                    <div className="inline-flex items-center gap-2 text-xs text-slate-500 mb-1.5">
-                      <FaSearch className="text-emerald-600" />
+                    <div className="lux-eyebrow mb-1.5 inline-flex items-center gap-2">
+                      <FaSearch className="text-lux-emerald" />
                       Search Consignee
                     </div>
                     <SearchBox
@@ -738,14 +738,14 @@ const BidList = () => {
               </div>
 
               {filteredBids.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                  <p className="text-slate-500 font-medium inline-flex items-center gap-2">
-                    <FaLayerGroup className="text-slate-400" />
+                <div className="rounded-2xl border border-[#e9e2d3] bg-lux-cream py-12 text-center">
+                  <p className="inline-flex items-center gap-2 font-medium text-lux-muted">
+                    <FaLayerGroup className="text-lux-muted" />
                     No {activeTab} bids found.
                   </p>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5 overflow-hidden">
+                <div className="lux-card overflow-hidden p-4 sm:p-6">
                   <Tables
                     headers={headers}
                     rows={filteredBids.map((bid, idx) => buildRow(bid, idx))}
@@ -763,12 +763,12 @@ const BidList = () => {
             >
               <div className="space-y-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     End Time
                   </span>
                   <input
                     type="time"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
                     value={reactivateBid.endTime}
                     onChange={(e) =>
                       setReactivateBid({
@@ -779,12 +779,12 @@ const BidList = () => {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Quantity
                   </span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
                     value={reactivateBid.quantity}
                     onChange={(e) =>
                       setReactivateBid({
@@ -795,12 +795,12 @@ const BidList = () => {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Rate
                   </span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
                     value={reactivateBid.rate}
                     onChange={(e) =>
                       setReactivateBid({
@@ -814,14 +814,14 @@ const BidList = () => {
                   <button
                     type="button"
                     onClick={() => setReactivateBid(null)}
-                    className="px-6 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleReactivateSubmit}
-                    className="px-6 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                   >
                     Reactivate
                   </button>
@@ -855,12 +855,12 @@ const BidList = () => {
             >
               <div className="space-y-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Rate / Ton
                   </span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
                     value={editableRateQuantity.rate}
                     onChange={(e) =>
                       setEditableRateQuantity({
@@ -871,12 +871,12 @@ const BidList = () => {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Quantity (tons)
                   </span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-lux-ink outline-none focus:ring-2 focus:ring-lux-gold/50"
                     value={editableRateQuantity.quantity}
                     onChange={(e) =>
                       setEditableRateQuantity({
@@ -888,7 +888,7 @@ const BidList = () => {
                 </label>
                 <button
                   type="button"
-                  className="w-full py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-3 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                   onClick={handleEdit}
                 >
                   Save changes
@@ -946,7 +946,7 @@ const BidList = () => {
                       type="button"
                       onClick={loadMoreConsigneeSellers}
                       disabled={consigneeSellersLoading}
-                      className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                     >
                       {consigneeSellersLoading ? "Loading..." : "Show more"}
                     </button>

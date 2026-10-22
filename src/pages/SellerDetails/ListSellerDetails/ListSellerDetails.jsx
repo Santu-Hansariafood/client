@@ -217,7 +217,7 @@ const ListSellerDetails = () => {
     () =>
       sellers.map((item, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
-        <div key={item._id} className="font-bold text-slate-700">
+        <div key={item._id} className="font-bold text-lux-ink">
           {item.sellerName}
         </div>,
         <div key={`${item._id}-emails`} className="flex flex-col gap-1">
@@ -225,7 +225,7 @@ const ListSellerDetails = () => {
             <a
               key={email}
               href={`mailto:${email}`}
-              className="text-emerald-600 hover:text-emerald-700 hover:underline text-xs"
+              className="text-xs text-lux-emerald hover:text-lux-deep hover:underline"
             >
               {email}
             </a>
@@ -236,7 +236,7 @@ const ListSellerDetails = () => {
             <a
               key={phone.value}
               href={`tel:${phone.value}`}
-              className="text-slate-600 hover:text-emerald-600 text-xs"
+              className="text-xs text-lux-muted hover:text-lux-emerald"
             >
               {phone.value}
             </a>
@@ -244,25 +244,25 @@ const ListSellerDetails = () => {
         </div>,
         <div key={`${item._id}-commodities`} className="max-w-[200px]">
           {(item.commodities || []).map((commodity) => (
-            <div key={commodity.name} className="text-[11px] mb-1">
-              <span className="font-semibold text-slate-700">
+            <div key={commodity.name} className="mb-1 text-[11px] text-lux-muted">
+              <span className="font-semibold text-lux-ink">
                 {toTitleCase(commodity.name)}
               </span>
-              <span className="text-slate-500 ml-1">
+              <span className="ml-1 text-lux-muted">
                 (₹{commodity.brokerage})
               </span>
             </div>
           ))}
         </div>,
-        <div key={`${item._id}-companies`} className="text-xs text-slate-600">
+        <div key={`${item._id}-companies`} className="text-xs text-lux-muted">
           {(item.companies || []).join(", ")}
         </div>,
         <span
           key={`${item._id}-status`}
-          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+          className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
             item.status === "active"
-              ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-              : "bg-red-50 text-red-600 border border-red-100"
+              ? "border border-emerald-200 bg-emerald-100 text-emerald-700"
+              : "border border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"
           }`}
         >
           {item.status}
@@ -289,8 +289,8 @@ const ListSellerDetails = () => {
         icon={FaUsersCog}
         noContentCard
       >
-        <div className="max-w-full mx-auto space-y-6">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card flex flex-col justify-between gap-4 p-4 sm:p-6 lg:flex-row lg:items-center">
             <div className="w-full lg:max-w-md">
               <SearchBox
                 placeholder="Search sellers by name..."
@@ -304,18 +304,18 @@ const ListSellerDetails = () => {
             </div>
             <button
               onClick={() => navigate("/seller-details/add")}
-              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
             >
               <FaPlus /> Add New Seller
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+          <div className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-cream text-lux-muted shadow-sm">
                 <FaFilter size={14} />
               </div>
-              <span className="text-sm font-bold text-slate-700">Filters</span>
+              <span className="text-sm font-bold text-lux-ink">Filters</span>
             </div>
 
             <DataDropdown
@@ -352,13 +352,13 @@ const ListSellerDetails = () => {
             />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 overflow-hidden">
+          <div className="lux-card overflow-hidden">
             {loading ? (
               <Loading />
             ) : sellers.length === 0 ? (
-              <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
-                <FaSearch size={40} className="text-slate-200" />
-                <p className="font-medium text-lg">No sellers found</p>
+              <div className="flex h-64 flex-col items-center justify-center gap-3 text-lux-muted">
+                <FaSearch size={40} className="text-[#e6dcc4]" />
+                <p className="text-lg font-medium text-lux-muted">No sellers found</p>
                 <button
                   onClick={() => {
                     setSearchTerm("");
@@ -367,7 +367,7 @@ const ListSellerDetails = () => {
                     setSelectedCompany(null);
                     setSelectedStatus(null);
                   }}
-                  className="text-emerald-600 font-bold hover:underline"
+                  className="font-bold text-lux-emerald hover:text-lux-deep hover:underline"
                 >
                   Clear all filters
                 </button>
@@ -377,7 +377,7 @@ const ListSellerDetails = () => {
             )}
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="lux-card p-4">
             <Pagination
               currentPage={currentPage}
               totalItems={totalItems}
@@ -394,19 +394,19 @@ const ListSellerDetails = () => {
             >
               {selectedSeller && (
                 <div className="space-y-8 py-4">
-                  <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-                    <div className="w-20 h-20 rounded-[2rem] bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl font-black">
+                  <div className="flex items-center gap-6 border-b border-[#ece4d2] pb-6">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-lux-emerald/10 text-3xl font-black text-lux-emerald">
                       {selectedSeller.sellerName.charAt(0)}
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
+                      <h2 className="font-serif text-2xl font-semibold uppercase tracking-tight text-lux-ink sm:text-3xl">
                         {selectedSeller.sellerName}
                       </h2>
                       <div
-                        className={`mt-1 inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                           selectedSeller.status === "active"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "border border-emerald-200 bg-emerald-100 text-emerald-700"
+                            : "border border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"
                         }`}
                       >
                         {selectedSeller.status} Account
@@ -427,7 +427,7 @@ const ListSellerDetails = () => {
                       <Section title="Contact Information">
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                               Emails
                             </p>
                             <div className="flex flex-col gap-1">
@@ -435,7 +435,7 @@ const ListSellerDetails = () => {
                                 <a
                                   key={email}
                                   href={`mailto:${email}`}
-                                  className="text-emerald-600 font-bold hover:underline"
+                                  className="font-bold text-lux-emerald hover:text-lux-deep hover:underline"
                                 >
                                   {email}
                                 </a>
@@ -443,7 +443,7 @@ const ListSellerDetails = () => {
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                               Phone Numbers
                             </p>
                             <div className="flex flex-col gap-1">
@@ -451,7 +451,7 @@ const ListSellerDetails = () => {
                                 <a
                                   key={phone.value}
                                   href={`tel:${phone.value}`}
-                                  className="text-slate-700 font-bold hover:text-emerald-600 transition-colors"
+                                  className="font-bold text-lux-ink transition-colors hover:text-lux-emerald"
                                 >
                                   {phone.value}
                                 </a>
@@ -466,19 +466,19 @@ const ListSellerDetails = () => {
                       <Section title="Market Exposure">
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                               Commodities & Brokerage
                             </p>
                             <div className="grid grid-cols-1 gap-2">
                               {selectedSeller.commodities.map((c) => (
                                 <div
                                   key={c.name}
-                                  className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100"
+                                  className="flex items-center justify-between rounded-xl border border-[#ece4d2] bg-lux-cream p-3"
                                 >
-                                  <span className="font-bold text-slate-700">
+                                  <span className="font-bold text-lux-ink">
                                     {toTitleCase(c.name)}
                                   </span>
-                                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                  <span className="rounded-lg bg-lux-emerald/10 px-2 py-1 text-xs font-black text-lux-emerald">
                                     ₹{c.brokerage}/Ton
                                   </span>
                                 </div>
@@ -486,19 +486,19 @@ const ListSellerDetails = () => {
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                               Affiliated Companies
                             </p>
-                            <p className="text-slate-700 font-bold">
+                            <p className="font-bold text-lux-ink">
                               {selectedSeller.companies.join(", ") ||
                                 "None assigned"}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                               Assigned Groups
                             </p>
-                            <p className="text-slate-700 font-bold">
+                            <p className="font-bold text-lux-ink">
                               {(selectedSeller.groups || [])
                                 .map((group) => toTitleCase(group.name))
                                 .join(", ") || "No groups assigned"}
@@ -521,9 +521,9 @@ const ListSellerDetails = () => {
 };
 
 const Section = ({ title, children }) => (
-  <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 shadow-sm">
-    <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+  <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6">
+    <h4 className="lux-eyebrow mb-4 flex items-center gap-2">
+      <span className="h-1.5 w-1.5 rounded-full bg-lux-gold"></span>
       {title}
     </h4>
     {children}
@@ -532,11 +532,11 @@ const Section = ({ title, children }) => (
 
 const Field = ({ label, value, isSensitive = false }) => (
   <div className="space-y-1">
-    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
       {label}
     </p>
     <p
-      className={`font-bold ${isSensitive ? "text-slate-300 select-none" : "text-slate-700"}`}
+      className={`font-bold ${isSensitive ? "select-none text-lux-muted/60" : "text-lux-ink"}`}
     >
       {isSensitive ? "••••••••" : value || "N/A"}
     </p>

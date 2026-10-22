@@ -7,11 +7,11 @@ const Loading = lazy(() => import("../../../../common/Loading/Loading"));
 
 const AttachmentBadge = ({ count }) => (
   <span
-    className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 shadow-sm flex items-center gap-2 w-fit"
+    className="inline-flex w-fit items-center gap-2 rounded-full border border-[#e6dcc4] bg-[#f2eee2] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-muted shadow-sm"
     role="status"
     aria-label={`${count} attachments`}
   >
-    <FaClipboardList className="text-slate-400" />
+    <FaClipboardList className="text-lux-muted" />
     {count} {count === 1 ? "File" : "Files"}
   </span>
 );
@@ -33,14 +33,14 @@ const ReceivingTable = ({
   if (error) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center space-y-4 p-8 bg-white rounded-3xl border border-red-100 shadow-xl max-w-md">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
+        <div className="max-w-md space-y-4 rounded-2xl border border-rose-200 bg-lux-cream p-8 text-center shadow-xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500">
             <FaClipboardList size={32} />
           </div>
-          <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+          <h2 className="font-serif text-xl font-bold uppercase tracking-tight text-lux-ink">
             Sync Failure
           </h2>
-          <p className="text-slate-500 text-sm font-semibold">{error}</p>
+          <p className="text-sm font-semibold text-lux-muted">{error}</p>
         </div>
       </div>
     );
@@ -68,7 +68,7 @@ const ReceivingTable = ({
     entry.billNumber || "N/A",
     <span
       key={`lorry-${entry._id}`}
-      className="font-bold uppercase text-slate-600"
+      className="font-bold uppercase text-lux-ink"
     >
       {entry.lorryNumber || "N/A"}
     </span>,
@@ -90,8 +90,8 @@ const ReceivingTable = ({
       disabled={userRole !== "Admin" && userRole !== "Employee"}
       className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
         entry.sentStatus === "Sent"
-          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-          : "bg-green-50 text-green-600 border-green-100"
+          ? "border-emerald-200 bg-emerald-100 text-emerald-700"
+          : "border-amber-200 bg-amber-100 text-amber-800"
       } ${userRole !== "Admin" && userRole !== "Employee" ? "cursor-default opacity-80" : "hover:scale-105 active:scale-95"}`}
     >
       {entry.sentStatus || "Not Sent"}
@@ -103,7 +103,7 @@ const ReceivingTable = ({
     <div key={`actions-${entry._id}`} className="flex items-center gap-2">
       <button
         onClick={() => onViewDocuments(entry)}
-        className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-blue-100 focus:ring-2 focus:ring-blue-500/20"
+        className="rounded-xl border border-[#e6dcc4] bg-lux-cream p-2 text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-lux-emerald hover:text-lux-gold-soft focus:ring-2 focus:ring-lux-gold/30"
         title="View Documents"
         aria-label="View Documents"
       >
@@ -111,7 +111,7 @@ const ReceivingTable = ({
       </button>
       <button
         onClick={() => onCopy(entry)}
-        className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 focus:ring-2 focus:ring-emerald-500/20"
+        className="rounded-xl border border-[#e6dcc4] bg-lux-cream p-2 text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-lux-emerald hover:text-lux-gold-soft focus:ring-2 focus:ring-lux-gold/30"
         title="Copy Details"
         aria-label="Copy Details"
       >
@@ -121,7 +121,7 @@ const ReceivingTable = ({
   ]);
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] relative">
+    <div className="lux-card lux-gold-top relative min-h-[500px] w-full overflow-hidden p-4 sm:p-6">
       {loading && <Loading />}
       
       <Suspense fallback={<Loading />}>
@@ -129,7 +129,7 @@ const ReceivingTable = ({
       </Suspense>
 
       {totalItems > 0 && (
-        <div className="mt-10 flex justify-center pb-6">
+        <div className="mt-8 flex justify-center pb-4">
           <Suspense fallback={<Loading />}>
             <Pagination
               currentPage={currentPage}
@@ -144,8 +144,8 @@ const ReceivingTable = ({
 
       {!loading && tableRows.length === 0 && (
         <div className="py-20 text-center">
-          <FaClipboardList className="text-6xl text-slate-200 mx-auto mb-6" />
-          <p className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
+          <FaClipboardList className="mx-auto mb-6 text-6xl text-lux-gold-soft/60" />
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-lux-muted">
             No entries found
           </p>
         </div>

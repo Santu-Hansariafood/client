@@ -89,13 +89,13 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-slate-800">Edit Transporter</h2>
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-[#062e25]/70 p-0 backdrop-blur-sm animate-modal-backdrop sm:items-center sm:p-4">
+      <div className="relative flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-cream/95 px-4 py-4 backdrop-blur-xl sm:px-6">
+          <h2 className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink sm:text-lg md:text-xl">Edit Transporter</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl text-lux-muted transition hover:bg-[#f2eee2] hover:text-lux-ink active:scale-90"
           >
             ×
           </button>
@@ -103,13 +103,13 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
 
         {loading || !formData ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium">Loading details...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lux-emerald mx-auto mb-4"></div>
+            <p className="text-lux-muted font-medium">Loading details...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 md:px-8 space-y-8">
             <section>
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+              <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
                 Basic Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -149,7 +149,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+              <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
                 Vehicle Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,7 +181,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+              <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
                 Driver Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -210,7 +210,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+              <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
                 Bank Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,7 +247,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
               </div>
             </section>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
+            <div className="flex flex-col gap-3 border-t border-[#ece4d2] pt-4 sm:flex-row sm:justify-end">
               <Buttons
                 type="button"
                 label="Cancel"

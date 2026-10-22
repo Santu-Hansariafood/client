@@ -17,7 +17,7 @@ const AllocationRowActions = ({
   onAdd,
 }) => (
   <div className="flex w-full min-w-[100px] flex-col gap-1">
-    <div className="flex gap-1">
+    <div className="flex flex-wrap gap-1">
       {!multiAdjustmentMode && (
         <Buttons
           label={
@@ -48,7 +48,7 @@ const AllocationRowActions = ({
           }
           className={`flex-1 !py-2.5 !text-[10px] ${
             isAdmin && row.isSaved
-              ? "!border-green-500 !text-green-600 hover:!bg-green-50"
+              ? "!border-lux-gold !text-lux-emerald hover:!bg-lux-ivory"
               : ""
           }`}
         />
@@ -57,7 +57,7 @@ const AllocationRowActions = ({
         <button
           type="button"
           onClick={() => onAdd(row, index)}
-          className="rounded-xl bg-slate-100 p-2.5 text-slate-600 shadow-sm transition-all hover:bg-slate-900 hover:text-white"
+          className="rounded-xl border border-[#e4dbc6] bg-lux-cream p-2.5 text-lux-emerald shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg active:scale-[0.97]"
           title="Add another allocation for this lorry"
         >
           <FaPlus size={12} />

@@ -26,26 +26,26 @@ const UnderDevelopment = () => {
 
   return (
     <AdminPageShell>
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 flex items-center justify-center py-12 px-4">
-        <div className="max-w-2xl mx-auto text-center">
+      <div className="flex min-h-[60vh] items-center justify-center px-2 py-10 sm:py-12">
+        <div className="mx-auto max-w-2xl text-center">
           <div className="mb-10">
-            <div className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-rose-200">
-              <FaTools className="text-6xl text-rose-600 animate-pulse" />
+            <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-lux-ivory ring-1 ring-lux-gold/40 shadow-lg">
+              <FaTools className="h-12 w-12 text-lux-emerald animate-pulse" />
             </div>
-            <h1 className="text-5xl font-black text-rose-800 mb-4 tracking-tight">
+            <h1 className="font-serif text-4xl font-semibold text-lux-ink mb-4 tracking-tight sm:text-5xl">
               Under Development
             </h1>
-            <p className="text-xl text-rose-700/80 font-semibold mb-2">
+            <p className="text-base font-semibold text-lux-muted mb-2 sm:text-lg">
               We&apos;re working on something amazing!
             </p>
-            <p className="text-gray-600">
+            <p className="text-lux-muted">
               This feature will be live soon. Stay tuned!
             </p>
           </div>
-          
+
           <button
             onClick={goBack}
-            className="inline-flex items-center gap-3 bg-rose-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-rose-700 hover:scale-105 transition-all duration-300"
+            className="inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-8 py-3.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
           >
             <FaArrowLeft />
             Back to Dashboard
@@ -57,4 +57,3 @@ const UnderDevelopment = () => {
 };
 
 export default UnderDevelopment;
-

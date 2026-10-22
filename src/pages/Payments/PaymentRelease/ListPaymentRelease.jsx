@@ -178,18 +178,18 @@ const ListPaymentRelease = () => {
 
   return (
     <AdminPageShell noContentCard>
-      <div className="min-h-screen bg-slate-50 p-4 sm:p-8 space-y-8">
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+      <div className="mx-auto w-full max-w-6xl space-y-6 animate-slide-up sm:space-y-8">
+        <div className="lux-card lux-gold-top relative w-full overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40 sm:h-16 sm:w-16">
                 <FaMoneyCheck size={28} />
               </div>
               <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                <h1 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl">
                   Payment Release List
                 </h1>
-                <p className="text-sm font-semibold text-slate-400 mt-1">
+                <p className="mt-1 text-sm font-medium text-lux-muted">
                   Manage and track all payment releases
                 </p>
               </div>
@@ -197,21 +197,21 @@ const ListPaymentRelease = () => {
 
             <button
               onClick={() => navigate("/payments/payment-release/add")}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
             >
               <FaPlus /> Add Payment Release
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             <div className="relative group/input">
-              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-emerald-500 transition-colors" />
+              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-lux-muted transition-colors group-focus-within/input:text-lux-emerald" />
               <input
                 type="text"
                 placeholder="Search by bill no, lorry no, buyer, seller..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/30"
+                className="w-full rounded-2xl border border-[#ece4d2] bg-lux-ivory py-3.5 pl-12 pr-4 text-sm font-semibold text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-emerald/20 sm:py-4"
               />
             </div>
 
@@ -236,11 +236,11 @@ const ListPaymentRelease = () => {
             {userRole !== "Seller" && (
               <>
                 <div className="relative">
-                  <FaFilter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <FaFilter className="absolute left-5 top-1/2 -translate-y-1/2 text-lux-muted" />
                   <select
                     value={sellerCompanyFilter}
                     onChange={(e) => setSellerCompanyFilter(e.target.value)}
-                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/30"
+                    className="w-full rounded-2xl border border-[#ece4d2] bg-lux-ivory py-3.5 pl-12 pr-4 text-sm font-semibold text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-emerald/20 sm:py-4"
                   >
                     <option value="">All Seller Companies</option>
                     {sellerCompanies.map((company) => (
@@ -252,11 +252,11 @@ const ListPaymentRelease = () => {
                 </div>
 
                 <div className="relative">
-                  <FaFilter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <FaFilter className="absolute left-5 top-1/2 -translate-y-1/2 text-lux-muted" />
                   <select
                     value={sellerNameFilter}
                     onChange={(e) => setSellerNameFilter(e.target.value)}
-                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/30"
+                    className="w-full rounded-2xl border border-[#ece4d2] bg-lux-ivory py-3.5 pl-12 pr-4 text-sm font-semibold text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-emerald/20 sm:py-4"
                   >
                     <option value="">All Seller Names</option>
                     {sellers.map((seller) => (
@@ -270,17 +270,17 @@ const ListPaymentRelease = () => {
             )}
           </div>
 
-          <div className="flex justify-end mt-6">
+          <div className="mt-6 flex justify-end">
             <button
               onClick={handleDownloadExcel}
-              className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
-              <FaFileExcel className="text-emerald-600" /> Download Excel
+              <FaFileExcel className="text-lux-emerald" /> Download Excel
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-4 shadow-xl border border-slate-100 overflow-hidden">
+        <div className="lux-card lux-gold-top w-full overflow-hidden p-4 sm:p-6">
           <Suspense fallback={<Loading />}>
             {loading ? (
               <Loading />

@@ -126,31 +126,31 @@ const LoadingReport = () => {
     entry.lorryNumber,
     <span
       key={`comm-${index}`}
-      className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase"
+      className="px-2 py-0.5 bg-lux-ivory text-lux-emerald rounded-full text-[10px] font-bold border border-lux-gold/30 uppercase tracking-wide"
     >
       {entry.commodity}
     </span>,
-    <span key={`weight-${index}`} className="font-bold text-emerald-600">
+    <span key={`weight-${index}`} className="font-bold text-lux-emerald tabular-nums">
       {Number(entry.loadingWeight || 0).toFixed(2)}
     </span>,
     entry.bags || "N/A",
     <div
       key={`con-${index}`}
-      className="max-w-[150px] truncate text-xs font-medium"
+      className="max-w-[150px] truncate text-xs font-medium text-lux-ink"
     >
       {entry.consignee}
     </div>,
     <div
       key={`sup-${index}`}
-      className="max-w-[150px] truncate text-xs text-slate-500 italic"
+      className="max-w-[150px] truncate text-xs text-lux-muted italic"
     >
       {entry.supplierCompany}
     </div>,
     <div key={`entered-${index}`} className="flex flex-col text-[10px]">
-      <span className="font-bold text-slate-700">
+      <span className="font-bold text-lux-ink">
         {entry.creatorMobile || "N/A"}
       </span>
-      <span className="text-slate-400 uppercase">
+      <span className="text-lux-muted uppercase tracking-wide">
         {entry.entryByRole || "Admin"}
       </span>
     </div>,
@@ -406,11 +406,11 @@ const LoadingReport = () => {
         icon={FaHistory}
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                <label className="text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Select Date
                 </label>
                 <DateSelector
@@ -430,18 +430,18 @@ const LoadingReport = () => {
                 />
               </div>
 
-              <div className="lg:col-span-2 flex justify-end gap-3">
+              <div className="flex flex-wrap justify-end gap-3 lg:col-span-2">
                 <button
                   onClick={downloadPDF}
                   disabled={!loadingEntries.length}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl text-sm font-bold hover:bg-slate-900 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                 >
                   <FaFilePdf size={18} />
                   Download Report
                 </button>
                 <button
                   onClick={fetchLoadingEntries}
-                  className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-colors border border-emerald-100"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                   title="Refresh Data"
                 >
                   <FaTruckLoading
@@ -453,85 +453,81 @@ const LoadingReport = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-emerald-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
-              <div className="relative z-10 flex items-start justify-between">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <div className="lux-card lux-card-hover overflow-hidden p-5">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  <p className="lux-eyebrow mb-1">
                     Total Weight
                   </p>
                   <div className="flex items-end gap-2">
-                    <h3 className="text-3xl font-black text-slate-900">
+                    <h3 className="font-serif text-3xl font-semibold tabular-nums text-lux-ink">
                       {summaryData.totalWeight.toFixed(2)}
                     </h3>
-                    <span className="text-[10px] font-bold text-emerald-600 mb-1">
+                    <span className="text-[10px] font-bold text-lux-emerald mb-1">
                       TONS
                     </span>
                   </div>
                 </div>
-                <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 transform transition-transform group-hover:rotate-12">
+                <div className="rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep p-3 text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30">
                   <FaTruckLoading size={20} />
                 </div>
               </div>
             </div>
 
-            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
-              <div className="relative z-10 flex items-start justify-between">
+            <div className="lux-card lux-card-hover overflow-hidden p-5">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  <p className="lux-eyebrow mb-1">
                     Total Bags
                   </p>
-                  <h3 className="text-3xl font-black text-slate-900">
+                  <h3 className="font-serif text-3xl font-semibold tabular-nums text-lux-ink">
                     {summaryData.totalBags}
                   </h3>
                 </div>
-                <div className="p-4 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-500/20 transform transition-transform group-hover:rotate-12">
+                <div className="rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep p-3 text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30">
                   <FaBoxOpen size={20} />
                 </div>
               </div>
             </div>
 
-            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-green-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
-              <div className="relative z-10 flex items-start justify-between">
+            <div className="lux-card lux-card-hover overflow-hidden p-5">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  <p className="lux-eyebrow mb-1">
                     Vehicles
                   </p>
-                  <h3 className="text-3xl font-black text-slate-900">
+                  <h3 className="font-serif text-3xl font-semibold tabular-nums text-lux-ink">
                     {summaryData.distinctLorry}
                   </h3>
                 </div>
-                <div className="p-4 bg-green-500 text-white rounded-2xl shadow-lg shadow-green-500/20 transform transition-transform group-hover:rotate-12">
+                <div className="rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep p-3 text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30">
                   <FaTruckLoading size={20} />
                 </div>
               </div>
             </div>
 
-            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-slate-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
-              <div className="relative z-10 flex items-start justify-between">
+            <div className="lux-card lux-card-hover overflow-hidden p-5">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  <p className="lux-eyebrow mb-1">
                     Total Entries
                   </p>
-                  <h3 className="text-3xl font-black text-slate-900">
+                  <h3 className="font-serif text-3xl font-semibold tabular-nums text-lux-ink">
                     {summaryData.totalEntries}
                   </h3>
                 </div>
-                <div className="p-4 bg-slate-700 text-white rounded-2xl shadow-lg shadow-slate-700/20 transform transition-transform group-hover:rotate-12">
+                <div className="rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep p-3 text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30">
                   <FaHistory size={20} />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <FaCalendarAlt className="text-emerald-500" />
+          <div className="lux-card overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-[#ece4d2] flex justify-between items-center">
+              <h3 className="font-serif text-lg font-semibold text-lux-ink flex items-center gap-2">
+                <FaCalendarAlt className="text-lux-gold" />
                 Loading Records for{" "}
                 {selectedDate
                   ? selectedDate.toLocaleDateString("en-IN")

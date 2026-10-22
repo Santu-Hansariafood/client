@@ -160,26 +160,26 @@ const LorryWiseLoadingList = () => {
     return [
       (currentPage - 1) * itemsPerPage + index + 1,
       new Date(entry.loadingDate).toLocaleDateString("en-IN"),
-      <span key={`lorry-${index}`} className="font-black text-slate-900 tracking-tight">
+      <span key={`lorry-${index}`} className="font-black text-lux-ink tracking-tight">
         {entry.lorryNumber}
       </span>,
-      <span key={`sauda-${index}`} className="font-bold text-slate-500">{entry.saudaNo}</span>,
+      <span key={`sauda-${index}`} className="font-bold text-lux-muted">{entry.saudaNo}</span>,
       entry.commodity,
-      <span key={`lweight-${index}`} className="font-bold text-indigo-600">
+      <span key={`lweight-${index}`} className="font-bold text-lux-emerald tabular-nums">
         {Number(entry.loadingWeight || 0).toFixed(2)}
       </span>,
       <span
         key={`uweight-${index}`}
-        className={entry.unloadingWeight > 0 ? "font-bold text-emerald-600" : "text-slate-400"}
+        className={entry.unloadingWeight > 0 ? "font-bold text-lux-emerald tabular-nums" : "text-lux-muted"}
       >
         {entry.unloadingWeight > 0 ? Number(entry.unloadingWeight).toFixed(2) : "-"}
       </span>,
       <span
         key={`status-${index}`}
-        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+        className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
           isReceived
             ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-            : "bg-green-100 text-green-700 border border-green-200"
+            : "bg-lux-ivory text-lux-emerald border border-lux-gold/30"
         }`}
       >
         {isReceived ? "Received" : "In Transit"}
@@ -187,7 +187,7 @@ const LorryWiseLoadingList = () => {
       <div key={`actions-${index}`} className="flex items-center gap-2">
         <button
           onClick={() => downloadSinglePDF(entry)}
-          className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all shadow-sm border border-emerald-100"
+          className="p-2 bg-lux-ivory text-lux-emerald rounded-xl hover:bg-lux-emerald hover:text-lux-gold-soft transition-all shadow-sm border border-lux-gold/30"
           title="Download Slip"
         >
           <FaFilePdf size={14} />
@@ -336,31 +336,31 @@ const LorryWiseLoadingList = () => {
       subtitle="Comprehensive vehicle loading history and tracking"
       icon={FaTruck}
     >
-      <div className="space-y-10">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
         {/* Premium Filter Section */}
-        <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-xl shadow-slate-200/30">
+        <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col lg:flex-row gap-8 items-end">
             <div className="flex-1 w-full">
-              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-3 ml-2">
+              <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Vehicle Number
               </label>
-              <Suspense fallback={<div className="h-14 bg-slate-100 animate-pulse rounded-2xl" />}>
+              <Suspense fallback={<div className="h-14 bg-lux-ivory animate-pulse rounded-2xl" />}>
                 <SearchBox
                   placeholder="Search Lorry No..."
                   value={searchLorry}
                   onSearch={(q) => { setSearchLorry(q); setCurrentPage(1); }}
                   returnQuery={true}
                   items={[]}
-                  className="!max-w-none !h-14 !rounded-2xl !border-slate-200 shadow-inner"
+                  className="!max-w-none !h-14 !rounded-2xl !border-[#e4dbc6] shadow-inner"
                 />
               </Suspense>
             </div>
 
             <div className="w-full lg:w-72">
-              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-3 ml-2">
+              <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Filter by Status
               </label>
-              <Suspense fallback={<div className="h-14 bg-slate-100 animate-pulse rounded-2xl" />}>
+              <Suspense fallback={<div className="h-14 bg-lux-ivory animate-pulse rounded-2xl" />}>
                 <DataDropdown
                   options={statusOptions}
                   value={selectedStatus}
@@ -375,7 +375,7 @@ const LorryWiseLoadingList = () => {
             <button
               onClick={downloadPDF}
               disabled={loading || loadingEntries.length === 0}
-              className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 h-14 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none active:scale-95"
+              className="w-full lg:w-auto flex items-center justify-center gap-3 h-14 px-8 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none"
             >
               <FaFilePdf className="text-lg" /> Download All ({loadingEntries.length})
             </button>
@@ -383,12 +383,12 @@ const LorryWiseLoadingList = () => {
         </div>
 
         {/* Premium Table Section */}
-        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-xl shadow-slate-200/30 overflow-hidden">
-          <div className="px-10 py-8 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase italic">
+        <div className="lux-card overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-[#ece4d2] flex items-center justify-between">
+            <h3 className="font-serif text-lg font-semibold text-lux-ink">
               Loading Records
             </h3>
-            <span className="px-4 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <span className="px-4 py-1.5 bg-lux-ivory text-lux-emerald border border-lux-gold/30 rounded-full text-[10px] font-black uppercase tracking-widest">
               Total Found: {totalItems}
             </span>
           </div>
@@ -399,14 +399,14 @@ const LorryWiseLoadingList = () => {
 
           {loadingEntries.length === 0 && !loading && (
             <div className="py-24 text-center">
-              <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaTruck className="text-3xl text-slate-200" />
+              <div className="h-20 w-20 bg-lux-ivory rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaTruck className="text-3xl text-lux-gold/40" />
               </div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No records matching your filters</p>
+              <p className="text-lux-muted font-bold uppercase tracking-widest text-xs">No records matching your filters</p>
             </div>
           )}
 
-          <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-100">
+          <div className="p-4 sm:p-6 bg-lux-ivory/50 border-t border-[#ece4d2]">
             <Suspense fallback={<div className="h-12" />}>
               <Pagination
                 currentPage={currentPage}

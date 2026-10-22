@@ -110,11 +110,12 @@ const AddEmployee = () => {
 
   return (
     <AdminPageShell title="Register Employee" icon={FaUserPlus}>
+      <div className="mx-auto w-full max-w-5xl">
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100"
+        className="lux-card lux-gold-top w-full space-y-6 p-4 sm:p-6 lg:p-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
           <DataInput
             label="Full Name"
             name="name"
@@ -173,10 +174,11 @@ const AddEmployee = () => {
           currentUrl={formData.profileImage}
         />
         
-        <div className="flex justify-end pt-4">
+        <div className="flex flex-wrap justify-end gap-3 pt-4">
           <Buttons type="submit" label="Register Employee" variant="primary" />
         </div>
       </form>
+      </div>
     </AdminPageShell>
   );
 };

@@ -130,15 +130,16 @@ const ListQualityParameter = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-5xl">
         <AdminPageShell
           title="Quality Parameter List"
           subtitle="Search and manage all quality parameters"
           icon={FaUsers}
           noContentCard
         >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <div className="w-full md:w-1/2">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="w-full md:max-w-md">
               <SearchBox
                 placeholder="Search by name..."
                 items={qualityParameters.map((param) => param.name)}
@@ -149,7 +150,7 @@ const ListQualityParameter = () => {
 
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-lux-emerald/20 transition-all hover:brightness-110 active:scale-95 whitespace-nowrap"
             >
               {showAddForm ? "Cancel" : "Add New Quality Parameter"}
             </button>
@@ -174,6 +175,7 @@ const ListQualityParameter = () => {
             itemsPerPage={itemsPerPage}
             onPageChange={(page) => setCurrentPage(Number(page))}
           />
+          </div>
         </AdminPageShell>
       </div>
     </Suspense>

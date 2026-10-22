@@ -2191,7 +2191,7 @@ const AddPaymentReceived = () => {
           checked={selectedAllocationKeys.has(row.uiKey)}
           onChange={() => toggleAllocationSelection(row.uiKey)}
           disabled={!multiAdjustmentMode || (row.isSaved && user?.role !== "Admin")}
-          className="h-4 w-4 accent-blue-600"
+          className="h-4 w-4 accent-lux-emerald"
           aria-label={`Select ${row.lorryNumber} for adjustment`}
         />
       ),
@@ -2200,10 +2200,10 @@ const AddPaymentReceived = () => {
       header: "DATE & SAUDA",
       accessor: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-black text-slate-900 text-xs">
+          <span className="font-black text-lux-ink text-xs">
             {new Date(row.loadingDate).toLocaleDateString("en-GB")}
           </span>
-          <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+          <span className="text-[9px] text-lux-muted font-black uppercase tracking-widest">
             {row.saudaNo}
           </span>
         </div>
@@ -2214,20 +2214,20 @@ const AddPaymentReceived = () => {
       accessor: (row) => (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">
+            <span className="font-black text-lux-ink uppercase tracking-tighter text-xs">
               {row.lorryNumber}
             </span>
             {row.billNumber && (
-              <span className="text-[9px] font-black bg-slate-900 text-white px-2 py-0.5 rounded uppercase tracking-tighter">
+              <span className="text-[9px] font-black bg-lux-deep text-lux-cream px-2 py-0.5 rounded uppercase tracking-tighter">
                 {row.billNumber}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">
+            <span className="text-[9px] text-lux-muted font-black uppercase tracking-widest leading-none">
               {row.commodity}
             </span>
-            <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase tabular-nums">
+            <span className="text-[8px] font-black bg-lux-ivory text-lux-muted px-1 py-0.5 rounded border border-[#e4dbc6] uppercase tabular-nums">
               {Number(
                 ((row.unloadingWeight || 0) > 0
                   ? row.unloadingWeight
@@ -2245,13 +2245,13 @@ const AddPaymentReceived = () => {
         const details = calculateTallyDetails(row);
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="font-black text-rose-600 text-xs tabular-nums">
+            <span className="font-serif font-semibold text-rose-600 text-xs tabular-nums">
               ₹
               {details.netAmount.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
               })}
             </span>
-            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+            <span className="text-[8px] font-black uppercase tracking-widest text-lux-muted">
               Bill + GST ₹
               {details.gstAmount.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -2273,15 +2273,15 @@ const AddPaymentReceived = () => {
               className={`text-[9px] font-black uppercase truncate ${
                 matchCompanyName(row.buyerCompany, companyPair.buyerCompany)
                   ? "text-blue-700"
-                  : "text-slate-400"
+                  : "text-lux-muted"
               }`}
             >
               {row.buyerCompany || "N/A"}
             </span>
           </div>
           <div className="flex justify-center -my-1 ml-3">
-            <div className="h-2 w-0.5 bg-slate-200 relative">
-              <div className="absolute -bottom-1 -left-[3px] border-t-4 border-t-slate-200 border-x-[3px] border-x-transparent"></div>
+            <div className="h-2 w-0.5 bg-[#e4dbc6] relative">
+              <div className="absolute -bottom-1 -left-[3px] border-t-4 border-t-[#e4dbc6] border-x-[3px] border-x-transparent"></div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -2295,7 +2295,7 @@ const AddPaymentReceived = () => {
                   companyPair.supplierCompany,
                 )
                   ? "text-green-700"
-                  : "text-slate-400"
+                  : "text-lux-muted"
               }`}
             >
               {row.supplierCompany || "N/A"}
@@ -2326,11 +2326,11 @@ const AddPaymentReceived = () => {
           <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[1000px] uppercase">
             <div className="mb-1 flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
+                <span className="bg-lux-emerald text-lux-cream px-2 py-0.5 rounded text-[8px]">
                   Sauda: {row.saudaNo}
                 </span>
                 {row.billNumber && (
-                  <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[8px]">
+                  <span className="bg-lux-deep text-lux-gold-soft px-2 py-0.5 rounded text-[8px]">
                     Bill: {row.billNumber}
                   </span>
                 )}
@@ -2361,12 +2361,12 @@ const AddPaymentReceived = () => {
                   )}
               </div>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#e4dbc6] bg-lux-cream px-3 py-2 shadow-sm">
               <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-[8px] font-black uppercase tracking-wider sm:grid-cols-4">
-                <span className="text-slate-500">
+                <span className="text-lux-muted">
                   Bill ₹{details.grossAmount.toFixed(2)}
                 </span>
-                <span className="text-slate-500">
+                <span className="text-lux-muted">
                   Net ₹{details.netAmount.toFixed(2)}
                 </span>
                 <span className="text-rose-600">
@@ -2380,17 +2380,17 @@ const AddPaymentReceived = () => {
                 type="button"
                 onClick={() => setBreakdownEntry(row)}
                 disabled={isLocked}
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-[#1e3a5f] bg-[#1e3a5f] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-white transition hover:bg-[#152b47] disabled:cursor-not-allowed disabled:opacity-50"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep px-3 py-2 text-[9px] font-black uppercase tracking-wider text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:from-lux-deep hover:to-lux-night disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaEdit size={11} /> Details
               </button>
             </div>
             <div className="hidden">
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Total Bill Value
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.grossAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2398,10 +2398,10 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Less: CD ({details.cdPercent}%)
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.cdAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2409,7 +2409,7 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Less: Bank Charges
                 </span>
                 <input
@@ -2434,15 +2434,15 @@ const AddPaymentReceived = () => {
                     }
                   }}
                   disabled={row.isSaved && user?.role !== "Admin"}
-                  className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold outline-none tabular-nums"
+                  className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[9px] font-bold outline-none tabular-nums"
                   placeholder="0.00"
                 />
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Taxable Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.taxableAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2450,10 +2450,10 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Add: GST ({details.gstPercent}%)
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.gstAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2461,10 +2461,10 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Net Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-ivory text-lux-ink text-[9px] font-bold flex items-center tabular-nums">
                   ₹
                   {details.netAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2477,14 +2477,14 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-purple-600 uppercase tracking-widest">
                   Less 2nd Claim
                 </span>
-                <span className="h-6 px-2 rounded border border-purple-200 bg-white text-purple-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-purple-200 bg-lux-cream text-purple-700 text-[9px] font-bold flex items-center tabular-nums">
                   - ₹
                   {details.secondClaim.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
                 <span
-                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  className="text-[7px] font-bold normal-case text-lux-muted truncate"
                   title={row.secondClaimRemarks}
                 >
                   {row.secondClaimRemarks || "Remarks required"}
@@ -2494,14 +2494,14 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-teal-600 uppercase tracking-widest">
                   Less Other Charges
                 </span>
-                <span className="h-6 px-2 rounded border border-teal-200 bg-white text-teal-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-teal-200 bg-lux-cream text-teal-700 text-[9px] font-bold flex items-center tabular-nums">
                   - ₹
                   {details.otherCharges.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
                 <span
-                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  className="text-[7px] font-bold normal-case text-lux-muted truncate"
                   title={row.otherChargesRemarks}
                 >
                   {row.otherChargesRemarks || "Remarks required"}
@@ -2511,14 +2511,14 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-orange-600 uppercase tracking-widest">
                   Less Bank Charges
                 </span>
-                <span className="h-6 px-2 rounded border border-orange-200 bg-white text-orange-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-orange-200 bg-lux-cream text-orange-700 text-[9px] font-bold flex items-center tabular-nums">
                   - ₹
                   {details.bankCharges.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
                 <span
-                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  className="text-[7px] font-bold normal-case text-lux-muted truncate"
                   title={row.bankChargesRemarks}
                 >
                   {row.bankChargesRemarks || "Remarks required"}
@@ -2528,26 +2528,26 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-red-600 uppercase tracking-widest">
                   Less TDS
                 </span>
-                <span className="h-6 px-2 rounded border border-red-200 bg-white text-red-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-red-200 bg-lux-cream text-red-700 text-[9px] font-bold flex items-center tabular-nums">
                   - ₹
                   {details.tds.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
                 <span
-                  className="text-[7px] font-bold normal-case text-slate-500 truncate"
+                  className="text-[7px] font-bold normal-case text-lux-muted truncate"
                   title={row.tdsRemarks}
                 >
                   {row.tdsRemarks || "Remarks required"}
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 shadow-sm">
+            <div className="grid grid-cols-3 gap-2 bg-lux-ivory border border-[#ece4d2] rounded px-3 py-2 shadow-sm">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
                   Less Total Claim
                 </span>
-                <span className="h-6 px-2 rounded border border-rose-200 bg-white text-rose-700 text-[9px] font-bold flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-rose-200 bg-lux-cream text-rose-700 text-[9px] font-bold flex items-center tabular-nums">
                   - ₹
                   {details.totalClaim.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2555,11 +2555,11 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   General Remarks
                 </span>
                 <span
-                  className="h-6 px-2 rounded border border-slate-200 bg-white text-slate-600 text-[9px] font-bold flex items-center normal-case truncate"
+                  className="h-6 px-2 rounded border border-[#e4dbc6] bg-lux-cream text-lux-muted text-[9px] font-bold flex items-center normal-case truncate"
                   title={row.generalRemarks}
                 >
                   {row.generalRemarks || "Remarks required"}
@@ -2569,7 +2569,7 @@ const AddPaymentReceived = () => {
                 <span className="text-[7px] font-black text-emerald-700 uppercase tracking-widest">
                   Payable Amount
                 </span>
-                <span className="h-6 px-2 rounded border border-emerald-300 bg-white text-emerald-700 text-[9px] font-black flex items-center tabular-nums">
+                <span className="h-6 px-2 rounded border border-emerald-300 bg-lux-cream text-emerald-700 text-[9px] font-black flex items-center tabular-nums">
                   ₹
                   {Math.max(0, details.payableAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -2577,9 +2577,9 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
+            <div className="grid grid-cols-3 gap-2 items-end bg-lux-ivory border border-[#e4dbc6] rounded px-3 py-2 shadow-inner">
               <div className="flex flex-col gap-1">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Posting Date
                 </span>
                 <input
@@ -2591,11 +2591,11 @@ const AddPaymentReceived = () => {
                       allocationDate: e.target.value,
                     }))
                   }
-                  className="h-8 px-2 rounded border border-slate-200 text-[10px] font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/10 transition-all"
+                  className="h-8 px-2 rounded border border-[#e4dbc6] text-[10px] font-bold text-lux-ink outline-none focus:border-lux-gold focus:ring-1 focus:ring-lux-gold/20 transition-all"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Debit note
                 </span>
                 <input
@@ -2607,8 +2607,8 @@ const AddPaymentReceived = () => {
                   disabled={isLocked}
                   className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
-                      ? "bg-slate-100 text-slate-400 border-slate-200"
-                      : "bg-white border-slate-300 focus:border-slate-700 outline-none"
+                      ? "bg-lux-ivory text-lux-muted border-[#e4dbc6]"
+                      : "bg-lux-cream border-[#e4dbc6] focus:border-lux-gold outline-none"
                   }`}
                   placeholder="Dr. note"
                 />
@@ -2625,7 +2625,7 @@ const AddPaymentReceived = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Credit note
                 </span>
                 <input
@@ -2637,8 +2637,8 @@ const AddPaymentReceived = () => {
                   disabled={isLocked}
                   className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
-                      ? "bg-slate-100 text-slate-400 border-slate-200"
-                      : "bg-white border-slate-300 focus:border-slate-700 outline-none"
+                      ? "bg-lux-ivory text-lux-muted border-[#e4dbc6]"
+                      : "bg-lux-cream border-[#e4dbc6] focus:border-lux-gold outline-none"
                   }`}
                   placeholder="Cr. note"
                 />
@@ -2662,7 +2662,7 @@ const AddPaymentReceived = () => {
                     disabled={isLocked}
                     className={`h-8 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case transition-all ${
                       isLocked
-                        ? "bg-slate-100 text-slate-400 border-slate-200"
+                        ? "bg-lux-ivory text-lux-muted border-[#e4dbc6]"
                         : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none shadow-sm"
                     }`}
                     placeholder="0.00"
@@ -2685,7 +2685,7 @@ const AddPaymentReceived = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[7px] font-black text-lux-muted uppercase tracking-widest">
                   Lorry Balance
                 </span>
                 <span
@@ -2693,7 +2693,7 @@ const AddPaymentReceived = () => {
                     details.dueAmount - (parseFloat(row.allocatedAmount) || 0) >
                     0.01
                       ? "bg-blue-50 border-blue-200 text-blue-700"
-                      : "bg-slate-100 border-slate-200 text-slate-400"
+                      : "bg-lux-ivory border-[#e4dbc6] text-lux-muted"
                   }`}
                 >
                   ₹
@@ -2706,22 +2706,22 @@ const AddPaymentReceived = () => {
             </div>
             {breakdownEntry?.uiKey === row.uiKey && (
               <div
-                className="mt-3 w-full rounded-2xl border border-blue-200 bg-blue-50/40 p-3 shadow-inner normal-case sm:p-5"
+                className="mt-3 w-full rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3 shadow-inner normal-case sm:p-5"
               >
-                <div className="flex flex-col overflow-hidden rounded-xl bg-white text-left shadow-sm">
-                  <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-4">
+                <div className="flex flex-col overflow-hidden rounded-xl bg-lux-cream text-left shadow-sm">
+                  <div className="flex shrink-0 items-center justify-between border-b border-[#ece4d2] p-4">
                     <div>
-                      <h3 className="text-base font-black text-slate-900">
+                      <h3 className="font-serif text-base font-semibold text-lux-ink">
                         Bill & Payable Calculation
                       </h3>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-lux-muted">
                         Sauda {row.saudaNo} · Bill {row.billNumber || "-"}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setBreakdownEntry(null)}
-                      className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      className="rounded-lg p-2 text-lux-muted hover:bg-rose-50 hover:text-rose-600"
                       title="Close details"
                     >
                       <FaTimes size={16} />
@@ -2739,12 +2739,12 @@ const AddPaymentReceived = () => {
                       ].map(([label, value]) => (
                         <div
                           key={label}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                          className="rounded-lg border border-[#e4dbc6] bg-lux-ivory p-3"
                         >
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-lux-muted">
                             {label}
                           </span>
-                          <span className="mt-1 block text-sm font-black tabular-nums text-slate-900">
+                          <span className="mt-1 block font-serif text-sm font-semibold tabular-nums text-lux-ink">
                             ₹ {Number(value).toFixed(2)}
                           </span>
                         </div>
@@ -2767,13 +2767,13 @@ const AddPaymentReceived = () => {
                       ].map(([amountField, label, remarksField]) => (
                         <div
                           key={amountField}
-                          className="rounded-xl border border-slate-200 bg-white p-3"
+                          className="rounded-xl border border-[#e4dbc6] bg-lux-cream p-3"
                         >
-                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">
+                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-lux-muted">
                             {label}
                           </label>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-lux-muted">
                               ₹
                             </span>
                             <input
@@ -2787,7 +2787,7 @@ const AddPaymentReceived = () => {
                                 )
                               }
                               disabled={isLocked}
-                              className="h-9 w-full rounded-lg border border-slate-200 pl-7 pr-3 text-sm font-bold outline-none focus:border-[#1e3a5f]"
+                              className="h-9 w-full rounded-lg border border-[#e4dbc6] pl-7 pr-3 text-sm font-bold outline-none focus:border-lux-gold"
                               placeholder="0.00"
                             />
                           </div>
@@ -2801,14 +2801,14 @@ const AddPaymentReceived = () => {
                               )
                             }
                             disabled={isLocked}
-                            className="mt-2 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                            className="mt-2 h-9 w-full rounded-lg border border-[#e4dbc6] px-3 text-xs font-medium outline-none focus:border-lux-gold"
                             placeholder="Remarks..."
                           />
                         </div>
                       ))}
                     </div>
-                    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-600">
+                    <div className="mt-3 rounded-xl border border-[#e4dbc6] bg-lux-ivory p-3">
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-lux-muted">
                         General Remarks
                       </label>
                       <input
@@ -2821,7 +2821,7 @@ const AddPaymentReceived = () => {
                           )
                         }
                         disabled={isLocked}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:border-[#1e3a5f]"
+                        className="h-9 w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 text-xs font-medium outline-none focus:border-lux-gold"
                         placeholder="Remarks..."
                       />
                     </div>
@@ -2829,14 +2829,14 @@ const AddPaymentReceived = () => {
                       <button
                         type="button"
                         onClick={() => setBreakdownEntry(null)}
-                        className="rounded-lg border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50"
+                        className="rounded-lg border border-[#e4dbc6] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-lux-muted hover:bg-lux-ivory"
                       >
                         Close
                       </button>
                       <button
                         type="button"
                         onClick={() => setBreakdownEntry(null)}
-                        className="rounded-lg bg-[#1e3a5f] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#152b47]"
+                        className="rounded-lg bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-2 text-[10px] font-black uppercase tracking-wider text-lux-gold-soft ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night"
                       >
                         Done
                       </button>
@@ -2866,8 +2866,8 @@ const AddPaymentReceived = () => {
               rows={2}
               className={`w-full px-3 py-2 rounded-lg border text-[10px] font-bold ${
                 isLocked
-                  ? "bg-slate-50 text-slate-400 border-slate-100"
-                  : "border-slate-200 bg-white focus:border-slate-900 focus:bg-yellow-50"
+                  ? "bg-lux-ivory text-lux-muted border-[#ece4d2]"
+                  : "border-[#e4dbc6] bg-lux-cream focus:border-lux-gold focus:bg-lux-ivory"
               } outline-none transition-all resize-none uppercase`}
               placeholder="Narration..."
             />
@@ -2932,10 +2932,10 @@ const AddPaymentReceived = () => {
           <div
             className={`rounded-2xl border shadow-sm overflow-hidden ${
               editingPaymentId
-                ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50"
+                ? "border-amber-200 bg-gradient-to-br from-amber-50 via-lux-cream to-orange-50"
                 : liveUnadjustedAmount > 0
-                  ? "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
-                  : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-green-50"
+                  ? "border-blue-200 bg-gradient-to-br from-blue-50 via-lux-cream to-sky-50"
+                  : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-lux-cream to-green-50"
             }`}
           >
             <div className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -2950,13 +2950,13 @@ const AddPaymentReceived = () => {
                   <FaMoneyBillWave size={20} />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-lux-muted">
                     {editingPaymentId
                       ? "Unadjusted Amount (On Account / Advance)"
                       : "Unadjusted Amount — Available for Allocation"}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl sm:text-3xl font-black tabular-nums tracking-tight text-slate-800">
+                    <span className="font-serif text-2xl sm:text-3xl font-semibold tabular-nums tracking-tight text-lux-ink">
                       ₹
                       {liveUnadjustedAmount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
@@ -2967,7 +2967,7 @@ const AddPaymentReceived = () => {
                       editingPayment &&
                       (editingPayment.unadjustedAmount || 0) !==
                         liveUnadjustedAmount && (
-                        <span className="text-xs font-bold text-slate-400">
+                        <span className="text-xs font-bold text-lux-muted">
                           (original: ₹
                           {(
                             Number(editingPayment.unadjustedAmount) || 0
@@ -2980,7 +2980,7 @@ const AddPaymentReceived = () => {
                       )}
                   </div>
                   {editingPayment?.paymentType && (
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider text-lux-muted">
                       Type: {editingPayment.paymentType}
                       {editingPayment.paymentMode
                         ? ` · ${editingPayment.paymentMode}`
@@ -2991,15 +2991,15 @@ const AddPaymentReceived = () => {
               </div>
               <div className="flex flex-col items-start sm:items-end gap-1">
                 {editingPayment?.buyerCompany && (
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                  <div className="flex items-center gap-2 text-xs font-bold text-lux-muted">
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
                     {editingPayment.buyerCompany}
-                    <span className="text-slate-400 mx-1">→</span>
+                    <span className="text-lux-muted mx-1">→</span>
                     <span className="w-2.5 h-2.5 rounded-full bg-green-400"></span>
                     {editingPayment.supplierCompany || "—"}
                   </div>
                 )}
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <div className="text-[10px] font-black uppercase tracking-widest text-lux-muted">
                   {liveUnadjustedAmount > 0.01
                     ? "This amount remains unadjusted and is treated as advance / on-account"
                     : "All payment value has been allocated against lorries"}
@@ -3086,7 +3086,7 @@ const AddPaymentReceived = () => {
           />
         )}
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
+        <div className="bg-lux-cream rounded-3xl border border-[#e4dbc6] shadow-sm overflow-hidden min-h-[500px]">
           {activeTab === "payment_list" && (
             <SimplePaymentList
               payments={history}

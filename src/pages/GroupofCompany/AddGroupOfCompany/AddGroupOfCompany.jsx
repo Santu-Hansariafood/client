@@ -40,12 +40,13 @@ const AddGroupOfCompany = () => {
         icon={FaPlus}
         noContentCard
       >
-        <div className="max-w-lg mx-auto rounded-2xl border border-green-200/60 bg-white shadow-lg p-6 sm:p-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-6 text-center sm:text-left">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
+          <h2 className="mb-6 text-center font-serif text-xl font-semibold text-lux-ink sm:text-left sm:text-2xl">
             {addgroupcompanyLable.group_title}
           </h2>
           <label
-            className="block text-sm font-medium text-slate-700 mb-2"
+            className="mb-2 block font-serif text-xs font-bold uppercase tracking-widest text-lux-muted"
             htmlFor="groupName"
           >
             {addgroupcompanyLable.group_company_title}
@@ -57,7 +58,7 @@ const AddGroupOfCompany = () => {
             name="groupName"
             required
           />
-          <div className="mt-6 flex justify-center sm:justify-start">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-start">
             <Buttons
               label="Submit"
               onClick={handleSubmit}
@@ -65,6 +66,7 @@ const AddGroupOfCompany = () => {
               variant="primary"
               size="md"
             />
+          </div>
           </div>
         </div>
       </AdminPageShell>

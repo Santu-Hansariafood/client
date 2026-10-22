@@ -84,16 +84,16 @@ const LoadingEntry = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold text-center text-blue-700 mb-4">
+      <div className="mx-auto w-full max-w-5xl lux-card lux-gold-top p-4 sm:p-6 lg:p-8">
+        <h1 className="font-serif font-semibold text-center text-lux-ink text-2xl mb-6">
           Loading Entry
         </h1>
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:gap-6"
         >
           <div>
-            <label>Loading Date</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Loading Date</label>
             <DateSelector
               name="loadingDate"
               value={formData.loadingDate}
@@ -103,7 +103,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Loading Weight in Tons</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Loading Weight in Tons</label>
             <DataInput
               inputType="number"
               name="loadingWeight"
@@ -113,7 +113,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Lorry Number</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Lorry Number</label>
             <DataInput
               name="lorryNumber"
               value={formData.lorryNumber}
@@ -123,7 +123,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Added Transport</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Added Transport</label>
             <DataInput
               name="addedTransport"
               value={formData.addedTransport}
@@ -133,7 +133,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Driver Name</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Driver Name</label>
             <DataInput
               name="driverName"
               value={formData.driverName}
@@ -143,7 +143,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Driver Phone Number</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Driver Phone Number</label>
             <DataInput
               name="driverPhoneNumber"
               value={formData.driverPhoneNumber}
@@ -156,7 +156,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Freight Rate per Tons</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Freight Rate per Tons</label>
             <DataInput
               name="freightRate"
               value={formData.freightRate}
@@ -166,7 +166,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Total Freight</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Total Freight</label>
             <DataInput
               name="totalFreight"
               value={formData.totalFreight}
@@ -177,7 +177,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Advance</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Advance</label>
             <DataInput
               name="advance"
               value={formData.advance}
@@ -187,7 +187,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Balance</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Balance</label>
             <DataInput
               name="balance"
               value={formData.balance}
@@ -198,7 +198,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Bill Number</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Bill Number</label>
             <DataInput
               name="billNumber"
               value={formData.billNumber}
@@ -208,7 +208,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div>
-            <label>Date of Issue</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Date of Issue</label>
             <DateSelector
               name="dateOfIssue"
               value={formData.dateOfIssue}
@@ -218,7 +218,7 @@ const LoadingEntry = () => {
             />
           </div>
           <div className="md:col-span-3">
-            <label>Upload Document</label>
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Upload Document</label>
             <FileUpload
               label="Upload File"
               accept=".jpg,.png,.pdf"
@@ -232,7 +232,7 @@ const LoadingEntry = () => {
           <div className="md:col-span-3 flex justify-center">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
             >
               Submit
             </button>

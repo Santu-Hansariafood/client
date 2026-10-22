@@ -273,7 +273,7 @@ const AddFinancer = () => {
                   event.target.checked,
                 )
               }
-              className="h-4 w-4 accent-emerald-600"
+              className="h-4 w-4 accent-lux-emerald"
             />
             <span>
               {selectedBuyerCompanyData.financerId ? "Added" : "Add Financer"}
@@ -313,7 +313,7 @@ const AddFinancer = () => {
         noContentCard
       >
         <div className="space-y-6">
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
+          <section className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <div className="max-w-xl">
               <DataDropdown
                 label="Select Group"
@@ -329,9 +329,9 @@ const AddFinancer = () => {
             </div>
 
             {selectedGroup && (
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <span className="font-bold text-slate-800">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3 text-sm text-lux-muted">
+                  <span className="font-bold text-lux-ink">
                     Selected group:
                   </span>{" "}
                   {selectedGroup.label}
@@ -356,14 +356,14 @@ const AddFinancer = () => {
           </section>
 
           {selectedGroup && (
-            <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
+            <section className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
               <div className="mb-4 flex items-center gap-2">
-                <FaCheckCircle className="text-emerald-600" />
-                <h2 className="text-lg font-bold text-slate-800">
+                <FaCheckCircle className="text-lux-emerald" />
+                <h2 className="font-serif text-lg font-semibold text-lux-ink">
                   Add Financer Seller
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
                 <DataDropdown
                   label="Select Seller"
                   options={sellers}
@@ -400,7 +400,7 @@ const AddFinancer = () => {
                             selectedSeller.value,
                             selectedSellerCompany.value,
                           )}
-                          className="inline-flex items-center gap-2 font-semibold text-emerald-700"
+                          className="inline-flex items-center gap-2 font-semibold text-lux-emerald"
                         >
                           <input
                             type="checkbox"
@@ -422,7 +422,7 @@ const AddFinancer = () => {
                             onChange={(event) =>
                               handleSellerFinancerChange(event.target.checked)
                             }
-                            className="h-4 w-4 accent-emerald-600"
+                            className="h-4 w-4 accent-lux-emerald"
                           />
                           <span>
                             {" "}
@@ -447,10 +447,10 @@ const AddFinancer = () => {
           )}
 
           {selectedGroup && selectedBuyerCompany && (
-            <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 sm:p-6 shadow-lg">
+            <section className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
               <div className="mb-4 flex items-center gap-2">
-                <FaCheckCircle className="text-emerald-600" />
-                <h2 className="text-lg font-bold text-slate-800">
+                <FaCheckCircle className="text-lux-emerald" />
+                <h2 className="font-serif text-lg font-semibold text-lux-ink">
                   Buyer Companies
                 </h2>
               </div>
@@ -467,17 +467,17 @@ const AddFinancer = () => {
             </section>
           )}
 
-          <section className="rounded-2xl border border-emerald-200/60 bg-white p-4 shadow-lg sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
+          <section className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">
+                <h2 className="font-serif text-lg font-semibold text-lux-ink">
                   Added Financers (Buyer & Seller Companies)
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-lux-muted">
                   All saved buyer and seller financer mappings
                 </p>
               </div>
-              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
                 {financers.length} Added
               </span>
             </div>

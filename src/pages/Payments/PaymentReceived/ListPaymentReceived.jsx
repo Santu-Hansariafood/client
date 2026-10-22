@@ -2167,23 +2167,23 @@ const ListPaymentReceived = () => {
 
   const renderFirstLoadSkeleton = () => (
     <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-28 sm:h-36 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%]" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-28 sm:h-36 bg-gradient-to-r from-lux-ivory via-[#ece4d2] to-lux-ivory animate-pulse bg-[length:200%_100%]" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 sm:gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-36 sm:h-40 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200"
+            className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-36 sm:h-40 bg-gradient-to-r from-lux-ivory via-[#ece4d2] to-lux-ivory animate-pulse bg-[length:200%_100%] border border-[#ece4d2]"
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-300" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#e4dbc6]" />
           </div>
         ))}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-80 sm:h-96 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-80 sm:h-96 bg-gradient-to-r from-lux-ivory via-[#ece4d2] to-lux-ivory animate-pulse bg-[length:200%_100%] border border-[#ece4d2]" />
 
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-[560px] bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse bg-[length:200%_100%] border border-slate-200" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl h-[560px] bg-gradient-to-r from-lux-ivory via-[#ece4d2] to-lux-ivory animate-pulse bg-[length:200%_100%] border border-[#ece4d2]" />
     </div>
   );
 
@@ -2195,9 +2195,9 @@ const ListPaymentReceived = () => {
       noContentCard
     >
       <div className="relative -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8 min-w-0">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_#ecfdf5_0%,_#f8fafc_50%,_#f1f5f9_100%)]" />
-        <div className="absolute top-20 left-0 -z-10 w-80 h-80 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
-        <div className="absolute top-60 right-10 -z-10 w-72 h-72 rounded-full bg-amber-100/30 blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_#f7f4ec_0%,_#fffefb_50%,_#f2eee2_100%)]" />
+        <div className="absolute top-20 left-0 -z-10 w-80 h-80 rounded-full bg-lux-gold/20 blur-3xl pointer-events-none" />
+        <div className="absolute top-60 right-10 -z-10 w-72 h-72 rounded-full bg-lux-gold/20 blur-3xl pointer-events-none" />
 
         <div className="max-w-[1700px] mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
           <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-end lg:justify-between">
@@ -2209,7 +2209,7 @@ const ListPaymentReceived = () => {
                 type="button"
                 onClick={handleRefresh}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_2px_8px_rgba(15,23,42,0.05)] hover:bg-white hover:border-slate-300 hover:shadow-[0_4px_14px_rgba(15,23,42,0.08)] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-lux-cream/80 backdrop-blur-sm border border-[#e4dbc6] text-lux-ink font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_2px_8px_rgba(15,23,42,0.05)] hover:bg-lux-cream hover:border-lux-gold-soft hover:shadow-[0_4px_14px_rgba(15,23,42,0.08)] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FaSync size={12} className={loading ? "animate-spin" : ""} />
                 Refresh
@@ -2217,9 +2217,9 @@ const ListPaymentReceived = () => {
               <button
                 type="button"
                 onClick={() => navigate("/payments/received/add")}
-                className="group inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-br from-[#065f46] via-[#047857] to-[#059669] text-white font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-emerald-700/15 hover:shadow-xl hover:shadow-emerald-700/25 hover:from-[#044735] hover:via-[#065f46] hover:to-[#047857] active:scale-[0.98] transition-all duration-200"
+                className="group inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-br from-lux-emerald via-lux-deep to-lux-emerald text-lux-gold-soft font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-lux-emerald/15 ring-1 ring-lux-gold/30 hover:shadow-xl hover:shadow-lux-emerald/25 hover:from-lux-deep hover:via-lux-night hover:to-lux-deep active:scale-[0.98] transition-all duration-200"
               >
-                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/15 border border-white/20 group-hover:bg-white/25 transition-colors">
+                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-lux-cream/15 border border-lux-cream/20 group-hover:bg-lux-cream/25 transition-colors">
                   +
                 </span>
                 New Payment
@@ -2313,18 +2313,18 @@ const ListPaymentReceived = () => {
                     supplierCompany={listCompanyPair.supplierCompany}
                   />
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-slate-200 bg-white py-20 text-center px-6">
-                    <p className="font-bold text-slate-800">
+                  <div className="rounded-3xl border border-dashed border-[#e4dbc6] bg-lux-cream py-20 text-center px-6">
+                    <p className="font-serif font-semibold text-lux-ink">
                       No lorries for this sauda
                     </p>
-                    <p className="text-sm text-slate-500 mt-2">
+                    <p className="text-sm text-lux-muted mt-2">
                       Sauda {selectedSauda.label} has no loading entries in the
                       system.
                     </p>
                     <button
                       type="button"
                       onClick={() => setSelectedSauda(null)}
-                      className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#1e3a5f] hover:underline"
+                      className="mt-4 text-[10px] font-black uppercase tracking-widest text-lux-emerald hover:underline"
                     >
                       Back to register
                     </button>
@@ -2364,7 +2364,7 @@ const ListPaymentReceived = () => {
               )}
             </>
           ) : (
-            <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden p-4 sm:p-6">
+            <div className="rounded-2xl sm:rounded-3xl border border-[#ece4d2] bg-lux-cream shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden p-4 sm:p-6">
               <SaudaMISSection />
             </div>
           )}

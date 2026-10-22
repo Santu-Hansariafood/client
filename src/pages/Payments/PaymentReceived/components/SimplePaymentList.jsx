@@ -17,7 +17,7 @@ const SimplePaymentList = ({
   if (!payments.length) {
     return (
       <div className="py-20 px-6 text-center">
-        <p className="text-sm font-bold text-slate-600">{emptyMessage}</p>
+        <p className="font-serif text-sm font-semibold text-lux-muted">{emptyMessage}</p>
       </div>
     );
   }
@@ -33,45 +33,45 @@ const SimplePaymentList = ({
   return (
     <div className="space-y-4">
       {/* Total Payment Received Summary at the top of the list */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald text-lux-cream p-4 sm:p-6 rounded-3xl shadow-lg">
         <div>
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">
+          <p className="lux-eyebrow text-lux-gold-soft/70 mb-1">
             Total Received (Net)
           </p>
-          <p className="text-2xl font-black tabular-nums">
+          <p className="font-serif text-2xl font-semibold tabular-nums">
             {formatLedgerAmount(totalAmount)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase text-rose-400 tracking-widest mb-1">
+          <p className="lux-eyebrow text-rose-400 mb-1">
             Total Claim
           </p>
-          <p className="text-2xl font-black tabular-nums">
+          <p className="font-serif text-2xl font-semibold tabular-nums">
             {formatLedgerAmount(totalClaim)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase text-green-400 tracking-widest mb-1">
+          <p className="lux-eyebrow text-emerald-400 mb-1">
             Total TDS
           </p>
-          <p className="text-2xl font-black tabular-nums">
+          <p className="font-serif text-2xl font-semibold tabular-nums">
             {formatLedgerAmount(totalTds)}
           </p>
         </div>
-        <div className="border-l border-slate-700 pl-4">
-          <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">
+        <div className="border-t sm:border-t-0 sm:border-l border-white/15 pt-4 sm:pt-0 sm:pl-4">
+          <p className="lux-eyebrow text-lux-gold-soft mb-1">
             Grand Total (Gross)
           </p>
-          <p className="text-2xl font-black tabular-nums text-emerald-400">
+          <p className="font-serif text-2xl font-semibold tabular-nums text-lux-gold-soft">
             {formatLedgerAmount(grandTotal)}
           </p>
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-slate-200 rounded-2xl bg-white shadow-sm">
+      <div className="overflow-x-auto border border-[#ece4d2] rounded-2xl bg-lux-cream shadow-sm">
         <table className="w-full min-w-[800px] border-collapse text-left">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
+            <tr className="bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald text-lux-gold-soft font-serif border-b border-[#ece4d2]">
               <th className="px-4 py-4 text-[10px] font-black uppercase tracking-wider">
                 Date
               </th>
@@ -98,19 +98,19 @@ const SimplePaymentList = ({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[#ece4d2]">
             {payments.map((payment, idx) => (
               <tr
                 key={payment._id || idx}
-                className="hover:bg-slate-50/50 transition-colors"
+                className="odd:bg-lux-cream even:bg-[#f2eee2]/50 hover:bg-lux-ivory transition-colors"
               >
-                <td className="px-4 py-4 text-[11px] font-bold text-slate-900">
+                <td className="px-4 py-4 text-[11px] font-bold text-lux-ink">
                   {new Date(payment.date).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-4 text-[10px] font-bold text-blue-600 uppercase">
                   {payment.buyerCompany || "—"}
                 </td>
-                <td className="px-4 py-4 text-[10px] font-bold text-green-600 uppercase">
+                <td className="px-4 py-4 text-[10px] font-bold text-lux-emerald uppercase">
                   {payment.supplierCompany || "—"}
                 </td>
                 <td className="px-4 py-4 text-[11px] font-black text-emerald-700 tabular-nums">
@@ -119,16 +119,16 @@ const SimplePaymentList = ({
                 <td className="px-4 py-4 text-[11px] font-black text-rose-600 tabular-nums">
                   {payment.claim > 0 ? formatLedgerAmount(payment.claim) : "—"}
                 </td>
-                <td className="px-4 py-4 text-[11px] font-black text-green-600 tabular-nums">
+                <td className="px-4 py-4 text-[11px] font-black text-lux-emerald tabular-nums">
                   {payment.tds > 0 ? formatLedgerAmount(payment.tds) : "—"}
                 </td>
                 <td className="px-4 py-4">
-                  <span className="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-tighter">
+                  <span className="px-2 py-1 rounded-lg bg-lux-ivory text-lux-muted text-[9px] font-black uppercase tracking-tighter">
                     {payment.paymentMode}
                   </span>
                 </td>
                 <td
-                  className="px-4 py-4 text-[11px] text-slate-600 font-medium max-w-xs truncate"
+                  className="px-4 py-4 text-[11px] text-lux-muted font-medium max-w-xs truncate"
                   title={buildPaymentParticulars(payment)}
                 >
                   {buildPaymentParticulars(payment) || "—"}

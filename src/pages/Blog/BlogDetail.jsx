@@ -69,7 +69,7 @@ const BlogDetail = () => {
   };
 
   if (loading) return <Loading size="lg" />;
-  if (!blog) return <div className="p-10 text-center">News not found</div>;
+  if (!blog) return <div className="p-10 text-center text-lux-muted">News not found</div>;
 
   const galleryImages =
     blog.images?.length > 0
@@ -168,21 +168,21 @@ const BlogDetail = () => {
           </script>
         </Helmet>
       )}
-      <div className="min-h-screen bg-[#f4f1ea] py-10 px-4 print:bg-white print:py-0 print:px-0">
-        <div className="max-w-4xl mx-auto bg-white shadow-2xl border-x border-slate-200 min-h-[1000px] print:shadow-none print:border-none">
-          <div className="p-8 border-b-4 border-double border-slate-900 text-center">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 print:hidden">
+      <div className="lux-canvas min-h-screen px-4 py-10 print:bg-white print:px-0 print:py-0">
+        <div className="mx-auto min-h-[1000px] max-w-4xl border-x border-[#ece4d2] bg-lux-cream shadow-2xl print:border-none print:shadow-none">
+          <div className="border-b-4 border-double border-lux-ink p-8 text-center">
+            <div className="mb-4 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em] text-lux-muted print:hidden">
               <span>Established 2026</span>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate(-1)}
-                  className="hover:text-slate-900 transition-colors flex items-center gap-1"
+                  className="flex items-center gap-1 transition-colors hover:text-lux-ink"
                 >
                   <FaArrowLeft size={8} /> Back
                 </button>
                 <button
                   onClick={handleBookmark}
-                  className={`${isBookmarked ? "text-blue-600" : "hover:text-slate-900"} transition-colors flex items-center gap-1`}
+                  className={`${isBookmarked ? "text-lux-emerald" : "hover:text-lux-ink"} flex items-center gap-1 transition-colors`}
                 >
                   {isBookmarked ? (
                     <FaBookmark size={10} />
@@ -193,7 +193,7 @@ const BlogDetail = () => {
                 </button>
                 <button
                   onClick={() => window.print()}
-                  className="hover:text-slate-900 transition-colors flex items-center gap-1"
+                  className="flex items-center gap-1 transition-colors hover:text-lux-ink"
                 >
                   <FaPrint size={8} /> Print
                 </button>
@@ -201,15 +201,15 @@ const BlogDetail = () => {
               <span>Volume I · No. 1</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tighter text-slate-900 my-6 italic">
+            <h1 className="my-6 font-serif text-5xl font-semibold italic tracking-tighter text-lux-ink md:text-7xl">
               Hansaria Food News
             </h1>
 
-            <div className="border-y border-slate-900 py-2 flex justify-between items-center text-[11px] font-black uppercase tracking-widest text-slate-800">
+            <div className="flex items-center justify-between border-y border-lux-ink/30 py-2 text-[11px] font-black uppercase tracking-widest text-lux-ink">
               <span>KOLKATA, WEST BENGAL</span>
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
-                  <FaCalendarAlt size={10} className="text-slate-400" />
+                  <FaCalendarAlt size={10} className="text-lux-muted" />
                   {new Date(blog.date)
                     .toLocaleDateString("en-GB", {
                       weekday: "long",
@@ -220,7 +220,7 @@ const BlogDetail = () => {
                     .toUpperCase()}
                 </span>
                 <span className="flex items-center gap-1.5 print:hidden">
-                  <FaEye size={10} className="text-slate-400" />
+                  <FaEye size={10} className="text-lux-muted" />
                   {blog.views || 0}
                 </span>
               </div>
@@ -231,24 +231,24 @@ const BlogDetail = () => {
           <div className="p-8 md:p-12">
             <div className="mb-8 text-center">
               <div className="mb-2">
-                <span className="text-[10px] font-black uppercase bg-blue-600 text-white px-3 py-1 rounded-full tracking-widest">
+                <span className="rounded-full bg-lux-emerald px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-gold-soft">
                   {blog.category || "General"}
                 </span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight text-[#1e3a5f] mb-4 drop-shadow-sm">
+              <h2 className="mb-4 font-serif text-3xl font-semibold leading-tight text-lux-ink drop-shadow-sm md:text-5xl">
                 {blog.title}
               </h2>
-              <div className="w-24 h-1 bg-[#1e3a5f] mx-auto mb-6"></div>
-              <p className="text-xl font-bold italic text-[#059669] max-w-2xl mx-auto leading-relaxed">
+              <div className="mx-auto mb-6 h-1 w-24 bg-lux-gold"></div>
+              <p className="mx-auto max-w-2xl text-xl font-semibold italic leading-relaxed text-lux-emerald">
                 &quot;{blog.heading}&quot;
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
               <div className="md:col-span-8">
                 {galleryImages.length > 0 && (
                   <div className="mb-8">
-                    <div className="relative aspect-video border-4 border-slate-100 p-2 shadow-sm bg-slate-50 overflow-hidden group">
+                    <div className="group relative aspect-video overflow-hidden border-4 border-lux-ivory bg-lux-ivory p-2 shadow-sm">
                       <img
                         src={galleryImages[activeImageIdx]}
                         alt={`${blog.title} - ${activeImageIdx + 1}`}
@@ -290,7 +290,7 @@ const BlogDetail = () => {
                           <button
                             key={idx}
                             onClick={() => setActiveImageIdx(idx)}
-                            className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${activeImageIdx === idx ? "border-blue-600 shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
+                            className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${activeImageIdx === idx ? "border-lux-emerald shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
                           >
                             <img
                               src={img}
@@ -301,7 +301,7 @@ const BlogDetail = () => {
                         ))}
                       </div>
                     )}
-                    <p className="mt-2 text-[10px] italic font-bold text-slate-400 text-center border-t border-slate-200 pt-2 uppercase tracking-widest">
+                    <p className="mt-2 border-t border-[#ece4d2] pt-2 text-center text-[10px] font-bold uppercase italic tracking-widest text-lux-muted">
                       News Bulletin from Hansaria Food Pvt. Ltd.
                     </p>
                   </div>
@@ -320,7 +320,7 @@ const BlogDetail = () => {
                       return (
                         <h3
                           key={idx}
-                          className={`text-xl font-serif font-black mt-8 mb-4 border-b border-slate-100 pb-2 ${style}`}
+                          className={`mt-8 mb-4 border-b border-[#ece4d2] pb-2 font-serif text-xl font-semibold ${style}`}
                           style={colorStyle}
                         >
                           {block.text}
@@ -369,32 +369,32 @@ const BlogDetail = () => {
                 </div>
               </div>
 
-              <div className="md:col-span-4 border-l border-slate-200 pl-8 hidden md:block">
+              <div className="hidden border-l border-[#ece4d2] pl-8 md:col-span-4 md:block">
                 <div className="sticky top-10 space-y-8">
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                    <h4 className="lux-eyebrow mb-3">
                       Posted By
                     </h4>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lux-ivory text-lux-muted">
                         <FaUser size={14} />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-800 uppercase">
+                        <p className="text-sm font-black uppercase text-lux-ink">
                           {blog.author?.name || "Admin"}
                         </p>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                        <p className="text-[10px] font-bold uppercase tracking-tighter text-lux-muted">
                           {blog.author?.role || "Staff"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                  <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+                    <h4 className="lux-eyebrow mb-3">
                       Notice
                     </h4>
-                    <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic">
+                    <p className="text-[11px] font-bold italic leading-relaxed text-lux-muted">
                       &quot;This news bulletin is intended for internal
                       communication between Hansaria Food and its valued
                       partners including Transporters, Sellers, and
@@ -403,9 +403,9 @@ const BlogDetail = () => {
                   </div>
 
                   {isBookmarked && (
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-                      <FaBookmark className="text-blue-600" />
-                      <p className="text-[10px] font-bold text-blue-800 uppercase tracking-widest">
+                    <div className="flex items-center gap-3 rounded-2xl border border-[#e6dcc4] bg-lux-cream p-4">
+                      <FaBookmark className="text-lux-emerald" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-lux-emerald">
                         Saved in your bookmarks
                       </p>
                     </div>
@@ -414,8 +414,8 @@ const BlogDetail = () => {
               </div>
             </div>
           </div>
-          <div className="p-8 border-t border-slate-200 text-center bg-slate-50">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <div className="border-t border-[#ece4d2] bg-lux-ivory p-8 text-center">
+            <p className="text-[10px] font-black uppercase tracking-widest text-lux-muted">
               © 2026 Hansaria Food Pvt. Ltd. · All Rights Reserved
             </p>
           </div>

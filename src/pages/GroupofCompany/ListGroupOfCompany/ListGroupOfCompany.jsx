@@ -142,8 +142,9 @@ const ListGroupOfCompany = () => {
         icon={FaBuilding}
         noContentCard
       >
-        <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
-          <div className="mb-4 max-w-md">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top w-full overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="mb-4 w-full max-w-md">
             <SearchBox
               placeholder="Search groups..."
               items={groupsData.map((group) => group.groupName)}
@@ -152,7 +153,7 @@ const ListGroupOfCompany = () => {
             />
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-100">
+          <div className="overflow-x-auto rounded-2xl border border-[#ece4d2]">
             <Tables headers={["Sl No", "Group Name", "Actions"]} rows={rows} />
           </div>
 
@@ -164,6 +165,7 @@ const ListGroupOfCompany = () => {
               onPageChange={setCurrentPage}
             />
           </div>
+          </div>
         </div>
 
         {isPopupOpen && (
@@ -173,7 +175,7 @@ const ListGroupOfCompany = () => {
             title={selectedGroup?.groupName || "Group Details"}
           >
             {selectedGroup && (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3 text-sm text-lux-muted">
                 <p>
                   <strong>Group Name:</strong> {selectedGroup.groupName}
                 </p>

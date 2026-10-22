@@ -435,7 +435,7 @@ const EditSelfOrder = () => {
   if (isFetching) return <Loading />;
 
   const sectionClass =
-    "rounded-2xl border border-emerald-100 bg-white p-5 sm:p-6 shadow-md shadow-emerald-900/5";
+    "lux-card rounded-2xl border border-[#ece4d2] bg-lux-cream p-5 shadow-md shadow-emerald-900/5 sm:p-6";
 
   return (
     <Suspense fallback={<Loading />}>
@@ -445,7 +445,7 @@ const EditSelfOrder = () => {
         icon={FaEdit}
         noContentCard
       >
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="mx-auto w-full max-w-4xl space-y-6">
           <div className={sectionClass}>
             <BuyerInformation
               formData={formData}
@@ -518,11 +518,11 @@ const EditSelfOrder = () => {
           </div>
 
           <div className={sectionClass}>
-            <h3 className="text-base font-semibold text-slate-800 mb-4">
+            <h3 className="mb-4 font-serif text-base font-semibold text-lux-ink">
               Send Email Notifications
             </h3>
             <div className="flex flex-col gap-4">
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
                   checked={selectedEmails.buyer}
@@ -532,13 +532,13 @@ const EditSelfOrder = () => {
                       buyer: e.target.checked,
                     }))
                   }
-                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  className="h-5 w-5 rounded border-[#d8cfb8] text-lux-emerald focus:ring-lux-gold/40"
                 />
-                <span className="text-slate-700 font-medium">
+                <span className="font-medium text-lux-ink">
                   Send Email to Buyer
                 </span>
               </label>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
                   checked={selectedEmails.supplier}
@@ -548,9 +548,9 @@ const EditSelfOrder = () => {
                       supplier: e.target.checked,
                     }))
                   }
-                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  className="h-5 w-5 rounded border-[#d8cfb8] text-lux-emerald focus:ring-lux-gold/40"
                 />
-                <span className="text-slate-700 font-medium">
+                <span className="font-medium text-lux-ink">
                   Send Email to Supplier
                 </span>
               </label>
@@ -558,7 +558,7 @@ const EditSelfOrder = () => {
           </div>
 
           <div className={sectionClass}>
-            <h3 className="text-base font-semibold text-slate-800 mb-3">
+            <h3 className="mb-3 font-serif text-base font-semibold text-lux-ink">
               Sauda number
             </h3>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -575,18 +575,18 @@ const EditSelfOrder = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pb-8">
+          <div className="flex flex-col gap-3 pb-8 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate("/manage-order/list-self-order")}
-              className="flex-1 py-3.5 rounded-xl font-bold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-all duration-200"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 py-3.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/20 transition-all duration-200"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-3.5 text-sm font-bold text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
               disabled={isLoading}
             >
               {isLoading ? "Updating…" : "Update order"}

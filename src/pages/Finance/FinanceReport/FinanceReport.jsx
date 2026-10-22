@@ -991,7 +991,7 @@ const FinanceReport = () => {
       key={`adjust-${order._id || order.saudaNo}`}
       type="button"
       onClick={() => startPurchaseOrderAdjustment(order)}
-      className="inline-flex h-8 items-center gap-1 rounded-md bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+      className="inline-flex h-8 items-center gap-1 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-3 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-sm transition hover:-translate-y-0.5"
     >
       Adjust
     </button>,
@@ -1151,7 +1151,7 @@ const FinanceReport = () => {
           );
         }}
       />
-      <div className="text-xs text-slate-500">
+      <div className="text-xs text-lux-muted">
         Consignee: {row.consignee || "-"}
       </div>
       <button
@@ -1164,7 +1164,7 @@ const FinanceReport = () => {
             row.manualAdjustment,
           )
         }
-        className="h-9 w-full rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+        className="h-9 w-full rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-3 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5"
       >
         Check quantity
       </button>
@@ -1228,7 +1228,7 @@ const FinanceReport = () => {
         }
         aria-label={`Quantity to adjust for ${row.buyerSaudaNo || row.saudaNo || "Sauda"}`}
         placeholder="Enter quantity (Tons)"
-        className="h-10 w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+        className="h-10 w-full rounded-xl border border-amber-200 bg-amber-50/50 px-3 text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
       />
       {row.buyerSaudaNo &&
         row.purchaseQuantity !== null &&
@@ -1251,10 +1251,10 @@ const FinanceReport = () => {
       key={`status-${row.id}`}
       className={
         row.status === "Equal"
-          ? "font-bold text-emerald-600"
+          ? "font-bold text-lux-emerald"
           : row.status === "Not Equal"
             ? "font-bold text-amber-600"
-            : "text-slate-500"
+            : "text-lux-muted"
       }
     >
       {row.status === "Not Equal" && row.buyerSaudaNo
@@ -1276,7 +1276,7 @@ const FinanceReport = () => {
           !row.manualAdjustment ||
           Number(row.manualAdjustment) > getAvailableAdjustmentQuantity(row)
         }
-        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-3 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {row.adjustmentMode === "edit" ? (
           <FaEdit size={12} />
@@ -1296,7 +1296,7 @@ const FinanceReport = () => {
           type="button"
           onClick={() => deleteAdjustment(row)}
           title="Delete saved adjustment"
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-600 hover:bg-red-100"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-600 transition hover:bg-rose-100"
         >
           <FaTrash size={12} />
           Delete
@@ -1306,7 +1306,7 @@ const FinanceReport = () => {
         type="button"
         onClick={() => removeSaudaRow(row.id)}
         title="Remove Sauda row"
-        className="inline-flex h-8 items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:bg-slate-100"
+        className="inline-flex h-8 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold text-lux-muted transition hover:bg-lux-ivory"
       >
         <FaTrash size={12} />
         Remove row
@@ -1350,26 +1350,26 @@ const FinanceReport = () => {
 
           <details
             ref={adjustmentLookupRef}
-            className="border-y border-slate-200 bg-white"
+            className="lux-card lux-gold-top overflow-hidden"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-sm font-semibold text-slate-800 sm:px-6">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 font-serif text-sm font-semibold text-lux-ink sm:px-6">
               <span>Sauda adjustments</span>
-              <span className="text-xs font-normal text-slate-500">
+              <span className="text-xs font-normal text-lux-muted">
                 {adjustedSaudasTotal} saved
               </span>
               <FaChevronDown
                 aria-hidden="true"
-                className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                className="shrink-0 text-lux-muted transition-transform group-open:rotate-180"
                 size={13}
               />
             </summary>
             <section className="space-y-4 px-4 pb-5 sm:px-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-semibold text-slate-800">
+                  <h2 className="font-serif text-base font-semibold text-lux-ink">
                     Buying vs selling
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-lux-muted">
                     Consignee: {selectedConsignee || "All consignees"}
                   </p>
                 </div>
@@ -1418,57 +1418,57 @@ const FinanceReport = () => {
                   return (
                     <section
                       key={`adjustment-form-${row.id}`}
-                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+                      className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 shadow-sm sm:p-5"
                     >
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold text-slate-800">
+                        <h3 className="font-serif text-sm font-bold text-lux-ink">
                           Sauda adjustment
                         </h3>
-                        <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                        <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-sky-700">
                           Adjust as: Buying
                         </span>
                       </div>
 
                       <div className="mb-5">
-                        <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                           1. Buying details
                         </h4>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Buying Sauda No
-                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800">
+                            <div className="mt-1 rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5 text-sm font-bold text-lux-ink">
                               {fields[2]}
                             </div>
                           </label>
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Buying Company
-                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800">
+                            <div className="mt-1 rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5 text-sm font-medium text-lux-ink">
                               {fields[3]}
                             </div>
                           </label>
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Buying Sauda Quantity
-                            <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800">
+                            <div className="mt-1 rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5 text-sm font-bold text-lux-ink">
                               {fields[4]}
                             </div>
                           </label>
                         </div>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-lg border border-slate-200 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-slate-500">
+                          <div className="rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-lux-muted">
                               Past Adjustments
                             </div>
-                            <div className="mt-1 text-sm font-bold text-slate-800">
+                            <div className="mt-1 text-sm font-bold text-lux-ink">
                               {row.buyerSaudaNo
                                 ? `${formatNumber(previouslyAdjusted)} Tons`
                                 : "-"}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-emerald-700">
+                          <div className="rounded-xl border border-[#d9eddf] bg-emerald-50/60 px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-lux-emerald">
                               Available to Adjust
                             </div>
-                            <div className="mt-1 text-sm font-bold text-emerald-800">
+                            <div className="mt-1 text-sm font-bold text-lux-deep">
                               {availableToAdjust === null
                                 ? "-"
                                 : `${formatNumber(availableToAdjust)} Tons`}
@@ -1478,50 +1478,50 @@ const FinanceReport = () => {
                       </div>
 
                       <div>
-                        <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                           2. Select seller Sauda and adjust
                         </h4>
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Seller Company
                             <div className="mt-1">{fields[1]}</div>
                           </label>
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Adjust Sauda No(s)
                             <div className="mt-1">{fields[0]}</div>
                           </label>
-                          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-slate-500">
+                          <div className="rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-lux-muted">
                               Selected Seller Quantity
                             </div>
-                            <div className="mt-1 text-sm font-bold text-slate-800">
+                            <div className="mt-1 text-sm font-bold text-lux-ink">
                               {fields[5]}
                             </div>
                           </div>
-                          <div className="rounded-lg bg-emerald-50/60 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-emerald-700">
+                          <div className="rounded-xl border border-[#d9eddf] bg-emerald-50/60 px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-lux-emerald">
                               Seller Quantity Available
                             </div>
-                            <div className="mt-1 text-sm font-bold text-emerald-800">
+                            <div className="mt-1 text-sm font-bold text-lux-deep">
                               {sellerAvailableToAdjust === null
                                 ? "-"
                                 : `${formatNumber(sellerAvailableToAdjust)} Tons`}
                             </div>
                           </div>
-                          <label className="block text-xs font-semibold text-slate-600">
+                          <label className="block font-serif text-xs font-semibold text-lux-ink">
                             Quantity to Adjust (Tons)
                             <div className="mt-1">{fields[7]}</div>
                           </label>
-                          <div className="rounded-lg bg-amber-50/60 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-amber-700">
+                          <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-amber-700">
                               Pending Quantity
                             </div>
                             <div className="mt-1 text-sm font-bold text-amber-800">
                               {fields[8]}
                             </div>
                           </div>
-                          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-                            <div className="text-xs font-semibold text-slate-500">
+                          <div className="rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5">
+                            <div className="font-serif text-xs font-semibold text-lux-muted">
                               Status
                             </div>
                             <div className="mt-1 text-sm">{fields[9]}</div>
@@ -1550,12 +1550,12 @@ const FinanceReport = () => {
             </section>
           </details>
 
-          <details className="border-b border-slate-200 bg-white">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-sm font-semibold text-slate-800 sm:px-6">
+          <details className="lux-card lux-gold-top overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 font-serif text-sm font-semibold text-lux-ink sm:px-6">
               <span>Totals and transaction details</span>
               <FaChevronDown
                 aria-hidden="true"
-                className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                className="shrink-0 text-lux-muted transition-transform group-open:rotate-180"
                 size={13}
               />
             </summary>

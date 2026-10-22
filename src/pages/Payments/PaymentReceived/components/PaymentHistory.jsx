@@ -29,16 +29,16 @@ const PaymentHistory = ({
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex flex-col h-full">
-        <div className="p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
+        <div className="p-4 sm:p-6 border-b border-[#ece4d2] bg-lux-ivory space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-lux-emerald to-lux-deep rounded-xl flex items-center justify-center text-lux-gold-soft shadow-sm">
               <FaHistory size={14} />
             </div>
             <div>
-              <h4 className="font-bold text-slate-800">
+              <h4 className="font-serif font-semibold text-lux-ink">
                 Tally Payment Voucher Register
               </h4>
-              <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+              <p className="lux-eyebrow">
                 {new Date(formData.date).toLocaleDateString("en-GB", {
                   weekday: "short",
                   day: "2-digit",
@@ -83,29 +83,29 @@ const PaymentHistory = ({
         />
 
         {tallyRows.length > 0 && (
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-slate-900 text-white">
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald text-lux-cream">
             <div className="flex flex-wrap gap-6">
               <div>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                <p className="lux-eyebrow text-lux-gold-soft/70">
                   Day debit (Dr.)
                 </p>
-                <p className="text-lg font-black text-rose-400 tabular-nums">
+                <p className="font-serif text-lg font-semibold text-rose-400 tabular-nums">
                   {formatLedgerAmount(totalDebit)}
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                <p className="lux-eyebrow text-lux-gold-soft/70">
                   Day credit (Cr.)
                 </p>
-                <p className="text-lg font-black text-emerald-400 tabular-nums">
+                <p className="font-serif text-lg font-semibold text-emerald-400 tabular-nums">
                   {formatLedgerAmount(totalCredit)}
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                <p className="lux-eyebrow text-lux-gold-soft/70">
                   Closing (Dr. balance)
                 </p>
-                <p className="text-lg font-black tabular-nums">
+                <p className="font-serif text-lg font-semibold tabular-nums">
                   {formatLedgerAmount(closingBalance)}
                 </p>
               </div>

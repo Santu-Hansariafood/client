@@ -105,7 +105,7 @@ const ListVendorCode = () => {
         item.group?.groupName || "N/A",
         item.buyer?.companyName || "N/A",
         item.seller?.sellerName || "N/A",
-        <span key={item._id} className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+        <span key={item._id} className="font-mono font-bold text-lux-emerald bg-lux-emerald/10 px-2 py-1 rounded">
           {item.vendorCode}
         </span>,
         new Date(item.createdAt).toLocaleDateString("en-GB"),
@@ -125,25 +125,25 @@ const ListVendorCode = () => {
       icon={FaAddressCard}
       noContentCard
     >
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex-1 max-w-md">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="lux-card flex flex-col justify-between gap-4 p-4 sm:p-6 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1 max-w-md">
             {/* Search can be added here if needed */}
           </div>
           <button
             onClick={() => navigate("/vendor-code/add")}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-lux-emerald/20 transition-all hover:brightness-110 active:scale-95"
           >
             <FaPlus /> Create New
           </button>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="lux-card w-full overflow-hidden">
           <Suspense fallback={<Loading />}>
             <Tables headers={headers} rows={rows} />
           </Suspense>
           
-          <div className="p-6 border-t border-slate-50">
+          <div className="border-t border-[#ece4d2] p-4 sm:p-6">
             <Suspense fallback={null}>
               <Pagination
                 currentPage={currentPage}
@@ -166,20 +166,20 @@ const ListVendorCode = () => {
             <div className="space-y-6 p-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-400 uppercase text-xs font-bold tracking-wider">Group</p>
-                  <p className="font-semibold text-slate-700">{selectedItem.group?.groupName}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">Group</p>
+                  <p className="font-semibold text-lux-ink">{selectedItem.group?.groupName}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 uppercase text-xs font-bold tracking-wider">Buyer</p>
-                  <p className="font-semibold text-slate-700">{selectedItem.buyer?.companyName}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">Buyer</p>
+                  <p className="font-semibold text-lux-ink">{selectedItem.buyer?.companyName}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-slate-400 uppercase text-xs font-bold tracking-wider">Seller</p>
-                  <p className="font-semibold text-slate-700">{selectedItem.seller?.sellerName}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">Seller</p>
+                  <p className="font-semibold text-lux-ink">{selectedItem.seller?.sellerName}</p>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-[#ece4d2]">
                 <DataInput
                   label="Vendor Code"
                   value={editValue}
@@ -189,17 +189,17 @@ const ListVendorCode = () => {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-end">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-6 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50"
+                  className="rounded-xl border border-[#e2d9c5] px-6 py-2 font-semibold text-lux-ink transition hover:bg-[#f5f0e4]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdate}
                   disabled={isSaving}
-                  className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 active:scale-95 disabled:bg-slate-300"
+                  className="rounded-xl bg-gradient-to-r from-lux-emerald to-lux-deep px-6 py-2 font-bold text-white shadow-md transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
                 >
                   {isSaving ? "Saving..." : "Update Code"}
                 </button>

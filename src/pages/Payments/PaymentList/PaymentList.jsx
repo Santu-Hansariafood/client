@@ -1022,46 +1022,46 @@ const PaymentList = () => {
     item.saudaNo,
     <span
       key={`lorry-${item._id}`}
-      className="font-bold text-slate-600 uppercase"
+      className="font-bold uppercase text-lux-muted"
     >
       {item.lorryNumber || "N/A"}
     </span>,
     item.billNumber || "-",
-    <span key={`buyer-${item._id}`} className="font-semibold text-slate-700">
+    <span key={`buyer-${item._id}`} className="font-semibold text-lux-ink">
       {item.buyerCompany}
     </span>,
     item.supplierCompany,
-    <span key={`gross-${item._id}`} className="font-black text-slate-700">
+    <span key={`gross-${item._id}`} className="font-black text-lux-ink">
       Rs.{" "}
       {Number(item.grossAmount || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
-    <span key={`gst-${item._id}`} className="font-black text-slate-700">
+    <span key={`gst-${item._id}`} className="font-black text-lux-ink">
       Rs.{" "}
       {Number(item.gstAmount || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
-    <span key={`credit-${item._id}`} className="font-black text-emerald-700">
+    <span key={`credit-${item._id}`} className="font-black text-lux-emerald">
       Rs.{" "}
       {Number(item.paidAmount || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
-    <span key={`claims-${item._id}`} className="font-black text-slate-700">
+    <span key={`claims-${item._id}`} className="font-black text-lux-ink">
       Rs.{" "}
       {Number(item.totalQualityClaims || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
-    <span key={`cd-${item._id}`} className="font-black text-slate-700">
+    <span key={`cd-${item._id}`} className="font-black text-lux-ink">
       Rs.{" "}
       {Number(item.cdAmount || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
-    <span key={`bank-${item._id}`} className="font-black text-slate-700">
+    <span key={`bank-${item._id}`} className="font-black text-lux-ink">
       Rs.{" "}
       {Number(item.bankCharges || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
@@ -1069,7 +1069,7 @@ const PaymentList = () => {
     </span>,
     <span
       key={`dueamt-${item._id}`}
-      className={`font-bold ${item.dueAmount > 0 ? "text-rose-600" : "text-emerald-600"}`}
+      className={`font-bold ${item.dueAmount > 0 ? "text-rose-600" : "text-lux-emerald"}`}
     >
       Rs.{" "}
       {Number(item.dueAmount || 0).toLocaleString("en-IN", {
@@ -1079,7 +1079,7 @@ const PaymentList = () => {
     </span>,
     <span
       key={`lorrybal-${item._id}`}
-      className={`font-bold ${item.remainingLorryBalance > 0 ? "text-amber-600" : "text-slate-400"}`}
+      className={`font-bold ${item.remainingLorryBalance > 0 ? "text-amber-600" : "text-lux-muted"}`}
     >
       Rs.{" "}
       {Number(item.remainingLorryBalance || 0).toLocaleString("en-IN", {
@@ -1107,8 +1107,8 @@ const PaymentList = () => {
 
   return (
     <AdminPageShell noContentCard>
-      <div className="min-h-screen bg-slate-50/50 p-4 sm:p-8 space-y-8">
-        <div className="flex items-center gap-4 bg-white p-2 rounded-3xl border border-slate-100 shadow-sm w-fit">
+      <div className="mx-auto w-full max-w-6xl space-y-6 animate-slide-up sm:space-y-8">
+        <div className="flex w-fit flex-wrap items-center gap-2 rounded-2xl border border-[#ece4d2] bg-lux-cream p-2 shadow-sm">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -1116,10 +1116,10 @@ const PaymentList = () => {
                 setPaymentStatus(tab.id);
                 navigate(tab.link);
               }}
-              className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all ${
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6 sm:py-3 ${
                 paymentStatus === tab.id
-                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
-                  : "text-slate-500 hover:bg-slate-50"
+                  ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30"
+                  : "text-lux-muted hover:bg-[#f2eee2]"
               }`}
             >
               {tab.icon}
@@ -1128,16 +1128,16 @@ const PaymentList = () => {
           ))}
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
+        <div className="lux-card lux-gold-top group relative w-full overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="pointer-events-none absolute -mr-32 -mt-32 top-0 right-0 h-64 w-64 rounded-full bg-lux-gold/10 blur-3xl transition-transform duration-700 group-hover:scale-110" />
 
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 transform transition-transform hover:rotate-12">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40 transition-transform hover:rotate-12 sm:h-16 sm:w-16">
                 <FaMoneyCheckAlt size={28} />
               </div>
               <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight italic uppercase">
+                <h1 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl">
                   Payment {paymentStatus === "done" ? "Received" : "List"}
                 </h1>
               </div>
@@ -1147,15 +1147,15 @@ const PaymentList = () => {
               <button
                 onClick={handleDownloadExcel}
                 disabled={exporting}
-                className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg disabled:pointer-events-none disabled:opacity-60"
               >
-                <FaDownload className="text-emerald-600" />
+                <FaDownload className="text-lux-emerald" />
                 {exporting ? "Exporting..." : "Excel"}
               </button>
               <button
                 onClick={handleDownloadMISPDF}
                 disabled={exporting}
-                className="px-6 py-3 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-700 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
               >
                 <FaFilePdf />
                 MIS PDF
@@ -1163,15 +1163,15 @@ const PaymentList = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <div className="relative group/input">
-              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-emerald-500 transition-colors" />
+              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-lux-muted transition-colors group-focus-within/input:text-lux-emerald" />
               <input
                 type="text"
                 placeholder="Search Sauda No, Company, Lorry..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                className="w-full rounded-2xl border border-[#ece4d2] bg-lux-ivory py-3.5 pl-12 pr-4 text-sm font-semibold text-lux-ink transition-all focus:outline-none focus:ring-2 focus:ring-lux-emerald/20 sm:py-4"
               />
             </div>
 
@@ -1193,19 +1193,19 @@ const PaymentList = () => {
               />
             </div>
 
-            <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">
+            <div className="flex items-center rounded-2xl border border-[#ece4d2] bg-lux-ivory px-4 py-3.5 sm:px-6 sm:py-4">
+              <span className="mr-4 text-xs font-black uppercase tracking-widest text-lux-muted">
                 Status:
               </span>
               <span
-                className={`text-sm font-black uppercase ${paymentStatus === "done" ? "text-emerald-600" : paymentStatus === "pending" ? "text-green-600" : "text-blue-600"}`}
+                className={`text-sm font-black uppercase ${paymentStatus === "done" ? "text-lux-emerald" : paymentStatus === "pending" ? "text-emerald-700" : "text-lux-emerald"}`}
               >
                 {paymentStatus === "all" ? "All Records" : paymentStatus}
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             <DataDropdown
               options={allCompanies.map((c) => ({
                 value: c._id,
@@ -1235,45 +1235,45 @@ const PaymentList = () => {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total Gross
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalGross.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total CD
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalCd.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total GST
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalGst.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-6 border border-rose-300 shadow-md">
-              <div className="text-sm font-bold text-rose-600 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover border-rose-200 p-5">
+              <div className="lux-eyebrow mb-2 text-rose-600">
                 Total Due
               </div>
-              <div className="text-xs font-black text-rose-700">
+              <div className="font-serif text-xl font-semibold tabular-nums text-rose-700 sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalDue.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
@@ -1282,23 +1282,23 @@ const PaymentList = () => {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total Claims
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalClaims.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total Bank Charges
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalBankCharges.toFixed(2)).toLocaleString(
                   "en-IN",
@@ -1306,22 +1306,22 @@ const PaymentList = () => {
                 )}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-5">
+              <div className="lux-eyebrow mb-2">
                 Total Credit
               </div>
-              <div className="text-xs font-black text-slate-800">
+              <div className="font-serif text-xl font-semibold tabular-nums text-lux-ink sm:text-2xl">
                 Rs.{" "}
                 {Number(totals.totalCredit.toFixed(2)).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border border-amber-300 shadow-md">
-              <div className="text-sm font-bold text-amber-600 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover border-amber-200 p-5">
+              <div className="lux-eyebrow mb-2 text-amber-600">
                 Total Lorry Balance
               </div>
-              <div className="text-xs font-black text-amber-700">
+              <div className="font-serif text-xl font-semibold tabular-nums text-amber-700 sm:text-2xl">
                 Rs.{" "}
                 {Number(
                   (totals.totalRemainingLorryBalance || 0).toFixed(2),
@@ -1331,7 +1331,7 @@ const PaymentList = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+        <div className="lux-card lux-gold-top w-full overflow-hidden p-4 sm:p-6">
           <Suspense fallback={<Loading />}>
             <Tables headers={headers} rows={rows} />
             <div className="mt-8 flex justify-center">

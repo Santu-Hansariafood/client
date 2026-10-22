@@ -98,20 +98,20 @@ const NewsArchive = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="lux-canvas min-h-screen px-4 py-10">
+      <div className="mx-auto w-full max-w-7xl space-y-8">
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#1e3a5f] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
               <FaNewspaper size={24} />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase">
+              <h1 className="font-serif text-3xl font-semibold tracking-tight text-lux-ink">
                 {viewMode === "archive"
                   ? "Hansaria News Archive"
                   : "My Bookmarks"}
               </h1>
-              <p className="text-sm text-slate-500 font-medium">
+              <p className="text-sm font-medium text-lux-muted">
                 {viewMode === "archive"
                   ? "Browse historical news and daily bulletins"
                   : "Your curated list of saved news and reports"}
@@ -119,16 +119,16 @@ const NewsArchive = () => {
             </div>
           </div>
 
-          <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex rounded-2xl border border-[#e6dcc4] bg-lux-cream p-1.5 shadow-sm">
             <button
               onClick={() => {
                 setViewMode("archive");
                 setPage(1);
               }}
-              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+              className={`rounded-xl px-6 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
                 viewMode === "archive"
-                  ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-lux-emerald text-lux-gold-soft shadow-lg shadow-lux-emerald/25"
+                  : "text-lux-muted hover:text-lux-ink"
               }`}
             >
               All News
@@ -138,10 +138,10 @@ const NewsArchive = () => {
                 setViewMode("bookmarks");
                 setPage(1);
               }}
-              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+              className={`rounded-xl px-6 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
                 viewMode === "bookmarks"
-                  ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-100"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "bg-lux-emerald text-lux-gold-soft shadow-lg shadow-lux-emerald/25"
+                  : "text-lux-muted hover:text-lux-ink"
               }`}
             >
               Saved
@@ -150,9 +150,9 @@ const NewsArchive = () => {
         </div>
 
         {viewMode === "archive" && (
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-6">
+          <div className="lux-card lux-gold-top flex flex-wrap items-center gap-6 p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <FaRegCalendarAlt className="text-slate-400" />
+              <FaRegCalendarAlt className="text-lux-muted" />
               <input
                 type="date"
                 value={filterDate}
@@ -160,15 +160,15 @@ const NewsArchive = () => {
                   setFilterDate(e.target.value);
                   setPage(1);
                 }}
-                className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10"
+                className="rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2 text-sm font-bold text-lux-ink focus:outline-none focus:ring-2 focus:ring-lux-gold/30"
               />
             </div>
 
-            <div className="h-8 w-px bg-slate-200 hidden md:block" />
+            <div className="hidden h-8 w-px bg-[#e6dcc4] md:block" />
 
             <div className="flex items-center gap-3">
-              <FaTags className="text-slate-400" />
-              <div className="flex gap-2 overflow-x-auto max-w-md scrollbar-hide">
+              <FaTags className="text-lux-muted" />
+              <div className="flex max-w-md gap-2 overflow-x-auto scrollbar-hide">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
@@ -176,10 +176,10 @@ const NewsArchive = () => {
                       setCategory(cat);
                       setPage(1);
                     }}
-                    className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border ${
+                    className={`shrink-0 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all ${
                       category === cat
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                        ? "border-lux-emerald bg-lux-emerald text-lux-gold-soft"
+                        : "border-[#e6dcc4] bg-lux-cream text-lux-muted hover:border-lux-gold/50"
                     }`}
                   >
                     {cat}
@@ -195,7 +195,7 @@ const NewsArchive = () => {
                   setCategory("All");
                   setPage(1);
                 }}
-                className="ml-auto text-rose-500 text-[10px] font-black uppercase hover:underline"
+                className="ml-auto text-[10px] font-black uppercase text-rose-500 hover:underline"
               >
                 Clear Filters
               </button>
@@ -203,7 +203,7 @@ const NewsArchive = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {loading ? (
             <Loading />
           ) : blogs.length > 0 ? (
@@ -211,31 +211,31 @@ const NewsArchive = () => {
               <div
                 key={blog._id}
                 onClick={() => navigate(`/blog/${blog._id}`)}
-                className="group bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer flex flex-col"
+                className="lux-card lux-card-hover group flex cursor-pointer flex-col overflow-hidden"
               >
-                <div className="h-52 bg-slate-100 relative overflow-hidden">
+                <div className="relative h-52 overflow-hidden bg-lux-ivory">
                   {blog.images?.[0] || blog.imageUrl ? (
                     <img
                       src={blog.images?.[0] || blog.imageUrl}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       alt=""
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <div className="flex h-full w-full items-center justify-center text-lux-muted">
                       <FaNewspaper size={48} />
                     </div>
                   )}
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm">
-                    <span className="text-[10px] font-black uppercase text-blue-600 tracking-wider">
+                  <div className="absolute left-4 top-4 rounded-full bg-lux-cream/90 px-3 py-1 shadow-sm backdrop-blur">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-lux-emerald">
                       {blog.category || "General"}
                     </span>
                   </div>
                   <button
                     onClick={(e) => handleBookmark(e, blog._id)}
-                    className={`absolute top-4 right-4 w-10 h-10 rounded-2xl flex items-center justify-center backdrop-blur transition-all ${
+                    className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-2xl backdrop-blur transition-all ${
                       bookmarks.some((b) => b._id === blog._id)
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                        : "bg-white/90 text-slate-400 hover:text-blue-600 shadow-sm"
+                        ? "bg-lux-emerald text-lux-gold-soft shadow-lg shadow-lux-emerald/25"
+                        : "bg-lux-cream/90 text-lux-muted shadow-sm hover:text-lux-emerald"
                     }`}
                   >
                     {bookmarks.some((b) => b._id === blog._id) ? (
@@ -246,51 +246,51 @@ const NewsArchive = () => {
                   </button>
                 </div>
 
-                <div className="p-8 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                      <FaRegCalendarAlt size={12} className="text-slate-300" />
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-lux-muted">
+                      <FaRegCalendarAlt size={12} className="text-lux-muted" />
                       {new Date(blog.date).toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
                       })}
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-400">
-                      <FaEye size={12} className="text-slate-300" />
+                    <div className="flex items-center gap-1.5 text-[11px] font-black text-lux-muted">
+                      <FaEye size={12} className="text-lux-muted" />
                       {blog.views || 0}
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-800 line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors">
+                  <h3 className="mb-3 font-serif text-xl font-semibold text-lux-ink line-clamp-2 transition-colors group-hover:text-lux-emerald">
                     {blog.title}
                   </h3>
 
-                  <p className="text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed mb-6">
+                  <p className="mb-6 text-sm font-medium leading-relaxed text-lux-muted line-clamp-3">
                     {blog.heading}
                   </p>
 
-                  <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                  <div className="mt-auto flex items-center justify-between border-t border-[#ece4d2] pt-6">
                     <div className="flex -space-x-2">
                       {blog.images?.slice(0, 3).map((img, i) => (
                         <div
                           key={i}
-                          className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-slate-200"
+                          className="h-6 w-6 overflow-hidden rounded-full border-2 border-lux-cream bg-lux-ivory"
                         >
                           <img
                             src={img}
-                            className="w-full h-full object-cover"
+                            className="h-full w-full object-cover"
                             alt=""
                           />
                         </div>
                       ))}
                       {blog.images?.length > 3 && (
-                        <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-black text-slate-400">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-lux-cream bg-lux-ivory text-[8px] font-black text-lux-muted">
                           +{blog.images.length - 3}
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-black uppercase text-blue-600 tracking-widest group-hover:translate-x-1 transition-transform">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-lux-emerald transition-transform group-hover:translate-x-1">
                       Read Full Story →
                     </span>
                   </div>
@@ -298,15 +298,15 @@ const NewsArchive = () => {
               </div>
             ))
           ) : (
-            <div className="col-span-full py-40 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+            <div className="col-span-full flex flex-col items-center justify-center space-y-4 py-40 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-lux-ivory text-lux-muted">
                 <FaSearch size={32} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-800">
+                <h3 className="font-serif text-xl font-semibold text-lux-ink">
                   No news items found
                 </h3>
-                <p className="text-slate-500 text-sm font-medium">
+                <p className="text-sm font-medium text-lux-muted">
                   Try adjusting your filters or search for another date
                 </p>
               </div>
@@ -315,14 +315,14 @@ const NewsArchive = () => {
         </div>
 
         {totalPages > 1 && viewMode === "archive" && (
-          <div className="flex justify-center items-center gap-4 pt-10">
+          <div className="flex items-center justify-center gap-4 pt-10">
             <button
               disabled={page === 1}
               onClick={() => setPage((prev) => prev - 1)}
-              className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all ${
                 page === 1
-                  ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                  ? "cursor-not-allowed border-[#ece4d2] bg-lux-ivory text-lux-muted"
+                  : "border-[#e6dcc4] bg-lux-cream text-lux-muted shadow-sm hover:border-lux-gold/60 hover:text-lux-emerald"
               }`}
             >
               <FaChevronLeft />
@@ -332,10 +332,10 @@ const NewsArchive = () => {
                 <button
                   key={i}
                   onClick={() => setPage(i + 1)}
-                  className={`w-12 h-12 rounded-2xl text-xs font-black transition-all ${
+                  className={`h-12 w-12 rounded-2xl text-xs font-black transition-all ${
                     page === i + 1
-                      ? "bg-[#1e3a5f] text-white shadow-lg shadow-blue-200"
-                      : "bg-white text-slate-400 border border-slate-200 hover:border-slate-300"
+                      ? "bg-lux-emerald text-lux-gold-soft shadow-lg shadow-lux-emerald/25"
+                      : "border border-[#e6dcc4] bg-lux-cream text-lux-muted hover:border-lux-gold/50"
                   }`}
                 >
                   {i + 1}
@@ -345,10 +345,10 @@ const NewsArchive = () => {
             <button
               disabled={page === totalPages}
               onClick={() => setPage((prev) => prev + 1)}
-              className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all ${
                 page === totalPages
-                  ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                  ? "cursor-not-allowed border-[#ece4d2] bg-lux-ivory text-lux-muted"
+                  : "border-[#e6dcc4] bg-lux-cream text-lux-muted shadow-sm hover:border-lux-gold/60 hover:text-lux-emerald"
               }`}
             >
               <FaChevronRight />

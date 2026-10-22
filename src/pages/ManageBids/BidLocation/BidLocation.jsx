@@ -141,25 +141,25 @@ const BidLocation = () => {
         icon={FaMapMarkerAlt}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
           {userRole === "Buyer" && (
             <div className="flex justify-start">
               <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
               >
                 <FaArrowLeft />
                 Back
               </button>
             </div>
           )}
-          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <form
               onSubmit={handleSubmit}
               className="flex flex-col sm:flex-row gap-3 sm:items-end"
             >
               <div className="flex-1">
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Location name
                 </label>
                 <DataInput
@@ -179,7 +179,7 @@ const BidLocation = () => {
             </form>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+          <div className="lux-card p-3 sm:p-4">
             <Tables headers={headers} rows={rows} />
             <Pagination
               currentPage={currentPage}

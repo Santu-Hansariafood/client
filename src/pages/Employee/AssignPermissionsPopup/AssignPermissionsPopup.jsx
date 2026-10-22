@@ -68,27 +68,27 @@ const AssignPermissionsPopup = ({ employee, isOpen, onClose, onUpdate }) => {
       maxWidth="max-w-4xl"
     >
       <div className="p-6">
-        <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40">
             <FaShieldAlt />
           </div>
           <div>
-            <p className="text-xs font-black text-blue-600 uppercase tracking-widest">Access Control</p>
-            <h3 className="text-sm font-bold text-slate-800">Select components this employee can access</h3>
+            <p className="lux-eyebrow">Access Control</p>
+            <h3 className="font-serif text-sm font-bold text-lux-ink">Select components this employee can access</h3>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
           {dashboardData.sections.map((section, idx) => (
-            <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={idx} className="overflow-hidden rounded-2xl border border-[#ece4d2] shadow-sm transition-shadow hover:shadow-md">
               <div 
-                className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between cursor-pointer group"
+                className="flex items-center justify-between gap-2 border-b border-[#ece4d2] bg-lux-ivory p-4 cursor-pointer group"
                 onClick={() => toggleSection(section)}
               >
-                <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">{section.section}</h4>
-                <div className="text-slate-400 group-hover:text-blue-600 transition-colors">
+                <h4 className="font-serif text-xs font-black uppercase tracking-widest text-lux-ink">{section.section}</h4>
+                <div className="text-lux-muted transition-colors group-hover:text-lux-emerald">
                   {section.actions.map(a => a.link).every(link => selectedPermissions.includes(link)) ? (
-                    <FaCheckSquare className="text-blue-600" />
+                    <FaCheckSquare className="text-lux-emerald" />
                   ) : (
                     <FaSquare />
                   )}
@@ -101,15 +101,15 @@ const AssignPermissionsPopup = ({ employee, isOpen, onClose, onUpdate }) => {
                     onClick={() => togglePermission(action.link)}
                     className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
                       selectedPermissions.includes(action.link)
-                        ? "bg-blue-50 text-blue-700 font-bold"
-                        : "hover:bg-slate-50 text-slate-500"
+                        ? "bg-lux-ivory font-bold text-lux-emerald"
+                        : "text-lux-muted hover:bg-lux-ivory"
                     }`}
                   >
                     <span className="text-xs">{action.name}</span>
                     {selectedPermissions.includes(action.link) ? (
-                      <FaCheckSquare className="text-blue-600" />
+                      <FaCheckSquare className="text-lux-emerald" />
                     ) : (
-                      <FaSquare className="text-slate-200" />
+                      <FaSquare className="text-[#e4dbc6]" />
                     )}
                   </div>
                 ))}
@@ -118,17 +118,17 @@ const AssignPermissionsPopup = ({ employee, isOpen, onClose, onUpdate }) => {
           ))}
         </div>
 
-        <div className="mt-8 flex gap-3 justify-end">
+        <div className="mt-8 flex flex-wrap justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
           >
             {loading ? "Saving..." : <><FaSave /> Save Permissions</>}
           </button>

@@ -6,31 +6,31 @@ const QualityClaimsSection = ({ qualityClaims }) => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-[2rem] p-6 shadow-sm">
-      <h4 className="text-base font-black text-indigo-900 mb-6 flex items-center gap-3">
-        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+    <div className="lux-card lux-gold-top p-5 sm:p-6">
+      <h4 className="mb-6 flex items-center gap-3 font-serif text-lg font-semibold text-lux-ink">
+        <span className="w-2 h-2 rounded-full bg-lux-gold" />
         Quality Parameters & Claims
       </h4>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-indigo-100/50 border border-indigo-200 rounded-t-2xl">
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left rounded-tl-2xl">
+            <tr className="rounded-t-2xl bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald">
+              <th className="rounded-tl-2xl px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Quality Parameter
               </th>
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left">
+              <th className="px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Standard Value
               </th>
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left">
+              <th className="px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Actual Value
               </th>
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left">
+              <th className="px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Difference
               </th>
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left">
+              <th className="px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Claim Amount
               </th>
-              <th className="px-4 py-3 font-bold text-indigo-800 text-left rounded-tr-2xl">
+              <th className="rounded-tr-2xl px-4 py-3 text-left font-serif text-xs font-bold uppercase tracking-wider text-lux-gold-soft">
                 Notes
               </th>
             </tr>
@@ -44,29 +44,29 @@ const QualityClaimsSection = ({ qualityClaims }) => {
               return (
                 <tr
                   key={index}
-                  className="border border-indigo-100 bg-white hover:bg-indigo-50/50 transition-colors"
+                  className="border-b border-[#ece4d2] odd:bg-lux-cream even:bg-[#f2eee2]/50 transition-colors hover:bg-lux-ivory"
                 >
-                  <td className="px-4 py-3 font-semibold text-slate-700">
+                  <td className="px-4 py-3 font-semibold text-lux-ink">
                     {claim.parameterName || "-"}
                   </td>
-                  <td className="px-4 py-3 text-slate-600 font-mono">
+                  <td className="px-4 py-3 font-mono text-lux-muted">
                     {standard.toFixed(2)}%
                   </td>
-                  <td className="px-4 py-3 text-slate-800 font-bold">
+                  <td className="px-4 py-3 font-bold text-lux-ink">
                     {actual.toFixed(2)}%
                   </td>
                   <td
-                    className={`px-4 py-3 font-mono font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}
+                    className={`px-4 py-3 font-mono font-bold ${difference >= 0 ? "text-rose-600" : "text-emerald-600"}`}
                   >
                     {difference >= 0 ? "+" : ""}
                     {difference.toFixed(2)}%
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-indigo-700">
+                    <span className="font-bold text-lux-emerald">
                       ₹ {Number(claim.claimAmount || 0).toFixed(2)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600 italic">
+                  <td className="px-4 py-3 italic text-lux-muted">
                     {claim.notes || "-"}
                   </td>
                 </tr>

@@ -124,7 +124,7 @@ const BuyerList = () => {
       return [
         <span
           key={`sl-${buyer._id || index}`}
-          className="font-black text-slate-400"
+          className="font-bold text-lux-muted"
         >
           {slNo}
         </span>,
@@ -143,10 +143,10 @@ const BuyerList = () => {
         </div>,
         <span
           key={`status-${buyer._id || index}`}
-          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+          className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
             String(buyer.status).toLowerCase() === "active"
-              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-              : "bg-green-100 text-green-700 border border-green-200"
+              ? "border border-emerald-200 bg-emerald-100 text-emerald-700"
+              : "border border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"
           }`}
         >
           {toTitleCase(buyer.status || "N/A")}
@@ -176,8 +176,8 @@ const BuyerList = () => {
         icon={FaUsers}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white border border-green-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
             <div className="mb-4">
               <SearchBox
                 placeholder="Search buyers by name..."
@@ -190,7 +190,7 @@ const BuyerList = () => {
               <Loading />
             ) : (
               <>
-                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                <div className="overflow-x-auto rounded-2xl border border-[#ece4d2]">
                   <Tables
                     headers={[
                       "Sl No",

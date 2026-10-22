@@ -115,17 +115,17 @@ const AdminAuditReports = () => {
   ];
 
   const tableRows = records.map((record) => [
-    <span key="type" className="font-medium text-slate-700">
+    <span key="type" className="font-medium text-lux-ink">
       {record.type}
     </span>,
-    <span key="name" className="font-semibold text-slate-900">
+    <span key="name" className="font-semibold text-lux-ink">
       {record.name}
     </span>,
     record.contact,
     record.email,
     <span
       key="status"
-      className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${record.status === "Active" || record.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${record.status === "Active" || record.status === "active" ? "border-lux-emerald/30 bg-lux-ivory text-lux-emerald" : "border-rose-200 bg-rose-50 text-rose-600"}`}
     >
       {record.status}
     </span>,
@@ -135,12 +135,12 @@ const AdminAuditReports = () => {
     <span key="ip" className="font-mono text-xs">
       {record.lastLoginIp}
     </span>,
-    <span key="device" className="text-xs font-medium text-slate-700">
+    <span key="device" className="text-xs font-medium text-lux-ink">
       {record.lastLoginDevice}
     </span>,
     <span
       key="online"
-      className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${record.isLoggedIn ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${record.isLoggedIn ? "border-lux-emerald/30 bg-lux-ivory text-lux-emerald" : "border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"}`}
     >
       {record.isLoggedIn ? "Online" : "Offline"}
     </span>,
@@ -149,7 +149,7 @@ const AdminAuditReports = () => {
       type="button"
       onClick={() => setSelectedRecord(record)}
       title={`View ${record.type.toLowerCase()} usage`}
-      className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100"
+      className="inline-flex items-center gap-2 rounded-xl border border-[#ece4d2] bg-lux-ivory px-3 py-2 text-xs font-bold text-lux-emerald transition-colors hover:bg-lux-cream"
     >
       <FaEye size={12} />
       View
@@ -161,63 +161,71 @@ const AdminAuditReports = () => {
       title="Buyer & Seller Audit Report"
       subtitle="Track account usage, login activity, and current online status for buyer and seller accounts."
     >
-      <div className="space-y-6 p-4 md:p-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="flex items-center justify-between text-emerald-700">
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="lux-card lux-gold-top p-4">
+            <div className="flex items-center justify-between text-lux-emerald">
               <FaUsers className="text-xl" />
-              <span className="text-xs font-bold uppercase">Buyers</span>
+              <span className="font-serif text-xs font-bold uppercase tracking-widest">
+                Buyers
+              </span>
             </div>
-            <div className="mt-3 text-2xl font-black text-slate-900">
+            <div className="mt-3 font-serif text-2xl font-black text-lux-ink">
               {summary.buyers.totalUsers}
             </div>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-lux-muted">
               Online now: {summary.buyers.onlineNow}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center justify-between text-blue-700">
+          <div className="lux-card lux-gold-top p-4">
+            <div className="flex items-center justify-between text-lux-emerald">
               <FaUsers className="text-xl" />
-              <span className="text-xs font-bold uppercase">Sellers</span>
+              <span className="font-serif text-xs font-bold uppercase tracking-widest">
+                Sellers
+              </span>
             </div>
-            <div className="mt-3 text-2xl font-black text-slate-900">
+            <div className="mt-3 font-serif text-2xl font-black text-lux-ink">
               {summary.sellers.totalUsers}
             </div>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-lux-muted">
               Online now: {summary.sellers.onlineNow}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
-            <div className="flex items-center justify-between text-violet-700">
+          <div className="lux-card lux-gold-top p-4">
+            <div className="flex items-center justify-between text-lux-emerald">
               <FaUserCheck className="text-xl" />
-              <span className="text-xs font-bold uppercase">Admins</span>
+              <span className="font-serif text-xs font-bold uppercase tracking-widest">
+                Admins
+              </span>
             </div>
-            <div className="mt-3 text-2xl font-black text-slate-900">
+            <div className="mt-3 font-serif text-2xl font-black text-lux-ink">
               {summary.admins.totalAdmins || 0}
             </div>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-lux-muted">
               Online now: {summary.admins.onlineNow || 0}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-center justify-between text-amber-700">
+          <div className="lux-card lux-gold-top p-4">
+            <div className="flex items-center justify-between text-lux-emerald">
               <FaHistory className="text-xl" />
-              <span className="text-xs font-bold uppercase">Logins</span>
+              <span className="font-serif text-xs font-bold uppercase tracking-widest">
+                Logins
+              </span>
             </div>
-            <div className="mt-3 text-2xl font-black text-slate-900">
+            <div className="mt-3 font-serif text-2xl font-black text-lux-ink">
               {(summary.buyers.totalLogins || 0) +
                 (summary.sellers.totalLogins || 0)}
             </div>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-lux-muted">
               Combined buyer & seller usage
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="lux-card lux-gold-top p-4 sm:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <SearchBox
               placeholder="Search buyer or seller"
@@ -229,7 +237,7 @@ const AdminAuditReports = () => {
             />
 
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-slate-600">
+              <label className="font-serif text-sm font-medium text-lux-ink">
                 Status
               </label>
               <select
@@ -238,7 +246,7 @@ const AdminAuditReports = () => {
                   setPage(1);
                   setStatus(e.target.value);
                 }}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                className="rounded-xl border border-[#ece4d2] bg-lux-cream px-3 py-2.5 text-sm outline-none focus:border-lux-emerald"
               >
                 <option value="all">All</option>
                 <option value="Active">Active</option>
@@ -266,16 +274,16 @@ const AdminAuditReports = () => {
         )}
 
         {selectedRecord && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm">
+          <div className="lux-card lux-gold-top p-4 sm:p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+                <p className="font-serif text-xs font-bold uppercase tracking-widest text-lux-emerald">
                   Account usage details
                 </p>
-                <h2 className="mt-1 text-xl font-black text-slate-900">
+                <h2 className="mt-1 font-serif text-xl font-black text-lux-ink">
                   {selectedRecord.name}
                 </h2>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-lux-muted">
                   {selectedRecord.type} account
                 </p>
               </div>
@@ -283,7 +291,7 @@ const AdminAuditReports = () => {
                 type="button"
                 onClick={() => setSelectedRecord(null)}
                 title="Close details"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-800"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-lux-muted hover:bg-lux-ivory hover:text-lux-ink"
               >
                 <FaTimes />
               </button>
@@ -299,11 +307,11 @@ const AdminAuditReports = () => {
                 ["Login IP", selectedRecord.lastLoginIp],
                 ["Account status", selectedRecord.status],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-white bg-white p-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                <div key={label} className="rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+                  <p className="font-serif text-[11px] font-bold uppercase tracking-widest text-lux-muted">
                     {label}
                   </p>
-                  <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+                  <p className="mt-1 break-words text-sm font-semibold text-lux-ink">
                     {value}
                   </p>
                 </div>

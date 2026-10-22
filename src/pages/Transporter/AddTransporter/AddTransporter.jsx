@@ -105,10 +105,10 @@ const AddTransporter = () => {
     <AdminPageShell title="Register Transporter" icon={FaTruckMoving}>
       <form
         onSubmit={handleSubmit}
-        className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-slate-100"
+        className="space-y-8 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-6 lg:p-8"
       >
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+          <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
             Basic Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,7 +156,7 @@ const AddTransporter = () => {
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+          <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
             Vehicle Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -188,7 +188,7 @@ const AddTransporter = () => {
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+          <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
             Driver Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -217,7 +217,7 @@ const AddTransporter = () => {
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+          <h3 className="mb-4 border-b border-[#ece4d2] pb-2 font-serif text-lg font-semibold text-lux-ink">
             Bank Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

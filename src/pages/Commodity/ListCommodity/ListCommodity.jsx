@@ -135,8 +135,8 @@ const ListCommodity = () => {
         icon={FaCubes}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white border border-green-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <div className="w-full md:w-1/2">
                 <SearchBox
@@ -154,7 +154,7 @@ const ListCommodity = () => {
               </div>
             ) : commodities.length > 0 ? (
               <>
-                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                <div className="overflow-x-auto rounded-2xl border border-[#ece4d2]">
                   <Tables headers={tableHeaders} rows={tableRows} />
                 </div>
                 <div className="mt-6 flex justify-center">
@@ -167,7 +167,7 @@ const ListCommodity = () => {
                 </div>
               </>
             ) : (
-              <div className="py-10 text-center text-gray-500 font-medium">
+              <div className="py-10 text-center text-lux-muted font-medium">
                 No commodities found.
               </div>
             )}

@@ -81,13 +81,13 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-slate-800">Edit Employee</h2>
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-[#062e25]/70 backdrop-blur-sm animate-modal-backdrop p-0 sm:p-4">
+      <div className="relative flex w-full max-w-2xl max-h-[94vh] flex-col overflow-y-auto rounded-t-[2rem] border border-[#e9e2d3] bg-lux-cream shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] animate-modal-mobile sm:rounded-[2rem] md:animate-modal-desktop">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#ece4d2] bg-lux-cream/95 px-4 py-4 backdrop-blur-xl sm:px-6">
+          <h2 className="font-serif text-base font-bold uppercase tracking-tight text-lux-ink sm:text-lg md:text-xl">Edit Employee</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl text-lux-muted transition-all duration-300 hover:bg-[#f2eee2] hover:text-lux-ink"
           >
             ×
           </button>
@@ -95,12 +95,12 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
 
         {loading || !formData ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium">Loading details...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lux-emerald mx-auto mb-4"></div>
+            <p className="text-lux-muted font-medium">Loading details...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="p-4 space-y-6 sm:p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <DataInput
                 label="Full Name"
                 name="name"
@@ -153,7 +153,7 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
               currentUrl={formData.profileImage}
             />
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
+            <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-[#ece4d2]">
               <Buttons
                 type="button"
                 label="Cancel"

@@ -179,7 +179,7 @@ const BuyerBidsList = () => {
       <button
         key={bid._id}
         type="button"
-        className="font-medium text-emerald-700 hover:text-emerald-800 underline decoration-emerald-300"
+        className="font-medium text-lux-emerald underline decoration-lux-gold/40 hover:text-lux-deep"
         onClick={() => setSelectedBidId(bid._id)}
       >
         View bid
@@ -198,11 +198,11 @@ const BuyerBidsList = () => {
         icon={FaGavel}
         noContentCard
       >
-        <div className="max-w-full space-y-6">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
           <div className="flex justify-start">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
               <FaArrowLeft />
               Back
@@ -218,7 +218,7 @@ const BuyerBidsList = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="rounded-xl border border-emerald-100 bg-white px-4 py-2.5 text-slate-800 shadow-md shadow-emerald-900/5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none min-w-[140px]"
+              className="min-w-[140px] rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 text-lux-ink shadow-sm outline-none focus:ring-2 focus:ring-lux-gold/50"
             >
               <option value="all">All types</option>
               <option value="buyer">Buyers</option>
@@ -236,7 +236,7 @@ const BuyerBidsList = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-emerald-100 bg-white p-4 sm:p-6 shadow-lg shadow-emerald-900/5 overflow-hidden">
+          <div className="lux-card overflow-hidden p-4 sm:p-6">
             <Tables headers={headers} rows={rows} />
           </div>
 

@@ -62,24 +62,24 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {filteredDocs.map((doc) => (
-        <div key={doc.key} className="space-y-4 group">
-          <div className="flex items-center justify-between">
+        <div key={doc.key} className="group space-y-4">
+          <div className="flex items-center justify-between gap-2">
             <h4
-              className={`text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3`}
+              className={`flex items-center gap-3 font-serif text-sm font-semibold text-lux-ink`}
             >
               <span
                 className={`w-2 h-2 rounded-full bg-${doc.color}-500 animate-pulse`}
               />
               {doc.label}
             </h4>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {isPdfUrl(doc.url) && (
                 <button
                   type="button"
                   onClick={(e) => handlePrint(doc.url, e)}
-                  className="text-[9px] font-black text-sky-600 uppercase tracking-widest px-2 py-0.5 rounded bg-sky-50 hover:text-sky-700 hover:bg-sky-100 transition inline-flex items-center gap-1"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#e6dcc4] bg-lux-cream px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-lux-emerald transition hover:-translate-y-0.5 hover:bg-white"
                   title="Print PDF"
                 >
                   <FaPrint size={10} /> Print
@@ -89,14 +89,14 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
                 href={doc.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                className="inline-flex items-center rounded-full border border-[#e6dcc4] bg-[#f2eee2] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-lux-muted transition hover:-translate-y-0.5 hover:text-lux-emerald"
               >
                 Open
               </a>
             </div>
           </div>
 
-          <div className="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[300px]">
+          <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl border border-[#ece4d2] bg-lux-ivory transition-all duration-500 group-hover:shadow-xl sm:min-h-[300px]">
             {isPdfUrl(doc.url) ? (
               <a
                 href={doc.url}
@@ -104,14 +104,14 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
                 rel="noopener noreferrer"
                 className="group/btn flex flex-col items-center gap-4 p-10 text-center"
               >
-                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 shadow-lg transition-transform group-hover/btn:scale-110">
                   <FaFileAlt size={32} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">
+                  <p className="mb-1 font-serif text-sm font-bold uppercase tracking-tight text-lux-ink">
                     View PDF Document
                   </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-lux-muted">
                     Opens in new tab
                   </p>
                 </div>
@@ -138,14 +138,14 @@ const DocumentsDisplay = ({ documents, documentUrl }) => {
                 rel="noopener noreferrer"
                 className="group/btn flex flex-col items-center gap-4 p-10 text-center"
               >
-                <div className="w-16 h-16 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center shadow-lg group-hover/btn:scale-110 transition-transform">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2eee2] text-lux-muted shadow-lg transition-transform group-hover/btn:scale-110">
                   <FaFileAlt size={32} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">
+                  <p className="mb-1 font-serif text-sm font-bold uppercase tracking-tight text-lux-ink">
                     Open Document
                   </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-lux-muted">
                     Click to open in new tab
                   </p>
                 </div>

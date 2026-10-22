@@ -55,11 +55,11 @@ const AddQualityParameter = () => {
         icon={FaSlidersH}
         noContentCard
       >
-        <div className="max-w-3xl mx-auto">
-          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">
+        <div className="mx-auto w-full max-w-3xl">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
             <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5">
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                <label className="block mb-2 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">
                   Parameter name
                 </label>
                 <DataInput
@@ -70,7 +70,7 @@ const AddQualityParameter = () => {
                   required
                 />
               </div>
-              <div className="flex justify-end">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <Buttons
                   label="Submit"
                   type="submit"

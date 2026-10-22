@@ -101,20 +101,20 @@ const ListTransporter = () => {
     t.driverDetails?.licenseNumber || "N/A",
     <span
       key={t._id}
-      className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+      className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${t.status === "Active" ? "border border-emerald-200 bg-emerald-100 text-emerald-700" : "border border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"}`}
     >
       {t.status}
     </span>,
     <div key={`actions-${t._id}`} className="flex gap-2">
       <button
         onClick={() => handleEdit(t)}
-        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+        className="rounded-lg p-2 text-lux-emerald transition-colors hover:bg-lux-emerald/10"
       >
         <FaEdit />
       </button>
       <button
         onClick={() => handleDelete(t._id)}
-        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        className="rounded-lg p-2 text-rose-600 transition-colors hover:bg-rose-50"
       >
         <FaTrash />
       </button>
@@ -123,7 +123,7 @@ const ListTransporter = () => {
 
   return (
     <AdminPageShell title="Transporter List" icon={FaTruckMoving}>
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+      <div className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-6">
         <div className="mb-6">
           <SearchBox
             items={transporters.map((t) => t.name)}

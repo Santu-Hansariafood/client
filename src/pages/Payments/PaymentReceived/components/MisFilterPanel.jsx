@@ -24,16 +24,16 @@ const MisFilterPanel = ({
   ledgerTypeDisabled,
 }) => {
   return (
-    <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden">
+    <div className="lux-card lux-gold-top overflow-hidden">
       <div className="px-4 sm:px-6 lg:px-7 pt-5 sm:pt-6 space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
           <div className="lg:col-span-7 space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
-              <FaSearch size={9} className="text-slate-400" />
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
+              <FaSearch size={9} className="text-lux-muted" />
               Search
             </label>
             <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 group-focus-within:bg-emerald-50 group-focus-within:border-emerald-200 group-focus-within:text-emerald-600 transition-all">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-xl bg-lux-ivory border border-[#ece4d2] text-lux-muted group-focus-within:bg-emerald-50 group-focus-within:border-emerald-200 group-focus-within:text-emerald-600 transition-all">
                 <FaSearch size={12} />
               </div>
               <input
@@ -41,13 +41,13 @@ const MisFilterPanel = ({
                 value={filters.search || ""}
                 onChange={(e) => onFilterChange("search", e.target.value)}
                 placeholder="Lorry number, voucher, company, sauda…"
-                className="w-full h-12 pl-14 pr-4 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-semibold focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500/60 focus:bg-white outline-none transition-all duration-200"
+                className="w-full h-12 pl-14 pr-4 rounded-2xl border border-[#e4dbc6] bg-lux-cream text-sm font-bold text-lux-ink placeholder:text-lux-muted placeholder:font-semibold focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold/60 focus:bg-white outline-none transition-all duration-200"
               />
             </div>
           </div>
 
           <div className="lg:col-span-5 space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Entry type
             </label>
@@ -57,7 +57,7 @@ const MisFilterPanel = ({
               className={`w-full h-12 px-4 rounded-2xl border-2 text-sm font-black transition-all duration-200 flex items-center justify-between ${
                 filters.onlyCredit
                   ? "bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border-emerald-500 text-emerald-900 shadow-lg shadow-emerald-500/15"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  : "bg-lux-cream border-[#e4dbc6] text-lux-ink hover:border-lux-gold-soft hover:bg-lux-ivory"
               }`}
             >
               <span className="flex items-center gap-2.5">
@@ -65,7 +65,7 @@ const MisFilterPanel = ({
                   className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-[11px] font-black tracking-wider shadow-sm transition-all ${
                     filters.onlyCredit
                       ? "bg-gradient-to-br from-emerald-500 to-[#047857] text-white shadow-emerald-500/25"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-lux-ivory text-lux-muted"
                   }`}
                 >
                   Cr
@@ -76,7 +76,7 @@ const MisFilterPanel = ({
               </span>
               <span
                 className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                  filters.onlyCredit ? "bg-emerald-500" : "bg-slate-300"
+                  filters.onlyCredit ? "bg-emerald-500" : "bg-[#d9d0b8]"
                 }`}
               >
                 <span
@@ -90,27 +90,27 @@ const MisFilterPanel = ({
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-7 py-4 sm:py-5 mt-1 border-y border-slate-100 bg-gradient-to-br from-slate-50/70 via-white to-blue-50/30 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+      <div className="px-4 sm:px-6 lg:px-7 py-4 sm:py-5 mt-1 border-y border-[#ece4d2] bg-gradient-to-br from-lux-ivory via-lux-cream to-lux-ivory flex flex-col xl:flex-row xl:items-center justify-between gap-5">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] to-blue-600 rounded-2xl blur-sm opacity-25" />
-            <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8f] flex items-center justify-center text-white shadow-lg shadow-[#1e3a5f]/20 border border-white/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-lux-emerald to-lux-deep rounded-2xl blur-sm opacity-25" />
+            <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep flex items-center justify-center text-lux-gold-soft shadow-lg shadow-lux-emerald/20 border border-white/10">
               <FaFilter size={15} />
             </div>
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+            <h3 className="font-serif text-base sm:text-lg font-semibold text-lux-ink tracking-tight leading-tight">
               Company &amp; Period Filters
             </h3>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.18em]">
+                <span className="lux-eyebrow">
                   Tally MIS
                 </span>
               </span>
-              <span className="text-slate-300 hidden sm:inline">•</span>
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.18em]">
+              <span className="text-lux-muted/50 hidden sm:inline">•</span>
+              <span className="lux-eyebrow">
                 Company-to-Company
               </span>
             </div>
@@ -121,18 +121,18 @@ const MisFilterPanel = ({
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] hover:bg-slate-50 hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)] active:scale-[0.98] transition-all duration-200"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl border border-[#e4dbc6] bg-lux-cream text-lux-ink text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] hover:bg-lux-ivory hover:border-lux-gold-soft hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)] active:scale-[0.98] transition-all duration-200"
           >
             <FaUndo size={11} /> Reset
           </button>
 
-          <div className="h-6 w-px bg-slate-200 hidden md:block" />
+          <div className="h-6 w-px bg-[#ece4d2] hidden md:block" />
 
           <button
             type="button"
             onClick={onPrint}
             disabled={printDisabled}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8f] hover:from-[#152a45] hover:to-[#254a78] text-white text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] shadow-md shadow-[#1e3a5f]/15 hover:shadow-lg hover:shadow-[#1e3a5f]/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep hover:from-lux-deep hover:to-lux-night text-lux-gold-soft text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] shadow-md shadow-lux-emerald/15 hover:shadow-lg hover:shadow-lux-emerald/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             {printing ? (
               <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -159,7 +159,7 @@ const MisFilterPanel = ({
           <button
             type="button"
             onClick={onRecordPayment}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-br from-[#065f46] via-[#047857] to-[#059669] hover:from-[#044735] hover:via-[#065f46] hover:to-[#047857] text-white text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] shadow-md shadow-emerald-700/15 hover:shadow-lg hover:shadow-emerald-700/25 active:scale-[0.98] transition-all duration-200"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-br from-lux-emerald via-lux-deep to-lux-emerald hover:from-lux-deep hover:via-lux-night hover:to-lux-deep text-lux-gold-soft text-[11px] sm:text-xs font-black uppercase tracking-[0.08em] shadow-md shadow-lux-emerald/15 hover:shadow-lg hover:shadow-lux-emerald/25 active:scale-[0.98] transition-all duration-200"
           >
             <FaPlus size={12} /> Record
           </button>
@@ -167,24 +167,24 @@ const MisFilterPanel = ({
       </div>
 
       <div className="p-4 sm:p-6 lg:p-7 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-lux-muted" />
               Ledger type
             </label>
             <div className="relative">
               <select
                 value={filters.ledgerType}
                 onChange={(e) => onFilterChange("ledgerType", e.target.value)}
-                className="w-full h-12 px-3.5 pr-10 appearance-none rounded-2xl border border-slate-200 bg-white text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500/15 focus:border-emerald-500/60 outline-none transition-all duration-200 cursor-pointer"
+                className="w-full h-12 px-3.5 pr-10 appearance-none rounded-2xl border border-[#e4dbc6] bg-lux-cream text-sm font-black text-lux-ink focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold/60 outline-none transition-all duration-200 cursor-pointer"
               >
                 <option value="">All (consolidated)</option>
                 <option value="Buyer">Buyer receipts</option>
                 <option value="Seller">Seller payments</option>
               </select>
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-4 h-4 text-lux-muted" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.38a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -192,7 +192,7 @@ const MisFilterPanel = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               Buyer company
               {filters.ledgerType && (
@@ -217,7 +217,7 @@ const MisFilterPanel = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
               Seller company
             </label>
@@ -235,7 +235,7 @@ const MisFilterPanel = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Sauda no.
             </label>
@@ -261,7 +261,7 @@ const MisFilterPanel = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 pt-1">
           <div className="lg:col-span-7 space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 ml-0.5 inline-flex items-center gap-1.5">
+            <label className="lux-eyebrow ml-0.5 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
               Period range
             </label>
@@ -279,12 +279,12 @@ const MisFilterPanel = ({
           </div>
           <div className="lg:col-span-5 flex items-end">
             <div className="flex flex-wrap items-center gap-2 w-full lg:justify-end">
-              <div className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/70 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-slate-600">
+              <div className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-lux-ivory border border-[#ece4d2] text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-lux-muted">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" />
                 <span>
                   Filters active
                 </span>
-                <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-[10px] font-black tabular-nums shadow-sm">
+                <span className="px-2 py-0.5 rounded-lg bg-lux-cream border border-[#ece4d2] text-lux-ink text-[10px] font-black tabular-nums shadow-sm">
                   {[
                     filters.ledgerType,
                     selectedCompany,

@@ -2,79 +2,79 @@ import PropTypes from "prop-types";
 
 const OrderDetails = ({ item }) => {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+      <div className="space-y-2 text-lux-ink">
         <p>
-          <strong>Buyer:</strong> {item.buyer}
+          <strong className="font-serif font-semibold text-lux-ink">Buyer:</strong> {item.buyer}
         </p>
         <p>
-          <strong>Buyer Company:</strong> {item.buyerCompany}
+          <strong className="font-serif font-semibold text-lux-ink">Buyer Company:</strong> {item.buyerCompany}
         </p>
         <p>
-          <strong>Consignee:</strong> {item.consignee}
+          <strong className="font-serif font-semibold text-lux-ink">Consignee:</strong> {item.consignee}
         </p>
         <p>
-          <strong>Commodity:</strong> {item.commodity}
+          <strong className="font-serif font-semibold text-lux-ink">Commodity:</strong> {item.commodity}
         </p>
         {Array.isArray(item.parameters) && item.parameters.length > 0 && (
-          <div className="mt-2 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <p className="text-xs font-black uppercase text-slate-400 mb-2">Quality Parameters</p>
+          <div className="mt-2 space-y-1 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
+            <p className="lux-eyebrow mb-2">Quality Parameters</p>
             {item.parameters.map((p, idx) => (
               <p key={idx} className="text-sm">
-                <span className="font-bold text-slate-700">{p.parameter || p.id || "Parameter"}:</span>{" "}
-                <span className="text-emerald-600 font-black">{p.value}%</span>
+                <span className="font-bold text-lux-ink">{p.parameter || p.id || "Parameter"}:</span>{" "}
+                <span className="font-black text-lux-emerald">{p.value}%</span>
               </p>
             ))}
           </div>
         )}
         <p>
-          <strong>Quantity:</strong> {item.quantity} Tons
+          <strong className="font-serif font-semibold text-lux-ink">Quantity:</strong> {item.quantity} Tons
         </p>
         <p>
-          <strong>Pending Quantity:</strong> {item.pendingQuantity} Tons
+          <strong className="font-serif font-semibold text-lux-ink">Pending Quantity:</strong> {item.pendingQuantity} Tons
         </p>
         <p>
-          <strong>Rate:</strong> ₹{item.rate}
+          <strong className="font-serif font-semibold text-lux-ink">Rate:</strong> ₹{item.rate}
         </p>
         <p>
-          <strong>State:</strong> {item.state}
+          <strong className="font-serif font-semibold text-lux-ink">State:</strong> {item.state}
         </p>
         <p>
-          <strong>Location:</strong> {item.location}
+          <strong className="font-serif font-semibold text-lux-ink">Location:</strong> {item.location}
         </p>
       </div>
-      <div>
+      <div className="space-y-2 text-lux-ink">
         <p>
-          <strong>Broker:</strong> Hansaria Food Private Limited
+          <strong className="font-serif font-semibold text-lux-ink">Broker:</strong> Hansaria Food Private Limited
         </p>
         <p>
-          <strong>Agent Name:</strong> {item.agentName}
+          <strong className="font-serif font-semibold text-lux-ink">Agent Name:</strong> {item.agentName}
         </p>
         <p>
-          <strong>PO Date:</strong> {new Date(item.poDate).toLocaleDateString()}
+          <strong className="font-serif font-semibold text-lux-ink">PO Date:</strong> {new Date(item.poDate).toLocaleDateString()}
         </p>
         <p>
-          <strong>Delivery Date:</strong>{" "}
+          <strong className="font-serif font-semibold text-lux-ink">Delivery Date:</strong>{" "}
           {new Date(item.deliveryDate).toLocaleDateString()}
         </p>
         <p>
-          <strong>Loading Date:</strong>{" "}
+          <strong className="font-serif font-semibold text-lux-ink">Loading Date:</strong>{" "}
           {new Date(item.loadingDate).toLocaleDateString()}
         </p>
         <p>
-          <strong>GST:</strong> {item.gst} %
+          <strong className="font-serif font-semibold text-lux-ink">GST:</strong> {item.gst} %
         </p>
         <p>
-          <strong>CD:</strong> {item.cd} %
+          <strong className="font-serif font-semibold text-lux-ink">CD:</strong> {item.cd} %
         </p>
         <p>
-          <strong>Weight:</strong> {item.weight} Tons
+          <strong className="font-serif font-semibold text-lux-ink">Weight:</strong> {item.weight} Tons
         </p>
         <p>
-          <strong>Payment Terms:</strong> {item.paymentTerms} Days
+          <strong className="font-serif font-semibold text-lux-ink">Payment Terms:</strong> {item.paymentTerms} Days
         </p>
         <p>
-          <strong>Notes:</strong> {item.notes.join(", ") || "None"}
+          <strong className="font-serif font-semibold text-lux-ink">Notes:</strong> {item.notes.join(", ") || "None"}
         </p>
       </div>
     </div>

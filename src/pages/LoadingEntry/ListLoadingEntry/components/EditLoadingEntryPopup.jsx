@@ -161,9 +161,9 @@ const EditLoadingEntryPopup = ({
       label: "Gross Amount",
       detail: `${weight.toFixed(3)} T x Rs${rate.toFixed(2)}/Ton`,
       amount: grossAmount,
-      color: "text-slate-700",
-      bg: "bg-slate-50",
-      border: "border-slate-200",
+      color: "text-lux-ink",
+      bg: "bg-lux-ivory",
+      border: "border-[#ece4d2]",
       sign: "+",
       signColor: "text-emerald-600",
     });
@@ -305,7 +305,7 @@ const EditLoadingEntryPopup = ({
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Loading Date *
           </label>
           <input
@@ -313,12 +313,12 @@ const EditLoadingEntryPopup = ({
             name="loadingDate"
             value={editEntry.loadingDate || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Loading Date"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Delivery Date
           </label>
           <input
@@ -326,12 +326,12 @@ const EditLoadingEntryPopup = ({
             name="deliveryDate"
             value={editEntry.deliveryDate || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Delivery Date"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Sauda No *
           </label>
           <input
@@ -339,25 +339,25 @@ const EditLoadingEntryPopup = ({
             name="saudaNo"
             value={editEntry.saudaNo || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Sauda Number"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Payment Terms
           </label>
           <input
             type="text"
             value={paymentTermsMap[editEntry.saudaNo] || "N/A"}
             disabled
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-ivory px-3 py-2 text-sm text-lux-muted cursor-not-allowed"
             aria-label="Payment Terms (read-only)"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Bill No
           </label>
           <input
@@ -365,12 +365,12 @@ const EditLoadingEntryPopup = ({
             name="billNumber"
             value={editEntry.billNumber || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Bill Number"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Seller Bill No
           </label>
           <input
@@ -378,12 +378,12 @@ const EditLoadingEntryPopup = ({
             name="sellerBillNo"
             value={editEntry.sellerBillNo || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Seller Bill Number"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Date of Issue
           </label>
           <input
@@ -391,12 +391,12 @@ const EditLoadingEntryPopup = ({
             name="dateOfIssue"
             value={editEntry.dateOfIssue || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Date of Issue"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Lorry Number *
           </label>
           <input
@@ -404,13 +404,13 @@ const EditLoadingEntryPopup = ({
             name="lorryNumber"
             value={editEntry.lorryNumber || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Lorry Number"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Transporter
           </label>
           <DataDropdown
@@ -436,7 +436,7 @@ const EditLoadingEntryPopup = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Driver Name
           </label>
           <input
@@ -444,12 +444,12 @@ const EditLoadingEntryPopup = ({
             name="driverName"
             value={editEntry.driverName || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Driver Name"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Driver Phone
           </label>
           <input
@@ -457,13 +457,13 @@ const EditLoadingEntryPopup = ({
             name="driverPhoneNumber"
             value={editEntry.driverPhoneNumber || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Driver Phone"
             pattern="[0-9]{10}"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Commodity
           </label>
           <input
@@ -471,12 +471,12 @@ const EditLoadingEntryPopup = ({
             name="commodity"
             value={editEntry.commodity || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Commodity"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Loading From
           </label>
           <DataDropdown
@@ -499,7 +499,7 @@ const EditLoadingEntryPopup = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Loading Weight (Tons)
           </label>
           <input
@@ -511,13 +511,13 @@ const EditLoadingEntryPopup = ({
                 : ""
             }
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Loading Weight"
             step="0.001"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Bags
           </label>
           <input
@@ -525,12 +525,12 @@ const EditLoadingEntryPopup = ({
             name="bags"
             value={editEntry.bags || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Bags"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Unloading Weight (Tons)
           </label>
           <input
@@ -554,8 +554,8 @@ const EditLoadingEntryPopup = ({
               editEntry.unloadingWeight &&
               parseFloat(editEntry.unloadingWeight) >
                 parseFloat(editEntry.loadingWeight)
-                ? "border-red-400 bg-red-50 focus:ring-red-500"
-                : "border-slate-300 focus:ring-emerald-500"
+                ? "border-rose-400 bg-rose-50 focus:ring-rose-500"
+                : "border-[#e4dbc6] bg-lux-cream focus:ring-lux-gold/20"
             }`}
             aria-label="Unloading Weight"
             placeholder="e.g. 14.202 or 102.230"
@@ -564,14 +564,14 @@ const EditLoadingEntryPopup = ({
             editEntry.unloadingWeight &&
             parseFloat(editEntry.unloadingWeight) >
               parseFloat(editEntry.loadingWeight) && (
-              <p className="mt-1 text-xs text-red-600 font-semibold">
+              <p className="mt-1 text-xs text-rose-600 font-semibold">
                 ! Unloading Weight cannot exceed Loading Weight (
                 {Number(editEntry.loadingWeight).toFixed(3)} Tons)
               </p>
             )}
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Unloading Date
           </label>
           <input
@@ -579,12 +579,12 @@ const EditLoadingEntryPopup = ({
             name="unloadingDate"
             value={editEntry.unloadingDate || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Unloading Date"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Freight Rate
           </label>
           <input
@@ -592,14 +592,14 @@ const EditLoadingEntryPopup = ({
             name="freightRate"
             value={editEntry.freightRate || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Freight Rate"
             step="0.01"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Total Freight
           </label>
           <input
@@ -607,13 +607,13 @@ const EditLoadingEntryPopup = ({
             name="totalFreight"
             value={editEntry.totalFreight || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Total Freight"
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Advance
           </label>
           <input
@@ -621,13 +621,13 @@ const EditLoadingEntryPopup = ({
             name="advance"
             value={editEntry.advance || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Advance"
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Balance
           </label>
           <input
@@ -635,13 +635,13 @@ const EditLoadingEntryPopup = ({
             name="balance"
             value={editEntry.balance || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Balance"
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Buyer Brokerage
           </label>
           <input
@@ -649,13 +649,13 @@ const EditLoadingEntryPopup = ({
             name="buyerBrokerage"
             value={editEntry.buyerBrokerage || ""}
             onChange={handleEditFieldChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Buyer Brokerage"
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Seller Brokerage
           </label>
           <input
@@ -663,13 +663,13 @@ const EditLoadingEntryPopup = ({
             name="sellerBrokerage"
             value={editEntry.sellerBrokerage || ""}
             readOnly
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
+            className="w-full rounded-lg border border-[#e4dbc6] bg-lux-ivory px-3 py-2 text-sm text-lux-muted cursor-not-allowed"
             aria-label="Seller Brokerage"
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
+          <label className="block mb-1 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Due Date
           </label>
           <DateSelector
@@ -698,17 +698,17 @@ const EditLoadingEntryPopup = ({
                 showAllQualityParameters: e.target.checked,
               }));
             }}
-            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+            className="w-5 h-5 text-lux-emerald rounded focus:ring-lux-emerald cursor-pointer"
           />
           <label
             htmlFor="showAllQualityParameters"
-            className="text-sm font-semibold text-slate-700 cursor-pointer"
+            className="text-xs font-bold uppercase tracking-widest text-lux-muted font-serif cursor-pointer"
           >
             Show All Quality Parameters
           </label>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
             Manual Calculation Rate
           </label>
           <input
@@ -716,7 +716,7 @@ const EditLoadingEntryPopup = ({
             name="manualCalculationRate"
             value={editEntry.manualCalculationRate || ""}
             onChange={handleManualRateChange}
-            className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-32 rounded-lg border border-[#e4dbc6] bg-lux-cream px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
             aria-label="Manual Calculation Rate"
             step="0.01"
           />
@@ -731,35 +731,35 @@ const EditLoadingEntryPopup = ({
 
       {editEntry.qualityClaims && editEntry.qualityClaims.length > 0 && (
         <>
-          <div className="mt-4 flex items-center justify-between bg-indigo-50 px-4 py-3 rounded-lg border border-indigo-100">
-            <span className="text-sm font-bold text-indigo-800">
+          <div className="mt-4 flex items-center justify-between bg-lux-ivory px-4 py-3 rounded-lg border border-lux-gold/20">
+            <span className="font-serif text-sm font-bold text-lux-ink">
               Total Claim:
             </span>
-            <span className="text-lg font-black text-indigo-600">
+            <span className="text-lg font-black text-lux-emerald">
               Rs {totalClaimAmount}
             </span>
           </div>
 
-          <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-5 shadow-sm">
-            <h4 className="text-base font-bold text-emerald-900 mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <div className="mt-6 bg-lux-ivory border border-lux-gold/20 rounded-xl p-5 shadow-sm">
+            <h4 className="font-serif text-base font-semibold text-lux-ink mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
               Bill & Payable Calculation - Purpose-wise Breakdown
             </h4>
 
             <div className="space-y-4">
               {editEntry.manualCalculationRate && (
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
-                  <span className="font-semibold text-slate-700 text-sm">
+                <div className="flex justify-between items-center p-3 bg-lux-cream rounded-lg shadow-xs border border-lux-gold/20">
+                  <span className="font-semibold text-lux-ink text-sm">
                     Manual Calculation Rate:
                   </span>
-                  <span className="text-lg font-bold text-emerald-600">
+                  <span className="text-lg font-bold text-lux-emerald">
                     Rs {Number(editEntry.manualCalculationRate).toFixed(2)}
                   </span>
                 </div>
               )}
 
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-600">
+              <div className="bg-lux-cream rounded-xl shadow-sm border border-[#ece4d2] overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-lux-ivory border-b border-[#ece4d2] text-[10px] font-black uppercase tracking-wider text-lux-muted">
                   <div className="col-span-1 text-center">+/-</div>
                   <div className="col-span-6">Particulars & Purpose</div>
                   <div className="col-span-3">Detail / Remarks</div>
@@ -768,7 +768,7 @@ const EditLoadingEntryPopup = ({
                 {buildBreakdownItems().map((item, idx) => (
                   <div
                     key={idx}
-                    className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-100 ${item.bg} last:border-b-0 hover:brightness-95 transition-all`}
+                    className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-[#ece4d2] ${item.bg} last:border-b-0 hover:brightness-95 transition-all`}
                   >
                     <div className="col-span-1 flex items-center justify-center">
                       <span
@@ -785,7 +785,7 @@ const EditLoadingEntryPopup = ({
                       </span>
                     </div>
                     <div className="col-span-3 flex items-center">
-                      <span className="text-[10px] font-semibold text-slate-500 leading-snug">
+                      <span className="text-[10px] font-semibold text-lux-muted leading-snug">
                         {item.detail}
                       </span>
                     </div>
@@ -798,7 +798,7 @@ const EditLoadingEntryPopup = ({
                     </div>
                   </div>
                 ))}
-                <div className="grid grid-cols-12 gap-2 px-4 py-4 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white border-t-2 border-emerald-700">
+                <div className="grid grid-cols-12 gap-2 px-4 py-4 bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald text-lux-gold-soft border-t-2 border-lux-gold/40">
                   <div className="col-span-10 flex items-center">
                     <span className="text-[10px] font-black uppercase tracking-wider leading-tight">
                       Net Payable = Gross - CD - Claims - BankChgs - 2ndClaim - Others - TDS + GST
@@ -813,13 +813,13 @@ const EditLoadingEntryPopup = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-purple-200">
+                <div className="space-y-2 p-3 bg-lux-cream rounded-xl shadow-sm border border-purple-200">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 text-sm">
+                    <span className="font-bold text-lux-ink text-sm">
                       Less 2nd Claim:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">Rs</span>
+                      <span className="text-lux-muted font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -834,7 +834,7 @@ const EditLoadingEntryPopup = ({
                           }));
                         }}
                         placeholder="0.00"
-                        className="w-28 px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500"
+                        className="w-28 px-3 py-1.5 border border-[#e4dbc6] bg-lux-cream rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500"
                         step="0.01"
                       />
                     </div>
@@ -849,17 +849,17 @@ const EditLoadingEntryPopup = ({
                       }));
                     }}
                     placeholder="Purpose / Remarks..."
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 bg-slate-50"
+                    className="w-full px-3 py-1.5 border border-[#e4dbc6] bg-lux-ivory rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                   />
                 </div>
 
-                <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-teal-200">
+                <div className="space-y-2 p-3 bg-lux-cream rounded-xl shadow-sm border border-teal-200">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 text-sm">
+                    <span className="font-bold text-lux-ink text-sm">
                       Less Other Charges:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">Rs</span>
+                      <span className="text-lux-muted font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -874,7 +874,7 @@ const EditLoadingEntryPopup = ({
                           }));
                         }}
                         placeholder="0.00"
-                        className="w-28 px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
+                        className="w-28 px-3 py-1.5 border border-[#e4dbc6] bg-lux-cream rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                         step="0.01"
                       />
                     </div>
@@ -889,17 +889,17 @@ const EditLoadingEntryPopup = ({
                       }));
                     }}
                     placeholder="Purpose / Remarks..."
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 bg-slate-50"
+                    className="w-full px-3 py-1.5 border border-[#e4dbc6] bg-lux-ivory rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                   />
                 </div>
 
-                <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-orange-200">
+                <div className="space-y-2 p-3 bg-lux-cream rounded-xl shadow-sm border border-orange-200">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 text-sm">
+                    <span className="font-bold text-lux-ink text-sm">
                       Less Bank Charges:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">Rs</span>
+                      <span className="text-lux-muted font-bold">Rs</span>
                       <input
                         type="number"
                         value={
@@ -914,7 +914,7 @@ const EditLoadingEntryPopup = ({
                           }));
                         }}
                         placeholder="0.00"
-                        className="w-28 px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500"
+                        className="w-28 px-3 py-1.5 border border-[#e4dbc6] bg-lux-cream rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                         step="0.01"
                       />
                     </div>
@@ -929,17 +929,17 @@ const EditLoadingEntryPopup = ({
                       }));
                     }}
                     placeholder="Purpose / Remarks..."
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 bg-slate-50"
+                    className="w-full px-3 py-1.5 border border-[#e4dbc6] bg-lux-ivory rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                   />
                 </div>
 
-                <div className="space-y-2 p-3 bg-white rounded-xl shadow-sm border border-red-200">
+                <div className="space-y-2 p-3 bg-lux-cream rounded-xl shadow-sm border border-red-200">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 text-sm">
+                    <span className="font-bold text-lux-ink text-sm">
                       Less TDS:
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 font-bold">Rs</span>
+                      <span className="text-lux-muted font-bold">Rs</span>
                       <input
                         type="number"
                         value={editEntry.tds != null ? editEntry.tds : ""}
@@ -950,7 +950,7 @@ const EditLoadingEntryPopup = ({
                           }));
                         }}
                         placeholder="0.00"
-                        className="w-28 px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500"
+                        className="w-28 px-3 py-1.5 border border-[#e4dbc6] bg-lux-cream rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                         step="0.01"
                       />
                     </div>
@@ -965,13 +965,13 @@ const EditLoadingEntryPopup = ({
                       }));
                     }}
                     placeholder="Purpose / Remarks..."
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 bg-slate-50"
+                    className="w-full px-3 py-1.5 border border-[#e4dbc6] bg-lux-ivory rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-200">
-                <span className="text-sm font-bold text-slate-700 block mb-2">
+              <div className="p-3 bg-lux-cream rounded-xl shadow-sm border border-[#ece4d2]">
+                <span className="font-serif text-sm font-bold text-lux-ink block mb-2">
                   General Remarks:
                 </span>
                 <input
@@ -984,11 +984,11 @@ const EditLoadingEntryPopup = ({
                     }));
                   }}
                   placeholder="Add any additional remarks..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/30 focus:border-slate-500"
+                  className="w-full px-3 py-2 border border-[#e4dbc6] bg-lux-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-emerald"
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-5 bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald rounded-xl shadow-lg text-lux-gold-soft">
                 <div className="flex-1 w-full sm:w-auto">
                   <span className="text-lg font-bold">Payable Amount:</span>
                   <span className="text-3xl font-black ml-3">
@@ -1011,7 +1011,7 @@ const EditLoadingEntryPopup = ({
                         lorryNumber: editEntry.lorryNumber || "",
                       })
                     }
-                    className="flex items-center gap-2 px-5 py-3 bg-white text-emerald-700 rounded-xl font-black text-sm uppercase tracking-wider shadow-xl hover:bg-emerald-50 transition-all border-2 border-white/50"
+                    className="flex items-center gap-2 px-5 py-3 bg-lux-cream text-lux-emerald rounded-xl font-black text-sm uppercase tracking-wider shadow-xl hover:bg-white transition-all border-2 border-lux-gold/40"
                   >
                     <FaMoneyBillWave size={16} />
                     Record Payment Received
@@ -1032,16 +1032,16 @@ const EditLoadingEntryPopup = ({
                     manualClaim: e.target.checked,
                   }));
                 }}
-                className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                className="w-5 h-5 text-lux-emerald rounded focus:ring-lux-emerald cursor-pointer"
               />
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Report not Received, Enter Manual claim Amount
               </span>
             </label>
 
             {editEntry.manualClaim && (
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-slate-400 font-bold text-lg">Rs</span>
+                <span className="text-lux-muted font-bold text-lg">Rs</span>
                 <input
                   type="number"
                   value={
@@ -1056,14 +1056,14 @@ const EditLoadingEntryPopup = ({
                     }));
                   }}
                   placeholder="Enter manual claim amount"
-                  className="flex-1 max-w-xs px-4 py-2 bg-white border border-indigo-300 rounded-lg text-base font-bold text-indigo-800 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                  className="flex-1 max-w-xs px-4 py-2 bg-lux-cream border border-[#e4dbc6] rounded-lg text-base font-bold text-lux-ink focus:ring-2 focus:ring-lux-gold/20 outline-none"
                   step="0.01"
                 />
               </div>
             )}
           </div>
 
-          <p className="mt-3 text-[11px] text-slate-500 italic">
+          <p className="mt-3 text-[11px] text-lux-muted italic">
             * Claim Amount is automatically calculated based on (Actual -
             Standard) x Sauda Rate (Rs
             {currentSelfOrder?.rate || 0})
@@ -1071,14 +1071,14 @@ const EditLoadingEntryPopup = ({
         </>
       )}
 
-      <div className="mt-6 pt-6 border-t border-slate-200">
-        <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+      <div className="mt-6 pt-6 border-t border-[#ece4d2]">
+        <h4 className="text-base font-bold text-lux-ink mb-4 flex items-center gap-2 font-serif">
+          <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
           Upload Documents
         </h4>
         {!editEntry.unloadingWeight || !editEntry.unloadingDate ? (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className="mb-4 p-3 bg-lux-ivory border border-lux-gold/20 rounded-lg">
+            <p className="text-sm text-lux-emerald">
               i Tip: Fill in both <b>Unloading Weight</b> and{" "}
               <b>Unloading Date</b> to ensure the entry is complete. Document
               upload is enabled regardless - Kanta Slip / Unloading Challan can
@@ -1128,9 +1128,9 @@ const EditLoadingEntryPopup = ({
           />
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-200">
-          <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+        <div className="mt-8 pt-6 border-t border-[#ece4d2]">
+          <h4 className="text-base font-bold text-lux-ink mb-4 flex items-center gap-2 font-serif">
+            <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
             Document Attachments & Quality Reports
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1171,18 +1171,18 @@ const EditLoadingEntryPopup = ({
       </div>
 
       {editEntry.isRejected && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-semibold">
+        <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-lg">
+          <p className="text-rose-700 font-semibold">
             This lorry has been rejected. All amounts are set to 0.
           </p>
         </div>
       )}
 
-      <div className="flex justify-between items-center pt-4 border-t mt-4">
+      <div className="flex justify-between items-center pt-4 border-t border-[#ece4d2] mt-4">
         {!editEntry.isRejected && (
           <button
             onClick={handleRejectLorry}
-            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-lg active:scale-[0.97]"
           >
             Reject Lorry
           </button>
@@ -1190,14 +1190,14 @@ const EditLoadingEntryPopup = ({
         <div className="flex gap-3 ml-auto">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2.5 text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg active:scale-[0.97]"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdateEntry}
             disabled={isSaving}
-            className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSaving ? "Saving..." : "Update Entry"}
           </button>

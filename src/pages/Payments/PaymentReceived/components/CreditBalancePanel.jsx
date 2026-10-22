@@ -48,25 +48,25 @@ const CreditBalancePanel = ({
         : "Buyer → seller · payment received (Cr.) & lorry adjustment (Dr.)";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/80 p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-[#1e3a5f] text-white flex items-center justify-center shadow-md">
+    <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 shadow-sm sm:p-5">
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30">
           <FaCoins size={14} />
         </div>
-        <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-[0.25em]">
+        <p className="font-serif text-xs font-semibold uppercase tracking-[0.2em] text-lux-ink">
           {headerTitle}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
-          <p className="text-[9px] font-black text-rose-900 uppercase tracking-widest">
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3">
+          <p className="text-[9px] font-black text-rose-700 uppercase tracking-widest">
             {debitLabel}
           </p>
-          <p className="text-lg font-black text-rose-900 tabular-nums mt-1">
+          <p className="mt-1 font-serif text-lg font-semibold text-rose-700 tabular-nums">
             {formatLedgerAmount(debitToSeller)}
           </p>
-          <p className="text-[9px] font-bold text-rose-700/90 mt-1 normal-case">
+          <p className="mt-1 text-[9px] font-bold text-rose-700/90 normal-case">
             {debitHint}
             {isAdvance && debitPostedToSeller > 0
               ? ` · ${formatLedgerAmount(debitPostedToSeller)} saved`
@@ -77,37 +77,37 @@ const CreditBalancePanel = ({
           </p>
         </div>
 
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <p className="text-[9px] font-black text-emerald-900 uppercase tracking-widest">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-100 px-4 py-3">
+          <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">
             {creditLabel}
           </p>
-          <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
+          <p className="mt-1 font-serif text-lg font-semibold text-emerald-800 tabular-nums">
             {formatLedgerAmount(creditEntryTotal)}
           </p>
-          <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
+          <p className="mt-1 text-[9px] font-bold text-emerald-700/90 normal-case">
             {creditHint} · GST excluded
           </p>
         </div>
 
-        <div className="rounded-lg border border-[#1e3a5f]/25 bg-[#eef4ff] px-4 py-3 relative">
+        <div className="relative rounded-2xl border border-lux-gold/40 bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-3 text-lux-gold-soft">
           <FaMinus
-            className="hidden sm:block absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300"
+            className="absolute -left-3 top-1/2 hidden -translate-y-1/2 text-lux-muted sm:block"
             size={10}
           />
-          <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
+          <p className="lux-eyebrow text-lux-gold-soft">
             {remainingLabel}
           </p>
-          <p className="text-lg font-black text-[#1e3a5f] tabular-nums mt-1">
+          <p className="mt-1 font-serif text-lg font-semibold text-lux-gold-soft tabular-nums">
             {formatLedgerAmount(Math.abs(creditEntryTotal - debitToSeller))}
           </p>
-          <p className="text-[9px] font-bold text-slate-500 mt-1 normal-case">
+          <p className="mt-1 text-[9px] font-bold text-lux-gold-soft/80 normal-case">
             {isAdvance ? "Cr. − Dr." : "Difference (Credit − Debit)"}
           </p>
         </div>
       </div>
 
       {!showSummary && (
-        <p className="text-[11px] font-bold text-slate-500">
+        <p className="text-[11px] font-bold text-lux-muted">
           {isAdvance
             ? "Record buyer advance (Cr.), then adjust Dr. per lorry."
             : ""}
@@ -115,7 +115,7 @@ const CreditBalancePanel = ({
       )}
 
       {showSummary && fullCompanyMapping && supplierCompany && (
-        <p className="text-[10px] font-bold text-slate-500 mb-2">
+        <p className="mb-2 text-[10px] font-bold text-lux-muted">
           {buyerCompany} → {supplierCompany}:{" "}
           {formatLedgerAmount(creditEntryTotal)} Cr. −{" "}
           {formatLedgerAmount(debitToSeller)} Dr. ={" "}
@@ -126,20 +126,20 @@ const CreditBalancePanel = ({
 
       {showAdvanceTable && (
         <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+          <p className="lux-eyebrow mb-2">
             Advance (Dr.) by buyer → seller · click row
           </p>
-          <div className="max-h-40 overflow-y-auto rounded-lg border border-rose-100 bg-white/90">
+          <div className="max-h-40 overflow-y-auto rounded-2xl border border-[#ece4d2] bg-lux-cream">
             <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 bg-rose-50 border-b border-rose-100">
+              <thead className="sticky top-0 border-b border-[#ece4d2] bg-lux-ivory">
                 <tr>
-                  <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500">
+                  <th className="px-3 py-2 text-[9px] font-black uppercase text-lux-muted">
                     Buyer
                   </th>
-                  <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500">
+                  <th className="px-3 py-2 text-[9px] font-black uppercase text-lux-muted">
                     Seller
                   </th>
-                  <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500 text-right">
+                  <th className="px-3 py-2 text-right text-[9px] font-black uppercase text-lux-muted">
                     Advance left
                   </th>
                 </tr>
@@ -148,14 +148,14 @@ const CreditBalancePanel = ({
                 {creditByPair.map((row, idx) => (
                   <tr
                     key={`${row.buyerCompany}-${row.supplierCompany}-${idx}`}
-                    className={`border-b border-slate-50 last:border-0 ${
+                    className={`border-b border-[#ece4d2] last:border-0 ${
                       onSelectCreditPair
-                        ? "cursor-pointer hover:bg-rose-50/80"
+                        ? "cursor-pointer hover:bg-lux-ivory"
                         : ""
                     } ${
                       fullCompanyMapping &&
                       row.supplierCompany === supplierCompany
-                        ? "bg-rose-50"
+                        ? "bg-lux-ivory"
                         : ""
                     }`}
                     onClick={() => onSelectCreditPair?.(row)}
@@ -167,13 +167,13 @@ const CreditBalancePanel = ({
                     tabIndex={onSelectCreditPair ? 0 : undefined}
                     role={onSelectCreditPair ? "button" : undefined}
                   >
-                    <td className="px-3 py-2 font-bold text-slate-800 uppercase truncate max-w-[120px]">
+                    <td className="max-w-[120px] truncate px-3 py-2 font-bold uppercase text-lux-ink">
                       {row.buyerCompany}
                     </td>
-                    <td className="px-3 py-2 font-bold text-green-800 uppercase truncate max-w-[120px]">
+                    <td className="max-w-[120px] truncate px-3 py-2 font-bold uppercase text-lux-emerald">
                       {row.supplierCompany}
                     </td>
-                    <td className="px-3 py-2 font-black text-rose-700 text-right tabular-nums">
+                    <td className="px-3 py-2 text-right font-black tabular-nums text-rose-700">
                       {formatLedgerAmount(row.amount)}
                     </td>
                   </tr>

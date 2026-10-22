@@ -137,45 +137,45 @@ const PendingSaudaSummary = () => {
     const totalBrokerage = loadedBrokerage + pendingBrokerage;
 
     return [
-      <span key={`sl-${index}`} className="font-black text-slate-400">
+      <span key={`sl-${index}`} className="font-black text-lux-muted">
         {(currentPage - 1) * itemsPerPage + index + 1}
       </span>,
       <div key={`seller-${index}`} className="flex items-center gap-2">
-        <FaStore className="text-emerald-500" />
-        <span className="font-bold text-slate-800 uppercase tracking-tight">
+        <FaStore className="text-lux-gold" />
+        <span className="font-bold text-lux-ink uppercase tracking-tight">
           {item.sellerName || "N/A"}
         </span>
       </div>,
       <div key={`consignee-${index}`} className="flex items-center gap-2">
-        <FaTruck className="text-blue-500" />
-        <span className="font-medium text-slate-700">
+        <FaTruck className="text-lux-emerald" />
+        <span className="font-medium text-lux-ink">
           {getConsigneeName(item.consignee)}
         </span>
       </div>,
       <span
         key={`qty-${index}`}
-        className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-green-600 bg-green-50 border-green-100"} px-3 py-1 rounded-lg border`}
+        className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-emerald-700 bg-emerald-50 border-emerald-100"} px-3 py-1 rounded-lg border tabular-nums`}
       >
         {item.totalPendingQuantity.toFixed(2)} T
       </span>,
       <span
         key={`loaded-qty-${index}`}
-        className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100"
+        className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100 tabular-nums"
       >
         {(item.totalUnloadingWeight || 0).toFixed(2)} T
       </span>,
       <div key={`brokerage-${index}`} className="flex flex-col text-[11px]">
-        <span className="font-black text-slate-900">
+        <span className="font-black text-lux-ink">
           Total: ₹{totalBrokerage.toFixed(2)}
         </span>
-        <span className="text-emerald-600 font-bold">
+        <span className="text-lux-emerald font-bold">
           Loaded: ₹{loadedBrokerage.toFixed(2)}
         </span>
-        <span className="text-green-600 font-bold">
+        <span className="text-lux-emerald font-bold">
           Pending: ₹{pendingBrokerage.toFixed(2)}
         </span>
       </div>,
-      <span key={`count-${index}`} className="font-bold text-slate-600">
+      <span key={`count-${index}`} className="font-bold text-lux-ink">
         {item.saudaCount}
       </span>,
       <div key={`action-${index}`} className="flex items-center gap-2">
@@ -189,7 +189,7 @@ const PendingSaudaSummary = () => {
             };
             navigate("/Loading-Entry/pending-loading-list", { state });
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-black transition text-xs font-bold"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
         >
           <FaBoxOpen /> View Saudas
         </button>
@@ -205,27 +205,27 @@ const PendingSaudaSummary = () => {
         icon={FaClock}
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="mx-auto w-full max-w-6xl space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 shadow-sm">
+              <div className="p-3 rounded-2xl bg-lux-ivory text-lux-emerald ring-1 ring-lux-gold/30 shadow-sm">
                 <FaClock size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">
+                <p className="text-[10px] font-black text-lux-muted uppercase tracking-[0.2em] leading-tight">
                   System Intelligence
                 </p>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                <h3 className="font-serif text-xl font-semibold text-lux-ink tracking-tight">
                   Pending Sauda Summary
                 </h3>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                <p className="text-[9px] font-black text-lux-muted uppercase tracking-widest">
                   Last Intelligence Update
                 </p>
-                <p className="text-xs font-bold text-slate-600">
+                <p className="text-xs font-bold text-lux-ink">
                   {lastUpdated.toLocaleTimeString()}
                 </p>
               </div>
@@ -240,30 +240,30 @@ const PendingSaudaSummary = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="lux-card lux-card-hover p-6 sm:p-8">
+              <p className="lux-eyebrow mb-2">
                 Total Pending Weight
               </p>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-lux-ink tabular-nums">
                 {summaryStats.totalPendingWeight.toFixed(2)}{" "}
                 <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-6 sm:p-8">
+              <p className="lux-eyebrow mb-2">
                 Total Unloading Weight
               </p>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter text-emerald-600">
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-lux-emerald tabular-nums">
                 {summaryStats.totalUnloadingWeight.toFixed(2)}{" "}
                 <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-6 sm:p-8">
+              <p className="lux-eyebrow mb-2">
                 Total Brokerage
               </p>
-              <h3 className="text-3xl font-black text-slate-900 tracking-tighter">
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-lux-ink tabular-nums">
                 ₹
                 {(
                   summaryStats.totalLoadedBrokerage +
@@ -271,19 +271,19 @@ const PendingSaudaSummary = () => {
                 ).toFixed(0)}
               </h3>
               <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                <span className="text-emerald-600">
+                <span className="text-lux-emerald">
                   Loaded: ₹{summaryStats.totalLoadedBrokerage.toFixed(0)}
                 </span>
-                <span className="text-green-600">
+                <span className="text-lux-emerald">
                   Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}
                 </span>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+            <div className="lux-card lux-card-hover p-6 sm:p-8">
+              <p className="lux-eyebrow mb-2">
                 Consignees / Sellers
               </p>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-lux-ink tabular-nums">
                 {summaryStats.totalConsignees}{" "}
                 <span className="text-lg opacity-40">/</span>{" "}
                 {summaryStats.activeSellers}
@@ -292,7 +292,7 @@ const PendingSaudaSummary = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lux-card p-4">
               <div className="w-full lg:max-w-md">
                 <SearchBox
                   placeholder="Search by seller or consignee..."
@@ -300,18 +300,18 @@ const PendingSaudaSummary = () => {
                   returnQuery
                 />
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">
-                <FaSearch size={12} className="text-slate-300" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-lux-ivory text-[10px] font-bold text-lux-muted uppercase tracking-widest border border-lux-gold/20">
+                <FaSearch size={12} className="text-lux-gold/50" />
                 Live Filtering Enabled
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/5 overflow-hidden">
+            <div className="lux-card overflow-hidden">
               {loading ? (
                 <Loading />
               ) : data.length === 0 ? (
-                <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
-                  <FaBoxOpen size={48} className="text-slate-200" />
+                <div className="h-64 flex flex-col items-center justify-center text-lux-muted gap-3">
+                  <FaBoxOpen size={48} className="text-lux-gold/40" />
                   <p className="font-medium text-lg">No pending saudas found</p>
                 </div>
               ) : (
@@ -319,7 +319,7 @@ const PendingSaudaSummary = () => {
               )}
             </div>
 
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="lux-card p-4">
               <Pagination
                 currentPage={currentPage}
                 totalItems={totalItems}

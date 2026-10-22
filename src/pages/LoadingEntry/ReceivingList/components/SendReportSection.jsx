@@ -16,16 +16,16 @@ const SendReportSection = ({
   );
 
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-6 shadow-sm">
-      <h4 className="text-base font-black text-emerald-900 mb-4 flex items-center gap-3">
-        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+    <div className="lux-card lux-gold-top p-5 sm:p-6">
+      <h4 className="mb-4 flex items-center gap-3 font-serif text-lg font-semibold text-lux-ink">
+        <span className="w-2 h-2 rounded-full bg-lux-gold" />
         Send Report to Seller
       </h4>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
         <select
           value={selectedSellerEmail}
           onChange={(e) => setSelectedSellerEmail(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-xl border border-emerald-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent font-medium"
+          className="min-w-0 flex-1 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-3 text-sm font-medium text-lux-ink shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-lux-gold/40"
         >
           <option value="">Select Seller Email</option>
           {(matchingSellers.length > 0 ? matchingSellers : sellerCompanies).map((sc) => (
@@ -37,7 +37,7 @@ const SendReportSection = ({
         <button
           onClick={onSendEmail}
           disabled={!selectedSellerEmail || sendingEmail}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-200"
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-3 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
         >
           <FaEnvelope size={18} />
           {sendingEmail ? "Sending..." : "Send Report"}

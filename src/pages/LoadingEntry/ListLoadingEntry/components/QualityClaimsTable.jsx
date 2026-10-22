@@ -127,26 +127,26 @@ const QualityClaimsTable = ({
   const unloadingAmountForCalculation = effectiveRate * weight;
 
   return (
-    <div className="border-t border-slate-200 pt-6 mt-6 overflow-x-auto">
-      <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+    <div className="border-t border-[#ece4d2] pt-6 mt-6 overflow-x-auto">
+      <h4 className="font-serif text-base font-semibold text-lux-ink mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
           Quality Parameters & Claims
         </div>
         <div className="flex gap-6 text-sm">
-          <div className="text-slate-600">
+          <div className="text-lux-muted">
             <span className="font-medium">Actual Rate: </span>
             <span className="font-bold">₹{currentSelfOrder?.rate || 0}/-</span>
           </div>
           {editEntry.manualCalculationRate && (
-            <div className="text-slate-600">
+            <div className="text-lux-muted">
               <span className="font-medium">Manual Calculation Rate: </span>
               <span className="font-bold">
                 ₹{editEntry.manualCalculationRate}/-
               </span>
             </div>
           )}
-          <div className="text-slate-600">
+          <div className="text-lux-muted">
             <span className="font-medium">
               Unloading Amount (for calculation):{" "}
             </span>
@@ -156,19 +156,19 @@ const QualityClaimsTable = ({
       </h4>
       <table className="w-full text-sm text-left border-collapse">
         <thead>
-          <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="px-4 py-3 font-bold text-slate-700">
+          <tr className="bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald border-b border-[#ece4d2]">
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">
               Quality Parameter
             </th>
-            <th className="px-4 py-3 font-bold text-slate-700">
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">
               Standard Value
             </th>
-            <th className="px-4 py-3 font-bold text-slate-700">Actual Value</th>
-            <th className="px-4 py-3 font-bold text-slate-700">Difference</th>
-            <th className="px-4 py-3 font-bold text-slate-700">Claim Ratio</th>
-            {/* <th className="px-4 py-3 font-bold text-slate-700">Claim %</th> */}
-            <th className="px-4 py-3 font-bold text-slate-700">Claim Amount</th>
-            <th className="px-4 py-3 font-bold text-slate-700">Notes</th>
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">Actual Value</th>
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">Difference</th>
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">Claim Ratio</th>
+            {/* <th className="px-4 py-3 font-bold text-lux-gold-soft">Claim %</th> */}
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">Claim Amount</th>
+            <th className="px-4 py-3 font-bold text-lux-gold-soft">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -204,9 +204,9 @@ const QualityClaimsTable = ({
             return (
               <tr
                 key={originalIndex}
-                className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                className="border-b border-[#ece4d2] hover:bg-lux-ivory transition-colors"
               >
-                <td className="px-4 py-3 font-medium text-slate-800">
+                <td className="px-4 py-3 font-medium text-lux-ink">
                   {claim.parameterName}
                 </td>
                 <td className="px-4 py-3">
@@ -223,14 +223,14 @@ const QualityClaimsTable = ({
                       }
                       placeholder="Standard"
                       disabled={editEntry.manualClaim}
-                      className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                      className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lux-gold/20 ${
                         editEntry.manualClaim
-                          ? "bg-slate-100 border-slate-200 cursor-not-allowed"
-                          : "bg-white border-slate-300"
+                          ? "bg-lux-ivory border-[#e4dbc6] cursor-not-allowed"
+                          : "bg-lux-cream border-[#e4dbc6]"
                       }`}
                       step="0.01"
                     />
-                    <span className="text-slate-600 font-bold">%</span>
+                    <span className="text-lux-muted font-bold">%</span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -266,21 +266,21 @@ const QualityClaimsTable = ({
                     }}
                     placeholder="Actual"
                     disabled={editEntry.manualClaim}
-                    className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                    className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lux-gold/20 ${
                       editEntry.manualClaim
-                        ? "bg-slate-100 border-slate-200 cursor-not-allowed"
-                        : "bg-white border-slate-300"
+                        ? "bg-lux-ivory border-[#e4dbc6] cursor-not-allowed"
+                        : "bg-lux-cream border-[#e4dbc6]"
                     }`}
                   />
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}
+                    className={`font-bold ${difference >= 0 ? "text-rose-600" : "text-emerald-600"}`}
                   >
                     {difference.toFixed(2)}%
                   </span>
                 </td>
-                <td className="px-4 py-3 text-indigo-600 font-black italic">
+                <td className="px-4 py-3 text-lux-emerald font-black italic">
                   {ratio.display}
                 </td>
                 {/* <td className="px-4 py-3 text-slate-700 font-bold">
@@ -288,12 +288,12 @@ const QualityClaimsTable = ({
                 </td> */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">₹</span>
+                    <span className="text-lux-muted font-bold">₹</span>
                     <input
                       type="number"
                       value={claim.claimAmount != null ? claim.claimAmount : ""}
                       readOnly
-                      className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-orange-600 outline-none"
+                      className="w-24 px-3 py-1.5 bg-lux-ivory border border-[#e4dbc6] rounded-lg text-sm font-black text-lux-gold outline-none"
                     />
                   </div>
                 </td>
@@ -310,10 +310,10 @@ const QualityClaimsTable = ({
                     }
                     placeholder="Remarks..."
                     disabled={editEntry.manualClaim}
-                    className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                    className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/20 ${
                       editEntry.manualClaim
-                        ? "bg-slate-100 border-slate-200 cursor-not-allowed"
-                        : "bg-white border-slate-300"
+                        ? "bg-lux-ivory border-[#e4dbc6] cursor-not-allowed"
+                        : "bg-lux-cream border-[#e4dbc6]"
                     }`}
                   />
                 </td>

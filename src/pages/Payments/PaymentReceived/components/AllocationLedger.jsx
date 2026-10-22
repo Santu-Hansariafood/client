@@ -66,19 +66,19 @@ const AllocationLedger = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-4">
+      <div className="p-4 sm:p-6 border-b border-[#ece4d2] bg-lux-ivory flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-lux-emerald to-lux-deep rounded-xl flex items-center justify-center text-lux-gold-soft shadow-sm">
               <FaFilter size={14} />
             </div>
             <div>
-              <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+              <h4 className="font-serif font-semibold text-lux-ink flex items-center gap-2 flex-wrap">
                 {allocationSource === "fresh"
                   ? "Payment Received (Cr.) Ledger"
                   : "Advance Adjustment (Dr.)"}
               </h4>
-              <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+              <p className="lux-eyebrow">
                 {allocationSource === "fresh"
                   ? fullCompanyMapping
                     ? `credited balance from ${companyPair.buyerCompany} — adjust each lorry (Dr.) to ${companyPair.supplierCompany} below`
@@ -98,14 +98,14 @@ const AllocationLedger = ({
               selectedCount={selectedAllocationKeys.size}
               onChange={setMultiAdjustmentMode}
             />
-            <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
+            <div className="flex items-center gap-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-cream px-4 py-2 rounded-xl shadow-lg ring-1 ring-lux-gold/30">
               <div className="flex flex-col">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
+                <span className="lux-eyebrow text-lux-gold-soft leading-none mb-1">
                   {allocationSource === "advance"
                     ? "Cr. left"
                     : "Cr. Remaining"}
                 </span>
-                <span className="text-sm font-black italic tracking-tight tabular-nums">
+                <span className="font-serif font-semibold text-sm tracking-tight tabular-nums">
                   Rs.{" "}
                   {Math.abs(
                     allocationSource === "advance"
@@ -114,7 +114,7 @@ const AllocationLedger = ({
                   ).toLocaleString("en-IN")}
                 </span>
               </div>
-              <FaMoneyBillWave className="text-blue-200" />
+              <FaMoneyBillWave className="text-lux-gold-soft" />
             </div>
 
             <DateRangeSelector
@@ -133,11 +133,11 @@ const AllocationLedger = ({
                   filterEndDate: "",
                 }))
               }
-              className="!bg-white !px-3 !py-1.5 shadow-sm"
+              className="!bg-lux-cream !px-3 !py-1.5 shadow-sm"
             />
 
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">
+            <div className="flex items-center gap-2 bg-lux-cream border border-[#e4dbc6] rounded-xl px-3 py-1.5 shadow-sm">
+              <span className="lux-eyebrow whitespace-nowrap">
                 Common date
               </span>
               <input
@@ -149,7 +149,7 @@ const AllocationLedger = ({
                     allocationDate: e.target.value,
                   }))
                 }
-                className="h-8 px-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10"
+                className="h-8 px-2 rounded-lg border border-[#e4dbc6] bg-lux-cream text-xs font-bold text-lux-ink outline-none focus:border-lux-gold focus:ring-2 focus:ring-lux-gold/20"
               />
             </div>
 
@@ -184,8 +184,8 @@ const AllocationLedger = ({
             }
           />
         ) : (
-          <p className="text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-            Select a <span className="text-[#1e3a5f]">buyer company</span> to
+          <p className="text-[11px] font-bold text-lux-muted bg-lux-ivory border border-[#ece4d2] rounded-xl px-4 py-3">
+            Select a <span className="text-lux-emerald">buyer company</span> to
             load linked sellers and allocate your payment entry amount.
           </p>
         )}
@@ -194,10 +194,10 @@ const AllocationLedger = ({
       <div className="flex-1">
         {!hasCompanyTableScope ? (
           <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-            <h4 className="text-lg font-bold text-slate-800">
+            <h4 className="font-serif text-lg font-semibold text-lux-ink">
               Select company to load lorry table
             </h4>
-            <p className="text-sm text-slate-500 font-medium max-w-md mt-2">
+            <p className="text-sm text-lux-muted font-medium max-w-md mt-2">
               DATE & SAUDA, LORRY, PARTIES, BREAKDOWN, ALLOCATION and ACTION
               rows appear only for your selected buyer
               {formData.ledgerType !== "Seller"
@@ -209,7 +209,7 @@ const AllocationLedger = ({
         ) : fetchingEntries ? (
           <div className="py-32 flex flex-col items-center justify-center gap-4">
             <Loading size="lg" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+            <p className="lux-eyebrow">
               Loading entries...
             </p>
           </div>
@@ -217,46 +217,46 @@ const AllocationLedger = ({
           <div>
             <div className="px-4 sm:px-6 py-6">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                <span className="lux-eyebrow">
                   Showing lorries for
                 </span>
                 {companyPair.buyerCompany && (
-                  <span className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-black uppercase">
+                  <span className="px-2 py-1 rounded-lg bg-lux-emerald text-lux-cream text-[10px] font-black uppercase">
                     {companyPair.buyerCompany}
                   </span>
                 )}
                 {companyPair.buyerCompany && companyPair.supplierCompany && (
-                  <span className="text-slate-400 text-xs">→</span>
+                  <span className="text-lux-muted text-xs">→</span>
                 )}
                 {companyPair.supplierCompany && (
-                  <span className="px-2 py-1 rounded-lg bg-green-500 text-white text-[10px] font-black uppercase">
+                  <span className="px-2 py-1 rounded-lg bg-lux-gold text-lux-deep text-[10px] font-black uppercase">
                     {companyPair.supplierCompany}
                   </span>
                 )}
-                <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#1e3a5f]">
+                <div className="h-4 w-px bg-[#e4dbc6] mx-1 hidden sm:block" />
+                <span className="lux-eyebrow">
                   Cr. Remaining:
                 </span>
-                <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1e3a5f] text-[10px] font-black tabular-nums border border-blue-100">
+                <span className="px-2 py-1 rounded-lg bg-lux-ivory text-lux-ink text-[10px] font-black tabular-nums border border-[#e4dbc6]">
                   Rs.{" "}
                   {Math.abs(creditEntryTotal - debitToSeller).toLocaleString(
                     "en-IN",
                   )}
                 </span>
                 {buyerOnlyMapping && (
-                  <span className="text-[10px] font-bold text-slate-500">
+                  <span className="text-[10px] font-bold text-lux-muted">
                     (all sellers for this buyer)
                   </span>
                 )}
               </div>
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-xl border border-[#ece4d2]">
                 <table className="w-full border-collapse text-left min-w-[900px]">
                   <thead>
-                    <tr className="bg-slate-100 border-b border-slate-200">
+                    <tr className="bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald border-b border-lux-emerald/40">
                       {columns.map((col) => (
                         <th
                           key={col.header}
-                          className="px-3 py-2.5 text-[10px] font-black text-slate-600 uppercase tracking-wider"
+                          className="px-3 py-2.5 text-[10px] font-serif font-semibold text-lux-gold-soft uppercase tracking-wider"
                         >
                           {col.header}
                         </th>
@@ -267,7 +267,7 @@ const AllocationLedger = ({
                     {entries.map((entry, index) => (
                       <tr
                         key={entry.uiKey || entry._id}
-                        className="border-b border-slate-100 hover:bg-slate-50/80"
+                        className="border-b border-[#ece4d2] odd:bg-lux-cream even:bg-[#f2eee2]/50 hover:bg-lux-ivory"
                       >
                         {columns.map((col) => (
                           <td key={col.header} className="px-3 py-3 align-top">
@@ -291,7 +291,7 @@ const AllocationLedger = ({
                   showPageSize={false}
                 />
               ) : fullCompanyMapping && entries.length > 0 ? (
-                <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                <p className="mt-4 text-[10px] font-bold text-lux-muted uppercase tracking-widest text-center">
                   {entries.length} pending line
                   {entries.length !== 1 ? "s" : ""} · adjust against entry
                   amount
@@ -299,90 +299,90 @@ const AllocationLedger = ({
               ) : null}
             </div>
 
-            <div className="bg-[#1e3a5f] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/10 shadow-2xl">
+            <div className="bg-gradient-to-br from-lux-emerald via-lux-deep to-lux-night p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-lux-cream/10 shadow-2xl">
               <div className="flex flex-wrap items-center gap-8 lg:gap-16">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
-                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                    <p className="lux-eyebrow text-emerald-400">
                       Payment Credit (Cr.)
                     </p>
                   </div>
-                  <p className="text-2xl font-black text-white tabular-nums tracking-tight">
+                  <p className="font-serif text-2xl font-semibold text-lux-cream tabular-nums tracking-tight">
                     {formatLedgerAmount(creditEntryTotal)}
                   </p>
-                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                  <p className="text-[8px] font-bold text-lux-cream/40 uppercase tracking-tighter">
                     GST excluded · debit side only
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]"></div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-300">
+                    <div className="h-2 w-2 rounded-full bg-lux-gold shadow-[0_0_8px_rgba(251,191,36,0.5)]"></div>
+                    <p className="lux-eyebrow text-lux-gold">
                       GST (Dr.)
                     </p>
                   </div>
-                  <p className="text-2xl font-black tracking-tight text-amber-200 tabular-nums">
+                  <p className="font-serif text-2xl font-semibold tracking-tight text-lux-gold-soft tabular-nums">
                     {formatLedgerAmount(debitGstToSeller)}
                   </p>
-                  <p className="text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                  <p className="text-[8px] font-bold uppercase tracking-tighter text-lux-cream/40">
                     Included in lorry bill
                   </p>
                 </div>
 
-                <div className="text-white/20 text-3xl font-thin hidden lg:block">
+                <div className="text-lux-cream/20 text-3xl font-thin hidden lg:block">
                   /
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]"></div>
-                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                    <p className="lux-eyebrow text-rose-300">
                       Lorry Bill (Dr.)
                     </p>
                   </div>
-                  <p className="text-2xl font-black text-white tabular-nums tracking-tight">
+                  <p className="font-serif text-2xl font-semibold text-lux-cream tabular-nums tracking-tight">
                     {formatLedgerAmount(debitToSeller)}
                   </p>
-                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                  <p className="text-[8px] font-bold text-lux-cream/40 uppercase tracking-tighter">
                     Total Due Amount (Dr.)
                   </p>
                 </div>
 
-                <div className="h-12 w-px bg-white/10 hidden md:block"></div>
+                <div className="h-12 w-px bg-lux-cream/10 hidden md:block"></div>
 
                 <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest">
+                  <p className="lux-eyebrow text-lux-gold-soft/70">
                     Closing Balance
                   </p>
                   <div className="flex items-baseline gap-2">
                     <p
-                      className={`text-2xl font-black tabular-nums tracking-tight ${
+                      className={`font-serif text-2xl font-semibold tabular-nums tracking-tight ${
                         creditBalanceRemaining > 0.01
                           ? "text-emerald-400"
-                          : "text-white/60"
+                          : "text-lux-cream/60"
                       }`}
                     >
                       {formatLedgerAmount(creditBalanceRemaining)}
                     </p>
-                    <span className="text-[10px] font-black text-blue-300/60 uppercase">
+                    <span className="text-[10px] font-black text-lux-gold-soft/60 uppercase">
                       {creditBalanceRemaining > 0.01 ? "Cr." : "Balanced"}
                     </span>
                   </div>
-                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                  <p className="text-[8px] font-bold text-lux-cream/40 uppercase tracking-tighter">
                     Unallocated Credit Remaining
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
+              <div className="flex items-center gap-6 bg-lux-cream/5 p-4 rounded-2xl border border-lux-cream/10 backdrop-blur-sm">
                 {(multiAdjustmentMode || totalAllocated > 0) && (
                   <button
                     type="button"
                     onClick={onSaveAll}
                     disabled={loading || totalAllocated <= 0}
-                    className="flex items-center gap-2 rounded-xl border border-blue-500 bg-blue-600 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-blue-900/50 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-6 py-3 text-[11px] font-black uppercase tracking-widest text-lux-gold-soft shadow-xl shadow-lux-emerald/40 ring-1 ring-lux-gold/30 transition-all hover:from-lux-deep hover:to-lux-night disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? <Loading /> : <FaCloudUploadAlt size={16} />}
                     {loading
@@ -393,14 +393,14 @@ const AllocationLedger = ({
                   </button>
                 )}
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">
+                  <p className="text-[9px] font-black text-lux-cream/50 uppercase tracking-widest mb-1">
                     Pending Lines
                   </p>
-                  <p className="text-3xl font-black text-rose-400 tabular-nums">
+                  <p className="font-serif text-3xl font-semibold text-rose-300 tabular-nums">
                     {entryStats.pendingCount}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white/60">
+                <div className="w-12 h-12 bg-lux-cream/10 rounded-xl flex items-center justify-center text-lux-cream/60">
                   <FaFileInvoiceDollar size={24} />
                 </div>
               </div>
@@ -408,11 +408,11 @@ const AllocationLedger = ({
           </div>
         ) : (
           <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-            <FaHistory size={32} className="text-slate-200 mb-4" />
-            <h4 className="text-lg font-bold text-slate-800">
+            <FaHistory size={32} className="text-lux-muted/40 mb-4" />
+            <h4 className="font-serif text-lg font-semibold text-lux-ink">
               No records found
             </h4>
-            <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
+            <p className="text-sm text-lux-muted font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
                 ? (ledgerBalance.advanceBalance ?? 0) > 0
                   ? "Advance on account — switch to From Advance to adjust lorries, or record new payment received."

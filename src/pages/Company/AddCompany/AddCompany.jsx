@@ -309,15 +309,15 @@ const AddCompany = () => {
         icon={FaBuilding}
         noContentCard
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg w-full border border-green-200/80">
-            <h2 className="text-xl sm:text-2xl font-bold text-center mb-8 text-slate-800">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
+            <h2 className="font-serif text-xl sm:text-2xl font-semibold text-center mb-8 text-lux-ink">
               {addCompanyLable.company_title}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addCompanyLable.company_name}
                 </label>
                 <DataInput
@@ -327,7 +327,7 @@ const AddCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addCompanyLable.company_email}
                 </label>
                 <DataInput
@@ -338,7 +338,7 @@ const AddCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Location</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Location</label>
                 <DataInput
                   placeholder="Enter location"
                   value={location}
@@ -347,7 +347,7 @@ const AddCompany = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">State</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">State</label>
                 <DataDropdown
                   options={stateOptions}
                   selectedOptions={state}
@@ -357,7 +357,7 @@ const AddCompany = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">District</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">District</label>
                 <DataDropdown
                   options={districtOptions}
                   selectedOptions={district}
@@ -367,7 +367,7 @@ const AddCompany = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">PIN Code</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">PIN Code</label>
                 <DataInput
                   placeholder="Enter PIN"
                   value={pinCode}
@@ -376,7 +376,7 @@ const AddCompany = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">GST Number</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">GST Number</label>
                 <DataInput
                   placeholder="Enter GST"
                   value={gstNumber}
@@ -385,7 +385,7 @@ const AddCompany = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">PAN Number</label>
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">PAN Number</label>
                 <DataInput
                   placeholder={
                     gstNumber === "0" ? "Enter PAN Number" : "Auto-filled PAN"
@@ -398,7 +398,7 @@ const AddCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addCompanyLable.consignee_title}
                 </label>
 
@@ -411,7 +411,7 @@ const AddCompany = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addCompanyLable.group_title}
                 </label>
 
@@ -426,7 +426,7 @@ const AddCompany = () => {
             {selectedCommodities.map((entry, index) => (
               <div
                 key={index}
-                className="bg-gray-50 p-4 mt-6 rounded-md border border-gray-100"
+                className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-5 mt-6"
               >
                 <DataDropdown
                   options={availableCommodities.concat(
@@ -436,19 +436,19 @@ const AddCompany = () => {
                   placeholder="Select commodity"
                 />
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
                   {entry.parameters.map((param, pIndex) => (
                     <div key={param.parameter} className="space-y-2">
-                      <label className="text-xs font-semibold">
+                      <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                         {param.parameter}
                       </label>
 
                       {param.values.map((val, vIndex) => (
                         <div
                           key={vIndex}
-                          className="border p-3 rounded-md bg-gray-50 space-y-2"
+                          className="rounded-2xl border border-[#ece4d2] bg-lux-cream p-3 space-y-2"
                         >
-                          <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2 min-w-0">
                             <div className="flex-1">
                               <DataInput
                                 placeholder={`Base Value`}
@@ -493,7 +493,7 @@ const AddCompany = () => {
                                     return updated;
                                   });
                                 }}
-                                className="text-red-500 hover:text-red-700 text-sm"
+                                className="text-rose-500 hover:text-rose-600 text-sm"
                               >
                                 ✕
                               </button>
@@ -501,7 +501,7 @@ const AddCompany = () => {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <label className="text-xs">Claim Ratio</label>
+                            <label className="lux-eyebrow">Claim Ratio</label>
                             <DataInput
                               placeholder="1"
                               value={val.claimRatioLeft}
@@ -515,7 +515,7 @@ const AddCompany = () => {
                                 });
                               }}
                             />
-                            <span className="text-lg font-bold">:</span>
+                            <span className="text-lg font-bold text-lux-ink">:</span>
                             <DataInput
                               placeholder="20"
                               value={val.claimRatioRight}
@@ -550,7 +550,7 @@ const AddCompany = () => {
                             return updated;
                           });
                         }}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                        className="inline-flex items-center gap-1 text-lux-emerald hover:text-lux-deep text-sm font-semibold"
                       >
                         <span className="text-lg">+</span> Add More
                       </button>
@@ -558,7 +558,7 @@ const AddCompany = () => {
                   ))}
 
                   <div>
-                    <label className="text-xs">Brokerage per Ton</label>
+                    <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">Brokerage per Ton</label>
 
                     <DataInput
                       placeholder="Enter brokerage"
@@ -578,13 +578,13 @@ const AddCompany = () => {
 
             <button
               onClick={handleAddCommodity}
-              className="flex items-center text-blue-600 mt-6"
+              className="flex items-center gap-2 font-semibold text-lux-emerald hover:text-lux-deep mt-6"
             >
               <FaPlus className="mr-2" />
               {addCompanyLable.add_another_commodity}
             </button>
 
-            <div className="mt-10 text-center">
+            <div className="mt-10 flex justify-center">
               <Buttons
                 label={loading ? "Submitting..." : "Submit"}
                 disabled={loading}

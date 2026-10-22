@@ -215,15 +215,15 @@ const AddSellerDetails = () => {
       icon={FaUserTie}
       noContentCard
     >
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl">
-          <div className="p-6 sm:p-10 space-y-10">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
+        <div className="lux-card lux-gold-top w-full overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="space-y-8 sm:space-y-10">
             <section className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 font-bold text-sm">
+              <div className="flex items-center gap-3 border-b border-[#ece4d2] pb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                   1
                 </div>
-                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                <h4 className="text-sm font-black uppercase tracking-widest text-lux-ink">
                   Basic Information
                 </h4>
               </div>
@@ -247,17 +247,17 @@ const AddSellerDetails = () => {
             </section>
 
             <section className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
+              <div className="flex items-center gap-3 border-b border-[#ece4d2] pb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                   2
                 </div>
-                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                <h4 className="text-sm font-black uppercase tracking-widest text-lux-ink">
                   Contact Details
                 </h4>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted">
                     Phone Numbers
                   </label>
                   {phoneNumbers.map((phone, index) => (
@@ -280,7 +280,7 @@ const AddSellerDetails = () => {
                           <button
                             type="button"
                             onClick={addPhoneNumber}
-                            className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-lux-emerald/10 text-lux-emerald shadow-sm transition-all hover:bg-lux-emerald hover:text-lux-gold-soft"
                           >
                             <FaPlusCircle />
                           </button>
@@ -289,7 +289,7 @@ const AddSellerDetails = () => {
                           <button
                             type="button"
                             onClick={() => removePhoneNumber(phone.id)}
-                            className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 shadow-sm transition-all hover:bg-rose-500 hover:text-white"
                           >
                             <FaMinusCircle />
                           </button>
@@ -300,7 +300,7 @@ const AddSellerDetails = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted">
                     Email Addresses
                   </label>
                   {emails.map((email, index) => (
@@ -322,7 +322,7 @@ const AddSellerDetails = () => {
                           <button
                             type="button"
                             onClick={addEmail}
-                            className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-lux-emerald/10 text-lux-emerald shadow-sm transition-all hover:bg-lux-emerald hover:text-lux-gold-soft"
                           >
                             <FaPlusCircle />
                           </button>
@@ -331,7 +331,7 @@ const AddSellerDetails = () => {
                           <button
                             type="button"
                             onClick={() => removeEmail(email.id)}
-                            className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 shadow-sm transition-all hover:bg-rose-500 hover:text-white"
                           >
                             <FaMinusCircle />
                           </button>
@@ -344,11 +344,11 @@ const AddSellerDetails = () => {
             </section>
 
             <section className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">
+              <div className="flex items-center gap-3 border-b border-[#ece4d2] pb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                   3
                 </div>
-                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                <h4 className="text-sm font-black uppercase tracking-widest text-lux-ink">
                   Commodities & Brokerage
                 </h4>
               </div>
@@ -363,14 +363,14 @@ const AddSellerDetails = () => {
                 />
 
                 {selectedCommodity.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
                     {selectedCommodity.map((commodityValue) => {
                       const commodityLabel =
                         commodityOptions.find((o) => o.value === commodityValue)
                           ?.label || commodityValue;
                       return (
                         <div key={commodityValue} className="space-y-2">
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
                             Brokerage for {commodityLabel}
                           </label>
                           <DataInput
@@ -393,11 +393,11 @@ const AddSellerDetails = () => {
             </section>
 
             <section className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-sm">
+              <div className="flex items-center gap-3 border-b border-[#ece4d2] pb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lux-emerald/10 text-sm font-bold text-lux-emerald">
                   4
                 </div>
-                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                <h4 className="text-sm font-black uppercase tracking-widest text-lux-ink">
                   Business Associations & Status
                 </h4>
               </div>
@@ -432,7 +432,7 @@ const AddSellerDetails = () => {
               </div>
             </section>
 
-            <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
+            <div className="flex flex-col gap-3 border-t border-[#ece4d2] pt-10 sm:flex-row sm:justify-end">
               <Buttons
                 label="Reset Form"
                 onClick={resetForm}

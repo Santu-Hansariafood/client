@@ -38,8 +38,8 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
       label: "Gross Amount",
       detail: `${Number(weight).toFixed(3)} T x Rs${rate.toFixed(2)}/Ton`,
       amount: grossAmount,
-      color: "text-slate-700",
-      bg: "bg-slate-50",
+      color: "text-lux-ink",
+      bg: "bg-lux-cream",
       sign: "+",
       signColor: "text-emerald-600",
     });
@@ -152,15 +152,15 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
   const breakdownItems = buildBreakdown();
 
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-6 shadow-sm">
-      <h4 className="text-base font-black text-emerald-900 mb-6 flex items-center gap-3">
-        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+    <div className="lux-card lux-gold-top p-5 sm:p-6">
+      <h4 className="mb-6 flex items-center gap-3 font-serif text-lg font-semibold text-lux-ink">
+        <span className="w-2 h-2 rounded-full bg-lux-gold" />
         Bill & Payable Calculation - Purpose-wise Breakdown
       </h4>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-600">
+        <div className="overflow-hidden rounded-2xl border border-[#ece4d2] bg-lux-ivory">
+          <div className="grid grid-cols-12 gap-2 border-b border-[#ece4d2] bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald px-4 py-2.5 font-serif text-[10px] font-black uppercase tracking-wider text-lux-gold-soft">
             <div className="col-span-1 text-center">+/-</div>
             <div className="col-span-5">Particulars & Purpose</div>
             <div className="col-span-4">Detail / Remarks</div>
@@ -169,22 +169,22 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
           {breakdownItems.map((item, idx) => (
             <div
               key={idx}
-              className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-100 ${item.bg} last:border-b-0 hover:brightness-95 transition-all`}
+              className={`grid grid-cols-12 gap-2 border-b border-[#ece4d2] px-4 py-3 ${item.bg} last:border-b-0 transition-all hover:brightness-95`}
             >
               <div className="col-span-1 flex items-center justify-center">
                 <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-black ${item.signColor} bg-white/70 shadow-sm border`}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border border-[#ece4d2] bg-lux-cream text-sm font-black shadow-sm ${item.signColor}`}
                 >
                   {item.sign}
                 </span>
               </div>
               <div className="col-span-5 flex items-center">
-                <span className={`text-sm font-black ${item.color}`}>
+                <span className={`text-sm font-bold ${item.color}`}>
                   {item.label}
                 </span>
               </div>
               <div className="col-span-4 flex items-center">
-                <span className="text-[10px] font-semibold text-slate-500 leading-snug">
+                <span className="text-[10px] font-semibold leading-snug text-lux-muted">
                   {item.detail}
                 </span>
               </div>
@@ -197,14 +197,14 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
               </div>
             </div>
           ))}
-          <div className="grid grid-cols-12 gap-2 px-4 py-4 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white border-t-2 border-emerald-700">
+          <div className="grid grid-cols-12 gap-2 border-t-2 border-[#ece4d2] bg-gradient-to-r from-lux-emerald via-lux-deep to-lux-emerald px-4 py-4 text-lux-gold-soft">
             <div className="col-span-10 flex items-center">
               <span className="text-[10px] font-black uppercase tracking-wider leading-tight">
                 Net Payable = Gross - CD - Claims - BankChgs - 2ndClaim - Others - TDS + GST
               </span>
             </div>
             <div className="col-span-2 flex items-center justify-end">
-              <span className="text-2xl font-black tabular-nums">
+              <span className="text-xl font-black tabular-nums sm:text-2xl">
                 = Rs {payableAmount.toFixed(2)}
               </span>
             </div>
@@ -212,61 +212,61 @@ const BillCalculationSection = ({ selectedEntry, cdValue, gstValue }) => {
         </div>
 
         {selectedEntry.generalRemarks && (
-          <div className="mt-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-2">
+          <div className="mt-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4">
+            <span className="mb-2 block font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">
               General Remarks
             </span>
-            <p className="text-sm text-slate-700 font-medium">
+            <p className="text-sm font-medium text-lux-ink">
               {selectedEntry.generalRemarks}
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-100">
-              <span className="font-semibold text-slate-700 text-xs">Gross Amount</span>
-              <span className="text-base font-black text-emerald-700">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Gross Amount</span>
+              <span className="text-base font-black text-lux-emerald">
                 Rs {grossAmount.toFixed(2)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-100">
-              <span className="font-semibold text-slate-700 text-xs">Total Bill</span>
-              <span className="text-base font-black text-emerald-700">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Total Bill</span>
+              <span className="text-base font-black text-lux-emerald">
                 Rs {totalBillAmount.toFixed(2)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-green-100">
-              <span className="font-semibold text-slate-700 text-xs">Total Quality Claim</span>
-              <span className="text-base font-bold text-green-600">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Total Quality Claim</span>
+              <span className="text-base font-bold text-emerald-600">
                 Rs {qualityClaimsTotal.toFixed(2)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-purple-100">
-              <span className="font-semibold text-slate-700 text-xs">Second Claim</span>
-              <span className="text-base font-bold text-purple-600">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Second Claim</span>
+              <span className="text-base font-bold text-violet-600">
                 Rs {secondClaim.toFixed(2)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-teal-100">
-              <span className="font-semibold text-slate-700 text-xs">Other Charges</span>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Other Charges</span>
               <span className="text-base font-bold text-teal-600">
                 Rs {otherCharges.toFixed(2)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-orange-100">
-              <span className="font-semibold text-slate-700 text-xs">Bank Charges</span>
-              <span className="text-base font-bold text-orange-600">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ece4d2] bg-lux-cream p-3">
+              <span className="text-xs font-semibold text-lux-muted">Bank Charges</span>
+              <span className="text-base font-bold text-amber-600">
                 Rs {bankCharges.toFixed(2)}
               </span>
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-8 shadow-2xl w-full text-center">
-              <span className="text-xs font-bold text-white/80 uppercase tracking-[0.2em] block mb-3">
+            <div className="w-full rounded-3xl bg-gradient-to-br from-lux-emerald to-lux-deep p-8 text-center shadow-2xl ring-1 ring-lux-gold/30">
+              <span className="mb-3 block font-serif text-xs font-bold uppercase tracking-[0.2em] text-lux-gold-soft/80">
                 Final Payable Amount
               </span>
-              <span className="text-4xl font-black text-white drop-shadow-lg tabular-nums">
+              <span className="text-3xl font-black tabular-nums text-lux-gold-soft drop-shadow-lg sm:text-4xl">
                 Rs {payableAmount.toFixed(2)}
               </span>
             </div>

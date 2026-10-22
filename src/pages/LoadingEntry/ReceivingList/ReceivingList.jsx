@@ -151,12 +151,12 @@ const ReceivingList = () => {
       icon={FaClipboardList}
       noContentCard
     >
-      <div className="max-w-[1700px] mx-auto space-y-8 p-4 sm:p-6 lg:p-10">
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
+      <div className="mx-auto w-full max-w-6xl space-y-8">
+        <div className="lux-card lux-gold-top group relative overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="pointer-events-none absolute -mr-32 -mt-32 top-0 right-0 h-64 w-64 rounded-full bg-lux-gold/5 blur-3xl transition-transform duration-700 group-hover:scale-110" />
           <div className="relative space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex items-center p-1.5 bg-slate-100/50 rounded-2xl border border-slate-200/50 w-fit backdrop-blur-sm">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+              <div className="flex w-fit flex-wrap items-center rounded-2xl border border-[#e6dcc4] bg-[#f2eee2] p-1.5">
                 {["All", "Sent", "Not Sent"].map((status) => (
                   <button
                     key={status}
@@ -166,8 +166,8 @@ const ReceivingList = () => {
                     }}
                     className={`relative px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 ${
                       sentFilter === status
-                        ? "bg-white text-blue-600 shadow-md shadow-blue-100 ring-1 ring-blue-50"
-                        : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
+                        ? "bg-lux-cream text-lux-emerald shadow-md shadow-lux-emerald/10 ring-1 ring-lux-gold/30"
+                        : "text-lux-muted hover:bg-white/60 hover:text-lux-ink"
                     }`}
                   >
                     {status}
@@ -177,7 +177,7 @@ const ReceivingList = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   disabled={loadingEntries.length === 0}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center gap-2 text-xs uppercase tracking-widest"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
                 >
                   <FaFileAlt size={14} />
                   Master Report
@@ -185,12 +185,12 @@ const ReceivingList = () => {
                 <button
                   onClick={handleDownloadPDFReport}
                   disabled={loadingEntries.length === 0}
-                  className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center gap-2 text-xs uppercase tracking-widest"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg disabled:pointer-events-none disabled:opacity-60"
                 >
                   <FaPrint size={14} />
                   Table Report
                 </button>
-                <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center">
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
                   Live Database
                 </span>
               </div>

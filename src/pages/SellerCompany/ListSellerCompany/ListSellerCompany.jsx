@@ -149,12 +149,12 @@ const ListSellerCompany = () => {
     capitalizeWords(company.address),
     capitalizeWords(company.state),
     capitalizeWords(company.district),
-    <span key={`qty-${company._id}`} className="font-bold text-indigo-600">
+    <span key={`qty-${company._id}`} className="font-bold text-lux-ink">
       {(company.totalUnloadingWeight || 0).toFixed(2)} T
     </span>,
     <span
       key={`brokerage-${company._id}`}
-      className="font-bold text-emerald-600"
+      className="font-bold text-lux-emerald"
     >
       ₹
       {(company.totalBrokerage || 0).toLocaleString("en-IN", {
@@ -162,7 +162,7 @@ const ListSellerCompany = () => {
       })}
     </span>,
     formatBankDetails(company.bankDetails)?.map((bank, index) => (
-      <div key={index} className="text-xs space-y-0.5 mb-2">
+      <div key={index} className="mb-2 space-y-0.5 text-xs text-lux-muted">
         <strong>Bank {index + 1}:</strong>
         <div>
           <span className="font-semibold">Holder:</span>{" "}
@@ -204,9 +204,9 @@ const ListSellerCompany = () => {
         noContentCard
       >
         <ToastContainer position="top-right" autoClose={3000} />
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6">
-            <div className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400">
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+          <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
+            <div className="flex w-full max-w-md items-center rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 shadow-sm transition focus-within:border-lux-gold focus-within:ring-2 focus-within:ring-lux-gold/40">
               <input
                 type="text"
                 value={searchText}
@@ -215,12 +215,12 @@ const ListSellerCompany = () => {
                   setCurrentPage(1);
                 }}
                 placeholder="Search by name, GST, PAN or account number..."
-                className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+                className="w-full min-w-0 bg-transparent px-3 py-2 text-lux-ink placeholder:text-lux-muted focus:outline-none"
               />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+          <div className="lux-card w-full p-3 sm:p-4 lg:p-6">
             <Tables headers={headers} rows={rows} />
             <Pagination
               currentPage={currentPage}
@@ -236,7 +236,7 @@ const ListSellerCompany = () => {
               onClose={() => setSelectedCompany(null)}
               title={capitalizeWords(selectedCompany.companyName)}
             >
-              <div className="space-y-3">
+              <div className="space-y-3 text-lux-muted">
                 <p>
                   <strong>GST No:</strong> {toUpperCase(selectedCompany.gstNo)}
                 </p>
@@ -265,14 +265,14 @@ const ListSellerCompany = () => {
                 )}
                 <p>
                   <strong>Total Quantity:</strong>{" "}
-                  <span className="text-indigo-600 font-bold">
+                  <span className="font-bold text-lux-ink">
                     {(selectedCompany.totalUnloadingWeight || 0).toFixed(2)}{" "}
                     Tons
                   </span>
                 </p>
                 <p>
                   <strong>Total Brokerage:</strong>{" "}
-                  <span className="text-emerald-600 font-bold">
+                  <span className="font-bold text-lux-emerald">
                     ₹
                     {(selectedCompany.totalBrokerage || 0).toLocaleString(
                       "en-IN",
@@ -285,7 +285,7 @@ const ListSellerCompany = () => {
                 </div>
                 {formatBankDetails(selectedCompany.bankDetails)?.map(
                   (bank, index) => (
-                    <div key={index} className="mb-4 border-b pb-2 text-sm">
+                    <div key={index} className="mb-4 border-b border-[#ece4d2] pb-2 text-sm">
                       <p>
                         <strong>Bank {index + 1}:</strong>
                       </p>
@@ -310,7 +310,7 @@ const ListSellerCompany = () => {
                 )}
                 <button
                   onClick={() => generatePDF(selectedCompany)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl mt-4 font-semibold transition"
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-5 py-2.5 text-sm font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97]"
                 >
                   Download KYC Documents (PDF)
                 </button>

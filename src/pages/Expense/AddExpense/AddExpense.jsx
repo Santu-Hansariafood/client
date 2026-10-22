@@ -247,12 +247,12 @@ const AddExpense = () => {
       <div className="space-y-8">
         {/* Admin Section: Category Management */}
         {isAdmin && (
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <FaPlus className="text-emerald-500 text-sm" /> Create Expense Category
+          <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
+            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
+              <FaPlus className="text-lux-emerald text-sm" /> Create Expense Category
             </h2>
-            <form onSubmit={handleAddCategory} className="flex gap-4">
-              <div className="flex-1">
+            <form onSubmit={handleAddCategory} className="flex flex-col gap-4 sm:flex-row">
+              <div className="flex-1 min-w-0">
                 <DataInput
                   placeholder="Enter category name (e.g. Fuel, Stationery)"
                   value={newCategory}
@@ -267,16 +267,16 @@ const AddExpense = () => {
               />
             </form>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
               {categories.map((cat) => (
                 <div
                   key={cat._id}
-                  className="group flex items-center justify-between px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl hover:border-emerald-200 transition-all"
+                  className="group flex items-center justify-between gap-2 rounded-xl border border-[#ece4d2] bg-lux-cream px-4 py-2 transition-all hover:border-lux-gold/40"
                 >
-                  <span className="text-sm font-medium text-slate-700">{cat.name}</span>
+                  <span className="text-sm font-medium text-lux-ink">{cat.name}</span>
                   <button
                     onClick={() => handleDeleteCategory(cat._id)}
-                    className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                    className="text-lux-muted opacity-0 transition-colors group-hover:text-rose-500 group-hover:opacity-100"
                   >
                     <FaTrash size={12} />
                   </button>
@@ -287,14 +287,14 @@ const AddExpense = () => {
         )}
 
         {/* Request Submission Section */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <FaPaperPlane className="text-emerald-500 text-sm" /> Submit Expense Request
+        <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
+              <FaPaperPlane className="text-lux-emerald text-sm" /> Submit Expense Request
             </h2>
             <button
               onClick={addExpenseItem}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all font-bold text-sm"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
               <FaPlus size={12} /> Add More
             </button>
@@ -302,12 +302,12 @@ const AddExpense = () => {
           
           <form onSubmit={handleRequestSubmit} className="space-y-6">
             {expenseItems.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end p-4 bg-slate-50/50 rounded-xl border border-slate-100 relative">
+              <div key={index} className="relative grid grid-cols-1 items-end gap-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5 md:grid-cols-12 md:gap-6">
                 {expenseItems.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeExpenseItem(index)}
-                    className="absolute -top-2 -right-2 p-1.5 bg-rose-50 text-rose-500 rounded-full hover:bg-rose-100 transition-colors border border-rose-100 shadow-sm"
+                    className="absolute -top-2 -right-2 rounded-full border border-rose-100 bg-rose-50 p-1.5 text-rose-500 shadow-sm transition-colors hover:bg-rose-100"
                   >
                     <FaTimes size={10} />
                   </button>
@@ -341,7 +341,7 @@ const AddExpense = () => {
               </div>
             ))}
             
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-wrap justify-end gap-3 pt-2">
               <Buttons
                 type="submit"
                 label={isSubmittingRequest ? "Submitting..." : "Send for Approval"}
@@ -353,22 +353,22 @@ const AddExpense = () => {
         </div>
 
         {/* Filters and List Section */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-lg font-bold text-slate-800">
+        <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="font-serif text-lg font-semibold text-lux-ink">
               {isAdmin ? "Recent Expense Requests" : "Your Expense History"}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={downloadExcel}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all font-bold text-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 title="Download Excel"
               >
                 <FaFileExcel /> Excel
               </button>
               <button
                 onClick={generatePDF}
-                className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all font-bold text-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-lg"
                 title="Generate PDF"
               >
                 <FaFilePdf /> PDF
@@ -377,7 +377,7 @@ const AddExpense = () => {
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <div className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5 md:grid-cols-4">
             {isAdmin && (
               <DataDropdown
                 label="Employee"
@@ -409,42 +409,42 @@ const AddExpense = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="pb-4 font-bold text-slate-500 text-xs uppercase">Date</th>
-                  {isAdmin && <th className="pb-4 font-bold text-slate-500 text-xs uppercase">Employee</th>}
-                  <th className="pb-4 font-bold text-slate-500 text-xs uppercase">Category</th>
-                  <th className="pb-4 font-bold text-slate-500 text-xs uppercase">Amount</th>
-                  <th className="pb-4 font-bold text-slate-500 text-xs uppercase">Description</th>
-                  <th className="pb-4 font-bold text-slate-500 text-xs uppercase text-center">Status</th>
-                  {isAdmin && <th className="pb-4 font-bold text-slate-500 text-xs uppercase text-right">Actions</th>}
+                <tr className="border-b border-[#ece4d2]">
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Date</th>
+                  {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Employee</th>}
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Category</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Amount</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Description</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-center">Status</th>
+                  {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-right">Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-[#ece4d2]">
                 {requests.length > 0 ? (
                   requests.map((req) => (
-                    <tr key={req._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-4 text-sm text-slate-600">
+                    <tr key={req._id} className="hover:bg-lux-ivory/60 transition-colors">
+                      <td className="py-4 text-sm text-lux-muted">
                         {new Date(req.createdAt).toLocaleDateString()}
                       </td>
                       {isAdmin && (
                         <td className="py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm font-bold text-slate-700">{req.employee?.name}</span>
-                            <span className="text-[10px] text-slate-400">{req.employee?.email}</span>
+                            <span className="text-sm font-bold text-lux-ink">{req.employee?.name}</span>
+                            <span className="text-[10px] text-lux-muted">{req.employee?.email}</span>
                           </div>
                         </td>
                       )}
-                      <td className="py-4 text-sm font-medium text-slate-700">{req.category?.name}</td>
-                      <td className="py-4 text-sm font-bold text-emerald-600">Rs. {req.amount}</td>
-                      <td className="py-4 text-sm text-slate-500">{req.description || "-"}</td>
+                      <td className="py-4 text-sm font-medium text-lux-ink">{req.category?.name}</td>
+                      <td className="py-4 text-sm font-bold text-lux-emerald">Rs. {req.amount}</td>
+                      <td className="py-4 text-sm text-lux-muted">{req.description || "-"}</td>
                       <td className="py-4 text-center">
                         <span
-                          className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                             req.status === "approved"
-                              ? "bg-emerald-100 text-emerald-700"
+                              ? "border-emerald-200 bg-emerald-100 text-emerald-700"
                               : req.status === "rejected"
-                              ? "bg-rose-100 text-rose-700"
-                              : "bg-green-100 text-green-700"
+                              ? "border-rose-200 bg-rose-100 text-rose-700"
+                              : "border-amber-200 bg-amber-100 text-amber-800"
                           }`}
                         >
                           {req.status}
@@ -456,14 +456,14 @@ const AddExpense = () => {
                             <div className="flex justify-end gap-2">
                               <button
                                 onClick={() => handleStatusUpdate(req._id, "approved")}
-                                className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                className="rounded-xl bg-emerald-50 p-2 text-emerald-600 transition-colors hover:bg-emerald-100"
                                 title="Approve"
                               >
                                 <FaCheck size={14} />
                               </button>
                               <button
                                 onClick={() => handleStatusUpdate(req._id, "rejected")}
-                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
+                                className="rounded-xl bg-rose-50 p-2 text-rose-600 transition-colors hover:bg-rose-100"
                                 title="Reject"
                               >
                                 <FaTimes size={14} />
@@ -476,7 +476,7 @@ const AddExpense = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={isAdmin ? 7 : 5} className="py-10 text-center text-slate-400 italic">
+                    <td colSpan={isAdmin ? 7 : 5} className="py-10 text-center italic text-lux-muted">
                       No expense requests found
                     </td>
                   </tr>

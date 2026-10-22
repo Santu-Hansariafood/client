@@ -496,7 +496,7 @@ ${fileUrl}
   };
 
   const sectionClass =
-    "rounded-2xl border border-emerald-100 bg-white p-5 sm:p-6 shadow-md shadow-emerald-900/5";
+    "lux-card rounded-2xl border border-[#ece4d2] bg-lux-cream p-5 shadow-md shadow-emerald-900/5 sm:p-6";
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
@@ -505,7 +505,7 @@ ${fileUrl}
         icon={FaClipboardList}
         noContentCard
       >
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="mx-auto w-full max-w-4xl space-y-6">
           <div className={sectionClass}>
             <BuyerInformation
               formData={formData}
@@ -584,7 +584,7 @@ ${fileUrl}
           </div>
 
           <div className={sectionClass}>
-            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-4">
+            <h3 className="mb-4 font-serif text-base font-semibold text-lux-ink">
               Sauda Number
             </h3>
             <DataInput
@@ -599,7 +599,7 @@ ${fileUrl}
 
           <button
             onClick={handleSubmit}
-            className="w-full py-3.5 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+            className="w-full rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep py-3.5 font-bold text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/30 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-lux-gold/50 disabled:pointer-events-none disabled:opacity-60"
             disabled={isLoading}
           >
             {isLoading ? "Submitting..." : "Submit Order"}

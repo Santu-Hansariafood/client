@@ -14,11 +14,13 @@ const DateWiseTotalsSection = ({
   onSelectAdjustment,
   onClearAdjustment,
 }) => (
-  <section className="bg-white py-2">
+  <section className="lux-card lux-gold-top p-4 sm:p-6">
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h2 className="text-lg font-bold text-slate-800">Date-wise Totals</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="font-serif text-lg font-bold text-lux-ink">
+          Date-wise Totals
+        </h2>
+        <p className="text-sm text-lux-muted">
           Sauda, adjustment, loaded, and pending quantities for the selected
           date range
         </p>
@@ -46,7 +48,7 @@ const DateWiseTotalsSection = ({
     </div>
     {partyTotals.length > 0 && (
       <div className="mt-6 overflow-x-auto">
-        <h3 className="mb-3 text-sm font-bold text-slate-700">
+        <h3 className="mb-3 font-serif text-sm font-bold text-lux-ink">
           Buyer and Seller Finance Totals
         </h3>
         <Tables
@@ -71,7 +73,9 @@ const DateWiseTotalsSection = ({
     )}
     {saudaDetails.length > 0 && (
       <div className="mt-6 overflow-x-auto">
-        <h3 className="mb-3 text-sm font-bold text-slate-700">Sauda Details</h3>
+        <h3 className="mb-3 font-serif text-sm font-bold text-lux-ink">
+          Sauda Details
+        </h3>
         <Tables
           headers={[
             "Sauda Date",
@@ -112,7 +116,7 @@ const DateWiseTotalsSection = ({
     )}
     {adjustments.length > 0 && (
       <div className="mt-6 overflow-x-auto">
-        <h3 className="mb-3 text-sm font-bold text-slate-700">
+        <h3 className="mb-3 font-serif text-sm font-bold text-lux-ink">
           Adjusted Saudas
         </h3>
         <Tables
@@ -140,7 +144,7 @@ const DateWiseTotalsSection = ({
                 type="button"
                 onClick={() => onSelectAdjustment(adjustment)}
                 title="View adjustment details"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-ivory text-lux-emerald hover:bg-lux-cream"
               >
                 <AiOutlineEye size={17} />
               </button>
@@ -150,7 +154,7 @@ const DateWiseTotalsSection = ({
                   <button
                     type="button"
                     title="Download Sauda"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-ivory text-lux-emerald hover:bg-lux-cream"
                   >
                     <FaDownload size={13} />
                   </button>
@@ -162,7 +166,7 @@ const DateWiseTotalsSection = ({
       </div>
     )}
     {selectedAdjustment && (
-      <div className="mt-4 grid gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-2 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 text-sm text-lux-ink sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <span className="font-bold">Buyer:</span>{" "}
           {selectedAdjustment.buyer || "-"}
@@ -198,7 +202,7 @@ const DateWiseTotalsSection = ({
         <button
           type="button"
           onClick={onClearAdjustment}
-          className="text-left text-xs font-bold text-emerald-700 hover:text-emerald-900"
+          className="text-left text-xs font-bold text-lux-emerald hover:text-lux-deep"
         >
           Close details
         </button>

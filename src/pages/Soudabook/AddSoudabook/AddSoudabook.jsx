@@ -95,18 +95,18 @@ const AddSoudabook = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-6 bg-gray-50 shadow-lg rounded-lg space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">
+      <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 space-y-6">
+        <h2 className="font-serif text-2xl font-semibold text-lux-ink text-center mb-4">
           Add Soudabook
         </h2>
 
         {rows.map((row, index) => (
           <div
             key={index}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-center border p-4 rounded-lg bg-white shadow-md"
+            className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Date
               </label>
               <DateSelector
@@ -116,7 +116,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Seller Name
               </label>
               <DataDropdown
@@ -130,7 +130,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Item
               </label>
               <DataDropdown
@@ -142,7 +142,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 O.Qnty
               </label>
               <DataInput
@@ -153,7 +153,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Buyer Name
               </label>
               <DataDropdown
@@ -167,7 +167,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Rate
               </label>
               <DataInput
@@ -178,7 +178,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Loading Qnty
               </label>
               <DataInput
@@ -191,7 +191,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Location
               </label>
               <DataInput
@@ -204,7 +204,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Unloading Qnty
               </label>
               <DataInput
@@ -217,7 +217,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Payment Terms in days
               </label>
               <DataInput
@@ -230,7 +230,7 @@ const AddSoudabook = () => {
             </div>
 
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-serif text-sm font-medium text-lux-ink">
                 Remarks
               </label>
               <DataInput
@@ -243,13 +243,13 @@ const AddSoudabook = () => {
             <div className="col-span-1 flex justify-center space-x-2">
               <button
                 onClick={() => handleApproveRow(index)}
-                className="text-green-500 hover:text-green-700"
+                className="text-lux-emerald hover:text-lux-deep"
               >
                 <FaCheck size={18} />
               </button>
               <button
                 onClick={() => handleRemoveRow(index)}
-                className="text-red-500 hover:text-red-700"
+                className="text-rose-500 hover:text-rose-700"
               >
                 <FaTrash size={18} />
               </button>
@@ -260,7 +260,7 @@ const AddSoudabook = () => {
         <div className="flex justify-center mt-4">
           <button
             onClick={handleAddRow}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-md shadow-md hover:bg-blue-700"
+            className="flex items-center rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-6 py-3 text-lg font-semibold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-md transition hover:-translate-y-0.5"
           >
             <FaPlus className="mr-2" />
             Add More

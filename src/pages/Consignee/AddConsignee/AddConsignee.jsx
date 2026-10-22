@@ -166,11 +166,12 @@ const AddConsignee = () => {
         icon={FaTruck}
         noContentCard
       >
-        <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8 w-full max-w-5xl mx-auto">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="lux-card lux-gold-top p-4 sm:p-6 lg:p-8 w-full">
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_name}
                 </label>
                 <DataInput
@@ -182,7 +183,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_phone}
                 </label>
                 <DataInput
@@ -197,7 +198,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_email}
                 </label>
                 <DataInput
@@ -210,7 +211,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_gst}
                 </label>
                 <DataInput
@@ -223,7 +224,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_pan}
                 </label>
                 <DataInput
@@ -240,7 +241,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_state}
                 </label>
                 <DataDropdown
@@ -255,7 +256,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_district}
                 </label>
                 <DataDropdown
@@ -270,7 +271,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_location}
                 </label>
                 <DataInput
@@ -281,7 +282,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_pin}
                 </label>
                 <DataInput
@@ -295,7 +296,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_contact}
                 </label>
                 <DataInput
@@ -306,7 +307,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_mandi_license}
                 </label>
                 <DataInput
@@ -317,7 +318,7 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">
+                <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   {addConsigneeLable.consignee_active_status}
                 </label>
                 <DataDropdown
@@ -342,6 +343,7 @@ const AddConsignee = () => {
               />
             </div>
           </form>
+          </div>
         </div>
       </AdminPageShell>
     </Suspense>

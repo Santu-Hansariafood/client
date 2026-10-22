@@ -225,19 +225,19 @@ const BlogManagement = () => {
       subtitle="Manage internal news, announcements, and bulletins"
       icon={FaNewspaper}
     >
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-4">
+            <h3 className="font-serif text-xl font-semibold tracking-tight text-lux-ink">
               News Bulletin
             </h3>
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-              <FaRegCalendarAlt size={12} className="text-slate-400" />
+            <div className="flex items-center gap-2 rounded-xl border border-[#e6dcc4] bg-lux-cream px-3 py-1.5 shadow-sm">
+              <FaRegCalendarAlt size={12} className="text-lux-muted" />
               <input
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="text-[10px] font-black uppercase bg-transparent outline-none text-slate-600"
+                className="bg-transparent text-[10px] font-black uppercase text-lux-muted outline-none"
               />
               {filterDate && (
                 <button
@@ -251,7 +251,7 @@ const BlogManagement = () => {
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2 shadow-lg shadow-slate-200"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
           >
             {showAddForm ? (
               "Close Form"
@@ -264,13 +264,13 @@ const BlogManagement = () => {
         </div>
 
         {showAddForm && (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">
+          <div className="lux-card lux-gold-top overflow-hidden animate-fade-in-up">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#ece4d2] bg-lux-ivory p-4 sm:p-6">
+              <h4 className="font-serif text-sm font-semibold uppercase tracking-widest text-lux-ink">
                 New Publication
               </h4>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-600">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase text-lux-muted">
                   <input
                     type="checkbox"
                     checked={formData.isPublished}
@@ -285,13 +285,13 @@ const BlogManagement = () => {
                   Published
                 </label>
                 <div className="flex items-center gap-2">
-                  <FaTags className="text-slate-400" size={12} />
+                  <FaTags className="text-lux-muted" size={12} />
                   <select
                     value={formData.category}
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/10"
+                    className="rounded-lg border border-[#e6dcc4] bg-lux-cream px-3 py-1.5 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-lux-gold/30"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -302,10 +302,10 @@ const BlogManagement = () => {
                 </div>
               </div>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-6 p-4 sm:p-6 lg:p-8">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Main Title
                   </label>
                   <input
@@ -315,11 +315,11 @@ const BlogManagement = () => {
                       setFormData({ ...formData, title: e.target.value })
                     }
                     placeholder="e.g. Annual Commodity Forecast 2026"
-                    className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-slate-900"
+                    className="h-12 w-full rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 font-bold text-lux-ink outline-none transition-all focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/30"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     Publication Date
                   </label>
                   <input
@@ -328,13 +328,13 @@ const BlogManagement = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, date: e.target.value })
                     }
-                    className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-slate-900"
+                    className="h-12 w-full rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 font-bold text-lux-ink outline-none transition-all focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/30"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Sub-heading (Summary)
                 </label>
                 <textarea
@@ -344,41 +344,41 @@ const BlogManagement = () => {
                   }
                   placeholder="A brief overview of the news..."
                   rows={2}
-                  className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-slate-900 resize-none"
+                  className="w-full resize-none rounded-xl border border-[#e6dcc4] bg-lux-cream p-4 font-bold text-lux-ink outline-none transition-all focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/30"
                 />
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                     News Content
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-4">
                     <button
                       type="button"
                       onClick={() => handleAddBlock("paragraph")}
-                      className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
+                      className="text-[10px] font-black uppercase tracking-widest text-lux-emerald hover:text-lux-deep hover:underline"
                     >
                       + Paragraph
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAddBlock("subheading")}
-                      className="text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:underline"
+                      className="text-[10px] font-black uppercase tracking-widest text-lux-emerald hover:text-lux-deep hover:underline"
                     >
                       + Heading
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAddBlock("list", "bullet")}
-                      className="text-green-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1"
+                      className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-lux-emerald hover:text-lux-deep hover:underline"
                     >
                       <FaListUl size={10} /> + Bullet List
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAddBlock("list", "number")}
-                      className="text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1"
+                      className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-lux-emerald hover:text-lux-deep hover:underline"
                     >
                       <FaListOl size={10} /> + Number List
                     </button>
@@ -387,16 +387,16 @@ const BlogManagement = () => {
                 {formData.content.map((block, index) => (
                   <div
                     key={index}
-                    className="relative group bg-slate-50 p-6 rounded-2xl border border-slate-200"
+                    className="group relative rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6"
                   >
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
                       <span
-                        className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded ${
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                           block.type === "subheading"
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "border-emerald-200 bg-emerald-100 text-emerald-700"
                             : block.type === "list"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
+                              ? "border-emerald-200 bg-emerald-100 text-emerald-700"
+                              : "border-[#e6dcc4] bg-[#f2eee2] text-lux-muted"
                         }`}
                       >
                         {block.type === "list"
@@ -409,7 +409,7 @@ const BlogManagement = () => {
                           onClick={() =>
                             handleBlockChange(index, "bold", !block.bold)
                           }
-                          className={`w-8 h-8 rounded flex items-center justify-center font-bold border ${block.bold ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-200"}`}
+                          className={`flex h-8 w-8 items-center justify-center rounded font-bold border ${block.bold ? "border-lux-emerald bg-lux-emerald text-lux-gold-soft" : "border-[#e6dcc4] bg-lux-cream text-lux-muted"}`}
                           title="Bold"
                         >
                           B
@@ -419,7 +419,7 @@ const BlogManagement = () => {
                           onClick={() =>
                             handleBlockChange(index, "italic", !block.italic)
                           }
-                          className={`w-8 h-8 rounded flex items-center justify-center italic border ${block.italic ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-200"}`}
+                          className={`flex h-8 w-8 items-center justify-center rounded italic border ${block.italic ? "border-lux-emerald bg-lux-emerald text-lux-gold-soft" : "border-[#e6dcc4] bg-lux-cream text-lux-muted"}`}
                           title="Italic"
                         >
                           I
@@ -430,7 +430,7 @@ const BlogManagement = () => {
                           onChange={(e) =>
                             handleBlockChange(index, "color", e.target.value)
                           }
-                          className="w-8 h-8 rounded cursor-pointer border border-slate-200"
+                          className="h-8 w-8 cursor-pointer rounded border border-[#e6dcc4]"
                           title="Text Color"
                         />
                       </div>
@@ -445,7 +445,7 @@ const BlogManagement = () => {
                             handleBlockChange(index, "text", e.target.value)
                           }
                           placeholder="List title (optional)..."
-                          className="w-full h-10 px-4 rounded-xl border border-slate-200 text-xs font-bold"
+                          className="h-10 w-full rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 text-xs font-bold"
                           style={{ color: block.color || "#334155" }}
                         />
                         <div className="space-y-2 ml-4">
@@ -454,7 +454,7 @@ const BlogManagement = () => {
                               key={itemIdx}
                               className="flex items-center gap-2"
                             >
-                              <span className="text-xs font-bold text-slate-400 w-4">
+                              <span className="w-4 text-xs font-bold text-lux-muted">
                                 {block.listType === "bullet"
                                   ? "•"
                                   : `${itemIdx + 1}.`}
@@ -469,7 +469,7 @@ const BlogManagement = () => {
                                     e.target.value,
                                   )
                                 }
-                                className="flex-1 h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium"
+                                className="h-9 flex-1 rounded-lg border border-[#e6dcc4] bg-lux-cream px-3 text-xs font-medium"
                                 placeholder={`Item ${itemIdx + 1}...`}
                                 style={{ color: block.color || "#334155" }}
                               />
@@ -487,7 +487,7 @@ const BlogManagement = () => {
                           <button
                             type="button"
                             onClick={() => handleAddListItem(index)}
-                            className="text-[9px] font-black uppercase text-blue-600 hover:underline mt-2"
+                            className="mt-2 text-[9px] font-black uppercase text-lux-emerald hover:text-lux-deep hover:underline"
                           >
                             + Add Item
                           </button>
@@ -505,7 +505,7 @@ const BlogManagement = () => {
                             : "Enter paragraph content..."
                         }
                         rows={block.type === "subheading" ? 2 : 4}
-                        className={`w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all ${block.bold ? "font-bold" : "font-medium"} ${block.italic ? "italic" : ""} ${block.underline ? "underline" : ""}`}
+                        className={`w-full rounded-xl border border-[#e6dcc4] bg-lux-cream p-4 outline-none transition-all focus:border-lux-emerald focus:ring-2 focus:ring-lux-gold/30 ${block.bold ? "font-bold" : "font-medium"} ${block.italic ? "italic" : ""} ${block.underline ? "underline" : ""}`}
                         style={{ color: block.color || "#334155" }}
                       />
                     )}
@@ -513,7 +513,7 @@ const BlogManagement = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveBlock(index)}
-                      className="absolute -right-2 -top-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
                     >
                       <FaTrash size={10} />
                     </button>
@@ -522,30 +522,30 @@ const BlogManagement = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                <label className="block text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                   Featured Gallery (Multiple Images)
                 </label>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6">
                     {formData.images.map((url, idx) => (
                       <div
                         key={idx}
-                        className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group"
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-[#ece4d2] bg-lux-ivory"
                       >
                         <img
                           src={url}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           alt={`Gallery ${idx}`}
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
-                          className="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                          className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
                         >
                           <FaTrash size={10} />
                         </button>
                         {formData.imageUrl === url && (
-                          <div className="absolute bottom-0 inset-x-0 bg-emerald-500 text-white text-[8px] font-black uppercase text-center py-0.5">
+                          <div className="absolute inset-x-0 bottom-0 bg-lux-emerald py-0.5 text-center text-[8px] font-black uppercase text-lux-gold-soft">
                             Primary
                           </div>
                         )}
@@ -555,14 +555,14 @@ const BlogManagement = () => {
                             onClick={() =>
                               setFormData({ ...formData, imageUrl: url })
                             }
-                            className="absolute inset-0 bg-black/40 text-white text-[8px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 text-[8px] font-black uppercase text-white opacity-0 transition-opacity group-hover:opacity-100"
                           >
                             Set Primary
                           </button>
                         )}
                       </div>
                     ))}
-                    <label className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all bg-slate-50/50">
+                    <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#e6dcc4] bg-lux-ivory transition-all hover:bg-white">
                       <input
                         type="file"
                         className="hidden"
@@ -570,8 +570,8 @@ const BlogManagement = () => {
                         multiple
                         onChange={handleImageUpload}
                       />
-                      <FaPlus className="text-slate-300 mb-2" size={20} />
-                      <span className="text-[9px] font-black text-slate-400 uppercase">
+                      <FaPlus className="mb-2 text-lux-muted" size={20} />
+                      <span className="text-[9px] font-black uppercase text-lux-muted">
                         Add Images
                       </span>
                     </label>
@@ -579,18 +579,18 @@ const BlogManagement = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
+              <div className="flex flex-wrap justify-end gap-3 border-t border-[#ece4d2] pt-6">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 transition-all"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-6 py-3 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-blue-600 text-white px-10 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-8 py-3 text-xs font-bold uppercase tracking-widest text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/25 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60"
                 >
                   {submitting ? (
                     <Loading size="xs" />
@@ -605,32 +605,32 @@ const BlogManagement = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {loading ? (
             <Loading />
           ) : blogs.length > 0 ? (
             blogs.map((blog) => (
               <div
                 key={blog._id}
-                className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
+                className="lux-card lux-card-hover flex flex-col overflow-hidden"
               >
-                <div className="h-40 bg-slate-100 relative">
+                <div className="relative h-40 bg-lux-ivory">
                   {(blog.imageUrl || blog.images?.[0]) && (
                     <img
                       src={blog.imageUrl || blog.images?.[0]}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                       alt=""
                     />
                   )}
-                  <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    <div className="bg-white/90 backdrop-blur px-2 py-1 rounded-lg shadow-sm">
-                      <span className="text-[9px] font-black uppercase text-blue-600 tracking-tighter">
+                  <div className="absolute left-3 top-3 flex flex-col gap-2">
+                    <div className="rounded-lg bg-lux-cream/90 px-2 py-1 shadow-sm backdrop-blur">
+                      <span className="text-[9px] font-black uppercase tracking-tighter text-lux-emerald">
                         {blog.category || "General"}
                       </span>
                     </div>
                     {!blog.isPublished && (
-                      <div className="bg-green-500 text-white px-2 py-1 rounded-lg shadow-sm">
-                        <span className="text-[9px] font-black uppercase">
+                      <div className="rounded-lg bg-lux-emerald px-2 py-1 shadow-sm">
+                        <span className="text-[9px] font-black uppercase text-lux-gold-soft">
                           Draft
                         </span>
                       </div>
@@ -638,39 +638,39 @@ const BlogManagement = () => {
                   </div>
                   <button
                     onClick={() => handleDelete(blog._id)}
-                    className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur text-rose-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-rose-500 hover:text-white transition-all"
+                    className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-xl bg-lux-cream/90 text-rose-500 shadow-sm backdrop-blur transition-all hover:bg-rose-500 hover:text-white"
                   >
                     <FaTrash size={12} />
                   </button>
                 </div>
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-lux-muted">
                       <FaRegCalendarAlt size={10} />
                       {new Date(blog.date).toLocaleDateString("en-GB")}
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase">
-                      <FaEye size={10} className="text-slate-300" />
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-lux-muted">
+                      <FaEye size={10} className="text-lux-muted" />
                       {blog.views || 0}
                     </div>
                   </div>
-                  <h5 className="text-lg font-bold text-slate-800 line-clamp-2 mb-2">
+                  <h5 className="mb-2 font-serif text-lg font-semibold text-lux-ink line-clamp-2">
                     {blog.title}
                   </h5>
-                  <p className="text-xs text-slate-500 font-medium line-clamp-3 mb-4">
+                  <p className="mb-4 text-xs font-medium text-lux-muted line-clamp-3">
                     {blog.heading}
                   </p>
-                  <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
+                  <div className="mt-auto flex items-center justify-between border-t border-[#ece4d2] pt-4">
                     <div className="flex items-center gap-1.5">
                       {blog.images?.length > 1 && (
-                        <span className="bg-slate-100 text-slate-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
+                        <span className="rounded-full border border-[#e6dcc4] bg-[#f2eee2] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-muted">
                           +{blog.images.length - 1} Images
                         </span>
                       )}
                     </div>
                     <button
                       onClick={() => window.open(`/blog/${blog._id}`, "_blank")}
-                      className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-900"
+                      className="text-[10px] font-black uppercase text-lux-muted transition-colors hover:text-lux-emerald"
                     >
                       View Preview
                     </button>
@@ -679,7 +679,7 @@ const BlogManagement = () => {
               </div>
             ))
           ) : (
-            <div className="col-span-full py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-sm">
+            <div className="col-span-full py-20 text-center font-serif text-sm font-semibold uppercase tracking-widest text-lux-muted">
               No news publications found
             </div>
           )}

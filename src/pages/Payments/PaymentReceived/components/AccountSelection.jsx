@@ -30,24 +30,24 @@ const AccountSelection = ({
   if (!formData) return null;
   const showEntryLedger = (Number(formData.amount) || 0) > 0 || hasBuyerCompany;
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="lux-card lux-gold-top overflow-hidden">
+      <div className="p-4 sm:p-6 border-b border-[#ece4d2] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#1e3a5f] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#1e3a5f]/20">
+          <div className="w-12 h-12 bg-gradient-to-br from-lux-emerald to-lux-deep rounded-2xl flex items-center justify-center text-lux-gold-soft shadow-lg shadow-lux-emerald/20">
             <FaFilter size={18} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-800">
+            <h3 className="font-serif text-lg font-semibold text-lux-ink">
               Filters & new payment
             </h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-lux-muted font-medium">
               Data loads automatically · use filters only to narrow the list
             </p>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <div className="flex bg-lux-ivory p-1 rounded-xl border border-[#ece4d2]">
             {[
               {
                 id: "fresh",
@@ -66,8 +66,8 @@ const AccountSelection = ({
                 onClick={() => setAllocationSource(source.id)}
                 className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
                   allocationSource === source.id
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-400 hover:text-slate-600"
+                    ? "bg-lux-cream text-lux-ink shadow-sm"
+                    : "text-lux-muted hover:text-lux-ink"
                 }`}
               >
                 {source.icon}
@@ -76,24 +76,24 @@ const AccountSelection = ({
             ))}
           </div>
           {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
-            <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
+            <p className="text-[9px] font-black text-lux-emerald uppercase tracking-tighter animate-pulse">
               Tip: Use From Advance to spend buyer Cr. advance on seller lorries
             </p>
           )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 bg-[#1e3a5f] rounded-full" />
-            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
+            <div className="w-1.5 h-4 bg-lux-gold rounded-full" />
+            <h4 className="lux-eyebrow">
               Optional filters
             </h4>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+              <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Entry date (vouchers)
               </label>
               <input
@@ -101,11 +101,11 @@ const AccountSelection = ({
                 name="date"
                 value={formData.date}
                 onChange={handleInputChange}
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f] outline-none transition-all font-bold text-slate-900"
+                className="w-full h-[42px] px-4 rounded-xl border border-[#e4dbc6] bg-lux-cream focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold outline-none transition-all font-bold text-lux-ink"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+              <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Buyer company
               </label>
               <div className="relative">
@@ -117,13 +117,13 @@ const AccountSelection = ({
                   }
                   placeholder="All buyers"
                   isMulti={false}
-                  className="rounded-xl transition-all border-slate-200 hover:border-slate-300"
+                  className="rounded-xl transition-all border-[#e4dbc6] hover:border-lux-gold-soft"
                 />
                 {formData.companyId && (
                   <button
                     type="button"
                     onClick={handleClearCompany}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-500"
+                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-lux-muted hover:text-rose-500"
                     title="Clear filter"
                   >
                     <FaTimes size={12} />
@@ -131,13 +131,13 @@ const AccountSelection = ({
                 )}
               </div>
               {formData.companyId && !hasResolvedLedger && (
-                <p className="text-[10px] font-bold text-green-600 ml-1">
+                <p className="text-[10px] font-bold text-lux-emerald ml-1">
                   No ledger linked — required only to record payment
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+              <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
                 Seller company
               </label>
               <div className="relative">
@@ -160,13 +160,13 @@ const AccountSelection = ({
                   isDisabled={
                     formData.ledgerType === "Seller" ? false : !hasBuyerCompany
                   }
-                  className="rounded-xl transition-all border-slate-200 hover:border-slate-300"
+                  className="rounded-xl transition-all border-[#e4dbc6] hover:border-lux-gold-soft"
                 />
                 {formData.opposingCompanyId && (
                   <button
                     type="button"
                     onClick={handleClearOpposingCompany}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-500"
+                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-lux-muted hover:text-rose-500"
                     title="Clear filter"
                   >
                     <FaTimes size={12} />
@@ -181,7 +181,7 @@ const AccountSelection = ({
           <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex flex-col gap-2 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lux-emerald to-lux-deep flex items-center justify-center text-lux-gold-soft">
                   <FaMoneyBillWave size={12} />
                 </div>
                 <div>
@@ -202,7 +202,7 @@ const AccountSelection = ({
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs font-black text-emerald-900 tabular-nums tracking-tight">
+                <p className="font-serif text-xs font-semibold text-emerald-900 tabular-nums tracking-tight">
                   ₹{Number(dateTotal).toLocaleString("en-IN")}
                 </p>
               </div>

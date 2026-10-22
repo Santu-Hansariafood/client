@@ -10,12 +10,14 @@ const PurchaseOrdersSection = ({
   itemsPerPage,
   onPageChange,
 }) => (
-  <section className="bg-white px-4 py-4 sm:px-6">
+  <section className="lux-card lux-gold-top p-4 sm:p-6">
     <div className="mb-4 flex items-center justify-between gap-3">
       <div>
-        <h2 className="text-base font-semibold text-slate-800">Purchase orders</h2>
+        <h2 className="font-serif text-base font-semibold text-lux-ink">
+          Purchase orders
+        </h2>
       </div>
-      <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+      <span className="rounded-full border border-[#ece4d2] bg-lux-ivory px-3 py-1 text-[10px] font-black uppercase tracking-widest text-lux-emerald">
         {total} Records
       </span>
     </div>

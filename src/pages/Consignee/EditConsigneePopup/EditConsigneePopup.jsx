@@ -128,7 +128,7 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="bg-white p-2">
+      <div className="w-full">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
             <DataInput
@@ -260,7 +260,7 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
             />
           </div>
 
-          <div className="mt-8 flex justify-end gap-3">
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Buttons
               label="Cancel"
               variant="secondary"
