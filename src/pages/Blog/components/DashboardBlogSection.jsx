@@ -29,14 +29,14 @@ const DashboardBlogSection = () => {
   return (
     <div className="mt-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-2xl bg-[#1e3a5f] flex items-center justify-center text-white shadow-lg shadow-blue-200/50">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep flex items-center justify-center text-lux-gold-soft ring-1 ring-lux-gold/40 shadow-lg shadow-lux-emerald/25">
           <FaNewspaper size={14} />
         </div>
         <div>
-          <h4 className="font-black text-[#1e3a5f] uppercase tracking-tight">
+          <h4 className="font-serif text-lg font-semibold tracking-tight text-lux-ink">
             Hansaria Food News
           </h4>
-          <p className="text-[10px] font-bold text-[#059669] uppercase tracking-widest mt-0.5">
+          <p className="lux-eyebrow mt-0.5">
             Latest updates & announcements
           </p>
         </div>
@@ -46,23 +46,23 @@ const DashboardBlogSection = () => {
         {latestBlog ? (
           <BlogCard blog={latestBlog} />
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center shadow-sm border-dashed">
-            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
+          <div className="lux-card p-8 flex flex-col items-center justify-center text-center border-dashed">
+            <div className="w-12 h-12 rounded-full bg-[#ece4d2] flex items-center justify-center text-lux-muted mb-4">
               <FaNewspaper size={20} />
             </div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <p className="text-xs font-bold text-lux-muted uppercase tracking-widest">
               No news published yet
             </p>
           </div>
         )}
-        <div className="hidden md:flex bg-slate-50 rounded-3xl border border-dashed border-slate-200 p-8 flex-col items-center justify-center text-center group hover:bg-slate-100/50 transition-all">
-          <div className="w-16 h-16 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300 mb-4 group-hover:scale-110 transition-transform">
+        <div className="hidden md:flex lux-card border-dashed p-8 flex-col items-center justify-center text-center group transition-all hover:shadow-lux-emerald/15 hover:border-[#dccfa8]">
+          <div className="w-16 h-16 rounded-full bg-lux-cream border border-[#e9e2d3] flex items-center justify-center text-lux-muted mb-4 group-hover:scale-110 transition-transform">
             <FaNewspaper size={24} />
           </div>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+          <p className="text-sm font-bold text-lux-muted uppercase tracking-widest">
             More news coming soon
           </p>
-          <p className="text-[10px] font-medium text-slate-400 mt-2">
+          <p className="text-[10px] font-medium text-lux-muted mt-2">
             Stay tuned for the latest updates from Hansaria Food.
           </p>
         </div>

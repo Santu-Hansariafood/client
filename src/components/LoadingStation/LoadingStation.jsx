@@ -23,12 +23,12 @@ const LoadingStation = ({ formData, handleChange }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+      <label className="block mb-4 text-base font-serif font-semibold text-lux-ink">
         Loading Station
       </label>
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Select State
           </label>
           <DataDropdown

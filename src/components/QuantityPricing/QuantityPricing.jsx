@@ -57,13 +57,13 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+      <label className="block mb-4 text-base font-semibold font-serif text-lux-ink">
         Quantity and Pricing
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {inputFields.map(({ label, field, placeholder, type }) => (
           <div key={field}>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-sm font-medium text-lux-muted mb-1">
               {label}
             </label>
             <DataInput
@@ -75,7 +75,7 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
           </div>
         ))}
         <div key="gst">
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             GST (%)
           </label>
           <DataDropdown

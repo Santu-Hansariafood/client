@@ -233,12 +233,12 @@ const ConfirmBids = () => {
       typeof p.amount === "number" ? `₹${p.amount}` : "-",
       p.acceptedAt ? formatDateTime(p.acceptedAt) : "-",
       <span
-        className={`px-3 py-1 rounded-full text-white text-sm ${
+        className={`px-3 py-1 rounded-full text-sm ${
           p.status === "Confirmed"
-            ? "bg-green-500"
+            ? "bg-lux-emerald text-lux-gold-soft"
             : p.status === "Rejected"
-              ? "bg-red-500"
-              : "bg-yellow-500"
+              ? "bg-red-500 text-white"
+              : "bg-lux-gold text-lux-night"
         }`}
         key={p.phone}
       >
@@ -246,7 +246,7 @@ const ConfirmBids = () => {
       </span>,
       <button
         key={p.slNo}
-        className={`text-blue-500 hover:underline ${
+        className={`text-lux-emerald hover:text-lux-gold hover:underline ${
           p.status !== "Review" ? "cursor-not-allowed opacity-50" : ""
         }`}
         onClick={() => openPopup(p)}
@@ -272,22 +272,22 @@ const ConfirmBids = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+      <div className="min-h-screen lux-canvas p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 font-semibold text-sm"
+                className="p-2.5 bg-lux-cream border border-[#e9e2d3] text-lux-muted rounded-xl hover:bg-lux-ivory hover:border-[#dccfa8] transition-all shadow-sm flex items-center gap-2 font-semibold text-sm"
               >
                 <FaArrowLeft />
                 Back
               </button>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">
+                <h2 className="text-2xl font-bold text-lux-ink font-serif">
                   Confirm Bids
                 </h2>
-                <p className="text-sm text-slate-500 font-medium">
+                <p className="text-sm text-lux-muted font-medium">
                   Review and accept the best offers for your bid
                 </p>
               </div>
@@ -299,55 +299,55 @@ const ConfirmBids = () => {
           ) : (
             <div className="space-y-6">
               {bidDetails && (
-                <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                <div className="bg-lux-cream border border-[#e9e2d3] shadow-sm rounded-3xl p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <span className="p-2 bg-lux-ivory text-lux-emerald rounded-xl">
                       <FaUserTag />
                     </span>
-                    <h3 className="text-lg font-bold text-slate-800">
+                    <h3 className="text-lg font-bold text-lux-ink font-serif">
                       Bid Summary
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[11px] font-bold text-lux-gold uppercase tracking-wider">
                         Commodity
                       </p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                      <p className="text-sm font-bold text-lux-ink mt-0.5">
                         {bidDetails.commodity}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[11px] font-bold text-lux-gold uppercase tracking-wider">
                         Route
                       </p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                      <p className="text-sm font-bold text-lux-ink mt-0.5">
                         {bidDetails.origin} → {bidDetails.consignee}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[11px] font-bold text-lux-gold uppercase tracking-wider">
                         Quantity
                       </p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">
+                      <p className="text-sm font-bold text-lux-ink mt-0.5">
                         {bidDetails.quantity} MT
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[11px] font-bold text-lux-gold uppercase tracking-wider">
                         Target Rate
                       </p>
-                      <p className="text-sm font-bold text-emerald-600 mt-0.5">
+                      <p className="text-sm font-bold text-lux-gold mt-0.5">
                         ₹{bidDetails.rate}
                       </p>
                     </div>
                   </div>
                   {bidDetails.notes && (
-                    <div className="mt-4 pt-4 border-t border-slate-100">
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="mt-4 pt-4 border-t border-[#e9e2d3]">
+                      <p className="text-[11px] font-bold text-lux-gold uppercase tracking-wider">
                         Notes
                       </p>
-                      <p className="text-xs text-slate-600 mt-1 italic">
+                      <p className="text-xs text-lux-muted mt-1 italic">
                         {bidDetails.notes}
                       </p>
                     </div>
@@ -355,12 +355,12 @@ const ConfirmBids = () => {
                 </div>
               )}
 
-              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-800">
+              <div className="bg-lux-cream border border-[#e9e2d3] shadow-sm rounded-3xl overflow-hidden">
+                <div className="p-6 border-b border-[#e9e2d3] flex items-center justify-between">
+                  <h3 className="font-bold text-lux-ink font-serif">
                     Participating Sellers
                   </h3>
-                  <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
+                  <span className="px-3 py-1 bg-lux-gold/15 text-lux-gold text-xs font-bold rounded-full">
                     {participants.length} Sellers
                   </span>
                 </div>
@@ -379,34 +379,34 @@ const ConfirmBids = () => {
             title="Review Participation"
           >
             <div className="space-y-6 p-2">
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="bg-lux-ivory rounded-2xl p-4 border border-[#e9e2d3]">
                 <div
                   className={`grid ${userRole === "Buyer" ? "grid-cols-1" : "grid-cols-2"} gap-4`}
                 >
                   {userRole !== "Buyer" && (
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[10px] font-bold text-lux-gold uppercase tracking-wider">
                         Seller
                       </p>
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-lux-ink">
                         {selectedBid?.sellerName}
                       </p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <p className="text-[10px] font-bold text-lux-gold uppercase tracking-wider">
                       Company
                     </p>
-                    <p className="text-sm font-bold text-slate-800">
+                    <p className="text-sm font-bold text-lux-ink">
                       {selectedBid?.company}
                     </p>
                   </div>
                   {userRole !== "Buyer" && (
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="text-[10px] font-bold text-lux-gold uppercase tracking-wider">
                         Phone
                       </p>
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-lux-ink">
                         {selectedBid?.phone}
                       </p>
                     </div>
@@ -415,19 +415,19 @@ const ConfirmBids = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                <div className="p-4 rounded-2xl bg-lux-ivory border border-[#e9e2d3]">
+                  <p className="text-[10px] font-bold text-lux-emerald uppercase tracking-wider">
                     Seller Rate
                   </p>
-                  <p className="text-lg font-bold text-blue-700">
+                  <p className="text-lg font-bold text-lux-ink">
                     ₹{selectedBid?.rate}
                   </p>
                 </div>
-                <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                <div className="p-4 rounded-2xl bg-lux-ivory border border-[#e9e2d3]">
+                  <p className="text-[10px] font-bold text-lux-gold uppercase tracking-wider">
                     Seller Qty
                   </p>
-                  <p className="text-lg font-bold text-indigo-700">
+                  <p className="text-lg font-bold text-lux-ink">
                     {selectedBid?.quantity} MT
                   </p>
                 </div>
@@ -436,25 +436,25 @@ const ConfirmBids = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <label className="block">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                    <span className="text-xs font-bold text-lux-gold uppercase tracking-wider ml-1">
                       Final Approval Rate
                     </span>
                     <input
                       type="number"
                       value={approvalRate}
                       onChange={(e) => setApprovalRate(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition-all font-bold text-slate-700"
+                      className="mt-1.5 w-full rounded-xl bg-lux-ivory border border-[#e9e2d3] px-4 py-3 focus:ring-2 focus:ring-lux-gold/30 focus:border-lux-gold/50 outline-none transition-all font-bold text-lux-ink"
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                    <span className="text-xs font-bold text-lux-gold uppercase tracking-wider ml-1">
                       Final Approval Qty
                     </span>
                     <input
                       type="number"
                       value={approvalQuantity}
                       onChange={(e) => setApprovalQuantity(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition-all font-bold text-slate-700"
+                      className="mt-1.5 w-full rounded-xl bg-lux-ivory border border-[#e9e2d3] px-4 py-3 focus:ring-2 focus:ring-lux-gold/30 focus:border-lux-gold/50 outline-none transition-all font-bold text-lux-ink"
                     />
                   </label>
                 </div>
@@ -462,14 +462,14 @@ const ConfirmBids = () => {
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
-                  className="flex-1 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-200"
+                  className="flex-1 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night active:scale-95 transition-all shadow-lg shadow-lux-emerald/20"
                   onClick={() => handleStatusChange("Confirmed")}
                 >
                   <FaCheckCircle />
                   Confirm & Accept
                 </button>
                 <button
-                  className="flex-1 bg-white text-rose-600 border-2 border-rose-100 px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-rose-50 active:scale-95 transition-all"
+                  className="flex-1 bg-lux-cream text-red-600 border-2 border-red-100 px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all"
                   onClick={() => handleStatusChange("Rejected")}
                 >
                   <FaTimesCircle />

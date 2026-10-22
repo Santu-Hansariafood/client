@@ -17,12 +17,12 @@ const TransporterDashboard = () => {
     <div className="p-6 space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold font-serif text-lux-ink">
             Welcome back, {user?.name}!
           </h1>
-          <p className="text-slate-500">Here is your Transporter Dashboard.</p>
+          <p className="text-lux-muted">Here is your Transporter Dashboard.</p>
         </div>
-        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
+        <div className="flex items-center gap-2 bg-lux-ivory text-lux-gold px-4 py-2 rounded-lg border border-[#e9e2d3]">
           <FaClock />
           <span className="font-medium">
             {new Date().toLocaleDateString("en-IN", {
@@ -36,28 +36,28 @@ const TransporterDashboard = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          icon={<FaTruck className="text-blue-600" />}
+          icon={<FaTruck className="text-lux-emerald" />}
           label="Total Trips"
           value="48"
-          color="bg-blue-50"
+          color="bg-lux-ivory"
         />
         <StatCard
-          icon={<FaCalendarCheck className="text-emerald-600" />}
+          icon={<FaCalendarCheck className="text-lux-emerald" />}
           label="Pending Deliveries"
           value="5"
-          color="bg-emerald-50"
+          color="bg-[#f2eee2]"
         />
         <StatCard
-          icon={<FaCreditCard className="text-indigo-600" />}
+          icon={<FaCreditCard className="text-lux-gold" />}
           label="Pending Payments"
           value="₹12,500"
-          color="bg-indigo-50"
+          color="bg-lux-ivory"
         />
         <StatCard
-          icon={<FaUser className="text-orange-600" />}
+          icon={<FaUser className="text-lux-emerald" />}
           label="Status"
           value={user?.status || "Active"}
-          color="bg-orange-50"
+          color="bg-[#f2eee2]"
         />
       </div>
 
@@ -69,21 +69,21 @@ const TransporterDashboard = () => {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+  <div className="lux-card lux-card-hover p-6 flex items-center gap-4">
     <div className={`p-4 rounded-xl ${color}`}>{icon}</div>
     <div>
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="text-xl font-bold text-slate-800">{value}</p>
+      <p className="text-sm font-medium text-lux-muted">{label}</p>
+      <p className="text-xl font-bold text-lux-ink">{value}</p>
     </div>
   </div>
 );
 
 const DetailItem = ({ label, value }) => (
   <div className="space-y-1">
-    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+    <p className="text-xs font-semibold text-lux-muted uppercase tracking-wider">
       {label}
     </p>
-    <p className="text-base font-medium text-slate-700">
+    <p className="text-base font-medium text-lux-ink">
       {value || "Not Provided"}
     </p>
   </div>

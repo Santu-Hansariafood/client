@@ -392,12 +392,12 @@ const BuyerInformation = ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+      <label className="block mb-4 text-base font-semibold font-serif text-lux-ink">
         Buyer Information
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Select Buyer Group
           </label>
           <DataDropdown
@@ -412,7 +412,7 @@ const BuyerInformation = ({
           />
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-sm font-medium text-lux-muted mb-1">
               Select Company
             </label>
             <DataDropdown
@@ -430,38 +430,38 @@ const BuyerInformation = ({
           </div>
 
           {selectedCompany && (
-            <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200 mb-2">
-                <span className="text-sm font-bold text-slate-800">
+            <div className="mt-4 p-4 rounded-xl bg-lux-ivory border border-[#e9e2d3] space-y-2">
+              <div className="flex justify-between items-center pb-2 border-b border-[#e9e2d3] mb-2">
+                <span className="text-sm font-bold text-lux-ink">
                   Company Details
                 </span>
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-lux-emerald">
                   {selectedCompany.companyName}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="space-y-1">
-                  <p className="text-slate-500">Location</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">Location</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedCompany.location || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-slate-500">State / District</p>
-                  <p className="font-semibold text-slate-700">
+                  <p className="text-lux-muted">State / District</p>
+                  <p className="font-semibold text-lux-ink">
                     {selectedCompany.state || "N/A"} /{" "}
                     {selectedCompany.district || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-slate-500">GST Number</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">GST Number</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedCompany.gstNumber || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-slate-500">PAN Number</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">PAN Number</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedCompany.panNumber || "N/A"}
                   </p>
                 </div>
@@ -470,7 +470,7 @@ const BuyerInformation = ({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Consignee
           </label>
           <DataDropdown
@@ -487,38 +487,38 @@ const BuyerInformation = ({
           />
 
           {selectedConsigneeData && (
-            <div className="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2">
-              <div className="flex justify-between items-center pb-2 border-b border-emerald-100 mb-2">
-                <span className="text-sm font-bold text-slate-800">
+            <div className="mt-4 p-4 rounded-xl bg-lux-gold/10 border border-[#e6dcc4] space-y-2">
+              <div className="flex justify-between items-center pb-2 border-b border-[#e6dcc4] mb-2">
+                <span className="text-sm font-bold text-lux-ink">
                   Consignee Details
                 </span>
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-lux-emerald">
                   {selectedConsigneeData.phone}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="space-y-1">
-                  <p className="text-slate-500">Location</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">Location</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedConsigneeData.location || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-slate-500">State / District</p>
-                  <p className="font-semibold text-slate-700">
+                  <p className="text-lux-muted">State / District</p>
+                  <p className="font-semibold text-lux-ink">
                     {selectedConsigneeData.state || "N/A"} /{" "}
                     {selectedConsigneeData.district || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-slate-500">GST Number</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">GST Number</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedConsigneeData.gst || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-slate-500">PAN Number</p>
-                  <p className="font-semibold text-slate-700 uppercase">
+                  <p className="text-lux-muted">PAN Number</p>
+                  <p className="font-semibold text-lux-ink uppercase">
                     {selectedConsigneeData.pan || "N/A"}
                   </p>
                 </div>

@@ -132,17 +132,17 @@ const SudokuGame = ({ title = "Sudoku 6x6" }) => {
   const isSolved = status.startsWith("Solved");
 
   return (
-    <div className="w-full max-w-md mx-auto rounded-3xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/50 shadow-xl p-5">
+    <div className="w-full max-w-md mx-auto rounded-3xl border border-[#e9e2d3] bg-gradient-to-br from-lux-cream to-lux-ivory shadow-xl p-5">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-800 inline-flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+        <h2 className="text-lg sm:text-xl font-bold text-lux-ink font-serif inline-flex items-center gap-2">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-lux-gold/15 text-lux-gold">
             <FaTh className="text-sm" />
           </span>
           {title}
         </h2>
         <button
           onClick={newGame}
-          className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 inline-flex items-center gap-1.5"
+          className="px-3 py-1.5 text-sm bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-lg ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night inline-flex items-center gap-1.5"
         >
           <FaRedoAlt className="text-xs" />
           New Game
@@ -150,16 +150,16 @@ const SudokuGame = ({ title = "Sudoku 6x6" }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 mb-3 text-sm">
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 inline-flex items-center gap-2">
-          <FaClock className="text-emerald-600" />
+        <div className="rounded-lg bg-lux-cream border border-[#e9e2d3] px-3 py-2 text-lux-muted inline-flex items-center gap-2">
+          <FaClock className="text-lux-gold" />
           <span>Time: {formatTime(time)}</span>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600">
+        <div className="rounded-lg bg-lux-cream border border-[#e9e2d3] px-3 py-2 text-lux-muted">
           Filled: {filledCount}/36
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-1 bg-slate-300/80 p-1.5 rounded-xl">
+      <div className="grid grid-cols-6 gap-1 bg-[#e9e2d3] p-1.5 rounded-xl">
         {board.map((row, r) =>
           row.map((cell, c) => {
             const isFixed = puzzle[r][c] !== 0;
@@ -176,12 +176,12 @@ const SudokuGame = ({ title = "Sudoku 6x6" }) => {
                 className={`aspect-square text-center text-lg font-semibold rounded-md border transition-all
                 ${
                   isFixed
-                    ? "bg-slate-100 text-slate-700 border-slate-200"
+                    ? "bg-lux-ivory text-lux-ink border-[#e9e2d3]"
                     : isWrong
-                      ? "bg-rose-100 text-rose-700 border-rose-200"
-                      : "bg-white border-slate-200"
+                      ? "bg-red-100 text-red-700 border-red-200"
+                      : "bg-lux-cream border-[#e9e2d3]"
                 }
-                ${isSelected ? "ring-2 ring-emerald-400 scale-105" : ""}
+                ${isSelected ? "ring-2 ring-lux-gold/40 scale-105" : ""}
               `}
                 disabled={isFixed}
               />
@@ -193,7 +193,7 @@ const SudokuGame = ({ title = "Sudoku 6x6" }) => {
       <div className="flex justify-end mt-4">
         <button
           onClick={checkAnswer}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-lg ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night disabled:opacity-60 disabled:cursor-not-allowed"
           disabled={isSolved}
         >
           {isSolved ? "Solved" : "Check"}
@@ -203,7 +203,7 @@ const SudokuGame = ({ title = "Sudoku 6x6" }) => {
       {status && (
         <p
           className={`mt-3 text-center font-semibold inline-flex w-full justify-center items-center gap-1.5 ${
-            isSolved ? "text-emerald-700" : "text-slate-700"
+            isSolved ? "text-lux-emerald" : "text-lux-ink"
           }`}
         >
           {isSolved && <FaCheckCircle />}

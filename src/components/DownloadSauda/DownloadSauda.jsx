@@ -305,7 +305,7 @@ const DownloadSauda = ({
   };
 
   return (
-    <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2 gap-2">
+    <div className="flex items-center justify-center lux-card rounded-lg p-2 gap-2">
       {loading ? (
         <Loading />
       ) : (
@@ -325,8 +325,8 @@ const DownloadSauda = ({
               onClick={handleManualDownload}
               className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
                 isGenerating
-                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                  : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:scale-105"
+                  ? "bg-[#e6dcc4] cursor-not-allowed text-lux-muted"
+                  : "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 hover:scale-105"
               }`}
               title={isGenerating ? "Generating document..." : "Download PDF"}
               disabled={isGenerating}
@@ -347,8 +347,8 @@ const DownloadSauda = ({
               onClick={() => setShowEmailPopup(true)}
               className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
                 sendingEmail
-                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                  : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:scale-105"
+                  ? "bg-[#e6dcc4] cursor-not-allowed text-lux-muted"
+                  : "bg-gradient-to-br from-lux-gold to-lux-gold-soft text-lux-night ring-1 ring-lux-gold/40 hover:scale-105"
               }`}
               title={sendingEmail ? "Sending email..." : "Send via Email"}
               disabled={sendingEmail}
@@ -367,29 +367,29 @@ const DownloadSauda = ({
       )}
       {showEmailPopup && !autoEmail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Send PDF via Email</h3>
-            <p className="text-xs text-slate-500 mb-2">
+          <div className="lux-card p-6 rounded-lg">
+            <h3 className="font-serif text-lg font-bold text-lux-ink mb-4">Send PDF via Email</h3>
+            <p className="text-xs text-lux-muted mb-2">
               Default email is picked from buyer emails. You can change it if
               needed.
             </p>
             <input
               type="email"
               placeholder="Enter recipient's email"
-              className="w-full p-2 border rounded mb-4"
+              className="w-full p-2 rounded mb-4 bg-lux-ivory border border-[#e9e2d3] text-lux-ink placeholder:text-lux-muted/70 focus:outline-none focus:border-lux-gold/50 focus:ring-2 focus:ring-lux-gold/30"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
             />
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowEmailPopup(false)}
-                className="py-2 px-4 rounded bg-gray-300 hover:bg-gray-400"
+                className="py-2 px-4 rounded bg-[#e6dcc4] text-lux-ink hover:bg-[#dccfa8]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendEmail}
-                className="py-2 px-4 rounded bg-green-500 text-white hover:bg-green-600"
+                className="py-2 px-4 rounded bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft hover:from-lux-deep hover:to-lux-night"
                 disabled={sendingEmail}
               >
                 {sendingEmail ? "Sending..." : "Send"}

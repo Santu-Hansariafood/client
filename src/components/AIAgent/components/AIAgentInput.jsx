@@ -10,7 +10,7 @@ const AIAgentInput = React.memo(({
   isListening,
 }) => {
   return (
-    <div className="p-4 bg-white border-t border-slate-100">
+    <div className="p-4 bg-lux-cream border-t border-[#e9e2d3]">
       <div className="relative flex items-center gap-2">
         <button
           onClick={startListening}
@@ -18,7 +18,7 @@ const AIAgentInput = React.memo(({
           className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
             isListening
               ? "bg-red-500 text-white animate-pulse"
-              : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+              : "bg-lux-ivory text-lux-muted hover:bg-[#ece4d2] hover:text-lux-emerald"
           }`}
           title="Voice Search"
         >
@@ -34,17 +34,17 @@ const AIAgentInput = React.memo(({
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleSend(null, true)}
           placeholder="Type a command..."
-          className="flex-1 bg-slate-100 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-slate-400"
+          className="flex-1 bg-lux-ivory text-lux-ink border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-lux-gold/50 focus:border-lux-gold/40 outline-none transition-all placeholder:text-lux-muted/70"
         />
         <button
           onClick={() => handleSend(null, true)}
           disabled={!input.trim()}
-          className="w-11 h-11 bg-emerald-600 text-white rounded-2xl flex items-center justify-center hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-200"
+          className="w-11 h-11 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 rounded-2xl flex items-center justify-center hover:from-lux-deep hover:to-lux-night disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-lux-emerald/30"
         >
           <FaPaperPlane size={16} />
         </button>
       </div>
-      <p className="mt-2 text-[10px] text-center text-slate-400 font-medium">
+      <p className="mt-2 text-[10px] text-center text-lux-muted font-medium">
         Powered by Saria AI • Minimal Commands Supported
       </p>
     </div>

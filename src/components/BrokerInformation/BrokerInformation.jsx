@@ -47,12 +47,12 @@ const BrokerInformation = ({ formData, handleChange }) => {
 
   return (
     <>
-      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+      <label className="block mb-4 text-base font-serif font-semibold text-lux-ink">
         Broker Information
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Broker
           </label>
           <DataInput
@@ -62,7 +62,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Agent Name
           </label>
           {loading ? (
@@ -81,7 +81,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Brokerage Per Ton (Buyer)
           </label>
           <DataInput
@@ -96,7 +96,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Brokerage Per Ton (Seller)
           </label>
           <DataInput

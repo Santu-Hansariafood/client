@@ -7,7 +7,6 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
   const { userRole, user } = useAuth();
-  const lux = userRole === "Admin";
 
   const [expandedSection, setExpandedSection] = useState(
     localStorage.getItem("expandedSection") || null,
@@ -68,37 +67,21 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       <aside
         className={`
           fixed lg:sticky top-0 left-0 z-40 h-screen
-          text-slate-100
-          ${
-            lux
-              ? "shadow-[6px_0_36px_rgba(4,45,36,0.45)]"
-              : "shadow-[4px_0_24px_rgba(0,0,0,0.3)]"
-          }
-          ${
-            lux
-              ? "bg-gradient-to-b from-lux-night via-lux-deep to-lux-night"
-              : "bg-slate-950"
-          }
+          text-lux-cream
+          shadow-[6px_0_36px_rgba(4,45,36,0.45)]
+          bg-gradient-to-b from-lux-night via-lux-deep to-lux-night
           transform transition-[width,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${isCollapsed ? "w-[5rem]" : "w-72"}
           flex flex-col shrink-0
-          ${lux ? "border-r border-lux-gold/15" : "border-r border-white/5"}
+          border-r border-lux-gold/15
         `}
       >
-        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-white/5">
+        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-lux-gold/10">
           <div className="flex items-center gap-3 min-w-0 w-full">
-            <div
-              className={`group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 hover:rotate-6 ${
-                lux
-                  ? "bg-gradient-to-br from-lux-gold to-[#8a6b1f] shadow-lg shadow-black/30"
-                  : "bg-emerald-600 shadow-lg shadow-emerald-900/20"
-              }`}
-            >
-              <Icons.FaLeaf
-                className={`text-lg ${lux ? "text-lux-night" : "text-white"}`}
-              />
+            <div className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 hover:rotate-6 bg-gradient-to-br from-lux-gold to-[#8a6b1f] shadow-lg shadow-black/30">
+              <Icons.FaLeaf className="text-lg text-lux-night" />
             </div>
 
             <div
@@ -106,18 +89,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
               }`}
             >
-              <h1
-                className={`font-black text-lg tracking-tight leading-none ${
-                  lux ? "font-serif text-lux-gold-soft" : "text-white"
-                }`}
-              >
+              <h1 className="font-black text-lg tracking-tight leading-none font-serif text-lux-gold-soft">
                 HANSARIA
               </h1>
-              <span
-                className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${
-                  lux ? "text-lux-gold/80" : "text-emerald-500"
-                }`}
-              >
+              <span className="text-[9px] font-bold uppercase tracking-widest mt-1 text-lux-gold/80">
                 BID PORTAL
               </span>
             </div>
@@ -127,11 +102,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className={`absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 border border-white/10 text-slate-500 transition-all duration-300 shadow-lg z-50 ${
-                lux
-                  ? "hover:text-lux-gold-soft hover:border-lux-gold/40"
-                  : "hover:text-emerald-400 hover:border-emerald-500/50"
-              }`}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-lux-night border border-lux-gold/20 text-lux-gold-soft/60 transition-all duration-300 shadow-lg z-50 hover:text-lux-gold-soft hover:border-lux-gold/40"
             >
               <Icons.FaChevronLeft size={8} />
             </button>
@@ -142,11 +113,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           <button
             type="button"
             onClick={() => setIsCollapsed(false)}
-            className={`mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 text-slate-400 transition-all duration-300 ${
-              lux
-                ? "hover:text-lux-gold-soft hover:bg-lux-gold/10"
-                : "hover:text-emerald-400 hover:bg-white/10"
-            }`}
+            className="mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 text-lux-gold-soft/60 transition-all duration-300 hover:text-lux-gold-soft hover:bg-lux-gold/10"
           >
             <Icons.FaChevronRight size={10} />
           </button>
@@ -195,12 +162,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                           ? "justify-center py-3 h-12 hover:bg-white/5"
                           : `py-3 px-4 h-12 ${
                               isSectionExpanded
-                                ? lux
-                                  ? "bg-lux-gold/10 text-lux-gold-soft"
-                                  : "bg-white/10 text-white"
-                                : lux
-                                  ? "text-slate-300/80 hover:bg-white/5 hover:text-lux-gold-soft"
-                                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-lux-gold/10 text-lux-gold-soft"
+                                : "text-lux-gold-soft/60 hover:bg-white/5 hover:text-lux-gold-soft"
                             }`
                       }
                     `}
@@ -208,10 +171,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     <span
                       className={`shrink-0 transition-all duration-300 ${
                         isSectionExpanded
-                          ? lux
-                            ? "text-lux-gold"
-                            : "text-emerald-400"
-                          : "text-slate-500 group-hover:text-slate-300"
+                          ? "text-lux-gold"
+                          : "text-lux-gold/50 group-hover:text-lux-gold-soft"
                       }`}
                     >
                       {renderIcon(sectionIcon)}
@@ -226,23 +187,15 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                           size={8} 
                           className={`shrink-0 transition-transform duration-300 ${
                             isSectionExpanded
-                              ? lux
-                                ? "rotate-180 text-lux-gold"
-                                : "rotate-180 text-emerald-400"
-                              : "text-slate-600 group-hover:text-slate-400"
+                              ? "rotate-180 text-lux-gold"
+                              : "text-lux-gold/40 group-hover:text-lux-gold-soft"
                           }`}
                         />
                       </>
                     )}
 
                     {isCollapsed && isSectionExpanded && (
-                      <div
-                        className={`absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-l-full ${
-                          lux
-                            ? "bg-lux-gold shadow-[0_0_8px_rgba(201,162,39,0.6)]"
-                            : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                        }`}
-                      />
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-l-full bg-lux-gold shadow-[0_0_8px_rgba(201,162,39,0.6)]" />
                     )}
                   </button>
 
@@ -259,11 +212,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     >
                       <div className="pl-9 pr-1 py-1 space-y-1 relative">
                         {/* Connecting Line */}
-                        <div
-                          className={`absolute left-[22px] top-0 bottom-4 w-px ${
-                            lux ? "bg-lux-gold/10" : "bg-white/5"
-                          }`}
-                        />
+                        <div className="absolute left-[22px] top-0 bottom-4 w-px bg-lux-gold/10" />
                         
                         {section.actions.map((action, idx) => {
                           const isActive = location.pathname.startsWith(action.link);
@@ -280,10 +229,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                 transition-all duration-200
                                 ${
                                   isActive
-                                    ? lux
-                                      ? "bg-gradient-to-r from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-black/25"
-                                      : "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
-                                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                                    ? "bg-gradient-to-r from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-black/25"
+                                    : "text-lux-gold-soft/45 hover:text-lux-gold-soft hover:bg-white/5"
                                 }
                               `}
                             >

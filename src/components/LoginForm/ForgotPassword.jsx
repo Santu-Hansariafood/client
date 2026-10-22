@@ -94,14 +94,14 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
     <div className="space-y-6">
       <button
         onClick={onBack}
-        className="flex items-center text-sm text-emerald-600 font-medium hover:text-emerald-700 transition"
+        className="flex items-center text-sm text-lux-emerald font-medium hover:text-lux-gold transition"
       >
         <AiOutlineArrowLeft className="mr-1" /> Back to Login
       </button>
 
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Reset Password</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className="text-2xl font-bold text-lux-ink font-serif">Reset Password</h2>
+        <p className="text-sm text-lux-muted mt-1">
           {step === 1 && "Enter your mobile to receive an OTP on your email"}
           {step === 2 && "Enter the 6-digit OTP sent to your email"}
           {step === 3 &&
@@ -120,7 +120,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
             required
           />
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">Select Role</p>
+            <p className="text-sm font-semibold text-lux-muted mb-3">Select Role</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {roles.map((role) => (
                 <button
@@ -128,8 +128,8 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
                   onClick={() => setUserRole(role)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                     userRole === role
-                      ? "bg-emerald-600 text-white shadow-lg scale-105"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg scale-105"
+                      : "bg-lux-ivory text-lux-muted hover:bg-lux-cream"
                   }`}
                 >
                   {role}
@@ -140,7 +140,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
           <button
             onClick={handleSendOTP}
             disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl font-semibold text-lux-gold-soft bg-gradient-to-br from-lux-emerald to-lux-deep ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night transition disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send OTP"}
           </button>
@@ -160,13 +160,13 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
           <button
             onClick={handleVerifyOTP}
             disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl font-semibold text-lux-gold-soft bg-gradient-to-br from-lux-emerald to-lux-deep ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night transition disabled:opacity-50"
           >
             {loading ? "Verifying..." : "Verify OTP"}
           </button>
           <button
             onClick={handleSendOTP}
-            className="w-full text-sm text-emerald-600 hover:underline"
+            className="w-full text-sm text-lux-emerald hover:text-lux-gold hover:underline"
           >
             Resend OTP
           </button>
@@ -186,7 +186,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
             />
             <button
               type="button"
-              className="absolute right-4 top-[38px] text-gray-400 hover:text-emerald-600 transition"
+              className="absolute right-4 top-[38px] text-lux-muted hover:text-lux-gold transition"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -204,12 +204,12 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
-          <label className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+          <label className="flex items-start gap-3 rounded-2xl border border-[#e9e2d3] bg-lux-ivory px-4 py-3 text-sm text-lux-ink">
             <input
               type="checkbox"
               checked={confirmLogoutAllDevices}
               onChange={(e) => setConfirmLogoutAllDevices(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
+              className="mt-1 h-4 w-4 rounded border-[#dccfa8] text-lux-emerald focus:ring-lux-gold/40"
             />
             <span>
               I understand that changing this password will log out this account
@@ -219,7 +219,7 @@ const ForgotPassword = ({ onBack, userRole: initialRole }) => {
           <button
             onClick={handleResetPassword}
             disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl font-semibold text-lux-gold-soft bg-gradient-to-br from-lux-emerald to-lux-deep ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night transition disabled:opacity-50"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>

@@ -5,7 +5,6 @@ import WeatherWidget from "./components/WeatherWidget";
 import NotificationDropdown from "./components/NotificationDropdown";
 import ProfileDropdown from "./components/ProfileDropdown";
 import HeaderBranding from "./components/HeaderBranding";
-import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Header = ({
   onLogoutClick,
@@ -17,8 +16,6 @@ const Header = ({
 }) => {
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
-  const { userRole } = useAuth();
-  const lux = userRole === "Admin";
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [isChangePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -49,11 +46,7 @@ const Header = ({
   return (
     <>
       <header
-        className={
-          lux
-            ? "sticky top-0 z-40 border-b border-lux-gold/20 bg-gradient-to-r from-lux-night via-lux-deep to-lux-night backdrop-blur-xl shadow-lg animate-slide-down relative after:absolute after:inset-x-0 after:bottom-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-lux-gold/60 after:to-transparent after:pointer-events-none"
-            : "sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 backdrop-blur-xl shadow-lg animate-slide-down relative after:absolute after:inset-x-0 after:bottom-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-emerald-400/40 after:to-transparent after:pointer-events-none"
-        }
+        className="sticky top-0 z-40 border-b border-lux-gold/20 bg-gradient-to-r from-lux-night via-lux-deep to-lux-night backdrop-blur-xl shadow-lg animate-slide-down relative after:absolute after:inset-x-0 after:bottom-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-lux-gold/60 after:to-transparent after:pointer-events-none"
       >
         <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 h-16 sm:h-[72px]">
           <HeaderBranding

@@ -53,12 +53,12 @@ const HeaderSection = memo(
     }, []);
 
     return (
-      <div className="relative bg-white border border-blue-100 rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-50/30 skew-x-12 translate-x-1/4" />
+      <div className="relative lux-card rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-lux-gold/10 skew-x-12 translate-x-1/4" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-4 md:gap-8">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-28 md:h-28 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center shadow-lg md:shadow-xl shadow-blue-100 ring-2 md:ring-4 ring-blue-50/50 p-2 md:p-3">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-28 md:h-28 bg-lux-cream rounded-2xl md:rounded-3xl flex items-center justify-center shadow-lg md:shadow-xl shadow-lux-emerald/10 ring-2 md:ring-4 ring-lux-gold/30 p-2 md:p-3">
               <img
                 src={logo}
                 alt="Hansaria Logo"
@@ -67,28 +67,28 @@ const HeaderSection = memo(
             </div>
             <div>
               <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-2">
-                <span className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[8px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                <span className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-lux-emerald animate-pulse" />
+                <p className="text-[8px] md:text-[10px] font-black text-lux-gold font-display uppercase tracking-[0.2em] md:tracking-[0.3em]">
                   Hansaria Buyer Portal
                 </p>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter">
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-black font-serif text-lux-ink tracking-tighter">
                 {greeting},{" "}
-                <span className="text-blue-600 truncate block sm:inline">
+                <span className="text-lux-emerald truncate block sm:inline">
                   {userName?.split(" ")[0] || "Partner"}
                 </span>
               </h1>
               <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 md:mt-2">
-                <p className="text-slate-500/60 text-[10px] md:text-sm font-semibold hidden sm:block">
+                <p className="text-lux-muted text-[10px] md:text-sm font-semibold hidden sm:block">
                   Managing procurement for{" "}
-                  <span className="text-slate-800">
+                  <span className="text-lux-ink">
                     {companyName || "Verified Buyer"}
                   </span>
                 </p>
                 <button
                   onClick={onPrintIDCard}
                   disabled={isPrinting}
-                  className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night transition-all disabled:opacity-50"
                 >
                   {isPrinting ? "Generating..." : "Print ID Card"}
                 </button>
@@ -96,16 +96,16 @@ const HeaderSection = memo(
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:border-l lg:border-blue-100 lg:pl-10">
-            <div className="bg-blue-50/50 border border-blue-100 px-4 py-3 md:px-10 md:py-6 rounded-[1rem] md:rounded-[2rem] flex-1 sm:min-w-[240px] shadow-inner text-center">
-              <p className="text-[8px] md:text-[10px] font-bold text-blue-600/60 uppercase tracking-widest mb-1 md:mb-2">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:border-l lg:border-[#e9e2d3] lg:pl-10">
+            <div className="bg-lux-ivory border border-[#e9e2d3] px-4 py-3 md:px-10 md:py-6 rounded-[1rem] md:rounded-[2rem] flex-1 sm:min-w-[240px] shadow-inner text-center">
+              <p className="text-[8px] md:text-[10px] font-bold text-lux-gold font-display uppercase tracking-widest mb-1 md:mb-2">
                 Total Brokerage
               </p>
               <div className="flex items-baseline justify-center gap-1 md:gap-1.5">
-                <span className="text-[10px] md:text-xs font-black text-blue-600/40">
+                <span className="text-[10px] md:text-xs font-black text-lux-gold">
                   Rs.
                 </span>
-                <span className="text-xl md:text-4xl font-black text-slate-800 tracking-tighter">
+                <span className="text-xl md:text-4xl font-black text-lux-ink tracking-tighter">
                   {totalBrokerage.toLocaleString("en-IN")}
                 </span>
               </div>
@@ -133,14 +133,14 @@ const StatCard = memo(
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
       role={onClick ? "button" : "article"}
       tabIndex={onClick ? 0 : undefined}
-      className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${
+      className={`lux-card p-4 md:p-6 rounded-2xl md:rounded-[2rem] shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${
         onClick
-          ? "cursor-pointer hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ? "cursor-pointer hover:shadow-xl hover:shadow-lux-emerald/15 hover:border-[#dccfa8] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
           : ""
       }`}
     >
       <div
-        className={`w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${colorClass} bg-opacity-10 shadow-inner ring-2 md:ring-4 ring-white shrink-0`}
+        className={`w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${colorClass} shadow-inner ring-2 md:ring-4 ring-lux-cream shrink-0`}
       >
         <span
           className={`text-xl md:text-2xl ${colorClass.replace("bg-", "text-")}`}
@@ -149,21 +149,21 @@ const StatCard = memo(
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] md:tracking-[0.2em] mb-0.5 md:mb-1 truncate">
+        <p className="text-[8px] md:text-[10px] font-black text-lux-muted font-display uppercase tracking-[0.1em] md:tracking-[0.2em] mb-0.5 md:mb-1 truncate">
           {title}
         </p>
         <div className="flex items-baseline gap-1">
-          <p className="text-lg md:text-2xl font-black text-slate-800 tracking-tight truncate">
+          <p className="text-lg md:text-2xl font-black text-lux-ink tracking-tight truncate">
             {typeof value === "number" ? value.toLocaleString("en-IN") : value}
           </p>
           {unit && (
-            <span className="text-[8px] md:text-xs font-black text-slate-400 uppercase tracking-widest">
+            <span className="text-[8px] md:text-xs font-black text-lux-muted uppercase tracking-widest">
               {unit}
             </span>
           )}
         </div>
         {subtitle && (
-          <p className="text-[7px] md:text-[9px] text-blue-600 font-bold mt-0.5 md:mt-1 uppercase tracking-widest truncate">
+          <p className="text-[7px] md:text-[9px] text-lux-emerald font-bold mt-0.5 md:mt-1 uppercase tracking-widest truncate">
             {subtitle}
           </p>
         )}
@@ -193,12 +193,12 @@ const CommodityItem = memo(
     );
 
     return (
-      <div className="group relative bg-white hover:bg-blue-50/30 p-4 md:p-6 rounded-[1rem] md:rounded-[1.5rem] border border-slate-100 transition-all duration-300 shadow-sm md:shadow-none">
+      <div className="group relative bg-lux-cream hover:bg-lux-ivory p-4 md:p-6 rounded-[1rem] md:rounded-[1.5rem] border border-[#e9e2d3] transition-all duration-300 shadow-sm md:shadow-none">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-5">
           <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
             <div
               className={`h-10 w-10 md:h-14 md:w-14 rounded-lg md:rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform ${
-                type === "company" ? "bg-indigo-700" : "bg-blue-700"
+                type === "company" ? "bg-lux-deep" : "bg-lux-emerald"
               }`}
             >
               <span className="text-xs md:text-sm font-black tracking-tighter italic">
@@ -208,20 +208,20 @@ const CommodityItem = memo(
             <div className="min-w-0 flex-1">
               <h4
                 className={`text-xs md:text-sm font-black uppercase tracking-wider truncate ${
-                  type === "company" ? "text-indigo-800" : "text-blue-800"
+                  type === "company" ? "text-lux-ink" : "text-lux-ink"
                 }`}
               >
                 {item?._id || "Other"}
               </h4>
               <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mt-0.5 md:mt-1.5">
-                <p className="text-[7px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                <p className="text-[7px] md:text-[9px] font-bold text-lux-muted uppercase tracking-widest flex items-center gap-1 md:gap-2">
                   <FaHistory className="text-[6px] md:text-[8px]" />{" "}
                   {item?.trips || 0} Loads
                 </p>
-                <span className="h-0.5 w-0.5 md:h-1 md:w-1 rounded-full bg-slate-200" />
+                <span className="h-0.5 w-0.5 md:h-1 md:w-1 rounded-full bg-[#dccfa8]" />
                 <span
                   className={`text-[7px] md:text-[9px] font-black uppercase tracking-widest ${
-                    type === "company" ? "text-indigo-500" : "text-blue-500"
+                    type === "company" ? "text-lux-gold" : "text-lux-gold"
                   }`}
                 >
                   {type === "company" ? "Procurement Node" : "Market Sync"}
@@ -232,34 +232,34 @@ const CommodityItem = memo(
 
           <div className="flex items-center justify-between md:justify-end gap-4 md:gap-12 shrink-0">
             <div className="text-left md:text-right">
-              <p className="text-[7px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0 md:mb-1">
+              <p className="text-[7px] md:text-[9px] font-bold text-lux-muted uppercase tracking-widest mb-0 md:mb-1">
                 Quantity
               </p>
               <div className="flex items-baseline justify-start md:justify-end gap-0.5 md:gap-1">
                 <span
                   className={`text-sm md:text-lg font-black ${
-                    type === "company" ? "text-indigo-800" : "text-blue-800"
+                    type === "company" ? "text-lux-ink" : "text-lux-ink"
                   }`}
                 >
                   {quantity.toFixed(1)}
                 </span>
-                <span className="text-[7px] md:text-[10px] font-bold text-slate-400 uppercase">
+                <span className="text-[7px] md:text-[10px] font-bold text-lux-muted uppercase">
                   Tons
                 </span>
               </div>
             </div>
 
             <div className="text-right min-w-[100px] md:min-w-[140px]">
-              <p className="text-[7px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0 md:mb-1">
+              <p className="text-[7px] md:text-[9px] font-bold text-lux-muted uppercase tracking-widest mb-0 md:mb-1">
                 Net Brokerage
               </p>
               <div className="flex items-baseline justify-end gap-0.5 md:gap-1.5">
-                <span className="text-[8px] md:text-[10px] font-black text-slate-400">
+                <span className="text-[8px] md:text-[10px] font-black text-lux-muted">
                   Rs.
                 </span>
                 <span
                   className={`text-sm md:text-lg font-black ${
-                    type === "company" ? "text-indigo-800" : "text-blue-800"
+                    type === "company" ? "text-lux-ink" : "text-lux-ink"
                   }`}
                 >
                   {brokerage.toLocaleString("en-IN", {
@@ -275,10 +275,10 @@ const CommodityItem = memo(
                   e.stopPropagation();
                   onAction(item?._id);
                 }}
-                className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 transition-all shadow-sm ${
+                className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-2xl bg-lux-cream border border-[#e9e2d3] flex items-center justify-center text-lux-muted transition-all shadow-sm ${
                   type === "company"
-                    ? "hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50"
-                    : "hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50"
+                    ? "hover:text-lux-emerald hover:border-lux-gold/40 hover:bg-lux-ivory"
+                    : "hover:text-lux-emerald hover:border-lux-gold/40 hover:bg-lux-ivory"
                 }`}
                 title={actionLabel || "Download Report"}
                 aria-label={actionLabel || "Download Report"}
@@ -289,10 +289,10 @@ const CommodityItem = memo(
           </div>
         </div>
 
-        <div className="mt-3 md:mt-5 h-1 md:h-2 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
+        <div className="mt-3 md:mt-5 h-1 md:h-2 w-full bg-[#ece4d2] rounded-full overflow-hidden p-0.5">
           <div
             className={`h-full rounded-full transition-all duration-1000 ease-out ${
-              type === "company" ? "bg-indigo-500" : "bg-blue-500"
+              type === "company" ? "bg-lux-gold" : "bg-lux-emerald"
             }`}
             style={{ width: `${percentage}%` }}
           />
@@ -677,35 +677,35 @@ const BuyerDashboard = () => {
       {
         label: "Market Bids",
         icon: <FaGavel />,
-        color: "bg-emerald-600",
+        color: "bg-lux-emerald",
         link: "/manage-bids/bid-list",
         count: "Live",
       },
       {
         label: "New Bid",
         icon: <FaPlus />,
-        color: "bg-blue-600",
+        color: "bg-lux-deep",
         link: "/manage-bids/buyer",
         count: "Post",
       },
       {
         label: "Accept Bids",
         icon: <FaCheckCircle />,
-        color: "bg-teal-600",
+        color: "bg-lux-emerald",
         link: "/manage-bids/bid-list/participate-bid-admin",
         count: stats.pendingBidAcceptances || 0, // now dynamic
       },
       {
         label: "Order History",
         icon: <FaBoxOpen />,
-        color: "bg-green-600",
+        color: "bg-lux-gold",
         link: "/manage-order/list-self-order",
         count: stats.totalSaudas,
       },
       {
         label: "Transactions",
         icon: <FaHistory />,
-        color: "bg-indigo-600",
+        color: "bg-lux-deep",
         link: "/buyer/bid-history",
         count: "View",
       },
@@ -718,20 +718,20 @@ const BuyerDashboard = () => {
   if (error) {
     return (
       <AdminPageShell noContentCard>
-        <div className="min-h-screen flex items-center justify-center bg-blue-50/20 p-4 sm:p-6">
-          <div className="bg-white p-8 sm:p-12 rounded-[2rem] sm:rounded-[3rem] shadow-2xl text-center max-w-lg border border-blue-100">
+        <div className="min-h-screen flex items-center justify-center bg-transparent p-4 sm:p-6">
+          <div className="lux-card p-8 sm:p-12 rounded-[2rem] sm:rounded-[3rem] shadow-2xl text-center max-w-lg">
             <div className="h-20 w-20 sm:h-24 sm:w-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-bounce">
               <FaExclamationTriangle size={32} />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-blue-800 italic uppercase tracking-tighter mb-4">
+            <h2 className="text-2xl sm:text-3xl font-black font-serif text-lux-ink italic uppercase tracking-tighter mb-4">
               Sync Error
             </h2>
-            <p className="text-blue-700/60 font-bold leading-relaxed text-sm sm:text-base">
+            <p className="text-lux-muted font-bold leading-relaxed text-sm sm:text-base">
               {error}
             </p>
             <button
               onClick={refreshDashboard}
-              className="mt-6 sm:mt-8 px-8 sm:px-10 py-3 sm:py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center gap-3 mx-auto text-sm sm:text-base"
+              className="mt-6 sm:mt-8 px-8 sm:px-10 py-3 sm:py-4 bg-lux-emerald text-lux-gold-soft rounded-2xl font-black uppercase tracking-widest hover:bg-lux-deep transition-all shadow-xl shadow-lux-emerald/20 flex items-center gap-3 mx-auto text-sm sm:text-base"
             >
               <FaSync />
               Retry Sync
@@ -745,7 +745,7 @@ const BuyerDashboard = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell noContentCard onRefresh={refreshDashboard}>
-        <div className="min-h-screen bg-[#f8fafc] p-3 sm:p-4 md:p-6 lg:p-10 space-y-4 sm:space-y-6 md:space-y-10 lg:space-y-14 max-w-[1700px] mx-auto">
+        <div className="min-h-screen bg-transparent p-3 sm:p-4 md:p-6 lg:p-10 space-y-4 sm:space-y-6 md:space-y-10 lg:space-y-14 max-w-[1700px] mx-auto">
           <HeaderSection
             userName={user?.name}
             totalBrokerage={stats.totalBrokerage}
@@ -774,7 +774,7 @@ const BuyerDashboard = () => {
               value={stats.totalUnloadingWeight.toFixed(2)}
               unit="Tons"
               icon={FaWeightHanging}
-              colorClass="bg-indigo-600"
+              colorClass="bg-lux-deep"
               subtitle="Material Total"
             />
             <StatCard
@@ -783,21 +783,21 @@ const BuyerDashboard = () => {
                 "en-IN",
               )}`}
               icon={FaWallet}
-              colorClass="bg-blue-600"
+              colorClass="bg-lux-gold"
               subtitle="Brokerage Dues"
             />
             <StatCard
               title="Active Saudas"
               value={stats.pendingSaudas}
               icon={FaClock}
-              colorClass="bg-green-600"
+              colorClass="bg-lux-emerald"
               subtitle="Awaiting Delivery"
             />
             <StatCard
               title="Material Reach"
               value={stats.commodityBreakdown.length}
               icon={FaChartLine}
-              colorClass="bg-emerald-600"
+              colorClass="bg-lux-emerald"
               subtitle="Diverse Portfolio"
             />
           </div>
@@ -805,23 +805,23 @@ const BuyerDashboard = () => {
           <DashboardBlogSection />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-start">
-            <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-blue-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500">
-              <div className="p-3 sm:p-4 md:p-8 border-b border-blue-50 bg-blue-50/20 flex items-center justify-between flex-wrap gap-2">
+            <div className="lux-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500">
+              <div className="p-3 sm:p-4 md:p-8 border-b border-[#e9e2d3] bg-lux-ivory/60 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep flex items-center justify-center text-lux-gold-soft shadow-lg">
                     <FaChartBar className="text-base sm:text-lg md:text-xl" />
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-base md:text-xl font-black text-blue-800 uppercase tracking-tight italic">
+                    <h3 className="text-sm sm:text-base md:text-xl font-black font-serif text-lux-ink uppercase tracking-tight italic">
                       Material{" "}
-                      <span className="text-blue-600">Intelligence</span>
+                      <span className="text-lux-emerald">Intelligence</span>
                     </h3>
-                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-blue-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-lux-muted font-display uppercase tracking-[0.2em] md:tracking-[0.3em]">
                       Precision Commodity Breakdown
                     </p>
                   </div>
                 </div>
-                <span className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-blue-600 bg-white px-2 sm:px-3 md:px-4 py-1 rounded-full border border-blue-100 uppercase tracking-widest shadow-sm">
+                <span className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-lux-emerald bg-lux-cream px-2 sm:px-3 md:px-4 py-1 rounded-full border border-[#e9e2d3] uppercase tracking-widest shadow-sm">
                   Sync Active
                 </span>
               </div>
@@ -836,8 +836,8 @@ const BuyerDashboard = () => {
                   ))
                 ) : (
                   <div className="py-8 sm:py-12 md:py-24 text-center">
-                    <FaBoxOpen className="text-2xl sm:text-3xl md:text-5xl text-blue-100 mx-auto mb-3 sm:mb-4 md:mb-6" />
-                    <p className="text-blue-800/40 font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
+                    <FaBoxOpen className="text-2xl sm:text-3xl md:text-5xl text-lux-gold/30 mx-auto mb-3 sm:mb-4 md:mb-6" />
+                    <p className="text-lux-muted font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
                       No intelligence data available
                     </p>
                   </div>
@@ -845,25 +845,25 @@ const BuyerDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-indigo-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500">
-              <div className="p-3 sm:p-4 md:p-8 border-b border-indigo-50 bg-indigo-50/20 flex items-center justify-between flex-wrap gap-2">
+            <div className="lux-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500">
+              <div className="p-3 sm:p-4 md:p-8 border-b border-[#e9e2d3] bg-lux-ivory/60 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep flex items-center justify-center text-lux-gold-soft shadow-lg">
                     <FaChartBar className="text-base sm:text-lg md:text-xl" />
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-base md:text-xl font-black text-indigo-800 uppercase tracking-tight italic">
+                    <h3 className="text-sm sm:text-base md:text-xl font-black font-serif text-lux-ink uppercase tracking-tight italic">
                       Entity{" "}
-                      <span className="text-indigo-600">Performance</span>
+                      <span className="text-lux-gold">Performance</span>
                     </h3>
-                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-700/40 uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                    <p className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-lux-muted font-display uppercase tracking-[0.2em] md:tracking-[0.3em]">
                       Company Wise Procurement Insights
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => navigate("/manage-order/list-self-order")}
-                  className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-600 bg-white px-2 sm:px-3 md:px-4 py-1 rounded-full border border-indigo-100 uppercase tracking-widest shadow-sm hover:bg-indigo-600 hover:text-white transition-all"
+                  className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-lux-emerald bg-lux-cream px-2 sm:px-3 md:px-4 py-1 rounded-full border border-[#e9e2d3] uppercase tracking-widest shadow-sm hover:bg-lux-emerald hover:text-lux-cream transition-all"
                   aria-label="View all orders"
                 >
                   View All
@@ -883,8 +883,8 @@ const BuyerDashboard = () => {
                   ))
                 ) : (
                   <div className="py-8 sm:py-12 md:py-24 text-center">
-                    <FaBoxOpen className="text-2xl sm:text-3xl md:text-5xl text-indigo-100 mx-auto mb-3 sm:mb-4 md:mb-6" />
-                    <p className="text-indigo-800/40 font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
+                    <FaBoxOpen className="text-2xl sm:text-3xl md:text-5xl text-lux-gold/30 mx-auto mb-3 sm:mb-4 md:mb-6" />
+                    <p className="text-lux-muted font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
                       No performance data captured
                     </p>
                   </div>
@@ -894,15 +894,15 @@ const BuyerDashboard = () => {
           </div>
 
           {/* Footer CTA */}
-          <div className="bg-blue-900 p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-blue-200 flex flex-wrap items-center justify-between gap-4 sm:gap-6 md:gap-12">
+          <div className="bg-gradient-to-br from-lux-night via-lux-deep to-lux-night p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] ring-1 ring-lux-gold/20 shadow-2xl shadow-lux-emerald/20 flex flex-wrap items-center justify-between gap-4 sm:gap-6 md:gap-12">
             <div className="flex items-center gap-4 sm:gap-6 md:gap-12">
               <div className="flex flex-col">
-                <p className="text-blue-400 text-[7px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 sm:mb-1 md:mb-2">
+                <p className="text-lux-gold text-[7px] sm:text-[8px] md:text-[10px] font-black font-display uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 sm:mb-1 md:mb-2">
                   Account Status
                 </p>
                 <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
                   <div
-                    className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-3 md:w-3 rounded-full bg-emerald-500 animate-ping"
+                    className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-3 md:w-3 rounded-full bg-lux-gold animate-ping"
                     aria-hidden="true"
                   ></div>
                   <span className="text-white font-black uppercase tracking-widest text-[8px] sm:text-[10px] md:text-sm">
@@ -914,15 +914,15 @@ const BuyerDashboard = () => {
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
               <button
                 onClick={() => navigate("/buyer/market-analytics")}
-                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3"
+                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-lux-gold/10 hover:bg-lux-gold/20 border border-lux-gold/30 text-lux-gold-soft rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3"
                 aria-label="View market intelligence"
               >
-                <FaChartLine className="text-blue-400 text-sm sm:text-base" />
+                <FaChartLine className="text-lux-gold text-sm sm:text-base" />
                 <span className="hidden xs:inline">Intelligence</span>
               </button>
               <button
                 onClick={() => navigate("/manage-bids/bid-list")}
-                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all shadow-xl shadow-blue-900/50 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3"
+                className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-lux-emerald hover:bg-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all shadow-xl flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3"
                 aria-label="View live bidding"
               >
                 <FaGavel />

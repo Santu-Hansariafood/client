@@ -99,8 +99,8 @@ const LoginForm = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-gray-100 px-4">
-        <div className="w-full max-w-md backdrop-blur-lg bg-white/80 p-8 rounded-3xl shadow-2xl border border-gray-200 transition-all duration-300">
+      <div className="min-h-screen flex items-center justify-center lux-canvas px-4">
+        <div className="w-full max-w-md backdrop-blur-lg lux-card p-8 rounded-3xl shadow-2xl transition-all duration-300">
           {showForgotPassword ? (
             <ForgotPassword
               onBack={() => setShowForgotPassword(false)}
@@ -110,10 +110,10 @@ const LoginForm = () => {
             <>
               {/* Header */}
               <div className="text-center mb-8">
-                <h2 className="text-4xl font-black text-slate-900 tracking-tighter font-display uppercase italic">
+                <h2 className="text-4xl font-black text-lux-ink tracking-tighter font-serif uppercase italic">
                   {loginLable.title1}
                 </h2>
-                <p className="text-emerald-600 mt-2 font-bold tracking-tight">
+                <p className="text-lux-gold mt-2 font-bold tracking-tight">
                   <Typewriter text={loginLable.title2} speed={80} delay={1000} />
                 </p>
               </div>
@@ -149,7 +149,7 @@ const LoginForm = () => {
 
                   <button
                     type="button"
-                    className="absolute right-4 top-[38px] text-gray-400 hover:text-emerald-600 transition"
+                    className="absolute right-4 top-[38px] text-lux-muted hover:text-lux-gold transition"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -164,7 +164,7 @@ const LoginForm = () => {
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition"
+                    className="text-sm font-medium text-lux-emerald hover:text-lux-gold transition"
                   >
                     Forgot Password?
                   </button>
@@ -172,7 +172,7 @@ const LoginForm = () => {
 
                 {/* Role Selector */}
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-3">
+                  <p className="text-sm font-semibold text-lux-muted mb-3">
                     Select Role
                   </p>
 
@@ -183,8 +183,8 @@ const LoginForm = () => {
                         onClick={() => setUserRole(role)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                           userRole === role
-                            ? "bg-emerald-600 text-white shadow-lg scale-105"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg scale-105"
+                            : "bg-lux-ivory text-lux-muted hover:bg-lux-cream"
                         }`}
                       >
                         {role}
@@ -196,10 +196,10 @@ const LoginForm = () => {
                 <button
                   onClick={handleLogin}
                   disabled={loading}
-                  className={`w-full py-3 rounded-xl font-semibold text-white transition-all duration-300 ${
+                  className={`w-full py-3 rounded-xl font-semibold text-lux-gold-soft transition-all duration-300 ${
                     loading
-                      ? "bg-emerald-400 cursor-not-allowed"
-                      : "bg-emerald-600 hover:bg-emerald-700 hover:shadow-xl active:scale-95"
+                      ? "bg-lux-emerald/50 cursor-not-allowed"
+                      : "bg-gradient-to-br from-lux-emerald to-lux-deep ring-1 ring-lux-gold/30 hover:from-lux-deep hover:to-lux-night hover:shadow-xl active:scale-95"
                   }`}
                 >
                   {loading ? "Logging in..." : "Sign In"}
@@ -207,7 +207,7 @@ const LoginForm = () => {
               </div>
             </>
           )}
-          <p className="text-center text-xs text-gray-400 mt-6">
+          <p className="text-center text-xs text-lux-muted mt-6">
             Secure login powered by Hansaria Food Private Limited
           </p>
         </div>

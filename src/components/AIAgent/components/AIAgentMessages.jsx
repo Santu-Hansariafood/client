@@ -23,7 +23,7 @@ const AIAgentMessages = React.memo(({
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 scroll-smooth no-scrollbar"
+      className="flex-1 overflow-y-auto p-4 space-y-4 bg-lux-ivory scroll-smooth no-scrollbar"
     >
       {messages.map((msg, idx) => (
         <div
@@ -35,8 +35,8 @@ const AIAgentMessages = React.memo(({
           <div
             className={`group relative max-w-[85%] rounded-2xl p-3.5 pb-8 shadow-sm ${
               msg.role === "user"
-                ? "bg-emerald-600 text-white rounded-tr-none"
-                : "bg-white border border-slate-100 text-slate-700 rounded-tl-none"
+                ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/20 rounded-tr-none"
+                : "bg-lux-cream border border-[#e9e2d3] text-lux-ink rounded-tl-none"
             }`}
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -47,7 +47,7 @@ const AIAgentMessages = React.memo(({
               <a
                 href={`tel:${msg.call.phone}`}
                 aria-label={`Call ${msg.call.name}`}
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-2 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:from-lux-deep hover:to-lux-night"
               >
                 <FaPhone size={11} />
                 Call {msg.call.name}
@@ -57,7 +57,7 @@ const AIAgentMessages = React.memo(({
             {msg.emailAction && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {emailSentIndex === idx ? (
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-lux-ivory px-4 py-2 text-xs font-bold text-lux-emerald ring-1 ring-[#dccfa8]">
                     <FaCheck size={11} /> Email sent
                   </span>
                 ) : (
@@ -75,7 +75,7 @@ const AIAgentMessages = React.memo(({
                         setEmailSendingIndex(null);
                       }
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-2 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 transition hover:from-lux-deep hover:to-lux-night disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <FaEnvelope size={11} />
                     {emailSendingIndex === idx ? "Sending..." : "Confirm & Send PDF"}
@@ -86,7 +86,7 @@ const AIAgentMessages = React.memo(({
 
             {msg.role === "user" ? (
               <div
-                className="absolute bottom-2 right-2 text-white/70"
+                className="absolute bottom-2 right-2 text-lux-gold-soft/70"
                 title="Sent"
               >
                 <FaCheck size={12} />
@@ -94,11 +94,11 @@ const AIAgentMessages = React.memo(({
             ) : (
               <button
                 onClick={() => handleCopy(msg.content, idx)}
-                className="absolute bottom-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-200 bg-white/70 text-slate-400 hover:text-slate-600 backdrop-blur-sm shadow-sm"
+                className="absolute bottom-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-lux-ivory bg-lux-cream/80 text-lux-muted hover:text-lux-emerald backdrop-blur-sm shadow-sm"
                 title="Copy message"
               >
                 {copiedIndex === idx ? (
-                  <FaCheck size={12} className="text-emerald-500" />
+                  <FaCheck size={12} className="text-lux-gold" />
                 ) : (
                   <FaCopy size={12} />
                 )}
@@ -111,7 +111,7 @@ const AIAgentMessages = React.memo(({
                   <button
                     key={i}
                     onClick={() => handleSend(s, true)}
-                    className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-all flex items-center gap-1.5 group"
+                    className="text-[11px] font-semibold bg-lux-ivory text-lux-emerald px-3 py-1.5 rounded-full border border-[#e9e2d3] hover:bg-lux-cream hover:border-[#dccfa8] transition-all flex items-center gap-1.5 group"
                   >
                     {s}
                     <FaArrowRight
@@ -128,9 +128,9 @@ const AIAgentMessages = React.memo(({
 
       {(isLoadingData || thinkingPath) && (
         <div className="flex justify-start animate-in fade-in duration-300">
-          <div className="bg-white border border-slate-100 p-3.5 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3">
-            <FaSpinner className="animate-spin text-emerald-600" />
-            <span className="text-sm text-slate-500 font-medium italic">
+          <div className="bg-lux-cream border border-[#e9e2d3] p-3.5 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3">
+            <FaSpinner className="animate-spin text-lux-gold" />
+            <span className="text-sm text-lux-muted font-medium italic">
               {thinkingPath || "Fetching details..."}
             </span>
           </div>

@@ -328,7 +328,7 @@ const BaseBid = ({ type }) => {
         extraHeaderContent={
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            className="flex items-center gap-2 text-sm text-lux-muted hover:text-lux-emerald"
           >
             <FaArrowLeft />
             Back
@@ -336,12 +336,12 @@ const BaseBid = ({ type }) => {
         }
       >
         <div className="max-w-4xl mx-auto space-y-8">
-          <div className="rounded-2xl border border-green-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="lux-card p-4 sm:p-6 md:p-8">
             {userRole === "Buyer" && (
               <div className="flex justify-start mb-6">
                 <button
                   onClick={() => navigate(-1)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-lux-emerald bg-lux-ivory border border-[#e9e2d3] rounded-xl hover:bg-lux-cream transition-colors"
                 >
                   <FaArrowLeft />
                   Back

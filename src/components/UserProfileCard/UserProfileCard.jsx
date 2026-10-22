@@ -59,8 +59,8 @@ const UserProfileCard = ({ user }) => {
   };
 
   return (
-    <div className="rounded-3xl overflow-hidden shadow-xl bg-white/70 backdrop-blur-xl border border-white/40">
-      <div className="relative bg-gradient-to-r from-emerald-500 to-green-700 p-6 sm:p-8 flex items-center gap-4">
+    <div className="lux-card overflow-hidden">
+      <div className="relative bg-gradient-to-r from-lux-emerald to-lux-deep p-6 sm:p-8 flex items-center gap-4">
         <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
 
         <div className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold">
@@ -69,15 +69,15 @@ const UserProfileCard = ({ user }) => {
 
         <div className="relative z-10 flex flex-col">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-bold font-serif text-white">
               {toTitleCase(user.name)}
             </h2>
 
             <span className="relative flex items-center justify-center">
-              <span className="w-4 h-4 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px]">
+              <span className="w-4 h-4 flex items-center justify-center rounded-full bg-lux-gold text-white text-[10px]">
                 ✓
               </span>
-              <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-50 animate-pulse"></span>
+              <span className="absolute inline-flex h-full w-full rounded-full bg-lux-gold-soft opacity-50 animate-pulse"></span>
             </span>
           </div>
 
@@ -120,15 +120,15 @@ const UserProfileCard = ({ user }) => {
 const DetailItem = ({ icon, label, value }) => (
   <div
     className="flex items-start gap-3 p-3 rounded-xl 
-    bg-white shadow-sm border border-slate-200 
+    bg-lux-cream shadow-sm border border-[#e9e2d3] 
     hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
   >
-    <div className="text-emerald-500 mt-1 text-lg">{icon}</div>
+    <div className="text-lux-emerald mt-1 text-lg">{icon}</div>
     <div>
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+      <p className="text-[10px] font-semibold text-lux-muted uppercase tracking-wider">
         {label}
       </p>
-      <p className="text-sm font-semibold text-slate-700 break-all">
+      <p className="text-sm font-semibold text-lux-ink break-all">
         {value || "N/A"}
       </p>
     </div>

@@ -3,7 +3,6 @@ import { useState } from "react";
 import PageHeader from "../PageHeader/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaSyncAlt } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const AdminPageShell = ({
   title,
@@ -19,8 +18,6 @@ const AdminPageShell = ({
   showBack = true,
 }) => {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
-  const lux = userRole === "Admin";
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = () => {
@@ -34,33 +31,22 @@ const AdminPageShell = ({
     }, 1200);
   };
 
-  const shimmer = `bg-gradient-to-r bg-[length:200%_100%] animate-shimmer ${
-    lux
-      ? "from-[#efe9dc] via-[#e5ddc9] to-[#efe9dc]"
-      : "from-slate-100 via-slate-200 to-slate-100"
-  }`;
+  const shimmer =
+    "bg-gradient-to-r bg-[length:200%_100%] animate-shimmer from-[#efe9dc] via-[#e5ddc9] to-[#efe9dc]";
 
-  const backButton = lux
-    ? "flex items-center gap-2 px-4 py-2 rounded-xl bg-lux-cream border border-[#e4dbc6] text-lux-emerald font-black uppercase text-[10px] tracking-widest hover:bg-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-lux-emerald/10 transition-all duration-200 shadow-sm active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 animate-fade-in"
-    : "flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 shadow-sm active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 animate-fade-in";
+  const backButton =
+    "flex items-center gap-2 px-4 py-2 rounded-xl bg-lux-cream border border-[#e4dbc6] text-lux-emerald font-black uppercase text-[10px] tracking-widest hover:bg-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-lux-emerald/10 transition-all duration-200 shadow-sm active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 animate-fade-in";
 
-  const refreshButton = lux
-    ? "flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft font-black uppercase text-[10px] tracking-widest ring-1 ring-lux-gold/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-lux-emerald/25 transition-all duration-200 shadow-lg active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 animate-fade-in disabled:opacity-70"
-    : "flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-900 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 shadow-lg active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 animate-fade-in disabled:opacity-70";
+  const refreshButton =
+    "flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft font-black uppercase text-[10px] tracking-widest ring-1 ring-lux-gold/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-lux-emerald/25 transition-all duration-200 shadow-lg active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 animate-fade-in disabled:opacity-70";
 
   return (
     <main
-      className={`min-h-[calc(100vh-5rem)] w-full max-w-full overflow-x-hidden px-4 py-6 sm:px-6 sm:py-10 ${
-        lux ? "lux-canvas" : "bg-slate-50"
-      } ${mainClassName}`}
+      className={`min-h-[calc(100vh-5rem)] w-full max-w-full overflow-x-hidden px-4 py-6 sm:px-6 sm:py-10 lux-canvas ${mainClassName}`}
     >
       <div
         className={`mx-auto w-full max-w-7xl animate-slide-up ${
-          noContentCard
-            ? ""
-            : lux
-              ? "lux-card p-4 sm:p-8 md:p-10"
-              : "rounded-3xl border border-slate-200 bg-white/70 backdrop-blur-md shadow-xl shadow-slate-900/5 p-4 sm:p-8 md:p-10"
+          noContentCard ? "" : "lux-card p-4 sm:p-8 md:p-10"
         } ${contentClassName}`}
       >
         <div className="flex items-center justify-between gap-4 mb-6">
@@ -93,9 +79,7 @@ const AdminPageShell = ({
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className={`rounded-2xl border p-4 sm:p-6 ${
-                    lux ? "border-[#e9e2d3] bg-lux-cream" : "border-slate-200 bg-white"
-                  }`}
+                  className="rounded-2xl border border-[#e9e2d3] bg-lux-cream p-4 sm:p-6"
                   style={{ animationDelay: `${(i + 1) * 150}ms` }}
                 >
                   <div className={`h-6 w-32 rounded-md ${shimmer} mb-4`} />

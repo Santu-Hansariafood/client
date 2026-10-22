@@ -34,7 +34,7 @@ const AdditionalFields = ({ state, handleChange }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
         {fields.map(({ label, field, type }, index) => (
           <div key={index}>
-            <label className="block text-sm font-medium mb-1">{label}</label>
+            <label className="block text-sm font-medium text-lux-muted mb-1">{label}</label>
             {type === "date" ? (
               <DateSelector
                 selectedDate={state[field] || getCurrentDate()}
@@ -44,7 +44,7 @@ const AdditionalFields = ({ state, handleChange }) => {
               <select
                 value={state[field] || "no"}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+                className="w-full rounded-xl border border-[#e9e2d3] bg-lux-ivory px-4 py-3 text-sm font-semibold text-lux-ink outline-none focus:border-lux-gold/50 focus:ring-2 focus:ring-lux-gold/30"
               >
                 <option value="no">No</option>
                 <option value="yes">Yes</option>
@@ -56,8 +56,8 @@ const AdditionalFields = ({ state, handleChange }) => {
                   onClick={() => handleChange(field, "active")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     state[field] === "active"
-                      ? "bg-green-500 text-white shadow-lg shadow-green-200"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-lg shadow-lux-emerald/20"
+                      : "bg-lux-ivory text-lux-muted hover:bg-[#ece4d2]"
                   }`}
                 >
                   Active
@@ -67,8 +67,8 @@ const AdditionalFields = ({ state, handleChange }) => {
                   onClick={() => handleChange(field, "closed")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     state[field] === "closed"
-                      ? "bg-red-500 text-white shadow-lg shadow-red-200"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+                      : "bg-lux-ivory text-lux-muted hover:bg-[#ece4d2]"
                   }`}
                 >
                   Closed

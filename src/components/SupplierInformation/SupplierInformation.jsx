@@ -132,12 +132,12 @@ const SupplierInformation = ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+      <label className="block mb-4 text-base font-semibold font-serif text-lux-ink">
         Supplier Information
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Select Supplier
           </label>
           <DataDropdown
@@ -151,7 +151,7 @@ const SupplierInformation = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Supplier Company
           </label>
           <DataDropdown
@@ -166,7 +166,7 @@ const SupplierInformation = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Payment Terms (in Days)
           </label>
           <DataInput
@@ -177,7 +177,7 @@ const SupplierInformation = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Delivery Date
           </label>
           <DateSelector
@@ -187,7 +187,7 @@ const SupplierInformation = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-sm font-medium text-lux-muted mb-1">
             Loading Date
           </label>
           <DateSelector
