@@ -41,27 +41,27 @@ const Buttons = React.memo(({
     onClick(e);
   }, [onClick, disabled, loading, createRipple]);
 
-  const baseStyles = `relative overflow-hidden rounded-2xl font-bold tracking-tight focus:outline-none transition-all duration-300 font-display select-none
+  const baseStyles = `relative overflow-hidden rounded-2xl font-bold tracking-tight focus:outline-none transition-all duration-300 font-serif select-none
     ${disabled || loading ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:shadow-xl active:scale-[0.97] hover:-translate-y-0.5"}
     ${fullWidth ? "w-full" : ""}`;
 
   const variants = {
     primary:
-      "bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 text-white hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2 shadow-lg shadow-emerald-600/25",
+      "bg-gradient-to-br from-lux-emerald via-lux-emerald to-lux-deep text-lux-cream hover:from-lux-deep hover:to-lux-night focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 shadow-[0_10px_24px_-10px_rgba(6,95,70,0.5)]",
     secondary:
-      "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 text-white hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 focus:ring-2 focus:ring-slate-500/50 focus:ring-offset-2 shadow-md shadow-slate-600/20",
+      "bg-gradient-to-br from-lux-ink via-lux-deep to-lux-night text-lux-cream hover:from-lux-night hover:to-lux-ink focus:ring-2 focus:ring-lux-gold/40 focus:ring-offset-2 shadow-md shadow-lux-night/25",
     danger:
-      "bg-gradient-to-br from-red-500 via-red-600 to-rose-600 text-white hover:from-red-600 hover:via-red-700 hover:to-rose-700 focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 shadow-lg shadow-red-500/25",
+      "bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white hover:from-red-600 hover:via-red-700 hover:to-red-800 focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 shadow-lg shadow-red-500/25",
     success:
-      "bg-gradient-to-br from-teal-500 via-emerald-600 to-green-600 text-white hover:from-teal-600 hover:via-emerald-700 hover:to-green-700 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2 shadow-md shadow-teal-600/20",
+      "bg-gradient-to-br from-lux-emerald via-lux-emerald to-lux-deep text-lux-gold-soft hover:from-lux-deep hover:to-lux-night focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 shadow-md shadow-lux-emerald/25",
     warning:
-      "bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 text-white hover:from-amber-500 hover:via-orange-600 hover:to-amber-700 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 shadow-md shadow-orange-500/25",
+      "bg-gradient-to-br from-lux-gold via-lux-gold to-[#a3873f] text-lux-cream hover:from-[#a3873f] hover:to-lux-gold focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 shadow-md shadow-lux-gold/25",
     outline:
-      "bg-white text-emerald-700 border-2 border-emerald-500 hover:bg-emerald-50 focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 hover:border-emerald-600",
+      "bg-lux-cream text-lux-emerald border-2 border-lux-emerald hover:bg-lux-ivory focus:ring-2 focus:ring-lux-gold/40 focus:ring-offset-2 hover:border-lux-gold",
     ghost:
-      "bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-2 focus:ring-slate-300/50 focus:ring-offset-2",
+      "bg-transparent text-lux-muted hover:bg-[#f2eee2] focus:ring-2 focus:ring-lux-gold/40 focus:ring-offset-2",
     gradient:
-      "bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 bg-[length:200%_200%] animate-gradient-shift text-white hover:shadow-2xl focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 shadow-xl shadow-cyan-500/20",
+      "bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald bg-[length:200%_200%] animate-gradient-shift text-lux-cream hover:shadow-2xl focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 shadow-xl shadow-lux-gold/20",
   };
 
   const sizes = {

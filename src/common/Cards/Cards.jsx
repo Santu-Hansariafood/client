@@ -26,12 +26,12 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
         rounded-2xl sm:rounded-3xl
         p-3 sm:p-4 lg:p-6
         min-h-[110px] sm:min-h-[140px]
-        bg-white border border-slate-200 shadow-md
+        bg-lux-cream border border-[#e9e2d3] shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)]
         backdrop-blur-xl
         transition-all duration-400 cubic-bezier(0.2, 0.8, 0.2, 1)
-        hover:shadow-2xl hover:-translate-y-1.5 hover:border-emerald-100
+        hover:shadow-2xl hover:-translate-y-1.5 hover:border-[#dccfa8]
         ${pressed ? "scale-[0.96]" : "scale-100"}
-        focus:outline-none focus:ring-2 focus:ring-emerald-400/60
+        focus:outline-none focus:ring-2 focus:ring-lux-gold/50
         active:scale-[0.97]
       `}
     >
@@ -39,7 +39,7 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
         className={`absolute inset-0 opacity-10 group-hover:opacity-25 transition-all duration-500 bg-gradient-to-br ${color}`}
       />
 
-      <div className="absolute -top-12 -right-12 w-28 h-28 sm:w-32 sm:h-32 bg-gradient-to-br from-white/60 to-slate-100/80 rounded-full opacity-50 blur-3xl group-hover:scale-150 group-hover:opacity-70 transition-all duration-700 ease-out" />
+      <div className="absolute -top-12 -right-12 w-28 h-28 sm:w-32 sm:h-32 bg-gradient-to-br from-lux-cream/70 to-[#f2eee2]/70 rounded-full opacity-50 blur-3xl group-hover:scale-150 group-hover:opacity-70 transition-all duration-700 ease-out" />
 
       <div className="relative z-10 flex flex-row sm:flex-col items-start justify-between h-full gap-2 sm:gap-0">
         <div className="flex flex-row sm:flex-col items-start sm:items-start gap-3 sm:gap-0 flex-1 min-w-0">
@@ -64,9 +64,9 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
               className="
               text-[10px] sm:text-xs
               font-extrabold
-              text-slate-500 uppercase tracking-[0.14em] sm:tracking-widest
-              group-hover:text-slate-700
-              font-display
+              text-lux-muted uppercase tracking-[0.14em] sm:tracking-widest
+              group-hover:text-lux-ink
+              font-serif
               leading-tight
               break-words
             "
@@ -80,9 +80,9 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
                 flex sm:hidden
                 text-2xl sm:text-3xl
                 font-black
-                text-slate-900
+                text-lux-ink
                 tracking-tighter
-                font-display
+                font-serif
                 leading-none
               "
               >
@@ -93,9 +93,9 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
                 hidden sm:block
                 text-xl sm:text-2xl lg:text-3xl
                 font-black
-                text-slate-900
+                text-lux-ink
                 tracking-tighter
-                font-display
+                font-serif
               "
               >
                 {count}
@@ -110,8 +110,8 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
           flex sm:hidden
           p-2
           rounded-xl
-          bg-gradient-to-br from-slate-800 to-slate-900
-          text-white shadow-md
+          bg-gradient-to-br from-lux-emerald to-lux-deep
+          text-lux-gold-soft shadow-md
           transition-all duration-400 cubic-bezier(0.34, 1.56, 0.64, 1)
         "
         >
@@ -124,10 +124,10 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
           absolute top-3 right-3 lg:top-4 lg:right-4
           p-1.5 lg:p-2
           rounded-xl lg:rounded-2xl
-          bg-slate-100 text-slate-400
+          bg-[#f2eee2] text-lux-muted
           transition-all duration-400 cubic-bezier(0.34, 1.56, 0.64, 1)
-          group-hover:bg-gradient-to-br group-hover:from-slate-800 group-hover:to-slate-900
-          group-hover:text-white group-hover:rotate-45 group-hover:scale-110
+          group-hover:bg-gradient-to-br group-hover:from-lux-emerald group-hover:to-lux-deep
+          group-hover:text-lux-gold-soft group-hover:rotate-45 group-hover:scale-110
         "
         >
           <FaArrowRight className="text-xs sm:text-sm lg:text-base" />
@@ -138,7 +138,7 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
         className="
         absolute bottom-0 right-0
         w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32
-        bg-gradient-to-tl from-slate-100/80 to-transparent
+        bg-gradient-to-tl from-[#f2eee2]/70 to-transparent
         rounded-tl-[100px]
         -mr-10 -mb-10 sm:-mr-14 sm:-mb-14
         opacity-50
@@ -147,7 +147,7 @@ const Cards = ({ title, count, icon: Icon, link, state, color, index = 0 }) => {
       "
       />
 
-      <div className="absolute inset-0 rounded-2xl sm:rounded-3xl ring-1 ring-inset ring-white/60 pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl sm:rounded-3xl ring-1 ring-inset ring-lux-gold/15 pointer-events-none" />
 
       <div
         className={`

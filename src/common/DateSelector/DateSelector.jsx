@@ -39,7 +39,7 @@ const DateSelector = ({ selectedDate, onChange }) => {
   };
 
   return (
-    <div className="w-full max-w-md flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/40 focus-within:border-emerald-500">
+    <div className="w-full max-w-md flex items-center gap-2 rounded-xl border border-[#e6dcc4] dark:border-lux-deep bg-lux-cream dark:bg-lux-night px-4 py-2 shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] transition-all duration-200 focus-within:ring-2 focus-within:ring-lux-gold/50 focus-within:border-lux-gold">
       <DatePicker
         selected={currentDate}
         onChange={handleDateChange}
@@ -49,14 +49,14 @@ const DateSelector = ({ selectedDate, onChange }) => {
         isClearable
         popperContainer={PopperContainer}
         popperClassName="z-[10050]"
-        className="w-full px-3 py-2.5 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+        className="w-full px-3 py-2.5 bg-transparent text-lux-ink dark:text-lux-ivory placeholder-lux-muted dark:placeholder-lux-muted focus:outline-none"
       />
 
       <button
         type="button"
         onClick={handleIconClick}
         aria-label="Select today"
-        className="shrink-0 p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+        className="shrink-0 p-2.5 rounded-xl bg-lux-emerald/10 hover:bg-lux-emerald/20 text-lux-emerald dark:text-lux-gold-soft transition-colors focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
       >
         <FaCalendarAlt size={18} />
       </button>

@@ -28,7 +28,7 @@ const Actions = ({ onView, onEdit, onDelete, size = "md", labels = false }) => {
   const buttonClass = (colors) => `
     flex items-center justify-center gap-1.5
     ${cfg.btn}
-    bg-white
+    bg-lux-cream
     ${colors.border} ${colors.text}
     hover:${colors.bgHover} hover:${colors.borderHover}
     active:scale-90 hover:scale-105 hover:-translate-y-0.5
@@ -41,39 +41,39 @@ const Actions = ({ onView, onEdit, onDelete, size = "md", labels = false }) => {
   return (
     <div className={`
       inline-flex items-center ${cfg.wrap}
-      bg-gradient-to-br from-slate-50 via-white to-slate-50
-      border border-slate-200/80 shadow-sm
+      bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream
+      border border-[#e9e2d3] shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)]
       animate-fade-in
     `}>
       <button
         type="button"
         onClick={onView}
         className={buttonClass({
-          border: "border border-emerald-100",
-          text: "text-emerald-600",
-          bgHover: "bg-emerald-50",
-          borderHover: "border-emerald-300",
-          ring: "focus:ring-emerald-400/40",
+          border: "border border-[#e6dcc4]",
+          text: "text-lux-emerald",
+          bgHover: "bg-lux-ivory",
+          borderHover: "border-[#dccfa8]",
+          ring: "focus:ring-lux-gold/40",
         })}
         title="View details"
       >
         <MdVisibility size={cfg.icon} className="shrink-0" />
-        {labels && <span className={`font-bold ${cfg.label}`}>View</span>}
+        {labels && <span className={`font-serif font-bold ${cfg.label}`}>View</span>}
       </button>
       <button
         type="button"
         onClick={onEdit}
         className={buttonClass({
-          border: "border border-blue-100",
-          text: "text-blue-600",
-          bgHover: "bg-blue-50",
-          borderHover: "border-blue-300",
-          ring: "focus:ring-blue-400/40",
+          border: "border border-lux-gold/20",
+          text: "text-lux-gold",
+          bgHover: "bg-lux-ivory",
+          borderHover: "border-[#dccfa8]",
+          ring: "focus:ring-lux-gold/40",
         })}
         title="Edit"
       >
         <MdEdit size={cfg.icon} className="shrink-0" />
-        {labels && <span className={`font-bold ${cfg.label}`}>Edit</span>}
+        {labels && <span className={`font-serif font-bold ${cfg.label}`}>Edit</span>}
       </button>
       <button
         type="button"
@@ -88,7 +88,7 @@ const Actions = ({ onView, onEdit, onDelete, size = "md", labels = false }) => {
         title="Delete"
       >
         <MdDelete size={cfg.icon} className="shrink-0" />
-        {labels && <span className={`font-bold ${cfg.label}`}>Delete</span>}
+        {labels && <span className={`font-serif font-bold ${cfg.label}`}>Delete</span>}
       </button>
     </div>
   );

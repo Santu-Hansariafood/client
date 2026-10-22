@@ -135,26 +135,26 @@ const WeatherWidget = () => {
     if (code === 0)
       return (
         <WiDaySunny
-          className={`${sizeClass} ${isDay ? "text-green-300" : "text-indigo-300"}`}
+          className={`${sizeClass} ${isDay ? "text-lux-gold-soft" : "text-[#e6dcc4]"}`}
         />
       );
     if (code >= 1 && code <= 3)
-      return <WiCloudy className={`${sizeClass} text-slate-200`} />;
+      return <WiCloudy className={`${sizeClass} text-[#f2eee2]`} />;
     if (code >= 51 && code <= 67)
-      return <WiRain className={`${sizeClass} text-sky-300`} />;
+      return <WiRain className={`${sizeClass} text-lux-gold-soft`} />;
     if (code >= 71 && code <= 86)
-      return <AiOutlineCloud className={`${sizeClass} text-slate-100`} />;
-    return <WiCloudy className={`${sizeClass} text-slate-300`} />;
+      return <AiOutlineCloud className={`${sizeClass} text-[#fffefb]`} />;
+    return <WiCloudy className={`${sizeClass} text-[#ece4d2]`} />;
   };
 
   const modalTitle = (
     <div className="min-w-0">
-      <p className="text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-[0.25em] mb-0.5">
+      <p className="text-[9px] sm:text-[10px] font-black text-lux-emerald uppercase tracking-[0.25em] mb-0.5">
         HFPL
       </p>
-      <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+      <h3 className="font-serif text-base sm:text-lg font-bold text-lux-ink tracking-tight leading-tight">
         Atmospheric{" "}
-        <span className="bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-lux-emerald to-lux-gold bg-clip-text text-transparent">
           Intelligence
         </span>
       </h3>
@@ -199,7 +199,7 @@ const WeatherWidget = () => {
             <span className="text-sm sm:text-base font-black text-white tabular-nums">
               {Math.round(weather.temp)}°
             </span>
-            <span className="text-[9px] font-bold text-emerald-200/90">C</span>
+            <span className="text-[9px] font-bold text-lux-gold-soft/90">C</span>
           </div>
           <span className="hidden sm:block text-[8px] font-black text-white/50 uppercase tracking-widest truncate max-w-[72px]">
             {locationName}
@@ -217,10 +217,10 @@ const WeatherWidget = () => {
       >
         <div className="space-y-5 sm:space-y-6 -mt-2 pb-2">
           <div
-            className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white shadow-xl ${
+            className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] ${
               isNight
-                ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900"
-                : "bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-700"
+                ? "bg-gradient-to-br from-lux-deep via-lux-night to-lux-deep"
+                : "bg-gradient-to-br from-lux-emerald via-lux-emerald to-lux-deep"
             }`}
           >
             <div
@@ -228,14 +228,14 @@ const WeatherWidget = () => {
               aria-hidden
             >
               <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/15 blur-3xl" />
-              <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-sky-400/20 blur-3xl" />
+              <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-lux-gold/20 blur-3xl" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_50%)]" />
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-[9px] font-black uppercase tracking-widest backdrop-blur-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-lux-gold-soft animate-pulse" />
                   Live feed
                 </span>
                 <span className="inline-flex items-center gap-1 text-[9px] font-bold text-white/70 uppercase tracking-wider">
@@ -290,8 +290,8 @@ const WeatherWidget = () => {
           </div>
 
           <div>
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 px-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-sky-500" />
+            <h4 className="text-[10px] font-black text-lux-muted uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 px-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-lux-emerald to-lux-gold" />
               7-day outlook
             </h4>
 
@@ -339,21 +339,21 @@ const ForecastDay = ({ day, isToday, getWeatherIcon }) => {
         "snap-start shrink-0 w-[140px] sm:w-full sm:shrink",
         "flex sm:flex-row flex-col sm:items-center sm:justify-between gap-3",
         "p-3.5 sm:p-4 rounded-2xl sm:rounded-2xl",
-        "bg-slate-50/80 border border-slate-100/80",
-        "hover:bg-white hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/40",
+        "bg-lux-ivory border border-[#e9e2d3]",
+        "hover:bg-lux-cream hover:border-[#dccfa8] hover:shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)]",
         "transition-all duration-300",
-        isToday ? "ring-2 ring-emerald-500/30 bg-emerald-50/50" : "",
+        isToday ? "ring-2 ring-lux-gold/30 bg-[#f2eee2]" : "",
       ].join(" ")}
     >
       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-xl bg-lux-cream shadow-sm border border-[#e9e2d3]">
           <div className="w-7 h-7">{getWeatherIcon(day.code)}</div>
         </div>
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm font-black text-slate-800 truncate">
+          <p className="font-serif text-xs sm:text-sm font-bold text-lux-ink truncate">
             {isToday ? "Today" : day.date}
           </p>
-          <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5 truncate">
+          <p className="text-[9px] sm:text-[10px] font-bold text-lux-muted uppercase tracking-wide mt-0.5 truncate">
             {day.precip > 0 ? `${day.precip} mm rain` : "Dry"}
           </p>
         </div>
@@ -361,19 +361,19 @@ const ForecastDay = ({ day, isToday, getWeatherIcon }) => {
 
       <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
         <div className="flex items-center gap-2 tabular-nums">
-          <span className="text-sm font-black text-slate-900">
+          <span className="text-sm font-black text-lux-ink">
             {Math.round(day.maxTemp)}°
           </span>
-          <span className="text-xs font-bold text-slate-400">
+          <span className="text-xs font-bold text-lux-muted">
             {Math.round(day.minTemp)}°
           </span>
         </div>
         <div
-          className="w-1.5 h-10 sm:h-12 rounded-full bg-slate-100 overflow-hidden flex flex-col justify-end shrink-0"
+          className="w-1.5 h-10 sm:h-12 rounded-full bg-[#ece4d2] overflow-hidden flex flex-col justify-end shrink-0"
           title={`Range ${tempRange.toFixed(0)}°`}
         >
           <div
-            className="w-full bg-gradient-to-t from-emerald-500 to-sky-400 rounded-full transition-all duration-500"
+            className="w-full bg-gradient-to-t from-lux-emerald to-lux-gold rounded-full transition-all duration-500"
             style={{ height: `${barHeight}%` }}
           />
         </div>

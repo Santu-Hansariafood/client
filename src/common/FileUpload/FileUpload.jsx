@@ -191,23 +191,23 @@ const FileUpload = ({
   };
 
   return (
-    <div className="mb-6 w-full max-w-2xl mx-auto bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100">
+    <div className="mb-6 w-full max-w-2xl mx-auto bg-lux-cream/80 rounded-2xl shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] p-6 border border-[#e9e2d3]">
       <div className="flex items-start justify-between mb-3 gap-3">
-        <label className="block text-base font-semibold text-gray-700">
+        <label className="block text-base font-semibold font-serif text-lux-ink">
           {label}
         </label>
         {currentUrl && !showUploader && (
           <div className="flex items-center gap-2 flex-shrink-0">
             {isLocalStored ? (
               <span
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-lux-gold/10 text-[#a3873f] border border-[#e6dcc4]"
                 title="Stored locally on this server. Re-upload once ImageKit auth is fixed to get a permanent CDN link."
               >
                 <MdCloudOff size={14} /> Local
               </span>
             ) : isCdnUrl(currentUrl) ? (
               <span
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-lux-emerald/10 text-lux-emerald border border-lux-emerald/20"
                 title="Stored on ImageKit CDN — URL works across all devices and won't expire."
               >
                 <MdCloudDone size={14} /> ImageKit
@@ -224,7 +224,7 @@ const FileUpload = ({
               href={toAbsoluteUrl(currentUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-800 truncate max-w-[60%]"
+              className="text-sm text-lux-emerald hover:text-lux-deep truncate max-w-[60%]"
               title={toAbsoluteUrl(currentUrl)}
             >
               View Document
@@ -233,7 +233,7 @@ const FileUpload = ({
               {isPdfUrl(currentUrl) && (
                 <button
                   onClick={handlePrintPdf}
-                  className="flex items-center px-3 py-2 bg-sky-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-sky-600 transition-all duration-150"
+                  className="flex items-center px-3 py-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-white rounded-lg text-xs font-semibold shadow hover:from-lux-deep hover:to-lux-deep transition-all duration-150"
                   type="button"
                 >
                   <MdPrint size={16} className="mr-1" /> Print
@@ -241,24 +241,24 @@ const FileUpload = ({
               )}
               <button
                 onClick={handlePreviewZoomOut}
-                className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-150"
+                className="p-2 bg-lux-ivory rounded-lg hover:bg-[#f2eee2] text-lux-ink transition-all duration-150"
                 type="button"
               >
                 <MdZoomOut size={18} />
               </button>
-              <span className="text-sm font-medium text-gray-600 w-16 text-center">
+              <span className="text-sm font-medium text-lux-muted w-16 text-center">
                 {Math.round(previewZoom * 100)}%
               </span>
               <button
                 onClick={handlePreviewZoomIn}
-                className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-150"
+                className="p-2 bg-lux-ivory rounded-lg hover:bg-[#f2eee2] text-lux-ink transition-all duration-150"
                 type="button"
               >
                 <MdZoomIn size={18} />
               </button>
               <button
                 onClick={() => setShowUploader(true)}
-                className="flex items-center px-3 py-2 bg-green-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-green-600 transition-all duration-150"
+                className="flex items-center px-3 py-2 bg-lux-emerald text-white rounded-lg text-xs font-semibold shadow hover:bg-lux-deep transition-all duration-150"
                 type="button"
               >
                 <MdEdit size={16} className="mr-1" /> Edit
@@ -274,15 +274,15 @@ const FileUpload = ({
           </div>
 
           {isPdfUrl(currentUrl) && (
-            <div className="mb-3 text-xs text-gray-500 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2 flex items-start gap-2">
-              <MdPrint size={16} className="mt-0.5 text-sky-600 flex-shrink-0" />
+            <div className="mb-3 text-xs text-lux-muted bg-lux-ivory border border-[#e9e2d3] rounded-lg px-3 py-2 flex items-start gap-2">
+              <MdPrint size={16} className="mt-0.5 text-lux-emerald flex-shrink-0" />
               <span>
                 If preview below appears blank, click{" "}
                 <a
                   href={toAbsoluteUrl(currentUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-sky-700 underline"
+                  className="font-semibold text-lux-emerald underline"
                 >
                   here to open the PDF in a new tab
                 </a>{" "}
@@ -291,7 +291,7 @@ const FileUpload = ({
             </div>
           )}
 
-          <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-4 flex justify-center">
+          <div className="border border-[#e9e2d3] rounded-xl overflow-hidden bg-lux-ivory p-4 flex justify-center">
             {isImageUrl(currentUrl) ? (
               <a
                 href={toAbsoluteUrl(currentUrl)}
@@ -328,12 +328,12 @@ const FileUpload = ({
             type="file"
             accept={accept}
             onChange={handleFileChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 shadow-sm transition-all duration-200 mb-4"
+            className="w-full px-4 py-3 border border-[#e6dcc4] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lux-gold/50 bg-lux-cream/70 shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] transition-all duration-200 mb-4"
           />
 
           {imageSrc && !isPdf && (
             <>
-              <div className="relative w-full h-80 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl overflow-hidden shadow-inner border border-blue-100">
+              <div className="relative w-full h-80 bg-gradient-to-br from-lux-cream to-lux-ivory rounded-xl overflow-hidden shadow-inner border border-[#e9e2d3]">
                 <Cropper
                   image={imageSrc}
                   crop={crop}
@@ -347,7 +347,7 @@ const FileUpload = ({
 
               <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-4">
                 <div className="flex items-center space-x-3 w-full md:w-auto">
-                  <label className="text-sm text-gray-700 font-medium">
+                  <label className="text-sm text-lux-ink font-medium">
                     Zoom:
                   </label>
                   <input
@@ -357,9 +357,9 @@ const FileUpload = ({
                     step={0.1}
                     value={zoom}
                     onChange={(e) => setZoom(Number(e.target.value))}
-                    className="w-48 accent-blue-500 h-2 rounded-lg appearance-none bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-48 accent-lux-emerald h-2 rounded-lg appearance-none bg-lux-ivory focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
                   />
-                  <span className="text-sm text-gray-600 w-12 text-center font-medium">
+                  <span className="text-sm text-lux-muted w-12 text-center font-medium">
                     {Math.round(zoom * 100)}%
                   </span>
                 </div>
@@ -367,14 +367,14 @@ const FileUpload = ({
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleOrientation}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold shadow hover:bg-blue-600 transition-all duration-150"
+                    className="px-4 py-2 bg-lux-emerald text-white rounded-lg text-sm font-semibold shadow hover:bg-lux-deep transition-all duration-150"
                   >
                     {aspect === A4_PORTRAIT_RATIO ? "Landscape" : "Portrait"}{" "}
                     (A4)
                   </button>
                   <button
                     onClick={() => setCrop({ x: 0, y: 0 })}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-semibold shadow hover:bg-gray-600 transition-all duration-150"
+                    className="px-4 py-2 bg-lux-muted text-white rounded-lg text-sm font-semibold shadow hover:bg-lux-ink transition-all duration-150"
                   >
                     Reset Position
                   </button>
@@ -385,7 +385,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-white rounded-lg font-semibold shadow hover:from-lux-deep hover:to-lux-deep transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-lux-gold/50 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}
@@ -406,10 +406,10 @@ const FileUpload = ({
 
           {isPdf && file && (
             <>
-              <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-4 mb-4">
+              <div className="border border-[#e9e2d3] rounded-xl overflow-hidden bg-lux-ivory p-4 mb-4">
                 <div className="text-center py-8">
-                  <p className="text-gray-600 mb-2 font-medium">{fileName}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-lux-ink mb-2 font-medium">{fileName}</p>
+                  <p className="text-sm text-lux-muted">
                     PDF selected. Click Save & Upload to continue.
                   </p>
                 </div>
@@ -419,7 +419,7 @@ const FileUpload = ({
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
+                  className="flex items-center px-6 py-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-white rounded-lg font-semibold shadow hover:from-lux-deep hover:to-lux-deep transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-lux-gold/50 disabled:opacity-50"
                 >
                   <MdCheckCircle size={24} className="mr-2" />{" "}
                   {uploading ? "Uploading..." : "Save & Upload"}

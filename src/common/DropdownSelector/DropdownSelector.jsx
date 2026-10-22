@@ -36,17 +36,17 @@ const DropdownSelector = ({ fetchData }) => {
   };
 
   return (
-    <div className="w-full p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+    <div className="w-full p-6 rounded-2xl border border-[#e9e2d3] dark:border-lux-deep bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream dark:from-lux-night dark:via-lux-night dark:to-lux-night shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)]">
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 border-t-emerald-500 animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-[#e9e2d3] dark:border-lux-deep border-t-lux-gold animate-spin" />
         </div>
       ) : (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <label
               htmlFor="dropdown-select"
-              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="text-sm font-medium text-lux-ink dark:text-lux-ivory"
             >
               Choose Buyers:
             </label>
@@ -60,7 +60,7 @@ const DropdownSelector = ({ fetchData }) => {
               />
               <button
                 onClick={handleSelectAll}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep text-white font-medium text-sm hover:from-lux-deep hover:to-lux-deep transition-colors focus:outline-none focus:ring-2 focus:ring-lux-gold/50 focus:ring-offset-2 shadow-[0_10px_24px_-10px_rgba(6,95,70,0.5)] dark:focus:ring-offset-lux-night"
               >
                 Select All
               </button>
@@ -68,12 +68,12 @@ const DropdownSelector = ({ fetchData }) => {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">
+            <h3 className="text-sm font-semibold font-serif text-lux-ink dark:text-lux-ivory mb-3">
               Selected Buyers:
             </h3>
             <ul className="space-y-2">
               {selectedItems.length === 0 ? (
-                <li className="py-4 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-400">
+                <li className="py-4 px-4 rounded-xl bg-lux-ivory dark:bg-lux-night/50 border border-[#e9e2d3] dark:border-lux-deep text-center text-sm text-lux-muted dark:text-lux-muted">
                   No buyers selected
                 </li>
               ) : (
@@ -84,14 +84,14 @@ const DropdownSelector = ({ fetchData }) => {
                   .map((seller) => (
                     <li
                       key={seller.value}
-                      className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                      className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-lux-ivory dark:bg-lux-night/50 border border-[#e9e2d3] dark:border-lux-deep"
                     >
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                      <span className="text-sm font-medium text-lux-ink dark:text-lux-ivory truncate">
                         {seller.label}
                       </span>
                       <button
                         onClick={() => handleRemove(seller)}
-                        className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400/40"
+                        className="shrink-0 p-1.5 rounded-lg text-lux-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400/40"
                         aria-label={`Remove ${seller.label}`}
                       >
                         <IoClose size={18} />

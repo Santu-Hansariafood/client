@@ -42,27 +42,27 @@ const Teams = () => {
   }, []);
 
   return (
-    <section className="bg-gray-50">
-      <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-green-50 via-white to-green-100">
+    <section className="bg-lux-ivory">
+      <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream">
         <Link
           to="/"
-          className="absolute top-8 left-8 flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
+          className="absolute top-8 left-8 flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft rounded-lg shadow hover:shadow-lg transition"
         >
           <FaArrowLeft />
           Home
         </Link>
 
-        <div className="absolute top-0 left-0 w-72 h-72 bg-green-300 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-0 right-0 w-72 h-72 bg-green-400 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 bg-lux-gold-soft rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-lux-emerald rounded-full blur-3xl opacity-30"></div>
 
         <div className="relative z-10 max-w-3xl">
-          <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-700 to-green-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-serif font-extrabold bg-gradient-to-r from-lux-emerald to-lux-gold bg-clip-text text-transparent">
             Our Leadership
           </h1>
 
-          <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed">
+          <p className="mt-6 text-lg md:text-xl text-lux-muted leading-relaxed">
             Meet the experienced leadership team behind
-            <span className="font-semibold text-green-700">
+            <span className="font-semibold text-lux-emerald">
               {" "}
               Hansaria Food Private Limited
             </span>
@@ -71,7 +71,7 @@ const Teams = () => {
           </p>
 
           <div className="flex justify-center mt-8">
-            <div className="h-1 w-28 bg-green-600 rounded-full"></div>
+            <div className="h-1 w-28 bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald rounded-full"></div>
           </div>
         </div>
       </header>
@@ -107,30 +107,30 @@ const Teams = () => {
 
               {/* CONTENT */}
               <div className="md:w-1/2 w-full">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-lux-ink">
                   {member.name}
                 </h2>
 
-                <p className="text-green-600 font-semibold mt-2 text-lg">
+                <p className="text-lux-emerald font-semibold mt-2 text-lg">
                   {member.position}
                 </p>
 
                 {member.email && (
                   <a
                     href={`mailto:${member.email}`}
-                    className="flex items-center gap-2 mt-2 text-gray-600 hover:text-green-700"
+                    className="flex items-center gap-2 mt-2 text-lux-muted hover:text-lux-emerald"
                   >
                     <FaEnvelope />
                     {member.email}
                   </a>
                 )}
 
-                <p className="text-gray-600 mt-5 leading-relaxed text-lg">
+                <p className="text-lux-muted mt-5 leading-relaxed text-lg">
                   {member.description}
                 </p>
 
-                <div className="mt-6 border-l-4 border-green-600 pl-5">
-                  <p className="italic text-gray-500 text-lg">
+                <div className="mt-6 border-l-4 border-lux-gold pl-5">
+                  <p className="italic text-lux-muted text-lg">
                     &ldquo;{member.quote}&rdquo;
                   </p>
                 </div>
@@ -142,7 +142,7 @@ const Teams = () => {
                       href={member.social.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:scale-125 transition"
+                      className="text-lux-emerald hover:scale-125 transition"
                     >
                       <FaFacebook />
                     </a>
@@ -153,7 +153,7 @@ const Teams = () => {
                       href={member.social.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-pink-500 hover:scale-125 transition"
+                      className="text-lux-gold hover:scale-125 transition"
                     >
                       <FaInstagram />
                     </a>
@@ -164,7 +164,7 @@ const Teams = () => {
                       href={member.social.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-700 hover:scale-125 transition"
+                      className="text-lux-deep hover:scale-125 transition"
                     >
                       <FaLinkedin />
                     </a>

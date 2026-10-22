@@ -8,17 +8,17 @@ const TermsConditions = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-20 px-6">
+    <div className="bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream min-h-screen py-20 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <h1 className="text-5xl font-bold text-green-700 mb-4">
+          <h1 className="text-5xl font-serif font-bold text-lux-ink mb-4">
             Terms & Conditions
           </h1>
 
-          <p className="text-gray-600 text-lg">Hansaria Food Private Limited</p>
+          <p className="text-lux-muted text-lg">Hansaria Food Private Limited</p>
         </div>
 
-        <div className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-xl rounded-3xl p-10 md:p-14">
+        <div className="backdrop-blur-lg bg-lux-cream/80 border border-[#e9e2d3] shadow-xl rounded-3xl p-10 md:p-14">
           <Section title="1. Acceptance of Terms">
             These Terms and Conditions (&quot;Terms&quot;) govern access to and
             use of services provided by Hansaria Food Private Limited
@@ -132,7 +132,7 @@ const TermsConditions = () => {
             Email:{" "}
             <a
               href="mailto:info@hansariafood.com"
-              className="text-green-700 font-semibold hover:underline"
+              className="text-lux-emerald font-semibold hover:underline"
             >
               info@hansariafood.com
             </a>
@@ -142,7 +142,7 @@ const TermsConditions = () => {
         <div className="text-center mt-14">
           <Link
             to="/"
-            className="inline-flex items-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-green-700 hover:scale-105 transition"
+            className="inline-flex items-center gap-3 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:scale-105 hover:shadow-xl transition"
           >
             <FaArrowLeft />
             Back to Home
@@ -155,10 +155,10 @@ const TermsConditions = () => {
 
 const Section = ({ title, children }) => {
   return (
-    <div className="mb-8 p-6 rounded-xl border border-gray-200 bg-white/70 hover:shadow-md transition">
-      <h2 className="text-xl font-semibold text-gray-800 mb-3">{title}</h2>
+    <div className="mb-8 p-6 rounded-xl border border-[#e9e2d3] bg-lux-cream/70 hover:border-[#dccfa8] hover:shadow-md transition">
+      <h2 className="text-xl font-serif font-semibold text-lux-ink mb-3">{title}</h2>
 
-      <div className="text-gray-700 leading-relaxed">{children}</div>
+      <div className="text-lux-muted leading-relaxed">{children}</div>
     </div>
   );
 };

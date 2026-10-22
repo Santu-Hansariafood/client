@@ -56,7 +56,7 @@ const LoginCarousel = () => {
 
   return (
     <div className="h-screen relative overflow-hidden">
-      <Slider {...settings} className="h-full [&_.slick-list]:h-full [&_.slick-track]:h-full [&_.slick-slide]:h-full [&_.slick-slide>div]:h-full [&_.slick-dots]:bottom-8 [&_.slick-dots_li]:mx-1 [&_.slick-dots_button]:before:text-lg [&_.slick-dots_button]:before:text-white/80 [&_.slick-dots .slick-active button:before]:text-white">
+      <Slider {...settings} className="h-full [&_.slick-list]:h-full [&_.slick-track]:h-full [&_.slick-slide]:h-full [&_.slick-slide>div]:h-full [&_.slick-dots]:bottom-8 [&_.slick-dots_li]:mx-1 [&_.slick-dots_button]:before:text-lg [&_.slick-dots_button]:before:text-lux-cream/70 [&_.slick-dots .slick-active button:before]:text-lux-gold">
         {carouselSlides.map((slide, index) => (
           <div key={index} className="relative h-screen">
             <LazyImage
@@ -65,13 +65,13 @@ const LoginCarousel = () => {
               className="h-full w-full object-cover scale-[1.02] transition-transform duration-[1200ms] ease-out"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/50" />
+            <div className="absolute inset-0 bg-gradient-to-r from-lux-night/70 via-lux-deep/40 to-lux-night/60" />
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
-              <h1 className="mb-6 text-4xl font-bold drop-shadow-lg md:text-6xl animate-[fadeInUp_0.9s_ease-out]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-lux-cream">
+              <h1 className="mb-6 font-serif text-4xl font-bold drop-shadow-lg md:text-6xl animate-[fadeInUp_0.9s_ease-out]">
                 {slide.title}
               </h1>
-              <p className="max-w-2xl text-lg italic leading-relaxed md:text-2xl animate-[fadeInUp_1.1s_ease-out]">
+              <p className="max-w-2xl text-lg italic leading-relaxed text-lux-cream/85 md:text-2xl animate-[fadeInUp_1.1s_ease-out]">
                 “{slide.quote}”
               </p>
             </div>

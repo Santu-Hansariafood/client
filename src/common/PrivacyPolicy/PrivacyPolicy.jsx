@@ -13,19 +13,19 @@ const PrivacyPolicy = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-14 px-6">
+    <div className="bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream min-h-screen py-14 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-green-700">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-lux-ink">
             Privacy Policy
           </h1>
-          <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+          <p className="text-lux-muted mt-4 max-w-2xl mx-auto">
             <strong>Hansaria Food Private Limited</strong> is committed to
             protecting your personal and business data. This policy explains how
             we collect, use, and safeguard your information.
           </p>
         </div>
-        <div className="bg-white rounded-3xl shadow-xl p-10 md:p-14">
+        <div className="lux-card rounded-3xl p-10 md:p-14">
           <Section icon={<FaShieldAlt />} title="1. Introduction">
             Hansaria Food Private Limited (&quot;Company&quot;,
             &quot;Hansaria&quot;, &quot;we&quot;, &quot;us&quot;,
@@ -55,7 +55,7 @@ const PrivacyPolicy = () => {
               </li>
             </ul>
 
-            <p className="mt-3 text-gray-600">
+            <p className="mt-3 text-lux-muted">
               We never store card numbers, UPI PINs, or banking passwords.
             </p>
           </Section>
@@ -100,7 +100,7 @@ const PrivacyPolicy = () => {
                 verification, and improving service efficiency.
               </li>
             </ul>
-            <p className="mt-3 text-gray-600">
+            <p className="mt-3 text-lux-muted">
               These permissions are accessed only with user consent and only
               when required for specific features initiated by the user. We do
               not access camera, microphone, media, files, or location data in
@@ -188,7 +188,7 @@ const PrivacyPolicy = () => {
               Email:{" "}
               <a
                 href="mailto:info@hansariafood.com"
-                className="text-green-700 font-semibold"
+                className="text-lux-emerald font-semibold"
               >
                 info@hansariafood.com
               </a>
@@ -199,7 +199,7 @@ const PrivacyPolicy = () => {
         <div className="text-center mt-10">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-green-800 transition"
+            className="inline-flex items-center gap-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition"
           >
             <FaArrowLeft />
             Back to Home
@@ -215,18 +215,18 @@ const Section = ({ title, children, icon }) => {
     <div className="mb-10 group">
       <div className="flex items-center gap-3 mb-3">
         {icon && (
-          <span className="text-green-600 text-xl group-hover:scale-110 transition">
+          <span className="text-lux-gold text-xl group-hover:scale-110 transition">
             {icon}
           </span>
         )}
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+        <h2 className="text-xl md:text-2xl font-serif font-semibold text-lux-ink">
           {title}
         </h2>
       </div>
 
-      <div className="text-gray-700 leading-relaxed ml-1">{children}</div>
+      <div className="text-lux-muted leading-relaxed ml-1">{children}</div>
 
-      <div className="h-[1px] bg-gray-200 mt-6"></div>
+      <div className="h-[1px] bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald mt-6"></div>
     </div>
   );
 };

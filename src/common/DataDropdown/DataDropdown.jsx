@@ -70,8 +70,8 @@ const DataDropdown = React.memo(({
       {label && (
         <label className={`
           block mb-2 transition-all duration-300
-          ${isFocused || hasSelection ? "text-emerald-600" : "text-slate-500"}
-          text-xs font-bold uppercase tracking-widest font-display
+          ${isFocused || hasSelection ? "text-lux-gold" : "text-lux-muted"}
+          text-xs font-bold uppercase tracking-widest font-serif
         `}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -81,7 +81,7 @@ const DataDropdown = React.memo(({
         <div
           className={`
             absolute -inset-px rounded-2xl transition-all duration-400 ease-out pointer-events-none opacity-0 blur-sm
-            ${isFocused && !disabled ? "opacity-100 bg-gradient-to-r from-emerald-400/30 via-cyan-400/30 to-teal-400/30" : ""}
+            ${isFocused && !disabled ? "opacity-100 bg-gradient-to-r from-lux-gold/30 via-lux-gold-soft/25 to-lux-emerald/20" : ""}
           `}
         />
 
@@ -106,15 +106,15 @@ const DataDropdown = React.memo(({
             ...theme,
             colors: {
               ...theme.colors,
-              primary: "#059669",
-              primary25: "#ecfdf5",
-              primary50: "#d1fae5",
+              primary: "#c9a227",
+              primary25: "#f7f4ec",
+              primary50: "#f2eee2",
               danger: "#dc2626",
               dangerLight: "#fee2e2",
-              neutral0: "#ffffff",
-              neutral10: "#f8fafc",
-              neutral20: "#f1f5f9",
-              neutral30: "#94a3b8",
+              neutral0: "#fffefb",
+              neutral10: "#f7f4ec",
+              neutral20: "#e9e2d3",
+              neutral30: "#8a968f",
             },
             borderRadius: 16,
             spacing: {
@@ -126,18 +126,18 @@ const DataDropdown = React.memo(({
           components={{
             DropdownIndicator: () => (
               <div className={`pr-1 transition-transform duration-300 ${isFocused ? "rotate-180" : "rotate-0"}`}>
-                <FaChevronDown className={`text-sm transition-colors duration-300 ${isFocused ? "text-emerald-600" : "text-slate-400"}`} />
+                <FaChevronDown className={`text-sm transition-colors duration-300 ${isFocused ? "text-lux-gold" : "text-lux-muted"}`} />
               </div>
             ),
           }}
           styles={{
             control: (provided, state) => ({
               ...provided,
-              background: "#ffffff",
-              borderColor: state.isFocused ? "#059669" : "#e2e8f0",
+              background: "#fffefb",
+              borderColor: state.isFocused ? "#c9a227" : "#e6dcc4",
               borderWidth: "2px",
               boxShadow: state.isFocused
-                ? "0 0 0 4px rgba(5,150,105,0.12)"
+                ? "0 0 0 4px rgba(201,162,39,0.15)"
                 : "none",
               borderRadius: "16px",
               transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
@@ -149,18 +149,18 @@ const DataDropdown = React.memo(({
               minHeight: "52px",
               opacity: disabled ? 0.6 : 1,
               "&:hover": {
-                borderColor: state.isFocused ? "#059669" : "#cbd5e1",
+                borderColor: state.isFocused ? "#c9a227" : "#dccfa8",
               },
             }),
 
             option: (provided, state) => ({
               ...provided,
               backgroundColor: state.isSelected
-                ? "#16a34a"
+                ? "#065f46"
                 : state.isFocused
-                  ? "#dcfce7"
-                  : "#ffffff",
-              color: state.isSelected ? "#ffffff" : "#1e293b",
+                  ? "#f2eee2"
+                  : "#fffefb",
+              color: state.isSelected ? "#ffffff" : "#12261f",
               padding: "12px 16px",
               fontWeight: state.isSelected ? 700 : 500,
               transition: "all 0.2s ease",
@@ -174,8 +174,8 @@ const DataDropdown = React.memo(({
               borderRadius: "16px",
               marginTop: "8px",
               overflow: "hidden",
-              boxShadow: "0 16px 40px -8px rgba(0,0,0,0.12), 0 4px 12px -4px rgba(0,0,0,0.08)",
-              border: "1px solid #e2e8f0",
+              boxShadow: "0 16px 40px -12px rgba(6,95,70,0.22)",
+              border: "1px solid #e9e2d3",
               zIndex: 9999,
               padding: "4px",
             }),
@@ -191,11 +191,11 @@ const DataDropdown = React.memo(({
                 width: "6px",
               },
               "&::-webkit-scrollbar-track": {
-                background: "#f8fafc",
+                background: "#f2eee2",
                 borderRadius: "3px",
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#cbd5e1",
+                background: "#dccfa8",
                 borderRadius: "3px",
               },
               maxHeight: isMulti ? "280px" : "320px",
@@ -203,21 +203,21 @@ const DataDropdown = React.memo(({
 
             placeholder: (provided) => ({
               ...provided,
-              color: "#94a3b8",
+              color: "#8a968f",
               fontWeight: 500,
               fontSize: "14px",
             }),
 
             singleValue: (provided) => ({
               ...provided,
-              color: "#1e293b",
+              color: "#12261f",
               fontWeight: 600,
               fontSize: "14px",
             }),
 
             multiValue: (provided) => ({
               ...provided,
-              backgroundColor: "#dcfce7",
+              backgroundColor: "rgba(201,162,39,0.16)",
               borderRadius: "10px",
               padding: "3px 8px",
               margin: "3px 4px 3px 0",
@@ -226,7 +226,7 @@ const DataDropdown = React.memo(({
 
             multiValueLabel: (provided) => ({
               ...provided,
-              color: "#15803d",
+              color: "#8a6d1f",
               fontWeight: 600,
               fontSize: "13px",
               padding: "0 4px 0 2px",
@@ -234,21 +234,21 @@ const DataDropdown = React.memo(({
 
             multiValueRemove: (provided) => ({
               ...provided,
-              color: "#15803d",
+              color: "#8a6d1f",
               borderRadius: "6px",
               padding: "2px 4px",
               marginLeft: "2px",
               transition: "all 0.15s ease",
               ":hover": {
-                backgroundColor: "#86efac",
-                color: "#166534",
+                backgroundColor: "#e6cf86",
+                color: "#5a4712",
                 transform: "scale(1.15)",
               },
             }),
 
             clearIndicator: (provided) => ({
               ...provided,
-              color: "#94a3b8",
+              color: "#8a968f",
               padding: "6px",
               borderRadius: "8px",
               transition: "all 0.15s ease",
@@ -264,7 +264,7 @@ const DataDropdown = React.memo(({
 
             groupHeading: (provided) => ({
               ...provided,
-              color: "#059669",
+              color: "#a3873f",
               fontWeight: 700,
               fontSize: "11px",
               textTransform: "uppercase",
@@ -274,7 +274,7 @@ const DataDropdown = React.memo(({
 
             noOptionsMessage: (provided) => ({
               ...provided,
-              color: "#94a3b8",
+              color: "#8a968f",
               padding: "20px",
               fontSize: "14px",
               textAlign: "center",
@@ -286,7 +286,7 @@ const DataDropdown = React.memo(({
           className={`
             absolute inset-x-4 sm:inset-x-5 bottom-0 h-0.5 rounded-full
             transition-all duration-400 ease-out origin-left pointer-events-none
-            ${isFocused && !disabled ? "scale-x-100 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 animate-gradient-border" : "scale-x-0 bg-transparent"}
+            ${isFocused && !disabled ? "scale-x-100 bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald animate-gradient-border" : "scale-x-0 bg-transparent"}
           `}
         />
       </div>

@@ -81,13 +81,13 @@ const SearchBox = ({
           flex items-center justify-center shrink-0
           w-12 h-12 sm:w-11 sm:h-11
           rounded-2xl
-          bg-white border border-slate-200
-          text-emerald-600
-          shadow-md shadow-slate-900/5
+          bg-lux-cream border border-[#e6dcc4]
+          text-lux-gold
+          shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)]
           transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)
-          hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-lg
+          hover:bg-lux-ivory hover:border-[#dccfa8] hover:shadow-lg
           active:scale-95
-          focus:outline-none focus:ring-2 focus:ring-emerald-400/50
+          focus:outline-none focus:ring-2 focus:ring-lux-gold/50
           ${className}
         `}
         aria-label="Open search"
@@ -110,27 +110,27 @@ const SearchBox = ({
       <div
         className={`
           absolute -inset-0.5 rounded-2xl transition-all duration-400 ease-out pointer-events-none opacity-0 blur-md
-          ${isFocused ? "opacity-100 bg-gradient-to-r from-emerald-400/25 via-cyan-400/25 to-teal-400/25" : ""}
+          ${isFocused ? "opacity-100 bg-gradient-to-r from-lux-gold/30 via-lux-gold-soft/25 to-lux-emerald/20" : ""}
         `}
       />
       <div
         className={`
           relative flex items-center
           w-full sm:min-w-[280px] sm:max-w-sm
-          bg-white border-2
+          bg-lux-cream border-2
           rounded-2xl
           px-3.5 sm:px-4 py-2.5 sm:py-3
           transition-all duration-350 cubic-bezier(0.2, 0.8, 0.2, 1)
           ${isFocused
-            ? "border-emerald-500 ring-4 ring-emerald-500/12 shadow-xl shadow-emerald-900/10 scale-[1.01]"
-            : "border-slate-200 shadow-md shadow-slate-900/5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/10"
+            ? "border-lux-gold ring-4 ring-lux-gold/40 shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] scale-[1.01]"
+            : "border-[#e6dcc4] shadow-[0_18px_40px_-28px_rgba(6,95,70,0.35)] hover:border-[#dccfa8] hover:shadow-[0_18px_40px_-22px_rgba(6,95,70,0.42)]"
           }
         `}
       >
         <div className={`
           shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl
           transition-all duration-300
-          ${isFocused ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white scale-110 shadow-md shadow-emerald-500/30" : "bg-emerald-50 text-emerald-600/80 group-hover:bg-emerald-100 group-hover:text-emerald-700"}
+          ${isFocused ? "bg-gradient-to-br from-lux-gold to-lux-emerald text-white scale-110 shadow-md shadow-[0_10px_24px_-10px_rgba(6,95,70,0.5)]" : "bg-lux-ivory text-lux-emerald/80 group-hover:bg-[#f2eee2] group-hover:text-lux-emerald"}
         `}>
           <FiSearch
             className="w-4.5 h-4.5 sm:w-5 sm:h-5 transition-transform duration-300"
@@ -148,7 +148,7 @@ const SearchBox = ({
           }}
           placeholder={placeholder || "Search..."}
           autoComplete="off"
-          className="w-full min-w-0 px-3 sm:px-3.5 py-1.5 bg-transparent text-sm sm:text-base font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-medium focus:outline-none tracking-tight"
+          className="w-full min-w-0 px-3 sm:px-3.5 py-1.5 bg-transparent text-sm sm:text-base font-semibold text-lux-ink placeholder:text-lux-muted placeholder:font-medium focus:outline-none tracking-tight"
           aria-label={placeholder || "Search"}
           autoFocus={expandable}
         />
@@ -159,7 +159,7 @@ const SearchBox = ({
             className="
               shrink-0 flex items-center justify-center
               w-8 h-8 sm:w-9 sm:h-9 rounded-xl
-              text-slate-400
+              text-lux-muted
               transition-all duration-250 ease-out
               hover:text-red-500 hover:bg-red-50 hover:scale-110
               focus:outline-none focus:ring-2 focus:ring-red-400/40
@@ -177,7 +177,7 @@ const SearchBox = ({
         className={`
           absolute inset-x-5 sm:inset-x-6 bottom-0 h-0.5 rounded-full
           transition-all duration-400 ease-out origin-left pointer-events-none
-          ${isFocused ? "scale-x-100 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 animate-gradient-border" : "scale-x-0 bg-transparent"}
+          ${isFocused ? "scale-x-100 bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald animate-gradient-border" : "scale-x-0 bg-transparent"}
         `}
       />
     </div>

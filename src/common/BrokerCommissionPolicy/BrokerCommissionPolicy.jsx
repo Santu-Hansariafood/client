@@ -13,19 +13,19 @@ const BrokerCommissionPolicy = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-14 px-6">
+    <div className="bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream min-h-screen py-14 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-green-700">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-lux-ink">
             Broker Commission Policy
           </h1>
-          <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+          <p className="text-lux-muted mt-4 max-w-2xl mx-auto">
             <strong>Hansaria Food Private Limited</strong> outlines the rules
             governing brokerage commissions, service charges, and trade
             facilitation for commodity transactions.
           </p>
         </div>
-        <div className="bg-white rounded-3xl shadow-xl p-10 md:p-14">
+        <div className="lux-card rounded-3xl p-10 md:p-14">
           <Section icon={<FaHandshake />} title="1. Purpose">
             This Broker Commission Policy defines the brokerage and service
             charges applied by Hansaria Food Private Limited for facilitating
@@ -143,8 +143,8 @@ const BrokerCommissionPolicy = () => {
 
           {/* Highlight Clause */}
 
-          <div className="bg-green-50 border-l-4 border-green-600 p-6 rounded-xl mt-8">
-            <p className="font-semibold text-gray-800">
+          <div className="bg-lux-ivory border-l-4 border-lux-gold p-6 rounded-xl mt-8">
+            <p className="font-semibold text-lux-ink">
               Brokerage is earned once a transaction is confirmed between
               parties introduced by the Company, regardless of whether the
               contract is later completed or performed.
@@ -157,7 +157,7 @@ const BrokerCommissionPolicy = () => {
         <div className="text-center mt-10">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-green-800 transition"
+            className="inline-flex items-center gap-2 bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition"
           >
             <FaArrowLeft />
             Back to Home
@@ -173,19 +173,19 @@ const Section = ({ title, children, icon }) => {
     <div className="mb-10 group">
       <div className="flex items-center gap-3 mb-3">
         {icon && (
-          <span className="text-green-600 text-xl group-hover:scale-110 transition">
+          <span className="text-lux-gold text-xl group-hover:scale-110 transition">
             {icon}
           </span>
         )}
 
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+        <h2 className="text-xl md:text-2xl font-serif font-semibold text-lux-ink">
           {title}
         </h2>
       </div>
 
-      <div className="text-gray-700 leading-relaxed ml-1">{children}</div>
+      <div className="text-lux-muted leading-relaxed ml-1">{children}</div>
 
-      <div className="h-[1px] bg-gray-200 mt-6"></div>
+      <div className="h-[1px] bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald mt-6"></div>
     </div>
   );
 };

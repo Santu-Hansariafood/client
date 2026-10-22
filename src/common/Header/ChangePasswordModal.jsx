@@ -119,22 +119,22 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800">Change Password</h2>
+      <div className="bg-lux-cream rounded-2xl shadow-[0_24px_50px_-30px_rgba(6,95,70,0.45)] border border-[#e9e2d3] w-full max-w-md overflow-hidden">
+        <div className="p-6 border-b border-[#ece4d2] flex items-center justify-between">
+          <h2 className="font-serif text-xl font-bold text-lux-ink">Change Password</h2>
           <button
             onClick={() => {
               onClose();
               resetForm();
             }}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-lux-muted hover:text-lux-ink transition-colors"
           >
             <AiOutlineClose size={24} />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-lux-muted">
             {step === 1 &&
               "An OTP will be sent to your registered email address to verify your identity."}
             {step === 2 && "Enter the 6-digit OTP sent to your email."}
@@ -146,7 +146,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             <button
               onClick={handleSendOTP}
               disabled={loading}
-              className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+              className="w-full py-3 rounded-xl font-semibold text-lux-cream bg-lux-emerald hover:bg-lux-deep transition disabled:opacity-50"
             >
               {loading ? "Sending OTP..." : "Send OTP to Email"}
             </button>
@@ -165,13 +165,13 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handleVerifyOTP}
                 disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+                className="w-full py-3 rounded-xl font-semibold text-lux-cream bg-lux-emerald hover:bg-lux-deep transition disabled:opacity-50"
               >
                 {loading ? "Verifying..." : "Verify OTP"}
               </button>
               <button
                 onClick={handleSendOTP}
-                className="w-full text-sm text-emerald-600 hover:underline text-center"
+                className="w-full text-sm text-lux-emerald hover:text-lux-deep hover:underline text-center"
               >
                 Resend OTP
               </button>
@@ -191,7 +191,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 />
                 <button
                   type="button"
-                  className="absolute right-4 top-[38px] text-gray-400 hover:text-emerald-600 transition"
+                  className="absolute right-4 top-[38px] text-lux-muted hover:text-lux-emerald transition"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -209,12 +209,12 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
-              <label className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+              <label className="flex items-start gap-3 rounded-2xl border border-[#e6dcc4] bg-lux-ivory px-4 py-3 text-sm text-lux-ink">
                 <input
                   type="checkbox"
                   checked={confirmLogoutAllDevices}
                   onChange={(e) => setConfirmLogoutAllDevices(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
+                  className="mt-1 h-4 w-4 rounded border-[#dccfa8] text-lux-gold focus:ring-lux-gold"
                 />
                 <span>
                   I understand that changing this password will sign this
@@ -225,7 +225,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handleResetPassword}
                 disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+                className="w-full py-3 rounded-xl font-semibold text-lux-cream bg-lux-emerald hover:bg-lux-deep transition disabled:opacity-50"
               >
                 {loading ? "Updating..." : "Update Password"}
               </button>

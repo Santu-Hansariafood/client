@@ -37,7 +37,7 @@ const DataInput = ({
   return (
     <div className="mb-4 sm:mb-5 w-full animate-fade-in group">
       {label && !floatingLabel && (
-        <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">
+        <label className="block mb-2 text-xs font-bold text-lux-muted uppercase tracking-widest font-serif">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -46,8 +46,8 @@ const DataInput = ({
         <div
           className={`
             absolute -inset-px rounded-2xl transition-all duration-400 ease-out pointer-events-none opacity-0 blur-sm
-            ${isFocused && !error && !disabled ? "opacity-100 bg-gradient-to-r from-emerald-400/30 via-cyan-400/30 to-teal-400/30" : ""}
-            ${error && !disabled ? "opacity-100 bg-gradient-to-r from-red-400/30 via-rose-400/30 to-orange-400/30" : ""}
+            ${isFocused && !error && !disabled ? "opacity-100 bg-gradient-to-r from-lux-gold/30 via-lux-gold-soft/25 to-lux-emerald/20" : ""}
+            ${error && !disabled ? "opacity-100 bg-gradient-to-r from-red-400/30 via-red-500/30 to-red-400/30" : ""}
           `}
         />
 
@@ -55,7 +55,7 @@ const DataInput = ({
           <div className={`
             absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 z-10
             transition-all duration-300 ease-out
-            ${error ? "text-red-500" : isFocused ? "text-emerald-600 scale-110" : "text-slate-400 group-hover:text-slate-500"}
+            ${error ? "text-red-500" : isFocused ? "text-lux-gold scale-110" : "text-lux-muted group-hover:text-lux-ink"}
             ${floatingLabel && label && isActive ? "-translate-y-[calc(50%-8px)] sm:-translate-y-[calc(50%-9px)] scale-90" : ""}
           `}>
             <Icon className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
@@ -66,19 +66,19 @@ const DataInput = ({
           <label
             className={`
               absolute z-10 pointer-events-none
-              font-bold uppercase tracking-widest font-display whitespace-nowrap
+              font-bold uppercase tracking-widest font-serif whitespace-nowrap
               transition-all duration-300 cubic-bezier(0.2, 0.8, 0.2, 1)
-              bg-white px-1 rounded
+              bg-lux-cream px-1 rounded
               ${Icon ? "left-10 sm:left-11" : "left-4 sm:left-5"}
               top-0 -translate-y-0
               text-[10px] sm:text-xs
               ${isActive
-                ? `text-emerald-600 ${error ? "!text-red-500" : ""}`
-                : "text-slate-500"
+                ? `text-lux-gold ${error ? "!text-red-500" : ""}`
+                : "text-lux-muted"
               }
               ${!hasValue && !isFocused ? `
                 top-1/2 -translate-y-1/2
-                text-sm sm:text-base normal-case tracking-normal font-semibold text-slate-400
+                text-sm sm:text-base normal-case tracking-normal font-semibold text-lux-muted
                 px-0 bg-transparent
                 ${Icon ? "left-10 sm:left-11" : "left-4 sm:left-5"}
               ` : ""}
@@ -113,19 +113,19 @@ const DataInput = ({
           className={`
             peer relative w-full ${iconPadding || (floatingLabel && label ? "px-4 sm:px-5 pt-5 sm:pt-5.5 pb-2.5 sm:pb-3" : "px-4 sm:px-5 py-3 sm:py-3.5")}
             ${sizeStyles}
-            bg-white rounded-2xl outline-none
+            bg-lux-cream rounded-2xl outline-none
             transition-all duration-300 cubic-bezier(0.2, 0.8, 0.2, 1)
-            font-semibold tracking-tight text-slate-800
-            placeholder:text-transparent sm:placeholder:text-slate-400
+            font-semibold tracking-tight text-lux-ink
+            placeholder:text-transparent sm:placeholder:text-lux-muted
             border-2
             ${error
               ? "border-red-400 hover:border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/15"
               : disabled
-                ? "border-slate-200"
-                : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15"
+                ? "border-[#e9e2d3]"
+                : "border-[#e6dcc4] hover:border-[#dccfa8] focus:border-lux-gold focus:ring-4 focus:ring-lux-gold/50"
             }
-            ${disabled ? "bg-slate-50 cursor-not-allowed opacity-60 select-none" : readOnly ? "bg-slate-50/70 cursor-default" : "cursor-text"}
-            ${readOnly ? "text-slate-600" : ""}
+            ${disabled ? "bg-lux-ivory cursor-not-allowed opacity-60 select-none" : readOnly ? "bg-lux-ivory/70 cursor-default" : "cursor-text"}
+            ${readOnly ? "text-lux-muted" : ""}
           `}
         />
 
@@ -139,7 +139,7 @@ const DataInput = ({
           className={`
             absolute inset-x-4 sm:inset-x-5 bottom-0 h-0.5 rounded-full
             transition-all duration-400 ease-out origin-left
-            ${isFocused && !error && !disabled ? "scale-x-100 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 animate-gradient-border" : "scale-x-0 bg-transparent"}
+            ${isFocused && !error && !disabled ? "scale-x-100 bg-gradient-to-r from-lux-emerald via-lux-gold to-lux-emerald animate-gradient-border" : "scale-x-0 bg-transparent"}
           `}
         />
       </div>
