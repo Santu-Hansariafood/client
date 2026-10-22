@@ -33,30 +33,30 @@ import {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[180px]">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+      <div className="bg-lux-cream/95 backdrop-blur-xl p-4 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[180px]">
+        <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-2 border-b border-[#ece4d2] pb-2">
           {label}
         </p>
         <div className="space-y-2">
           {payload.map((entry, index) => (
             <p
               key={index}
-              className="text-sm font-black text-slate-800 flex items-center justify-between gap-4"
+              className="text-sm font-black text-lux-ink flex items-center justify-between gap-4"
             >
               <span className="flex items-center gap-2">
                 <span
                   className="w-2.5 h-2.5 rounded-full shadow-sm"
                   style={{ backgroundColor: entry.color }}
                 ></span>
-                <span className="text-slate-600">{entry.name}:</span>
+                <span className="text-lux-muted">{entry.name}:</span>
               </span>
               <span style={{ color: entry.color }}>
                 Rs. {entry.value.toLocaleString("en-IN")}
               </span>
             </p>
           ))}
-          <div className="pt-2 mt-2 border-t border-slate-50">
-            <p className="text-[10px] font-bold text-slate-900 flex items-center justify-between">
+          <div className="pt-2 mt-2 border-t border-[#ece4d2]">
+            <p className="text-[10px] font-bold text-lux-ink flex items-center justify-between">
               <span>Total:</span>
               <span>
                 Rs.{" "}
@@ -144,16 +144,16 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
   if (loading)
     return (
       <div className={CHART_LOADING_CLASS}>
-        <ChartSpinner colorClass="border-emerald-600" />
+        <ChartSpinner colorClass="border-lux-emerald" />
       </div>
     );
 
   if (!data.length)
     return (
       <div
-        className={`${CHART_AREA_CLASS} flex flex-col items-center justify-center text-slate-400 px-4 text-center`}
+        className={`${CHART_AREA_CLASS} flex flex-col items-center justify-center text-lux-muted px-4 text-center`}
       >
-        <p className="font-bold uppercase tracking-widest text-xs">
+        <p className="font-serif text-sm font-semibold text-lux-ink">
           No payment data for {currentMonthLabel}
         </p>
       </div>
@@ -162,14 +162,14 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
   const legend = (
     <div className="flex flex-wrap gap-3 sm:gap-4">
       <div className="flex items-center gap-2">
-        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400 shadow-sm" />
-        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-lux-gold shadow-sm" />
+        <span className="text-[9px] sm:text-[10px] font-black text-lux-muted uppercase tracking-widest">
           Pending
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 shadow-sm" />
-        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-lux-emerald shadow-sm" />
+        <span className="text-[9px] sm:text-[10px] font-black text-lux-muted uppercase tracking-widest">
           Received
         </span>
       </div>
@@ -179,9 +179,9 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
   return (
     <div className="w-full min-w-0">
       <ChartPanelHeader
-        accentClass="bg-emerald-600"
+        accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
         title="Payment"
-        highlight={{ text: "Settlement", className: "text-emerald-600" }}
+        highlight={{ text: "Settlement", className: "text-lux-gold" }}
         subtitle={`Pending vs received • ${currentMonthLabel}`}
       >
         {/* Month selector integrated into header */}
@@ -195,25 +195,25 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
             onChange={handleMonthChange}
             className="
               appearance-none
-              bg-white/70 backdrop-blur-sm
-              border border-slate-200
+              bg-lux-cream backdrop-blur-sm
+              border border-[#e6dcc4]
               rounded-xl
               px-4 py-2
               text-xs sm:text-sm
               font-semibold
-              text-slate-700
+              text-lux-ink
               cursor-pointer
               shadow-sm
-              hover:bg-white
+              hover:bg-[#f7f4ec]
               transition-all
               focus:outline-none
-              focus:ring-2 focus:ring-emerald-500/50
+              focus:ring-2 focus:ring-lux-gold/40
               focus:border-transparent
               pr-8
               relative
             "
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6f68' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "right 0.75rem center",
               backgroundSize: "0.75rem",
@@ -297,19 +297,15 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
             >
               <defs>
                 <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#c9a227" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#c9a227" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#065f46" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#065f46" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#f1f5f9"
-              />
+              <CartesianGrid {...MODERN_GRID_PROPS} />
               <XAxis
                 dataKey="date"
                 axisLine={false}
@@ -330,7 +326,7 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 type="monotone"
                 dataKey="pending"
                 name="Pending"
-                stroke="#fbbf24"
+                stroke="#c9a227"
                 strokeWidth={4}
                 fillOpacity={1}
                 fill="url(#colorPending)"
@@ -340,7 +336,7 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 type="monotone"
                 dataKey="received"
                 name="Received"
-                stroke="#10b981"
+                stroke="#065f46"
                 strokeWidth={4}
                 fillOpacity={1}
                 fill="url(#colorReceived)"

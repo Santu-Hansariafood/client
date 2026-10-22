@@ -33,14 +33,14 @@ import {
 } from "../chartLayoutShared";
 
 const COLORS = [
-  "#6366f1",
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
+  "#065f46",
+  "#0d7a68",
+  "#12a594",
+  "#c9a227",
+  "#e6cf86",
+  "#b8860b",
+  "#04392c",
+  "#0f8a6c",
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -48,30 +48,30 @@ const CustomTooltip = ({ active, payload, label }) => {
     const isPie = !label;
     const data = isPie ? payload[0].payload : null;
     return (
-      <div className="bg-white/95 backdrop-blur-xl p-5 shadow-2xl border border-slate-100 rounded-2xl min-w-[180px]">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">
+      <div className="bg-lux-cream/95 backdrop-blur-xl p-5 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[180px]">
+        <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-3 border-b border-[#ece4d2] pb-2">
           {isPie ? data.name : label}
         </p>
         <div className="space-y-2">
-          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+          <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
               <span
                 className="w-3 h-3 rounded-full shadow-sm"
                 style={{
-                  backgroundColor: isPie ? payload[0].payload.fill : "#6366f1",
+                  backgroundColor: isPie ? payload[0].payload.fill : "#065f46",
                 }}
               ></span>
-              <span className="text-slate-600">Volume:</span>
+              <span className="text-lux-muted">Volume:</span>
             </span>
-            <span className="text-indigo-600">
+            <span className="font-serif text-base font-semibold text-lux-emerald">
               {payload[0].value.toLocaleString()} T
             </span>
           </p>
           {isPie && (
-            <div className="pt-2 mt-2 border-t border-slate-50">
-              <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+            <div className="pt-2 mt-2 border-t border-[#ece4d2]">
+              <div className="flex items-center justify-between text-[10px] font-bold text-lux-muted">
                 <span>Performance:</span>
-                <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-xl">
+                <span className="text-lux-emerald bg-lux-emerald/10 px-3 py-1 rounded-xl">
                   {((data.value / data.total) * 100).toFixed(1)}%
                 </span>
               </div>
@@ -158,7 +158,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
             iconType="circle"
             iconSize={10}
             formatter={(value) => (
-              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+              <span className="font-serif font-semibold text-lux-muted text-[10px]">
                 {value}
               </span>
             )}
@@ -233,7 +233,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
                 offset={8}
                 formatter={(v) => (v > 0 ? `${v.toLocaleString()} T` : "")}
                 style={{
-                  fill: "#475569",
+                  fill: "#5f6f68",
                   fontSize: 11,
                   fontWeight: 800,
                 }}
@@ -248,8 +248,8 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorAgent" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+            <stop offset="5%" stopColor="#065f46" stopOpacity={0.45} />
+            <stop offset="100%" stopColor="#065f46" stopOpacity={0} />
           </linearGradient>
           <filter id="agentAreaShadow" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
@@ -263,12 +263,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
             </feMerge>
           </filter>
         </defs>
-        <CartesianGrid
-          strokeDasharray="8 12"
-          vertical={false}
-          stroke="#e2e8f0"
-          strokeOpacity={0.6}
-        />
+        <CartesianGrid {...MODERN_GRID_PROPS} />
         <XAxis
           dataKey="name"
           axisLine={false}
@@ -288,7 +283,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
         <Area
           type="monotone"
           dataKey="tons"
-          stroke="#4338ca"
+          stroke="#065f46"
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorAgent)"
@@ -302,15 +297,15 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
   return (
     <div className="w-full min-w-0">
       <ChartPanelHeader
-        accentClass="bg-indigo-600"
+        accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
         title="Agent Distribution"
         subtitle="Volume metrics by representative"
       />
 
       <div className={`${CHART_AREA_CLASS} dashboard-chart-stage`}>
         {!chartData.length ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+          <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
+            <div className="w-20 h-20 bg-lux-cream rounded-full flex items-center justify-center">
               <svg
                 className="w-10 h-10"
                 fill="none"
@@ -325,7 +320,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
                 ></path>
               </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">
+            <p className="font-serif text-sm font-semibold text-lux-ink">
               No agent data available
             </p>
           </div>

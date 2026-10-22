@@ -41,13 +41,13 @@ import {
 } from "../chartLayoutShared";
 
 const COLORS = [
-  "#f59e0b",
-  "#3b82f6",
-  "#10b981",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
+  "#c9a227",
+  "#e6cf86",
+  "#b8860b",
+  "#065f46",
+  "#0d7a68",
+  "#12a594",
+  "#04392c",
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -55,34 +55,34 @@ const CustomTooltip = ({ active, payload, label }) => {
     const isPie = !label;
     const data = isPie ? payload[0].payload : null;
     return (
-      <div className="relative bg-white/95 backdrop-blur-xl p-3.5 sm:p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px] animate-pop-in">
-        <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-white border-t border-l border-slate-100" />
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+      <div className="relative bg-lux-cream/95 backdrop-blur-xl p-3.5 sm:p-4 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[150px] animate-pop-in">
+        <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-lux-cream border-t border-l border-[#e9e2d3]" />
+        <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-2 border-b border-[#ece4d2] pb-2">
           {isPie ? data?.name : label}
         </p>
         <div className="space-y-2">
-          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+          <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
               <span
                 className="w-2.5 h-2.5 rounded-full shadow-sm"
                 style={{
-                  backgroundColor: isPie ? payload[0].payload.fill : "#f59e0b",
+                  backgroundColor: isPie ? payload[0].payload.fill : "#c9a227",
                 }}
               />
-              <span className="text-slate-600">Total:</span>
+              <span className="text-lux-muted">Total:</span>
             </span>
-            <span className="text-amber-700 tabular-nums">
+            <span className="font-serif text-base font-semibold text-lux-gold tabular-nums">
               {payload[0].value}
-              <span className="text-[10px] font-bold text-amber-600/70 ml-1">
+              <span className="text-[10px] font-bold text-lux-gold/70 ml-1">
                 Bids
               </span>
             </span>
           </p>
           {isPie && data && (
-            <div className="pt-2 mt-2 border-t border-slate-50">
-              <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+            <div className="pt-2 mt-2 border-t border-[#ece4d2]">
+              <div className="flex items-center justify-between text-[10px] font-bold text-lux-muted">
                 <span>Share:</span>
-                <span className="text-slate-900 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md tabular-nums font-black">
+                <span className="text-lux-ink bg-lux-gold/15 text-lux-gold px-2 py-0.5 rounded-md tabular-nums font-black">
                   {data.total > 0
                     ? ((data.value / data.total) * 100).toFixed(1)
                     : 0}
@@ -246,7 +246,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   if (loading && !firstLoad)
     return (
       <div className={CHART_LOADING_CLASS}>
-        <ChartSpinner colorClass="border-amber-500" subtitle="Refreshing bid activity" />
+        <ChartSpinner colorClass="border-lux-gold" subtitle="Refreshing bid activity" />
       </div>
     );
 
@@ -307,7 +307,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               />
             ))}
           </Pie>
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#f59e0b", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#c9a227", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
           <Legend
             verticalAlign="bottom"
             align="center"
@@ -315,7 +315,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             iconSize={responsiveCfg.showFullLegend ? 9 : 7}
             formatter={(value) => (
               <span
-                className={`font-black text-slate-600 uppercase tracking-widest ${
+                className={`font-serif font-semibold text-lux-muted ${
                   responsiveCfg.showFullLegend ? "text-[10px]" : "text-[9px]"
                 }`}
               >
@@ -384,8 +384,8 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       <AreaChart {...commonProps} className="animate-fade-in">
         <defs>
           <linearGradient id="colorBids" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+            <stop offset="5%" stopColor="#c9a227" stopOpacity={0.4} />
+            <stop offset="95%" stopColor="#c9a227" stopOpacity={0} />
           </linearGradient>
           <filter id="bidAreaShadow" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
@@ -415,11 +415,11 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           width={36}
           allowDecimals={false}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#d97706", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#c9a227", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
         <Area
           type="monotone"
           dataKey="count"
-          stroke="#d97706"
+          stroke="#c9a227"
           strokeWidth={responsiveCfg.areaStrokeWidth}
           fillOpacity={1}
           fill="url(#colorBids)"
@@ -435,7 +435,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <ChartPanelHeader
-        accentClass="bg-green-500"
+        accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
         title="Bid Tracking"
         subtitle={`Bidding activity by ${viewType}`}
         icon={FaGavel}
@@ -445,12 +445,12 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             options={["weekly", "monthly", "quarterly", "yearly"]}
             value={viewType}
             onChange={setViewType}
-            activeClass="bg-white text-green-600 shadow-md ring-1 ring-green-100"
+            activeClass="bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
           />
         )}
       </ChartPanelHeader>
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-amber-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
+      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f2e4] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`}>
         {!hasData ? (
           <ChartEmptyState
             title="No bid data for this period"

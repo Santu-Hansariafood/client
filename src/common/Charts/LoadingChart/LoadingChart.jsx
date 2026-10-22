@@ -34,28 +34,28 @@ import {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px]">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+      <div className="bg-lux-cream/95 backdrop-blur-xl p-4 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[150px]">
+        <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-2 border-b border-[#ece4d2] pb-2">
           {label}
         </p>
         <div className="space-y-2">
-          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+          <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm"></span>
-              <span className="text-slate-600">Weight:</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-lux-emerald shadow-sm"></span>
+              <span className="text-lux-muted">Weight:</span>
             </span>
-            <span className="text-blue-600">
+            <span className="font-serif text-base font-semibold text-lux-emerald">
               {payload[0].value.toFixed(2)} T
             </span>
           </p>
           {payload[1] && (
-            <div className="pt-2 mt-2 border-t border-slate-50">
-              <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+            <div className="pt-2 mt-2 border-t border-[#ece4d2]">
+              <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
                 <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span>
-                  <span className="text-slate-600">Entries:</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-lux-gold shadow-sm"></span>
+                  <span className="text-lux-muted">Entries:</span>
                 </span>
-                <span className="text-emerald-600">{payload[1].value}</span>
+                <span className="font-serif text-base font-semibold text-lux-gold">{payload[1].value}</span>
               </p>
             </div>
           )}
@@ -176,7 +176,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   if (loading)
     return (
       <div className={CHART_LOADING_CLASS}>
-        <ChartSpinner colorClass="border-blue-600" />
+        <ChartSpinner colorClass="border-lux-emerald" />
       </div>
     );
 
@@ -237,8 +237,8 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+            <stop offset="5%" stopColor="#0d7a68" stopOpacity={0.4} />
+            <stop offset="95%" stopColor="#0d7a68" stopOpacity={0} />
           </linearGradient>
           <filter id="areaShadow" height="200%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
@@ -252,11 +252,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             </feMerge>
           </filter>
         </defs>
-        <CartesianGrid
-          strokeDasharray="3 3"
-          vertical={false}
-          stroke="#f1f5f9"
-        />
+        <CartesianGrid {...MODERN_GRID_PROPS} />
         <XAxis
           dataKey="date"
           axisLine={false}
@@ -275,7 +271,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         <Area
           type="monotone"
           dataKey="weight"
-          stroke="#2563eb"
+          stroke="#0d7a68"
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorWeight)"
@@ -289,7 +285,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   return (
     <div className="w-full min-w-0">
       <ChartPanelHeader
-        accentClass="bg-blue-600"
+        accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
         title="Loading Analytics"
         subtitle={`Performance by ${viewType}`}
       >
@@ -297,14 +293,14 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           options={["weekly", "monthly", "quarterly", "yearly"]}
           value={viewType}
           onChange={setViewType}
-          activeClass="bg-white text-blue-600 shadow-md ring-1 ring-blue-100"
+          activeClass="bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
         />
       </ChartPanelHeader>
 
       <div className={CHART_AREA_CLASS}>
         {!data.length ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+          <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
+            <div className="w-16 h-16 bg-lux-cream rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -319,7 +315,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
                 ></path>
               </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">
+            <p className="font-serif text-sm font-semibold text-lux-ink">
               No loading data for this period
             </p>
           </div>

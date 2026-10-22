@@ -26,27 +26,27 @@ import {
 import { CHART_AREA_CLASS, ChartPanelHeader } from "../chartLayoutShared";
 
 const COLORS = {
-  total: "#6366f1",
-  completed: "#10b981",
-  pending: "#f59e0b",
-  inProgress: "#8b5cf6",
+  total: "#04392c",
+  completed: "#065f46",
+  pending: "#c9a227",
+  inProgress: "#12a594",
 };
 
 const PIE_COLORS = [
-  "#6366f1",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
+  "#065f46",
+  "#0d7a68",
+  "#12a594",
+  "#c9a227",
+  "#e6cf86",
+  "#b8860b",
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-xl p-5 shadow-2xl border border-slate-100 rounded-2xl min-w-[190px]">
+      <div className="bg-lux-cream/95 backdrop-blur-xl p-5 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[190px]">
         {label && (
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">
+          <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-3 border-b border-[#ece4d2] pb-2">
             {label}
           </p>
         )}
@@ -54,16 +54,16 @@ const CustomTooltip = ({ active, payload, label }) => {
           {payload.map((entry, index) => (
             <p
               key={index}
-              className="text-sm font-black text-slate-800 flex items-center justify-between gap-4"
+              className="text-sm font-black text-lux-ink flex items-center justify-between gap-4"
             >
               <span className="flex items-center gap-2">
                 <span
                   className="w-3 h-3 rounded-full shadow-sm"
                   style={{ backgroundColor: entry.color }}
                 ></span>
-                <span className="text-slate-600">{entry.name}:</span>
+                <span className="text-lux-muted">{entry.name}:</span>
               </span>
-              <span style={{ color: entry.color }}>{entry.value}</span>
+              <span className="font-serif text-base font-semibold" style={{ color: entry.color }}>{entry.value}</span>
             </p>
           ))}
         </div>
@@ -177,7 +177,7 @@ const EmployeeWorkChart = ({
             iconType="circle"
             iconSize={10}
             formatter={(value) => (
-              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+              <span className="text-[10px] font-serif font-semibold text-lux-muted">
                 {value}
               </span>
             )}
@@ -284,12 +284,7 @@ const EmployeeWorkChart = ({
             </feMerge>
           </filter>
         </defs>
-        <CartesianGrid
-          strokeDasharray="8 12"
-          vertical={false}
-          stroke="#e2e8f0"
-          strokeOpacity={0.6}
-        />
+        <CartesianGrid {...MODERN_GRID_PROPS} />
         <XAxis
           dataKey={viewType === "date" ? "date" : "name"}
           axisLine={false}
@@ -353,7 +348,7 @@ const EmployeeWorkChart = ({
           iconType="circle"
           iconSize={10}
           formatter={(value) => (
-            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+            <span className="text-[10px] font-serif font-semibold text-lux-muted">
               {value}
             </span>
           )}
@@ -367,7 +362,7 @@ const EmployeeWorkChart = ({
     <div className="w-full min-w-0">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <ChartPanelHeader
-          accentClass="bg-indigo-600"
+          accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
           title="Employee Work Analytics"
           subtitle={
             viewType === "date"
@@ -375,13 +370,13 @@ const EmployeeWorkChart = ({
               : "Employee-wise work distribution"
           }
         />
-        <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl">
+        <div className="flex gap-2 p-1.5 bg-[#f2eee2] border border-[#e6dcc4] rounded-2xl">
           <button
             onClick={() => setViewType("date")}
             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
               viewType === "date"
-                ? "bg-white text-indigo-600 shadow-md ring-1 ring-indigo-100"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
+                : "text-lux-muted hover:text-lux-emerald"
             }`}
           >
             Date-wise
@@ -390,8 +385,8 @@ const EmployeeWorkChart = ({
             onClick={() => setViewType("employee")}
             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
               viewType === "employee"
-                ? "bg-white text-indigo-600 shadow-md ring-1 ring-indigo-100"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
+                : "text-lux-muted hover:text-lux-emerald"
             }`}
           >
             Employee-wise
@@ -401,8 +396,8 @@ const EmployeeWorkChart = ({
 
       <div className={CHART_AREA_CLASS}>
         {!chartData.length ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+          <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
+            <div className="w-20 h-20 bg-lux-cream rounded-full flex items-center justify-center">
               <svg
                 className="w-10 h-10"
                 fill="none"
@@ -417,7 +412,7 @@ const EmployeeWorkChart = ({
                 ></path>
               </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">
+            <p className="font-serif text-sm font-semibold text-lux-ink">
               No work data available
             </p>
           </div>

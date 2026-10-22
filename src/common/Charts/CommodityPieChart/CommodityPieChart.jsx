@@ -24,44 +24,44 @@ import {
 } from "../modernBarChartShared";
 
 const COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
+  "#065f46",
+  "#0d7a68",
+  "#12a594",
+  "#c9a227",
+  "#e6cf86",
+  "#b8860b",
+  "#04392c",
 ];
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="relative bg-white/95 backdrop-blur-xl p-3.5 sm:p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px] animate-pop-in">
-        <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-white border-t border-l border-slate-100" />
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+      <div className="relative bg-lux-cream/95 backdrop-blur-xl p-3.5 sm:p-4 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[150px] animate-pop-in">
+        <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 bg-lux-cream border-t border-l border-[#e9e2d3]" />
+        <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-2 border-b border-[#ece4d2] pb-2">
           {data.name}
         </p>
         <div className="space-y-2">
-          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+          <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
               <span
                 className="w-2.5 h-2.5 rounded-full shadow-sm"
                 style={{ backgroundColor: payload[0].color }}
               />
-              <span className="text-slate-600">Weight:</span>
+              <span className="text-lux-muted">Weight:</span>
             </span>
-            <span className="text-blue-600 tabular-nums">
+            <span className="font-serif text-base font-semibold text-lux-emerald tabular-nums">
               {data.value.toFixed(3)}
-              <span className="text-[10px] font-bold text-blue-600/70 ml-1">
+              <span className="text-[10px] font-bold text-lux-emerald/70 ml-1">
                 MT
               </span>
             </span>
           </p>
-          <div className="pt-2 mt-2 border-t border-slate-50">
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+          <div className="pt-2 mt-2 border-t border-[#ece4d2]">
+            <div className="flex items-center justify-between text-[10px] font-bold text-lux-muted">
               <span>Volume Share:</span>
-              <span className="text-slate-900 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md tabular-nums font-black">
+              <span className="text-lux-emerald bg-lux-emerald/10 px-2 py-0.5 rounded-md tabular-nums font-black">
                 {data.percentage}%
               </span>
             </div>
@@ -155,7 +155,7 @@ const CommodityPieChart = ({ apiUrl }) => {
   if (loading && !firstLoad)
     return (
       <div className={CHART_LOADING_CLASS}>
-        <ChartSpinner colorClass="border-emerald-600" subtitle="Refreshing commodity distribution" />
+        <ChartSpinner colorClass="border-lux-emerald" subtitle="Refreshing commodity distribution" />
       </div>
     );
 
@@ -166,13 +166,13 @@ const CommodityPieChart = ({ apiUrl }) => {
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <ChartPanelHeader
-        accentClass="bg-emerald-600"
+        accentClass="bg-gradient-to-b from-lux-gold to-lux-emerald"
         title="Commodity Distribution"
         subtitle="Volume share by commodity type"
         icon={FaBalanceScale}
       />
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-slate-100 shadow-sm overflow-hidden`}>
+      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`}>
         {!data.length ? (
           <ChartEmptyState
             title="No commodity data available"
@@ -237,7 +237,7 @@ const CommodityPieChart = ({ apiUrl }) => {
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#10b981", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#065f46", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
                 <Legend
                   verticalAlign="bottom"
                   align="center"
@@ -246,7 +246,7 @@ const CommodityPieChart = ({ apiUrl }) => {
                   iconSize={responsiveCfg.showFullLegend ? 9 : 7}
                   formatter={(value) => (
                     <span
-                      className={`font-black text-slate-600 uppercase tracking-widest ${
+                      className={`font-serif font-semibold text-lux-muted ${
                         responsiveCfg.showFullLegend ? "text-[10px]" : "text-[9px]"
                       }`}
                     >
