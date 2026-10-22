@@ -6,6 +6,20 @@ export default {
       fontFamily: {
         sans: ["'Plus Jakarta Sans'", "Inter", "system-ui", "sans-serif"],
         display: ["'Outfit'", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "'Times New Roman'", "serif"],
+      },
+      colors: {
+        lux: {
+          ivory: "#f7f4ec",
+          cream: "#fffefb",
+          ink: "#12261f",
+          muted: "#5f6f68",
+          gold: "#c9a227",
+          "gold-soft": "#e6cf86",
+          emerald: "#065f46",
+          deep: "#04392c",
+          night: "#062e25",
+        },
       },
       keyframes: {
         softPulse: {

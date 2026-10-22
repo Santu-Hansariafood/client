@@ -22,7 +22,7 @@ import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
 import Loading from "../../../common/Loading/Loading";
 
-const COLORS = ["#0f766e", "#2563eb", "#ea580c", "#7c3aed", "#ca8a04", "#dc2626"];
+const COLORS = ["#065f46", "#0d7a68", "#12a594", "#c9a227", "#e6cf86", "#b8860b"];
 const money = (value) => `Rs ${Math.round(Number(value) || 0).toLocaleString("en-IN")}`;
 const tons = (value) => `${(Number(value) || 0).toFixed(3)} tons`;
 const chartValue = (value, name) => [name?.toLowerCase().includes("ton") || name === "Quantity" ? tons(value) : money(value), name];
@@ -140,9 +140,9 @@ const AdminAnalysisSection = () => {
         onclone: (documentClone) => {
           const reportClone = documentClone.querySelector("[data-admin-analysis-report]");
           if (reportClone) {
-            reportClone.style.background = "linear-gradient(135deg, #ffffff 0%, #f8fafc 52%, #ecfdf5 100%)";
-            reportClone.style.boxShadow = "0 24px 70px rgba(15, 23, 42, 0.14)";
-            reportClone.style.borderColor = "#dbe4ee";
+            reportClone.style.background = "linear-gradient(135deg, #fffefb 0%, #fdfbf6 52%, #f7f4ec 100%)";
+            reportClone.style.boxShadow = "0 24px 70px rgba(6, 95, 70, 0.18)";
+            reportClone.style.borderColor = "#e9e2d3";
           }
         },
       });
@@ -161,39 +161,39 @@ const AdminAnalysisSection = () => {
   };
 
   return (
-    <section data-admin-analysis-report ref={reportRef} className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-8">
-      <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
+    <section data-admin-analysis-report ref={reportRef} className="lux-card lux-gold-top relative overflow-hidden rounded-[2rem] p-5 text-lux-ink sm:p-8">
+      <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-lux-gold/15 blur-3xl" />
       <div className="relative z-10">
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
           <div>
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700"><FaChartPie /> Admin intelligence report</div>
-            <h2 className="text-2xl font-black tracking-tight sm:text-3xl">Sauda, loading & payment analysis</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">Compare companies, follow monthly value, and understand commodity movement from one filtered report.</p>
+            <div className="lux-eyebrow mb-2 flex items-center gap-2"><FaChartPie /> Admin intelligence report</div>
+            <h2 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl">Sauda, loading &amp; payment analysis</h2>
+            <p className="mt-2 max-w-2xl text-sm text-lux-muted">Compare companies, follow monthly value, and understand commodity movement from one filtered report.</p>
           </div>
           <div data-export-control="true" className="flex flex-wrap gap-2">
-            <button type="button" onClick={downloadReportImage} disabled={loading || exporting} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"><FaDownload /> {exporting ? "Preparing image..." : "Download image"}</button>
-            <button type="button" onClick={loadReport} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"><FaSyncAlt /> Refresh report</button>
+            <button type="button" onClick={downloadReportImage} disabled={loading || exporting} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-lux-emerald to-lux-deep px-4 py-2.5 text-xs font-bold text-lux-gold-soft ring-1 ring-lux-gold/30 shadow-sm transition hover:shadow-lg hover:shadow-lux-emerald/25 disabled:cursor-not-allowed disabled:opacity-60"><FaDownload /> {exporting ? "Preparing image..." : "Download image"}</button>
+            <button type="button" onClick={loadReport} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 text-xs font-bold text-lux-emerald shadow-sm transition hover:bg-white"><FaSyncAlt /> Refresh report</button>
           </div>
         </div>
 
-        <div className="mb-7 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-7 grid grid-cols-1 gap-3 rounded-2xl border border-[#e9e2d3] bg-lux-cream/80 p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
           <DataDropdown options={[{ value: "", label: "All seller companies" }, ...sellerCompanies.map((item) => ({ value: item.companyName, label: item.companyName }))]} selectedOptions={filters.sellerCompany} onChange={(item) => setFilter("sellerCompany", item?.value)} placeholder="Select seller company" isClearable />
           <DataDropdown options={[{ value: "", label: "All buyer companies" }, ...buyerCompanies.map((item) => ({ value: item.companyName, label: item.companyName }))]} selectedOptions={filters.buyerCompany} onChange={(item) => setFilter("buyerCompany", item?.value)} placeholder="Select buyer company" isClearable />
           <div className="md:col-span-2"><DateRangeSelector startDate={filters.startDate} endDate={filters.endDate} onStartDateChange={(date) => setFilter("startDate", date)} onEndDateChange={(date) => setFilter("endDate", date)} onClear={() => setFilters((current) => ({ ...current, startDate: "", endDate: "" }))} /></div>
-          <button type="button" onClick={clearFilters} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 md:col-start-2 xl:col-start-4"><FaFilter /> Clear filters</button>
+          <button type="button" onClick={clearFilters} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e6dcc4] px-4 py-2 text-xs font-bold text-lux-muted transition hover:bg-lux-cream md:col-start-2 xl:col-start-4"><FaFilter /> Clear filters</button>
         </div>
 
         {loading ? <Loading /> : (
           <>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-7">
-              {[['Saudas', report?.summary?.saudas], ['Sauda value', money(report?.summary?.value)], ['Quantity', tons(report?.summary?.quantity)], ['Loaded weight', tons(report?.summary?.loadedWeight)], ['Unloading', tons(report?.summary?.unloadingWeight)], ['Rejected lorries', report?.summary?.rejectedLorries], ['Total works', report?.summary?.totalWorks]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</p><p className="mt-2 text-xl font-black text-slate-900">{value || 0}</p></div>)}
+              {[['Saudas', report?.summary?.saudas], ['Sauda value', money(report?.summary?.value)], ['Quantity', tons(report?.summary?.quantity)], ['Loaded weight', tons(report?.summary?.loadedWeight)], ['Unloading', tons(report?.summary?.unloadingWeight)], ['Rejected lorries', report?.summary?.rejectedLorries], ['Total works', report?.summary?.totalWorks]].map(([label, value]) => <div key={label} className="rounded-2xl border border-[#ece5d6] bg-lux-cream p-4 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-widest text-lux-muted">{label}</p><p className="mt-2 font-serif text-xl font-semibold text-lux-ink">{value || 0}</p></div>)}
             </div>
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><FaBrain className="mt-0.5 shrink-0 text-emerald-600" /><span>{report?.insights}</span></div>
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-lux-gold/30 bg-lux-cream p-4 text-sm text-lux-ink"><FaBrain className="mt-0.5 shrink-0 text-lux-emerald" /><span>{report?.insights}</span></div>
             <div ref={chartStackRef} className="mt-6 grid grid-cols-1 gap-6 sm:gap-8">
-              <Chart title="Monthly sauda value & quantity"><ResponsiveContainer width="100%" height={280}><LineChart data={monthly}><CartesianGrid stroke="#cbd5e1" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#64748b" /><YAxis yAxisId="left" stroke="#64748b" /><YAxis yAxisId="right" orientation="right" stroke="#64748b" /><Tooltip formatter={chartValue} /><Legend /><Line yAxisId="left" type="monotone" dataKey="value" name="Value" stroke="#059669" strokeWidth={3} /><Line yAxisId="right" type="monotone" dataKey="quantity" name="Quantity" stroke="#2563eb" strokeWidth={3} /></LineChart></ResponsiveContainer></Chart>
+              <Chart title="Monthly sauda value & quantity"><ResponsiveContainer width="100%" height={280}><LineChart data={monthly}><CartesianGrid stroke="#e0d8c6" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#5f6f68" /><YAxis yAxisId="left" stroke="#5f6f68" /><YAxis yAxisId="right" orientation="right" stroke="#5f6f68" /><Tooltip formatter={chartValue} /><Legend /><Line yAxisId="left" type="monotone" dataKey="value" name="Value" stroke="#065f46" strokeWidth={3} /><Line yAxisId="right" type="monotone" dataKey="quantity" name="Quantity" stroke="#c9a227" strokeWidth={3} /></LineChart></ResponsiveContainer></Chart>
               <Chart title="Commodity value distribution"><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={report?.commodityStats || []} dataKey="value" nameKey="commodity" cx="50%" cy="50%" outerRadius={95} label={(item) => item.commodity}>{(report?.commodityStats || []).map((item, index) => <Cell key={item.commodity} fill={COLORS[index % COLORS.length]} />)}</Pie><Tooltip formatter={(value) => money(value)} /><Legend /></PieChart></ResponsiveContainer></Chart>
-              <Chart title="Loading, unloading & payments by month"><ResponsiveContainer width="100%" height={280}><BarChart data={monthly}><CartesianGrid stroke="#cbd5e1" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#64748b" /><YAxis stroke="#64748b" /><Tooltip /><Legend /><Bar dataKey="loadedWeight" name="Loading (tons)" fill="#f59e0b" radius={[5, 5, 0, 0]} /><Bar dataKey="unloadingWeight" name="Unloading (tons)" fill="#0f766e" radius={[5, 5, 0, 0]} /><Bar dataKey="payments" name="Payments" fill="#7c3aed" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></Chart>
-              <Chart title="Commodity performance"><ResponsiveContainer width="100%" height={280}><BarChart data={report?.commodityStats || []} layout="vertical" margin={{ left: 20, right: 20 }}><CartesianGrid stroke="#334155" strokeDasharray="3 3" /><XAxis type="number" stroke="#94a3b8" /><YAxis type="category" dataKey="commodity" width={90} stroke="#94a3b8" /><Tooltip formatter={(value) => money(value)} /><Bar dataKey="value" name="Value" fill="#2dd4bf" radius={[0, 5, 5, 0]} /></BarChart></ResponsiveContainer></Chart>
+              <Chart title="Loading, unloading & payments by month"><ResponsiveContainer width="100%" height={280}><BarChart data={monthly}><CartesianGrid stroke="#e0d8c6" strokeDasharray="3 3" /><XAxis dataKey="month" stroke="#5f6f68" /><YAxis stroke="#5f6f68" /><Tooltip /><Legend /><Bar dataKey="loadedWeight" name="Loading (tons)" fill="#c9a227" radius={[5, 5, 0, 0]} /><Bar dataKey="unloadingWeight" name="Unloading (tons)" fill="#065f46" radius={[5, 5, 0, 0]} /><Bar dataKey="payments" name="Payments" fill="#0d7a68" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></Chart>
+              <Chart title="Commodity performance"><ResponsiveContainer width="100%" height={280}><BarChart data={report?.commodityStats || []} layout="vertical" margin={{ left: 20, right: 20 }}><CartesianGrid stroke="#e0d8c6" strokeDasharray="3 3" /><XAxis type="number" stroke="#5f6f68" /><YAxis type="category" dataKey="commodity" width={90} stroke="#5f6f68" /><Tooltip formatter={(value) => money(value)} /><Bar dataKey="value" name="Value" fill="#12a594" radius={[0, 5, 5, 0]} /></BarChart></ResponsiveContainer></Chart>
             </div>
           </>
         )}

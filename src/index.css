@@ -59,12 +59,12 @@
     --scroll-scale: 1;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgb(203 213 225 / 0.8);
+    border: 1px solid #e9e2d3;
     border-radius: 1.25rem;
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 58%, #ecfdf5 100%);
+    background: linear-gradient(145deg, #fffefb 0%, #fdfbf6 58%, #faf6ec 100%);
     box-shadow:
-      0 4px 8px rgb(15 23 42 / 0.04),
-      0 18px 36px -22px rgb(15 23 42 / 0.3),
+      0 1px 2px rgb(28 43 38 / 0.04),
+      0 22px 44px -30px rgb(6 95 70 / 0.42),
       inset 0 1px 0 rgb(255 255 255 / 0.95);
     transform:
       perspective(1400px)
@@ -84,17 +84,17 @@
     position: absolute;
     z-index: 1;
     inset: 0 0 auto;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #34d399, #60a5fa, transparent);
+    height: 3px;
+    background: linear-gradient(90deg, #065f46, #c9a227 45%, #e6cf86 55%, #065f46);
     content: "";
     pointer-events: none;
   }
 
   .admin-chart-card:hover {
-    border-color: rgb(110 231 183 / 0.8);
+    border-color: #dccfa8;
     box-shadow:
-      0 8px 16px rgb(15 23 42 / 0.06),
-      0 28px 54px -24px rgb(5 150 105 / 0.32),
+      0 2px 4px rgb(28 43 38 / 0.05),
+      0 34px 64px -34px rgb(6 95 70 / 0.5),
       inset 0 1px 0 rgb(255 255 255 / 0.95);
   }
 
@@ -105,7 +105,7 @@
     width: 17rem;
     height: 17rem;
     border-radius: 9999px;
-    background: radial-gradient(circle, rgb(52 211 153 / 0.12), transparent 68%);
+    background: radial-gradient(circle, rgb(201 162 39 / 0.14), transparent 68%);
     filter: blur(8px);
     pointer-events: none;
     transform: translateZ(8px);
@@ -120,17 +120,112 @@
   .admin-chart-card__title {
     position: relative;
     margin-bottom: 0.5rem;
-    border-bottom: 1px solid rgb(226 232 240 / 0.8);
+    border-bottom: 1px solid rgb(201 162 39 / 0.25);
     padding: 0.25rem 0 0.75rem;
-    color: #1e293b;
-    font-size: 0.875rem;
-    font-weight: 700;
+    color: #12261f;
+    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     transform: translateZ(28px);
   }
 
   .admin-chart-card__plot {
     position: relative;
     transform: translateZ(12px);
+  }
+
+  /* ---------------------------------------------------------------
+     Admin luxury theme — ivory canvas with emerald + gold accents
+     Applied only where the Admin role is detected.
+     --------------------------------------------------------------- */
+  .lux-canvas {
+    background-color: #f7f4ec;
+    background-image:
+      radial-gradient(1100px 560px at 100% -10%, rgba(6, 95, 70, 0.07), transparent 62%),
+      radial-gradient(900px 520px at -10% 110%, rgba(201, 162, 39, 0.09), transparent 60%),
+      linear-gradient(180deg, #faf7f0 0%, #f6f2e8 55%, #f3efe4 100%);
+    background-attachment: fixed;
+  }
+
+  .lux-card {
+    position: relative;
+    border-radius: 1.25rem;
+    border: 1px solid #e9e2d3;
+    background: #fffefb;
+    box-shadow:
+      0 1px 2px rgba(28, 43, 38, 0.04),
+      0 22px 48px -30px rgba(6, 95, 70, 0.4);
+  }
+
+  .lux-card-hover {
+    transition:
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.5s ease,
+      border-color 0.5s ease;
+  }
+
+  .lux-card-hover:hover {
+    transform: translateY(-4px);
+    border-color: #dccfa8;
+    box-shadow:
+      0 2px 4px rgba(28, 43, 38, 0.05),
+      0 32px 64px -34px rgba(6, 95, 70, 0.5);
+  }
+
+  .lux-gold-top::before {
+    position: absolute;
+    z-index: 1;
+    inset: 0 0 auto;
+    height: 3px;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: linear-gradient(90deg, #065f46, #c9a227 45%, #e6cf86 55%, #065f46);
+    content: "";
+    pointer-events: none;
+  }
+
+  .lux-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #a3873f;
+  }
+
+  .lux-rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 162, 39, 0.6) 15%,
+      rgba(6, 95, 70, 0.55) 50%,
+      rgba(201, 162, 39, 0.6) 85%,
+      transparent
+    );
+  }
+
+  .lux-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lux-sheen::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 32%,
+      rgba(255, 255, 255, 0.5) 48%,
+      transparent 64%
+    );
+    transform: translateX(-130%);
+    transition: transform 0.9s ease;
+    content: "";
+    pointer-events: none;
+  }
+
+  .lux-sheen:hover::after {
+    transform: translateX(130%);
   }
 }
 

@@ -25,69 +25,32 @@ const useCountUp = (end, duration = 800) => {
   return value;
 };
 
-const DashboardCard = ({
-  title,
-  value,
-  icon: Icon,
-  colorClass,
-  shadowColor,
-  subtitle,
-}) => {
+const DashboardCard = ({ title, value, icon: Icon, accent, iconClass, ring, subtitle }) => {
   return (
-    <div
-      className={`relative overflow-hidden group rounded-[3rem] p-8 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] border border-white/50 bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-2xl shadow-2xl shadow-slate-200/40`}
-    >
-      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
-
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-      <div
-        className={`absolute -right-16 -top-16 w-64 h-64 rounded-full blur-[80px] opacity-10 transition-all duration-1000 group-hover:opacity-30 group-hover:scale-125 bg-gradient-to-br ${colorClass}`}
-      ></div>
-
-      <div
-        className={`absolute -left-16 -bottom-16 w-48 h-48 rounded-full blur-[60px] opacity-5 transition-all duration-1000 group-hover:opacity-20 bg-gradient-to-tr ${colorClass}`}
-      ></div>
-
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${colorClass}`}
-              ></div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-tight transition-colors duration-500 group-hover:text-slate-600">
-                {title}
-              </p>
-            </div>
-            <h3 className="text-5xl font-black text-slate-900 tracking-tighter leading-none flex items-baseline gap-1">
-              {value}
-              <span className="text-lg font-bold text-slate-300 group-hover:text-slate-400 transition-colors">
-                +
-              </span>
-            </h3>
-          </div>
-
-          <div
-            className={`relative p-5 rounded-[2rem] shadow-2xl transform transition-all duration-700 group-hover:rotate-[10deg] group-hover:scale-110 group-hover:shadow-current/30`}
-          >
-            <div
-              className={`absolute inset-0 rounded-[2rem] bg-gradient-to-br ${colorClass} opacity-90`}
-            ></div>
-            <div className="absolute inset-0 rounded-[2rem] bg-white/20 backdrop-blur-sm border border-white/30"></div>
-            <Icon
-              size={28}
-              className="relative z-10 text-white drop-shadow-md"
-            />
-          </div>
+    <div className="lux-card lux-card-hover lux-gold-top lux-sheen group relative overflow-hidden p-6 sm:p-7">
+      <div className="relative z-10 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="lux-eyebrow">{title}</p>
+          <h3 className="mt-3 font-serif text-4xl font-semibold leading-none tracking-tight text-lux-ink tabular-nums sm:text-5xl">
+            {value}
+          </h3>
         </div>
 
-        {subtitle && (
-          <div className="inline-flex items-center w-fit px-4 py-2 rounded-2xl bg-white/40 border border-white/60 backdrop-blur-md shadow-sm">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
-              {subtitle}
-            </span>
-          </div>
+        <div
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} ${iconClass} shadow-lg ${ring} transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-3`}
+        >
+          <Icon size={20} aria-hidden />
+        </div>
+      </div>
+
+      <div className="relative z-10 mt-6 flex items-center gap-3">
+        <div className="lux-rule flex-1" />
+        {subtitle ? (
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-lux-muted">
+            {subtitle}
+          </span>
+        ) : (
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lux-emerald shadow-[0_0_6px_rgba(6,95,70,0.5)]" />
         )}
       </div>
     </div>
@@ -102,8 +65,9 @@ const CardItem = ({ card, count }) => {
       title={card.title}
       value={animatedCount}
       icon={card.icon}
-      colorClass={card.color}
-      shadowColor={card.shadowColor}
+      accent={card.accent}
+      iconClass={card.iconClass}
+      ring={card.ring}
     />
   );
 };
@@ -114,61 +78,61 @@ const cardConfig = [
     countKey: "buyers",
     icon: FaUsers,
     link: "/buyer/list",
-    color: "from-blue-600 to-cyan-500",
-    shadowColor: "shadow-blue-500/20",
+    accent: "from-lux-emerald to-[#0f8a6c]",
+    iconClass: "text-white",
+    ring: "shadow-lux-emerald/25",
   },
   {
     title: "Total Sellers",
     countKey: "sellers",
     icon: FaStore,
     link: "/seller-details/list",
-    color: "from-emerald-600 to-teal-400",
-    shadowColor: "shadow-emerald-500/20",
+    accent: "from-[#0d7a68] to-[#12a594]",
+    iconClass: "text-white",
+    ring: "shadow-[#0d7a68]/25",
   },
   {
     title: "Total Consignee",
     countKey: "consignees",
     icon: FaTruck,
     link: "/consignee/list",
-    color: "from-green-600 to-orange-400",
-    shadowColor: "shadow-green-500/20",
+    accent: "from-lux-gold to-lux-gold-soft",
+    iconClass: "text-lux-night",
+    ring: "shadow-lux-gold/30",
   },
   {
     title: "Today's Bids",
     countKey: "bids",
     icon: FaGavel,
     link: "/manage-bids/bid-list",
-    color: "from-fuchsia-600 to-pink-500",
-    shadowColor: "shadow-fuchsia-500/20",
+    accent: "from-lux-night to-lux-deep",
+    iconClass: "text-lux-gold-soft",
+    ring: "shadow-lux-deep/30",
   },
 ];
 
 const CardGrid = ({ counts }) => {
   return (
     <Suspense fallback={<Loading />}>
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-2">
-          <div className="space-y-1">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="lux-eyebrow mb-1.5">Portfolio Snapshot</p>
+            <h2 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl">
               System Overview
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
             </h2>
-            <p className="text-sm font-medium text-slate-500">
-              Live intelligence across your distribution network
-            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="px-4 py-2 rounded-2xl bg-white/50 backdrop-blur-md border border-white/60 shadow-sm text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Last Sync: Just Now
-            </div>
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-[#e6dcc4] bg-lux-cream px-4 py-2 shadow-sm sm:self-auto">
+            <span className="h-1.5 w-1.5 rounded-full bg-lux-emerald animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
+              Live
+            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {cardConfig.map((card, index) => (
-            <div key={index} className="w-full">
-              <CardItem card={card} count={counts[card.countKey]} />
-            </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
+          {cardConfig.map((card) => (
+            <CardItem key={card.title} card={card} count={counts[card.countKey]} />
           ))}
         </div>
       </div>

@@ -158,6 +158,14 @@ const Dashboard = () => {
     }
   };
 
+  const workStats = [
+    { label: "Total Works", value: counts.totalWorks || 0, valueClass: "text-lux-ink", bar: "from-lux-emerald to-lux-gold" },
+    { label: "Pending", value: counts.pendingWorks || 0, valueClass: "text-amber-700", bar: "from-amber-400 to-amber-600" },
+    { label: "In Progress", value: counts.inProgressWorks || 0, valueClass: "text-violet-700", bar: "from-violet-400 to-violet-600" },
+    { label: "Completed", value: counts.completedWorks || 0, valueClass: "text-emerald-700", bar: "from-emerald-400 to-emerald-600" },
+    { label: "Cancelled", value: counts.cancelledWorks || 0, valueClass: "text-rose-700", bar: "from-rose-400 to-rose-600" },
+  ];
+
   return (
     <Suspense fallback={<Loading />}>
       <ScrollToTop />
@@ -167,315 +175,263 @@ const Dashboard = () => {
         icon={FaTachometerAlt}
         noContentCard
       >
-        <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#f8fafc,_#f1f5f9)]" />
-            <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-400/10 blur-[150px] rounded-full animate-pulse delay-700" />
-            <div className="absolute top-[30%] left-[20%] w-[40%] h-[40%] bg-green-400/5 blur-[120px] rounded-full animate-pulse delay-1000" />
+        <div className="mx-auto max-w-7xl space-y-10 sm:space-y-12">
+          <div className="animate-fade-in-up">
+            <CardGrid counts={counts} />
           </div>
 
-          <div className="max-w-7xl mx-auto space-y-10 sm:space-y-14 lg:space-y-16 relative z-10 min-w-0">
-            <div className="animate-fade-in-up">
-              <CardGrid counts={counts} />
+          <section className="lux-card lux-gold-top animate-fade-in-up p-5 [animation-delay:200ms] sm:p-8 lg:p-10">
+            <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:mb-10">
+              <div className="min-w-0">
+                <p className="lux-eyebrow mb-1.5">Analytics Suite</p>
+                <h2 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl lg:text-4xl">
+                  Agent Performance Metrics
+                </h2>
+                <p className="mt-2 text-sm font-medium text-lux-muted sm:text-base">
+                  Deep-dive distribution analysis by sauda volume and tonnage
+                </p>
+              </div>
+              <div className="inline-flex shrink-0 items-center gap-2.5 self-start rounded-full border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 shadow-sm sm:self-auto">
+                <span className="h-2 w-2 rounded-full bg-lux-emerald animate-ping" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-lux-muted">
+                  Real-time Live Feed
+                </span>
+              </div>
             </div>
 
-            <div className="group relative">
-              <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-emerald-500/10 rounded-[4rem] blur-[30px] opacity-20 group-hover:opacity-100 transition duration-1000"></div>
+            <ChartSection
+              agentSaudas={agentSaudas}
+              dateWiseWorks={dateWiseWorks}
+              employeeWiseWorks={employeeWiseWorks}
+            />
+          </section>
 
-              <div className="relative bg-white/40 backdrop-blur-3xl rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-12 border border-white/60 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] animate-fade-in-up delay-200 min-w-0 overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6 sm:mb-10 lg:mb-12">
-                  <div className="space-y-2 min-w-0">
-                    <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                      Analytics Dashboard
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                      Agent Performance Metrics
-                    </h2>
-                    <p className="text-sm sm:text-base text-slate-500 font-medium">
-                      Deep-dive distribution analysis by sauda volume and
-                      tonnage
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-white/50 border border-white/80 shadow-sm shrink-0 self-start sm:self-center">
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                    <span className="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase tracking-[0.15em] sm:tracking-[0.2em]">
-                      Real-time Live Feed
-                    </span>
-                  </div>
+          <div className="animate-fade-in-up [animation-delay:300ms]">
+            <AdminAnalysisSection />
+          </div>
+
+          <section className="lux-card lux-gold-top animate-fade-in-up p-5 [animation-delay:400ms] sm:p-8 lg:p-10">
+            <div className="mb-6 min-w-0 sm:mb-8">
+              <p className="lux-eyebrow mb-1.5">Work Management</p>
+              <h2 className="font-serif text-2xl font-semibold tracking-tight text-lux-ink sm:text-3xl lg:text-4xl">
+                Employee Work Status
+              </h2>
+              <p className="mt-2 text-sm font-medium text-lux-muted sm:text-base">
+                Track all work items and their current status
+              </p>
+            </div>
+
+            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-5">
+              {workStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="lux-card lux-sheen overflow-hidden p-5"
+                >
+                  <div className={`h-1 w-10 rounded-full bg-gradient-to-r ${stat.bar}`} />
+                  <p className="lux-eyebrow mt-3">{stat.label}</p>
+                  <p className={`mt-2 font-serif text-3xl font-semibold tabular-nums ${stat.valueClass}`}>
+                    {stat.value}
+                  </p>
                 </div>
+              ))}
+            </div>
 
-                <ChartSection
-                  agentSaudas={agentSaudas}
-                  dateWiseWorks={dateWiseWorks}
-                  employeeWiseWorks={employeeWiseWorks}
+            <div className="mb-6 flex flex-wrap items-end gap-4">
+              <div className="w-64">
+                <DataDropdown
+                  options={[
+                    { value: "", label: "All Employees" },
+                    ...employees.map((emp) => ({
+                      value: emp._id,
+                      label: `${emp.name} (${emp.employeeId})`,
+                    })),
+                  ]}
+                  selectedOptions={workFilters.employeeId}
+                  onChange={(selected) => {
+                    const newEmployeeId = selected?.value || "";
+                    setWorkFilters({
+                      ...workFilters,
+                      employeeId: newEmployeeId,
+                    });
+                  }}
+                  placeholder="Select Employee"
+                  isClearable={true}
                 />
               </div>
+              <div className="w-64">
+                <DataDropdown
+                  options={[
+                    { value: "", label: "All Statuses" },
+                    { value: "Pending", label: "Pending" },
+                    { value: "Assigned", label: "Assigned" },
+                    { value: "In Progress", label: "In Progress" },
+                    { value: "Completed", label: "Completed" },
+                    { value: "Cancelled", label: "Cancelled" },
+                  ]}
+                  selectedOptions={workFilters.status}
+                  onChange={(selected) => {
+                    const newStatus = selected?.value || "";
+                    setWorkFilters({ ...workFilters, status: newStatus });
+                  }}
+                  placeholder="Select Status"
+                  isClearable={true}
+                />
+              </div>
+              <div className="w-64">
+                <DataDropdown
+                  options={[
+                    { value: "", label: "All Types" },
+                    { value: "Loading Entry", label: "Loading Entry" },
+                    {
+                      value: "Sauda Management",
+                      label: "Sauda Management",
+                    },
+                    { value: "Bid Creation", label: "Bid Creation" },
+                    { value: "Bid Management", label: "Bid Management" },
+                    {
+                      value: "Bid Participation",
+                      label: "Bid Participation",
+                    },
+                    { value: "Payment Entry", label: "Payment Entry" },
+                    {
+                      value: "Payment Management",
+                      label: "Payment Management",
+                    },
+                    { value: "Custom Task", label: "Custom Task" },
+                    { value: "Other Entry", label: "Other Entry" },
+                  ]}
+                  selectedOptions={workFilters.workType}
+                  onChange={(selected) => {
+                    const newWorkType = selected?.value || "";
+                    setWorkFilters({
+                      ...workFilters,
+                      workType: newWorkType,
+                    });
+                  }}
+                  placeholder="Select Work Type"
+                  isClearable={true}
+                />
+              </div>
+              <DateRangeSelector
+                startDate={workFilters.startDate}
+                endDate={workFilters.endDate}
+                onStartDateChange={(date) =>
+                  setWorkFilters({ ...workFilters, startDate: date })
+                }
+                onEndDateChange={(date) =>
+                  setWorkFilters({ ...workFilters, endDate: date })
+                }
+                onClear={() =>
+                  setWorkFilters({
+                    ...workFilters,
+                    startDate: "",
+                    endDate: "",
+                  })
+                }
+              />
             </div>
 
-            <div className="animate-fade-in-up delay-300">
-              <AdminAnalysisSection />
-            </div>
-
-            <div className="group relative">
-              <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 rounded-[4rem] blur-[30px] opacity-20 group-hover:opacity-100 transition duration-1000"></div>
-
-              <div className="relative bg-white/40 backdrop-blur-3xl rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-12 border border-white/60 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] animate-fade-in-up delay-400 min-w-0 overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-6 sm:mb-10 lg:mb-12">
-                  <div className="space-y-2 min-w-0">
-                    <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                      Work Management
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                      Employee Work Status
-                    </h2>
-                    <p className="text-sm sm:text-base text-slate-500 font-medium">
-                      Track all work items and their current status
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
-                  <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
-                      Total Works
-                    </p>
-                    <p className="text-3xl font-black text-slate-900">
-                      {counts.totalWorks || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-yellow-600 uppercase tracking-[0.2em] mb-2">
-                      Pending
-                    </p>
-                    <p className="text-3xl font-black text-yellow-700">
-                      {counts.pendingWorks || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] mb-2">
-                      In Progress
-                    </p>
-                    <p className="text-3xl font-black text-purple-700">
-                      {counts.inProgressWorks || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-2">
-                      Completed
-                    </p>
-                    <p className="text-3xl font-black text-green-700">
-                      {counts.completedWorks || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-2xl border border-white/80 shadow-sm">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em] mb-2">
-                      Cancelled
-                    </p>
-                    <p className="text-3xl font-black text-red-700">
-                      {counts.cancelledWorks || 0}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4 mb-6 items-end">
-                  <div className="w-64">
-                    <DataDropdown
-                      options={[
-                        { value: "", label: "All Employees" },
-                        ...employees.map((emp) => ({
-                          value: emp._id,
-                          label: `${emp.name} (${emp.employeeId})`,
-                        })),
-                      ]}
-                      selectedOptions={workFilters.employeeId}
-                      onChange={(selected) => {
-                        const newEmployeeId = selected?.value || "";
-                        setWorkFilters({
-                          ...workFilters,
-                          employeeId: newEmployeeId,
-                        });
-                      }}
-                      placeholder="Select Employee"
-                      isClearable={true}
-                    />
-                  </div>
-                  <div className="w-64">
-                    <DataDropdown
-                      options={[
-                        { value: "", label: "All Statuses" },
-                        { value: "Pending", label: "Pending" },
-                        { value: "Assigned", label: "Assigned" },
-                        { value: "In Progress", label: "In Progress" },
-                        { value: "Completed", label: "Completed" },
-                        { value: "Cancelled", label: "Cancelled" },
-                      ]}
-                      selectedOptions={workFilters.status}
-                      onChange={(selected) => {
-                        const newStatus = selected?.value || "";
-                        setWorkFilters({ ...workFilters, status: newStatus });
-                      }}
-                      placeholder="Select Status"
-                      isClearable={true}
-                    />
-                  </div>
-                  <div className="w-64">
-                    <DataDropdown
-                      options={[
-                        { value: "", label: "All Types" },
-                        { value: "Loading Entry", label: "Loading Entry" },
-                        {
-                          value: "Sauda Management",
-                          label: "Sauda Management",
-                        },
-                        { value: "Bid Creation", label: "Bid Creation" },
-                        { value: "Bid Management", label: "Bid Management" },
-                        {
-                          value: "Bid Participation",
-                          label: "Bid Participation",
-                        },
-                        { value: "Payment Entry", label: "Payment Entry" },
-                        {
-                          value: "Payment Management",
-                          label: "Payment Management",
-                        },
-                        { value: "Custom Task", label: "Custom Task" },
-                        { value: "Other Entry", label: "Other Entry" },
-                      ]}
-                      selectedOptions={workFilters.workType}
-                      onChange={(selected) => {
-                        const newWorkType = selected?.value || "";
-                        setWorkFilters({
-                          ...workFilters,
-                          workType: newWorkType,
-                        });
-                      }}
-                      placeholder="Select Work Type"
-                      isClearable={true}
-                    />
-                  </div>
-                  <DateRangeSelector
-                    startDate={workFilters.startDate}
-                    endDate={workFilters.endDate}
-                    onStartDateChange={(date) =>
-                      setWorkFilters({ ...workFilters, startDate: date })
-                    }
-                    onEndDateChange={(date) =>
-                      setWorkFilters({ ...workFilters, endDate: date })
-                    }
-                    onClear={() =>
-                      setWorkFilters({
-                        ...workFilters,
-                        startDate: "",
-                        endDate: "",
-                      })
-                    }
-                  />
-                </div>
-
-                {worksLoading ? (
-                  <Loading />
-                ) : works.length === 0 ? (
-                  <div className="text-center py-12 bg-white/50 rounded-2xl border border-white/60">
-                    <p className="text-slate-500 font-medium">
-                      No work items found
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {works.map((work) => (
-                      <div
-                        key={work._id}
-                        className="bg-white/70 backdrop-blur-2xl rounded-2xl p-6 border border-white/80 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3 flex-wrap">
-                              <h3 className="text-lg font-bold text-slate-900">
-                                {work.title}
-                              </h3>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(work.status)}`}
-                              >
-                                {work.status}
-                              </span>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(work.priority)}`}
-                              >
-                                {work.priority}
-                              </span>
-                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
-                                {work.workType}
-                              </span>
-                            </div>
-                            <div className="mb-3">
-                              <p className="text-sm font-bold text-slate-600">
-                                Employee: {work.employeeId?.name || "Unknown"} (
-                                {work.employeeId?.employeeId || "N/A"})
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {work.employeeId?.email} •{" "}
-                                {work.employeeId?.mobile}
-                              </p>
-                            </div>
-                            {work.description && (
-                              <p className="text-sm text-slate-600 mb-3">
-                                {work.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <FaCalendarCheck size={12} />
-                                Created:{" "}
-                                {new Date(
-                                  work.createdAt,
-                                ).toLocaleDateString()}{" "}
-                                {new Date(work.createdAt).toLocaleTimeString()}
-                              </span>
-                              {work.dueDate && (
-                                <span className="flex items-center gap-1">
-                                  <FaCalendarCheck size={12} />
-                                  Due:{" "}
-                                  {new Date(work.dueDate).toLocaleDateString()}
-                                </span>
-                              )}
-                              {work.completedAt && (
-                                <span className="flex items-center gap-1 text-green-600 font-bold">
-                                  <FaCalendarCheck size={12} />
-                                  Completed:{" "}
-                                  {new Date(
-                                    work.completedAt,
-                                  ).toLocaleDateString()}{" "}
-                                  {new Date(
-                                    work.completedAt,
-                                  ).toLocaleTimeString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+            {worksLoading ? (
+              <Loading />
+            ) : works.length === 0 ? (
+              <div className="rounded-2xl border border-[#e9e2d3] bg-lux-cream py-12 text-center">
+                <p className="font-medium text-lux-muted">
+                  No work items found
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {works.map((work) => (
+                  <div
+                    key={work._id}
+                    className="lux-card lux-card-hover rounded-2xl p-6"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                          <h3 className="font-serif text-lg font-semibold text-lux-ink">
+                            {work.title}
+                          </h3>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(work.status)}`}
+                          >
+                            {work.status}
+                          </span>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(work.priority)}`}
+                          >
+                            {work.priority}
+                          </span>
+                          <span className="rounded-full border border-[#e6dcc4] bg-lux-cream px-3 py-1 text-xs font-bold text-lux-emerald">
+                            {work.workType}
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <p className="text-sm font-bold text-lux-ink/80">
+                            Employee: {work.employeeId?.name || "Unknown"} (
+                            {work.employeeId?.employeeId || "N/A"})
+                          </p>
+                          <p className="text-xs text-lux-muted">
+                            {work.employeeId?.email} •{" "}
+                            {work.employeeId?.mobile}
+                          </p>
+                        </div>
+                        {work.description && (
+                          <p className="text-sm text-lux-muted mb-3">
+                            {work.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-lux-muted">
+                          <span className="flex items-center gap-1">
+                            <FaCalendarCheck size={12} />
+                            Created:{" "}
+                            {new Date(
+                              work.createdAt,
+                            ).toLocaleDateString()}{" "}
+                            {new Date(work.createdAt).toLocaleTimeString()}
+                          </span>
+                          {work.dueDate && (
+                            <span className="flex items-center gap-1">
+                              <FaCalendarCheck size={12} />
+                              Due:{" "}
+                              {new Date(work.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
+                          {work.completedAt && (
+                            <span className="flex items-center gap-1 font-bold text-lux-emerald">
+                              <FaCalendarCheck size={12} />
+                              Completed:{" "}
+                              {new Date(
+                                work.completedAt,
+                              ).toLocaleDateString()}{" "}
+                              {new Date(
+                                work.completedAt,
+                              ).toLocaleTimeString()}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                )}
-
-                {!worksLoading && works.length > 0 && (
-                  <Pagination
-                    currentPage={currentPage}
-                    totalItems={totalWorks}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={(page) => setCurrentPage(page)}
-                    onPageSizeChange={(size) => {
-                      setItemsPerPage(size);
-                      setCurrentPage(1);
-                    }}
-                  />
-                )}
+                ))}
               </div>
-            </div>
+            )}
 
-            <DashboardBlogSection />
-          </div>
+            {!worksLoading && works.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalWorks}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(size) => {
+                  setItemsPerPage(size);
+                  setCurrentPage(1);
+                }}
+              />
+            )}
+          </section>
+
+          <DashboardBlogSection />
         </div>
       </AdminPageShell>
     </Suspense>

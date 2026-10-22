@@ -34,8 +34,7 @@ const CHART_CARDS = [
     id: "employee-work",
     featured: true,
     label: "Employee Work",
-    accent: "from-indigo-500 to-purple-600",
-    ring: "ring-indigo-100/80",
+    accent: "from-lux-emerald to-[#0f8a6c]",
     Component: EmployeeWorkChart,
     props: (chartType, agentSaudas, dateWiseWorks, employeeWiseWorks) => ({ 
       chartType, 
@@ -47,24 +46,21 @@ const CHART_CARDS = [
     id: "payment",
     featured: true,
     label: "Payments",
-    accent: "from-emerald-500 to-teal-600",
-    ring: "ring-emerald-100/80",
+    accent: "from-lux-emerald to-[#12a594]",
     Component: PaymentAnalyticsChart,
     props: (chartType) => ({ chartType }),
   },
   {
     id: "loading",
     label: "Loading",
-    accent: "from-blue-500 to-indigo-600",
-    ring: "ring-blue-100/80",
+    accent: "from-[#0d7a68] to-[#12a594]",
     Component: LoadingChart,
     props: (chartType) => ({ apiUrl: "/loading-entries", chartType }),
   },
   {
     id: "commodity",
     label: "Commodity",
-    accent: "from-emerald-500 to-cyan-600",
-    ring: "ring-emerald-100/80",
+    accent: "from-lux-emerald to-[#12a594]",
     parallax: true,
     Component: CommodityPieChart,
     props: () => ({ apiUrl: "/loading-entries" }),
@@ -72,8 +68,7 @@ const CHART_CARDS = [
   {
     id: "sauda",
     label: "Sauda",
-    accent: "from-emerald-500 to-green-600",
-    ring: "ring-emerald-100/80",
+    accent: "from-lux-emerald to-[#0f8a6c]",
     parallax: true,
     Component: SaudaChart,
     props: (chartType) => ({ apiUrl: "/self-order", chartType }),
@@ -81,8 +76,7 @@ const CHART_CARDS = [
   {
     id: "sauda-pie",
     label: "Sauda mix",
-    accent: "from-emerald-500 to-green-600",
-    ring: "ring-emerald-100/80",
+    accent: "from-lux-emerald to-[#0f8a6c]",
     parallax: true,
     Component: SaudaChart,
     props: () => ({ apiUrl: "/self-order", chartType: "pie" }),
@@ -90,8 +84,7 @@ const CHART_CARDS = [
   {
     id: "bids",
     label: "Bids",
-    accent: "from-green-500 to-orange-600",
-    ring: "ring-green-100/80",
+    accent: "from-lux-gold to-[#b8860b]",
     parallax: true,
     Component: BidChart,
     props: (chartType) => ({ apiUrl: "/bids", chartType }),
@@ -99,8 +92,7 @@ const CHART_CARDS = [
   {
     id: "bids-pie",
     label: "Bid mix",
-    accent: "from-green-500 to-orange-600",
-    ring: "ring-green-100/80",
+    accent: "from-lux-gold to-[#b8860b]",
     parallax: true,
     Component: BidChart,
     props: () => ({ apiUrl: "/bids", chartType: "pie" }),
@@ -108,8 +100,7 @@ const CHART_CARDS = [
   {
     id: "agent",
     label: "Agents",
-    accent: "from-indigo-500 to-violet-600",
-    ring: "ring-indigo-100/80",
+    accent: "from-lux-night to-lux-deep",
     parallax: true,
     Component: AgentSaudaChart,
     props: (chartType, agentSaudas) => ({ data: agentSaudas, chartType }),
@@ -117,50 +108,41 @@ const CHART_CARDS = [
   {
     id: "agent-pie",
     label: "Agent mix",
-    accent: "from-indigo-500 to-violet-600",
-    ring: "ring-indigo-100/80",
+    accent: "from-lux-night to-lux-deep",
     parallax: true,
     Component: AgentSaudaChart,
     props: (_, agentSaudas) => ({ data: agentSaudas, chartType: "pie" }),
   },
 ];
 
-const ChartCard = memo(({ featured, label, accent, ring, parallax, children }) => (
+const ChartCard = memo(({ featured, label, accent, parallax, children }) => (
   <article
     data-market-parallax={parallax ? "" : undefined}
     className={[
-      "relative min-w-0 flex flex-col",
+      "lux-card lux-gold-top relative min-w-0 flex flex-col overflow-hidden",
       "rounded-2xl sm:rounded-[1.75rem] lg:rounded-[2rem]",
-      "border border-slate-200/70 bg-white/90 backdrop-blur-xl",
-      "shadow-[0_4px_24px_rgba(15,23,42,0.06)]",
       "p-4 sm:p-6 lg:p-8",
       "transition-all duration-500 ease-out",
-      "hover:shadow-[0_16px_48px_rgba(79,70,229,0.12)] hover:border-indigo-200/60",
-      "group overflow-hidden",
+      "hover:border-[#dccfa8] hover:shadow-[0_30px_64px_-34px_rgba(6,95,70,0.5)]",
+      "group",
       featured ? "lg:col-span-2" : "",
       parallax ? "market-parallax-card" : "",
-      ring,
-      "ring-1",
     ].join(" ")}
   >
-    <div
-      className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent} opacity-80`}
-      aria-hidden
-    />
     {label && (
       <span className="sr-only">{label} chart</span>
     )}
     {featured && (
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-          <FaBolt className="text-[8px]" aria-hidden />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-lux-gold/40 bg-lux-cream px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-lux-emerald sm:text-[10px]">
+          <FaBolt className="text-[8px] text-lux-gold" aria-hidden />
           Primary
         </span>
       </div>
     )}
     <div className="relative z-[1] min-w-0 flex-1">{children}</div>
     <div
-      className={`pointer-events-none absolute -bottom-8 -right-8 w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br ${accent} opacity-[0.07] group-hover:scale-125 transition-transform duration-700`}
+      className={`pointer-events-none absolute -bottom-8 -right-8 w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br ${accent} opacity-[0.06] group-hover:scale-125 transition-transform duration-700`}
       aria-hidden
     />
   </article>
@@ -222,33 +204,27 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
         <header className="mb-6 sm:mb-8 lg:mb-10 space-y-5 sm:space-y-6">
           <div className="flex flex-col gap-4 sm:gap-5">
             <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-              <div className="relative shrink-0">
-                <div
-                  className="absolute inset-0 bg-indigo-500 blur-xl opacity-25"
-                  aria-hidden
-                />
-                <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-300/40">
+              <div className="shrink-0">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-lg shadow-lux-emerald/25 ring-1 ring-lux-gold/40 sm:h-12 sm:w-12">
                   <FaChartLine
-                    className="text-white text-lg sm:text-xl"
+                    className="text-lg sm:text-xl"
                     aria-hidden
                   />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[9px] sm:text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">
-                  Live analytics
-                </p>
+                <p className="lux-eyebrow mb-1">Live analytics</p>
                 <h2
                   id="market-intelligence-heading"
-                  className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight"
+                  className="font-serif text-xl font-semibold tracking-tight text-lux-ink sm:text-2xl md:text-3xl"
                 >
                   Market{" "}
-                  <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-lux-emerald to-lux-gold bg-clip-text text-transparent">
                     Intelligence
                   </span>
                 </h2>
-                <div className="h-1 w-10 sm:w-12 bg-gradient-to-r from-indigo-600 to-violet-400 rounded-full mt-2" />
-                <p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium max-w-xl">
+                <div className="mt-2 h-1 w-10 rounded-full bg-gradient-to-r from-lux-emerald to-lux-gold sm:w-12" />
+                <p className="mt-2 max-w-xl text-xs font-medium text-lux-muted sm:text-sm">
                   Real-time operational performance across payments, loading,
                   sauda, and bids
                 </p>
@@ -258,7 +234,7 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
             {/* Controls — full width on mobile */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 w-full">
               <div
-                className="grid grid-cols-2 gap-1.5 sm:inline-flex sm:gap-0 rounded-xl sm:rounded-2xl bg-slate-100/90 backdrop-blur-md p-1 sm:p-1.5 border border-slate-200/80 shadow-inner w-full sm:w-auto"
+                className="grid grid-cols-2 gap-1.5 sm:inline-flex sm:gap-0 rounded-xl sm:rounded-2xl bg-[#f2eee2] backdrop-blur-md p-1 sm:p-1.5 border border-[#e6dcc4] shadow-inner w-full sm:w-auto"
                 role="group"
                 aria-label="Chart visualization type"
               >
@@ -271,10 +247,10 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
                     type="button"
                     onClick={() => setChartType(type.id)}
                     aria-pressed={chartType === type.id}
-                    className={`justify-center px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${
+                    className={`justify-center px-3 sm:px-5 py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${
                       chartType === type.id
-                        ? "bg-white text-indigo-600 shadow-md ring-1 ring-slate-100"
-                        : "text-slate-500 hover:text-indigo-600 hover:bg-white/60"
+                        ? "bg-white text-lux-emerald shadow-md ring-1 ring-lux-gold/30"
+                        : "text-lux-muted hover:text-lux-emerald hover:bg-white/60"
                     }`}
                   >
                     <type.icon size={12} aria-hidden />
@@ -284,7 +260,7 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
               </div>
 
               <div
-                className="flex rounded-xl sm:rounded-2xl bg-slate-800/95 p-1 sm:p-1.5 shadow-lg border border-slate-700/80 w-full sm:w-auto"
+                className="flex rounded-xl sm:rounded-2xl bg-lux-night/95 p-1 sm:p-1.5 shadow-lg border border-lux-gold/20 w-full sm:w-auto"
                 role="group"
                 aria-label="Dashboard layout"
               >
@@ -299,8 +275,8 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
                     aria-pressed={viewMode === mode.id}
                     className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${
                       viewMode === mode.id
-                        ? "bg-indigo-500 text-white shadow-md"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
+                        : "text-white/50 hover:text-lux-gold-soft"
                     }`}
                   >
                     <mode.icon size={14} aria-hidden />
@@ -323,13 +299,12 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
           ].join(" ")}
         >
           {CHART_CARDS.map(
-            ({ id, featured, label, accent, ring, parallax, Component, props }) => (
+            ({ id, featured, label, accent, parallax, Component, props }) => (
               <ChartCard
                 key={id}
                 featured={featured && viewMode === "grid"}
                 label={label}
                 accent={accent}
-                ring={ring}
                 parallax={parallax}
               >
                 <Component {...props(chartType, agentSaudas, dateWiseWorks, employeeWiseWorks)} />
