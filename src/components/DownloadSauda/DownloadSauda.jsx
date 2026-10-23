@@ -307,7 +307,7 @@ const DownloadSauda = ({
   return (
     <div className="flex items-center justify-center lux-card rounded-lg p-2 gap-2">
       {loading ? (
-        <Loading />
+        <p className="text-sm text-lux-muted">Loading...</p>
       ) : (
         <>
           {button ? (
