@@ -16,11 +16,13 @@ const employeeSchema = new mongoose.Schema(
     profileImage: { type: String, default: "" },
     otp: { type: String },
     otpExpires: { type: Date },
+    otpVerified: { type: Boolean, default: false },
+    otpVerifiedAt: { type: Date },
   },
   { timestamps: true },
 );
 
-employeeSchema.pre("save", async function (next) {
+employeeSchema.pre("save", async function () {
   if (this.mobile) {
     const match = String(this.mobile)
       .trim()
@@ -30,11 +32,10 @@ employeeSchema.pre("save", async function (next) {
     }
   }
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 employeeSchema.methods.comparePassword = async function (candidatePassword) {

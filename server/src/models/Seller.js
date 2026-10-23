@@ -119,17 +119,18 @@ const sellerSchema = new mongoose.Schema(
     isLoggedIn: { type: Boolean, default: false },
     otp: { type: String },
     otpExpires: { type: Date },
+    otpVerified: { type: Boolean, default: false },
+    otpVerifiedAt: { type: Date },
   },
   { timestamps: true },
 );
 
-sellerSchema.pre("save", async function (next) {
+sellerSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 sellerSchema.methods.comparePassword = async function (candidatePassword) {

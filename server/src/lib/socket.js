@@ -4,23 +4,18 @@ import {
   getAuthUserFromTokenPayload,
   isTokenIssuedBeforePasswordChange,
 } from "../utils/authSession.js";
+import { getConfiguredCorsOrigins } from "../utils/corsOrigins.js";
 
 let io;
 
 export const initSocket = (server) => {
-  const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
-  const corsOrigins =
-    corsOrigin && corsOrigin !== "*"
-      ? corsOrigin
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : "*";
+  const corsOrigins = getConfiguredCorsOrigins();
 
   io = new Server(server, {
     path: "/api/socket.io",
     cors: {
-      origin: corsOrigins === "*" ? true : corsOrigins,
+      origin: (origin, callback) =>
+        callback(null, !origin || corsOrigins.has(origin)),
       methods: ["GET", "POST", "PATCH", "DELETE"],
       credentials: true,
     },
@@ -39,7 +34,9 @@ export const initSocket = (server) => {
       }
 
       const bearerToken = token.startsWith("Bearer ") ? token.slice(7) : token;
-      const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+      const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET, {
+        algorithms: ["HS256"],
+      });
       const authUser = await getAuthUserFromTokenPayload(decoded);
 
       if (!authUser) {

@@ -38,11 +38,13 @@ const buyerSchema = new mongoose.Schema(
     isLoggedIn: { type: Boolean, default: false },
     otp: { type: String },
     otpExpires: { type: Date },
+    otpVerified: { type: Boolean, default: false },
+    otpVerifiedAt: { type: Date },
   },
   { timestamps: true },
 );
 
-buyerSchema.pre("save", async function (next) {
+buyerSchema.pre("save", async function () {
   if (this.mobile && Array.isArray(this.mobile)) {
     this.mobile = this.mobile.map((phone) => {
       const match = String(phone)
@@ -52,13 +54,12 @@ buyerSchema.pre("save", async function (next) {
     });
   }
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   if (this.password) {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
   }
-  next();
 });
 
 buyerSchema.methods.comparePassword = async function (candidatePassword) {

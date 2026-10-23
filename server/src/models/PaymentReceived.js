@@ -76,7 +76,7 @@ paymentReceivedSchema.index({ createdAt: -1 });
 paymentReceivedSchema.index({ voucherNumber: 1 });
 
 // Auto-generate voucherNumber before validation
-paymentReceivedSchema.pre("validate", async function (next) {
+paymentReceivedSchema.pre("validate", async function () {
   if (this.isNew && !this.voucherNumber) {
     let counter = await Counter.findOneAndUpdate(
       { id: "paymentVoucherNumber" },
@@ -98,7 +98,6 @@ paymentReceivedSchema.pre("validate", async function (next) {
 
     this.voucherNumber = counter.seq;
   }
-  next();
 });
 
 export default mongoose.model("PaymentReceived", paymentReceivedSchema);

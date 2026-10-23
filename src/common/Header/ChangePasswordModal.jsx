@@ -53,8 +53,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   };
 
   const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 4) {
-      toast.error("Password must be at least 4 characters long.");
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
       return;
     }
     if (newPassword !== confirmPassword) {

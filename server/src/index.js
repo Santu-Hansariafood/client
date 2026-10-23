@@ -57,6 +57,10 @@ import financerRoutes from "./routes/financers.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
+import {
+  getConfiguredCorsOrigins,
+  isTrustedRequestOrigin,
+} from "./utils/corsOrigins.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -65,7 +69,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:", "blob:", "https://ik.imagekit.io"],
       fontSrc: ["'self'", "data:"],
@@ -86,29 +90,11 @@ app.use(compression({
   threshold: 1024, // Only compress responses larger than 1KB
 }));
 
-const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
-const corsOrigins =
-  corsOrigin && corsOrigin !== "*"
-    ? corsOrigin
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : "*";
+const corsOrigins = getConfiguredCorsOrigins();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (corsOrigins === "*") {
-      return callback(null, true);
-    }
-    if (!origin) {
-      return callback(null, true);
-    }
-    if (corsOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    const msg =
-      "The CORS policy for this site does not allow access from the specified Origin.";
-    return callback(new Error(msg), false);
+    callback(null, !origin || corsOrigins.has(origin));
   },
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
@@ -125,11 +111,40 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    return next();
+  }
+
+  const origin = req.get("origin");
+  if (!origin) {
+    return next();
+  }
+
+  const requestOrigin = `${req.protocol}://${req.get("host")}`;
+  if (!isTrustedRequestOrigin(origin, requestOrigin, corsOrigins)) {
+    return res.status(403).json({ message: "Untrusted request origin" });
+  }
+
+  next();
+});
 app.use(cookieParser());
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
+app.use((req, res, next) => {
+  if (req.body === undefined) {
+    req.body = {};
+  }
+  Object.defineProperty(req, "query", {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: req.query,
+  });
+  next();
+});
 app.use(mongoSanitize());
 
 const loginLimiter = rateLimit({
@@ -224,7 +239,7 @@ if (process.env.NODE_ENV === "production") {
     etag: true,
     lastModified: true,
   }));
-  app.get("*", (req, res) => {
+  app.get("/{*splat}", (req, res) => {
     if (!req.path.startsWith("/api/")) {
       res.sendFile(path.join(distPath, "index.html"));
     } else {

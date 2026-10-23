@@ -29,11 +29,13 @@ const transporterSchema = new mongoose.Schema(
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
     otp: { type: String },
     otpExpires: { type: Date },
+    otpVerified: { type: Boolean, default: false },
+    otpVerifiedAt: { type: Date },
   },
   { timestamps: true },
 );
 
-transporterSchema.pre("save", async function (next) {
+transporterSchema.pre("save", async function () {
   if (this.mobile) {
     const match = String(this.mobile)
       .trim()
@@ -43,11 +45,10 @@ transporterSchema.pre("save", async function (next) {
     }
   }
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 transporterSchema.methods.comparePassword = async function (candidatePassword) {

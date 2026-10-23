@@ -97,7 +97,7 @@ function formatName(name) {
     .join(" ");
 }
 
-consigneeSchema.pre("save", function (next) {
+consigneeSchema.pre("save", function () {
   if (this.name) {
     this.name = formatName(this.name);
   }
@@ -113,8 +113,6 @@ consigneeSchema.pre("save", function (next) {
   if (this.pan) {
     this.pan = this.pan.toUpperCase();
   }
-
-  next();
 });
 
 consigneeSchema.index({ name: 1 });

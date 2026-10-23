@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomInt } from "node:crypto";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import fs from "fs/promises";
@@ -12,6 +13,7 @@ import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
 import Employee from "../models/Employee.js";
 import Transporter from "../models/Transporter.js";
+import authJwt from "../middleware/authJwt.js";
 import { getModelByRole } from "../utils/authSession.js";
 
 const router = Router();
@@ -158,19 +160,20 @@ router.post("/forgot-password", async (req, res) => {
 
     const user = await Model.findOne(query);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(202)
+        .json({ message: "If the account is eligible, an OTP will be sent." });
     }
 
     const email = getEmailByRole(user, role);
 
     if (!email) {
-      return res.status(400).json({
-        message:
-          "No email address found for this account. Please contact support.",
-      });
+      return res
+        .status(202)
+        .json({ message: "If the account is eligible, an OTP will be sent." });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.otp = otp;
@@ -215,22 +218,22 @@ router.post("/forgot-password", async (req, res) => {
     try {
       await transporter.sendMail(mailOptions);
     } catch (mailError) {
-      return res.status(500).json({
-        message: "Failed to send OTP email.",
-        details: mailError.message,
-      });
+      return res.status(500).json({ message: "Failed to send OTP email." });
     }
-    res.json({ message: "OTP sent to your registered email address" });
-  } catch (error) {
     res
-      .status(500)
-      .json({ message: "Internal server error", details: error.message });
+      .status(202)
+      .json({ message: "If the account is eligible, an OTP will be sent." });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 router.post("/verify-otp", async (req, res) => {
   try {
     const { mobile, role, otp } = req.body;
+    if (typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
     let normalizedMobile = String(mobile || "").trim();
     const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
     const phoneMatch = normalizedMobile.match(phoneRegex);
@@ -247,9 +250,16 @@ router.post("/verify-otp", async (req, res) => {
         : { mobile: normalizedMobile };
 
     const user = await Model.findOne(query);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
 
-    if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+    if (
+      !user.otp ||
+      user.otp !== otp ||
+      !user.otpExpires ||
+      user.otpExpires.getTime() <= Date.now()
+    ) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
@@ -263,7 +273,7 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-router.post("/change-password-otp", async (req, res) => {
+router.post("/change-password-otp", authJwt, async (req, res) => {
   try {
     const { mobile, role } = req.body;
     let normalizedMobile = String(mobile || "").trim();
@@ -273,16 +283,23 @@ router.post("/change-password-otp", async (req, res) => {
       normalizedMobile = phoneMatch[1];
     }
 
-    const Model = getModelByRole(role);
-    if (!Model) return res.status(400).json({ message: "Invalid role" });
+    const Model = getModelByRole(req.user.role);
+    if (!Model || req.user.role !== role) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
 
-    const query =
+    const user = await Model.findById(req.user.sub);
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    const accountMobiles =
       role === "Seller"
-        ? { "phoneNumbers.value": normalizedMobile }
-        : { mobile: normalizedMobile };
-
-    const user = await Model.findOne(query);
-    if (!user) return res.status(404).json({ message: "User not found" });
+        ? user.phoneNumbers.map((phone) => phone.value)
+        : Array.isArray(user.mobile)
+          ? user.mobile
+          : [user.mobile];
+    if (!accountMobiles.includes(normalizedMobile)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
 
     const email = getEmailByRole(user, role);
     if (!email) {
@@ -291,7 +308,7 @@ router.post("/change-password-otp", async (req, res) => {
       });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.otp = otp;
@@ -343,6 +360,18 @@ router.post("/change-password-otp", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   try {
     const { mobile, role, otp, newPassword, keepSession } = req.body;
+    if (
+      typeof newPassword !== "string" ||
+      Buffer.byteLength(newPassword, "utf8") < 8 ||
+      Buffer.byteLength(newPassword, "utf8") > 72
+    ) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters and no more than 72 bytes.",
+      });
+    }
+    if (typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
     let normalizedMobile = String(mobile || "").trim();
     const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
     const phoneMatch = normalizedMobile.match(phoneRegex);
@@ -359,9 +388,16 @@ router.post("/reset-password", async (req, res) => {
         : { mobile: normalizedMobile };
 
     const user = await Model.findOne(query);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
 
-    if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+    if (
+      !user.otp ||
+      user.otp !== otp ||
+      !user.otpExpires ||
+      user.otpExpires.getTime() <= Date.now()
+    ) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
@@ -430,7 +466,9 @@ router.post("/refresh-token", async (req, res) => {
       return res.status(401).json({ message: "Session expired" });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
     const Model = getModelByRole(decoded.role);
     if (!Model) {
       return res.status(401).json({ message: "Invalid session" });
@@ -492,7 +530,10 @@ router.post("/logout", async (req, res) => {
       req.cookies?.accessToken ||
       req.header("authorization")?.replace(/^Bearer\s+/i, "");
     if (token) {
-      const decoded = jwt.decode(token);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ["HS256"],
+        ignoreExpiration: true,
+      });
       if (decoded?.role && decoded?.sub) {
         const Model = getModelByRole(decoded.role);
         if (Model) {
@@ -569,7 +610,7 @@ router.post("/admin/login", async (req, res) => {
         name: user.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     await User.findByIdAndUpdate(user._id, {
@@ -595,7 +636,7 @@ router.post("/admin/login", async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -656,7 +697,7 @@ router.post("/employees/login", async (req, res) => {
         name: employee.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     await Employee.findByIdAndUpdate(employee._id, {
@@ -687,7 +728,7 @@ router.post("/employees/login", async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -748,7 +789,7 @@ router.post("/transporters/login", async (req, res) => {
         name: transporter.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     await Transporter.findByIdAndUpdate(transporter._id, {
@@ -777,7 +818,7 @@ router.post("/transporters/login", async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -849,7 +890,7 @@ router.post("/buyers/login", async (req, res) => {
         name: buyer.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     await Buyer.findByIdAndUpdate(buyer._id, {
@@ -951,7 +992,7 @@ router.post("/sellers/login", async (req, res) => {
         name: seller.sellerName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     await Seller.findByIdAndUpdate(seller._id, {

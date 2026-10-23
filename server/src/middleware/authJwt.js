@@ -18,7 +18,9 @@ export default async function authJwt(req, res, next) {
   }
   const token = auth.slice(7);
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
     const authUser = await getAuthUserFromTokenPayload(decoded);
 
     if (!authUser) {

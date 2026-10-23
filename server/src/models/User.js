@@ -16,12 +16,14 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: { type: Date },
     otp: { type: String },
     otpExpires: { type: Date },
+    otpVerified: { type: Boolean, default: false },
+    otpVerifiedAt: { type: Date },
     bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
   },
   { timestamps: true },
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (this.mobile) {
     const match = String(this.mobile)
       .trim()
@@ -39,11 +41,10 @@ userSchema.pre("save", async function (next) {
     }
   }
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
