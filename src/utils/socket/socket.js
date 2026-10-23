@@ -28,7 +28,7 @@ export const initiateSocket = (token) => {
 
   socket = io(SOCKET_URL, {
     path: "/api/socket.io",
-    transports: ["polling", "websocket"],
+    transports: ["websocket"],
     secure: true,
     withCredentials: true,
     auth: {

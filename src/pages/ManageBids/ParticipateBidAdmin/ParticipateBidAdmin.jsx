@@ -139,7 +139,7 @@ const ParticipateBidAdmin = () => {
         if (!isSilent) setLoading(false);
       }
     },
-    [mobile, normalize, selectedDate, userRole, selectedGroup],
+    [mobile, normalize, selectedDate, userRole],
   );
 
   useEffect(() => {

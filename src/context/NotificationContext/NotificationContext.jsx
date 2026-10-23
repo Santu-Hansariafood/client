@@ -5,6 +5,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import { useAuth } from "../AuthContext/AuthContext";
 import {
@@ -22,6 +23,8 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const initializedAuthRef = useRef("");
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
 
   const fetchNotifications = useCallback(
     async (unreadOnly = false) => {
@@ -44,6 +47,21 @@ export const NotificationProvider = ({ children }) => {
     },
     [mobile, userRole, isAuthenticated],
   );
+
+  const markAsRead = useCallback(async (id) => {
+    try {
+      const notification = notificationsRef.current.find((n) => n._id === id);
+      if (notification && notification.isRead) return;
+
+      await api.patch(`/notifications/${id}/read`);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
+  }, []);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -177,9 +195,9 @@ export const NotificationProvider = ({ children }) => {
       disconnectSocket();
       initializedAuthRef.current = "";
     };
-  }, [isAuthenticated, mobile, token, userRole, fetchNotifications]);
+  }, [isAuthenticated, mobile, token, userRole, fetchNotifications, markAsRead]);
 
-  const toggleReadStatus = async (id) => {
+  const toggleReadStatus = useCallback(async (id) => {
     try {
       const response = await api.patch(`/notifications/${id}/toggle-read`);
       const updatedNotification = response.data;
@@ -196,24 +214,9 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error("Failed to toggle read status", error);
     }
-  };
+  }, []);
 
-  const markAsRead = async (id) => {
-    try {
-      const notification = notifications.find((n) => n._id === id);
-      if (notification && notification.isRead) return;
-
-      await api.patch(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Failed to mark as read", error);
-    }
-  };
-
-  const markAllRead = async () => {
+  const markAllRead = useCallback(async () => {
     try {
       await api.patch("/notifications/read-all", { mobile, role: userRole });
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
@@ -221,9 +224,9 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error("Failed to mark all as read", error);
     }
-  };
+  }, [mobile, userRole]);
 
-  const deleteNotification = async (id) => {
+  const deleteNotification = useCallback(async (id) => {
     try {
       await api.delete(`/notifications/${id}`);
       setNotifications((prev) => {
@@ -236,20 +239,31 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error("Failed to delete notification", error);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      notifications,
+      unreadCount,
+      fetchNotifications,
+      markAsRead,
+      toggleReadStatus,
+      markAllRead,
+      deleteNotification,
+    }),
+    [
+      notifications,
+      unreadCount,
+      fetchNotifications,
+      markAsRead,
+      toggleReadStatus,
+      markAllRead,
+      deleteNotification,
+    ],
+  );
 
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        fetchNotifications,
-        markAsRead,
-        toggleReadStatus,
-        markAllRead,
-        deleteNotification,
-      }}
-    >
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   );
