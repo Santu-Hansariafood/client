@@ -18,6 +18,18 @@ const router = Router();
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const findDuplicateSaudaNo = (saudaNo, excludeId) => {
+  const normalizedSaudaNo = String(saudaNo || "").trim();
+  if (!normalizedSaudaNo) return null;
+
+  const query = { saudaNo: normalizedSaudaNo };
+  if (excludeId) query._id = { $ne: excludeId };
+  return SelfOrder.findOne(query)
+    .collation({ locale: "en", strength: 2 })
+    .select("_id")
+    .lean();
+};
+
 const getPendingSaudaDateQuery = (startDate, endDate) => {
   const dateFilter = {};
   if (startDate) dateFilter.$gte = new Date(startDate);
@@ -1355,6 +1367,15 @@ router.put("/:id", async (req, res) => {
     const item = await SelfOrder.findById(req.params.id);
     if (!item) return res.status(404).json({ message: "Order not found" });
 
+    if (req.body.saudaNo !== undefined) {
+      const saudaNo = String(req.body.saudaNo || "").trim();
+      const duplicate = await findDuplicateSaudaNo(saudaNo, item._id);
+      if (duplicate) {
+        return res.status(409).json({ message: "Sauda number already exists." });
+      }
+      req.body.saudaNo = saudaNo;
+    }
+
     const oldSupplier = item.supplier;
     const oldCommodity = item.commodity;
 
@@ -1398,6 +1419,9 @@ router.put("/:id", async (req, res) => {
     await item.save();
     res.json(item);
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.saudaNo) {
+      return res.status(409).json({ message: "Sauda number already exists." });
+    }
     res.status(400).json({ message: error.message });
   }
 });
@@ -1405,6 +1429,11 @@ router.put("/:id", async (req, res) => {
 router.post("/", authJwt, async (req, res) => {
   try {
     const data = req.body;
+    data.saudaNo = String(data.saudaNo || "").trim();
+    const duplicate = await findDuplicateSaudaNo(data.saudaNo);
+    if (duplicate) {
+      return res.status(409).json({ message: "Sauda number already exists." });
+    }
 
     if (
       data.supplier &&
@@ -1444,6 +1473,9 @@ router.post("/", authJwt, async (req, res) => {
     
     res.status(201).json(item);
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.saudaNo) {
+      return res.status(409).json({ message: "Sauda number already exists." });
+    }
     res.status(400).json({ message: error.message });
   }
 });

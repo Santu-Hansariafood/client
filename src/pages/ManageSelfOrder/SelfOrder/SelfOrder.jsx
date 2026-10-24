@@ -487,9 +487,12 @@ ${fileUrl}
         "Self Order API Error:",
         error.response?.data || error.message,
       );
-      toast.error(
-        `Failed to create order: ${error.response?.data?.message || error.message}`,
-      );
+      const errorMessage = error.response?.data?.message || error.message;
+      if (error.response?.status === 409) {
+        toast.warn(errorMessage, { position: "top-right" });
+      } else {
+        toast.error(`Failed to create order: ${errorMessage}`);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -426,7 +426,11 @@ const EditSelfOrder = () => {
         error.response?.data?.message ||
         error.message ||
         "Failed to update order";
-      toast.error(`Update failed: ${errorMsg}`);
+      if (error.response?.status === 409) {
+        toast.warn(errorMsg, { position: "top-right" });
+      } else {
+        toast.error(`Update failed: ${errorMsg}`);
+      }
     } finally {
       setIsLoading(false);
     }
