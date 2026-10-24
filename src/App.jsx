@@ -5,6 +5,7 @@ import { NotificationProvider } from "./context/NotificationContext/Notification
 import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
 import RouteSEO from "./common/SEO/RouteSEO";
+import ScrollToTop from "./common/ScrollToTop/ScrollToTop";
 import AppRoutes from "./routes/AppRoutes";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
@@ -26,6 +27,7 @@ const App = () => {
         </Helmet>
 
         <BrowserRouter>
+          <ScrollToTop />
           <Suspense fallback={<Loading />}>
             {/* <StartupAd /> */}
             <RouteSEO />

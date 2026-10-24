@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useState, useCallback } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
@@ -18,10 +18,18 @@ const PageLoader = () => (
 const PrivateLayout = () => {
   const { userRole, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const mainRef = useRef(null);
 
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [pathname]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -54,7 +62,10 @@ const PrivateLayout = () => {
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100">
+        <main
+          ref={mainRef}
+          className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100"
+        >
           <div className={`min-h-full flex flex-col ${(userRole === "Buyer" || userRole === "Seller") ? "pb-20 md:pb-0" : ""}`}>
             <div className="flex-1 p-4 sm:p-6 lg:p-8">
               <Suspense fallback={<PageLoader />}>
