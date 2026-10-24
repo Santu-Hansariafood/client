@@ -6,6 +6,7 @@ import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import { invalidate } from "../middleware/cache.js";
 import { employeeOrAdmin } from "../middleware/roleMiddleware.js";
+import { sendBidMessages } from "../lib/hfConnect.js";
 
 const router = Router();
 
@@ -293,6 +294,14 @@ router.post("/", async (req, res) => {
       }),
     ]);
 
+    await sendBidMessages({
+      event: "seller_participation",
+      bid,
+      recipients: [bid.createdByMobile],
+      participation: item,
+      notes: remarks,
+    });
+
     invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {
@@ -478,6 +487,16 @@ router.patch("/:id/status", async (req, res) => {
       ];
 
       await Promise.all(notifications);
+    }
+
+    if (bid) {
+      await sendBidMessages({
+        event: status === "accepted" ? "bid_accepted" : "participation_rejected",
+        bid,
+        recipients: [participation.mobile, bid.createdByMobile],
+        participation,
+        notes: adminNotes,
+      });
     }
 
     res.json(participation);

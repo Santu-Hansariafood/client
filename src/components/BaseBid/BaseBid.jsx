@@ -267,21 +267,21 @@ const BaseBid = ({ type }) => {
 
       const bidId = response.data.bidId || response.data._id || "UNKNOWN_BID";
 
-      const whatsappNotifier = await WhatsAppNotification({
-        bidData: {
-          group: state.selectedGroup?.value,
-          consignee: state.selectedConsignee?.value,
-          commodity: state.selectedCommodity?.value,
-          quantity: state.quantity,
-          rate: state.rate,
-          endTime: state.endTime,
-        },
-        bidId,
-      });
+      let messageDelivery;
+      try {
+        const whatsappNotifier = await WhatsAppNotification({ bidId });
+        messageDelivery = await whatsappNotifier.notifyRelevantSellers();
+      } catch (messageError) {
+        console.error("Bid submitted but HF Connect messaging failed:", messageError);
+      }
 
-      await whatsappNotifier.notifyRelevantSellers();
-
-      toast.success("Bid submitted successfully and notifications sent!");
+      if (!messageDelivery || messageDelivery.failed > 0) {
+        toast.warn("Bid submitted, but one or more messages could not be sent.");
+      } else if (messageDelivery.sent === 0) {
+        toast.warn("Bid submitted, but no registered seller mobile numbers were found.");
+      } else {
+        toast.success("Bid submitted successfully and messages sent!");
+      }
       setTimeout(() => {
         navigate("/manage-bids/bid-list");
       }, 2000);

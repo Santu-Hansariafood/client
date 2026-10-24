@@ -2,6 +2,7 @@ import { Router } from "express";
 import ConfirmBid from "../models/ConfirmBid.js";
 import Notification from "../models/Notification.js";
 import Bid from "../models/Bid.js";
+import { sendBidMessages } from "../lib/hfConnect.js";
 
 const router = Router();
 
@@ -83,6 +84,7 @@ router.post("/", async (req, res) => {
 
     const bid = await Bid.findById(bidId);
 
+    let participationForMessage = null;
     if (phone || participationId) {
       const ParticipateBid = (await import("../models/ParticipateBid.js"))
         .default;
@@ -91,6 +93,7 @@ router.post("/", async (req, res) => {
         : { bidId, mobile: phone };
       const participation = await ParticipateBid.findOne(pQuery);
       if (participation) {
+        participationForMessage = participation;
         if (status === "Confirmed") {
           participation.status = "accepted";
           participation.acceptedRate =
@@ -149,6 +152,15 @@ router.post("/", async (req, res) => {
         message: buyerMsg,
         type: "BidConfirmation",
         relatedId: item._id,
+      });
+    }
+
+    if (bid && ["Confirmed", "Rejected"].includes(status)) {
+      await sendBidMessages({
+        event: status === "Confirmed" ? "bid_accepted" : "participation_rejected",
+        bid,
+        recipients: [phone, bid.createdByMobile],
+        participation: participationForMessage || { mobile: phone },
       });
     }
 

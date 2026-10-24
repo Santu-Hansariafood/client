@@ -12,6 +12,7 @@ import { invalidate } from "../middleware/cache.js";
 import authJwt from "../middleware/authJwt.js";
 import { employeeOrAdmin } from "../middleware/roleMiddleware.js";
 import { trackEmployeeWork } from "../utils/workTracker.js";
+import { sendBidMessages } from "../lib/hfConnect.js";
 
 const router = Router();
 
@@ -30,6 +31,22 @@ const hideBidsForSellerGroups = (bids, sellerGroups) => {
   return bids.filter(
     (bid) => !hiddenGroups.has(normalizeGroupName(bid.group)),
   );
+};
+
+const sendBidClosedMessages = async (bid) => {
+  try {
+    const participantMobiles = await ParticipateBid.distinct("mobile", {
+      bidId: bid._id,
+    });
+    await sendBidMessages({
+      event: "bid_closed",
+      bid,
+      recipients: [bid.createdByMobile, ...participantMobiles],
+      notes: "Bid closed",
+    });
+  } catch (error) {
+    console.error("HF Connect bid-closed messaging failed:", error.message);
+  }
 };
 
 router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
@@ -139,7 +156,9 @@ const closeExpiredBids = async () => {
         },
       ],
     })
-      .select("_id")
+      .select(
+        "_id type group consignee origin commodity notes quantity rate endTime createdByMobile",
+      )
       .lean();
 
     if (bidsToClose.length > 0) {
@@ -148,6 +167,7 @@ const closeExpiredBids = async () => {
         { _id: { $in: ids } },
         { $set: { status: "closed", closedAt: now } },
       );
+      await Promise.all(bidsToClose.map(sendBidClosedMessages));
     }
   } catch (error) {
     console.error("Error auto-closing bids:", error);
@@ -572,6 +592,10 @@ router.put("/:id", authJwt, async (req, res) => {
       runValidators: true,
     });
 
+    if (bid.status === "active" && updated.status === "closed") {
+      await sendBidClosedMessages(updated);
+    }
+
     const rolesToNotify = ["Employee", "Admin"];
     await Promise.all(
       rolesToNotify.map((role) =>
@@ -671,6 +695,10 @@ router.patch("/:id/status", async (req, res) => {
       { status: finalStatus, closedAt },
       { new: true },
     );
+
+    if (bid.status === "active" && updated.status === "closed") {
+      await sendBidClosedMessages(updated);
+    }
 
     invalidate("/api/bids");
     res.json(updated);
