@@ -22,6 +22,7 @@ const BidList = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
+  const [sendingTestSmsBidId, setSendingTestSmsBidId] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [consigneeSellers, setConsigneeSellers] = useState([]);
   const [consigneeSellersLoading, setConsigneeSellersLoading] = useState(false);
@@ -478,6 +479,20 @@ const BidList = () => {
     }
   };
 
+  const handleTestSms = async (bidId) => {
+    setSendingTestSmsBidId(bidId);
+    try {
+      const response = await api.post("/whatsapp/test-send", { bidId });
+      toast.success(response.data?.message || "Test SMS sent successfully.");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send test SMS.",
+      );
+    } finally {
+      setSendingTestSmsBidId(null);
+    }
+  };
+
   const buildRow = (bid, index) => [
     index + 1,
     bid.group,
@@ -514,6 +529,17 @@ const BidList = () => {
       {bid.status === "active" ? "Active" : "Closed"}
     </span>,
     <div key={`actions-${bid._id}`} className="flex items-center gap-2">
+      {["Admin", "Employee"].includes(userRole) && (
+        <button
+          type="button"
+          className="inline-flex h-8 items-center justify-center rounded-xl border border-[#e4dbc6] bg-lux-cream px-2 text-[10px] font-bold text-lux-emerald shadow-sm transition hover:bg-white hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => handleTestSms(bid._id)}
+          disabled={sendingTestSmsBidId === bid._id}
+          title="Send a test bid SMS to +91 7029481930"
+        >
+          {sendingTestSmsBidId === bid._id ? "Sending..." : "Test SMS"}
+        </button>
+      )}
       <button
         type="button"
         className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-[#e4dbc6] bg-lux-cream text-lux-emerald shadow-sm transition hover:bg-white hover:shadow-lg"

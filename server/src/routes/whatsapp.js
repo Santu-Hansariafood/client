@@ -4,6 +4,48 @@ import Seller from "../models/Seller.js";
 import { sendBidMessages } from "../lib/hfConnect.js";
 
 const router = Router();
+const TEST_RECIPIENT = "+917029481930";
+
+router.post("/test-send", async (req, res) => {
+  try {
+    if (!["Admin", "Employee"].includes(req.user?.role)) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    const bidId = String(req.body.bidId || "").trim();
+    if (!bidId) {
+      return res.status(400).json({ message: "Bid ID is required." });
+    }
+
+    const bid = await Bid.findById(bidId).lean();
+    if (!bid) {
+      return res.status(404).json({ message: "Bid not found." });
+    }
+
+    const delivery = await sendBidMessages({
+      event: "test_bid",
+      bid,
+      recipients: [TEST_RECIPIENT],
+    });
+
+    if (delivery.failed > 0) {
+      return res.status(502).json({
+        ok: false,
+        ...delivery,
+        message: `Test SMS to ${TEST_RECIPIENT} failed.`,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      ...delivery,
+      message: `Test SMS sent to ${TEST_RECIPIENT}.`,
+    });
+  } catch (error) {
+    console.error("HF Connect test message failed:", error.message);
+    return res.status(500).json({ message: "Failed to send test SMS." });
+  }
+});
 
 router.post("/send", async (req, res) => {
   try {
