@@ -8,8 +8,6 @@ import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
-import HFConnectNotification from "../HFConnectNotification/HFConnectNotification";
-
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const GroupSelection = lazy(() => import("./GroupSelection"));
@@ -265,21 +263,7 @@ const BaseBid = ({ type }) => {
         createdByRole: userRole || "",
       });
 
-      const bidId = response.data.bidId || response.data._id || "UNKNOWN_BID";
-
-      let messageDelivery;
-      try {
-        const hfConnectNotifier = await HFConnectNotification({ bidId });
-        messageDelivery = await hfConnectNotifier.sendBidMessage();
-      } catch (messageError) {
-        console.error("Bid submitted but HF Connect messaging failed:", messageError);
-        const providerMessage =
-          messageError.response?.data?.message || messageError.message;
-        toast.warn(
-          `Bid submitted, but seller messages failed: ${providerMessage}`,
-        );
-      }
-
+      const messageDelivery = response.data.smsDelivery;
       if (messageDelivery) {
         if (messageDelivery.failed > 0) {
           toast.warn("Bid submitted, but one or more messages could not be sent.");
@@ -288,6 +272,8 @@ const BaseBid = ({ type }) => {
         } else {
           toast.success("Bid submitted successfully and messages sent!");
         }
+      } else {
+        toast.warn("Bid submitted, but seller SMS delivery could not be confirmed.");
       }
       setTimeout(() => {
         navigate("/manage-bids/bid-list");

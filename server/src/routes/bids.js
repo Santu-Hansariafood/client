@@ -469,6 +469,23 @@ router.post("/", authJwt, async (req, res) => {
       closedAt,
     });
 
+    let smsDelivery = null;
+    try {
+      const sellers = await Seller.find({})
+        .select("phoneNumbers.value")
+        .lean();
+      const recipients = sellers.flatMap((seller) =>
+        (seller.phoneNumbers || []).map((phone) => phone.value),
+      );
+      smsDelivery = await sendBidMessages({
+        event: "new_bid",
+        bid: item,
+        recipients,
+      });
+    } catch (smsError) {
+      console.error("Error sending new bid SMS messages:", smsError);
+    }
+
     try {
       // Format quality parameters for notification
       const formatQualityParams = (params) => {
@@ -535,7 +552,7 @@ router.post("/", authJwt, async (req, res) => {
     });
 
     invalidate("/api/bids");
-    res.status(201).json(item);
+    res.status(201).json({ ...item.toObject(), smsDelivery });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
