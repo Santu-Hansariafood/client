@@ -401,12 +401,6 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    if (user.otpVerified !== true) {
-      return res.status(400).json({
-        message: "OTP must be verified before resetting the password.",
-      });
-    }
-
     user.password = newPassword;
     user.passwordChangedAt = new Date();
     user.otp = undefined;

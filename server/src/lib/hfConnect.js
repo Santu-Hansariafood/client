@@ -1,4 +1,5 @@
 const HF_CONNECT_URL = "https://hfconnect.in/api/v1/messages/send";
+const HF_CONNECT_TEMPLATE_ID = "6adc60da1f6d49a0148fde67";
 
 const toTemplateString = (value) =>
   value === undefined || value === null ? "" : String(value);
@@ -25,10 +26,8 @@ const sendMessage = async (toUserId, payload) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      adminId: process.env.HANSARIA_WORKSPACE_ID,
-      templateId: process.env.HANSARIA_TEMPLATE_ID,
+      templateId: HF_CONNECT_TEMPLATE_ID,
       language: "en",
-      fromUserId: process.env.HANSARIA_ADMIN_ID,
       toUserId,
       variables: payload,
     }),
@@ -48,6 +47,8 @@ const sendMessage = async (toUserId, payload) => {
   if (!response.ok) {
     throw new Error(result.error || `Request failed: ${response.status}`);
   }
+
+  return result;
 };
 
 export const sendBidMessages = async ({
@@ -67,12 +68,7 @@ export const sendBidMessages = async ({
     return { recipients: 0, sent: 0, failed: 0 };
   }
 
-  const requiredConfig = [
-    "HANSARIA_API_KEY",
-    "HANSARIA_WORKSPACE_ID",
-    "HANSARIA_TEMPLATE_ID",
-    "HANSARIA_ADMIN_ID",
-  ];
+  const requiredConfig = ["HANSARIA_API_KEY"];
   const missingConfig = requiredConfig.filter((key) => !process.env[key]);
   if (missingConfig.length > 0) {
     console.error(
