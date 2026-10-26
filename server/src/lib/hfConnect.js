@@ -24,10 +24,7 @@ const sendMessage = async (toUserId, payload) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      adminId: process.env.HANSARIA_WORKSPACE_ID,
       templateId: process.env.HANSARIA_TEMPLATE_ID,
-      language: "en",
-      fromUserId: process.env.HANSARIA_ADMIN_ID,
       toUserId,
       variables: payload,
     }),
@@ -68,12 +65,7 @@ export const sendBidMessages = async ({
     return { recipients: 0, sent: 0, failed: 0 };
   }
 
-  const requiredConfig = [
-    "HANSARIA_API_KEY",
-    "HANSARIA_WORKSPACE_ID",
-    "HANSARIA_TEMPLATE_ID",
-    "HANSARIA_ADMIN_ID",
-  ];
+  const requiredConfig = ["HANSARIA_API_KEY", "HANSARIA_TEMPLATE_ID"];
   const missingConfig = requiredConfig.filter((key) => !process.env[key]);
   if (missingConfig.length > 0) {
     console.error(
