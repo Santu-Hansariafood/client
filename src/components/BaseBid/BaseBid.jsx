@@ -8,7 +8,7 @@ import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
-import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification";
+import HFConnectNotification from "../HFConnectNotification/HFConnectNotification";
 
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
@@ -269,8 +269,8 @@ const BaseBid = ({ type }) => {
 
       let messageDelivery;
       try {
-        const whatsappNotifier = await WhatsAppNotification({ bidId });
-        messageDelivery = await whatsappNotifier.notifyRelevantSellers();
+        const hfConnectNotifier = await HFConnectNotification({ bidId });
+        messageDelivery = await hfConnectNotifier.sendBidMessage();
       } catch (messageError) {
         console.error("Bid submitted but HF Connect messaging failed:", messageError);
         const providerMessage =

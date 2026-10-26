@@ -482,7 +482,7 @@ const BidList = () => {
   const handleTestSms = async (bidId) => {
     setSendingTestSmsBidId(bidId);
     try {
-      const response = await api.post("/whatsapp/test-send", { bidId });
+      const response = await api.post("/hf-connect/test-send", { bidId });
       toast.success(response.data?.message || "Test SMS sent successfully.");
     } catch (error) {
       toast.error(
