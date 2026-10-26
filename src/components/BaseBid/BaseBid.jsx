@@ -273,14 +273,21 @@ const BaseBid = ({ type }) => {
         messageDelivery = await whatsappNotifier.notifyRelevantSellers();
       } catch (messageError) {
         console.error("Bid submitted but HF Connect messaging failed:", messageError);
+        const providerMessage =
+          messageError.response?.data?.message || messageError.message;
+        toast.warn(
+          `Bid submitted, but seller messages failed: ${providerMessage}`,
+        );
       }
 
-      if (!messageDelivery || messageDelivery.failed > 0) {
-        toast.warn("Bid submitted, but one or more messages could not be sent.");
-      } else if (messageDelivery.sent === 0) {
-        toast.warn("Bid submitted, but no registered seller mobile numbers were found.");
-      } else {
-        toast.success("Bid submitted successfully and messages sent!");
+      if (messageDelivery) {
+        if (messageDelivery.failed > 0) {
+          toast.warn("Bid submitted, but one or more messages could not be sent.");
+        } else if (messageDelivery.sent === 0) {
+          toast.warn("Bid submitted, but no registered seller mobile numbers were found.");
+        } else {
+          toast.success("Bid submitted successfully and messages sent!");
+        }
       }
       setTimeout(() => {
         navigate("/manage-bids/bid-list");

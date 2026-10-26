@@ -3,8 +3,7 @@ const HF_CONNECT_URL = "https://hfconnect.in/api/v1/messages/send";
 const toTemplateString = (value) =>
   value === undefined || value === null ? "" : String(value);
 
-const buildVariables = ({ event, bid, participation, notes, recipient }) => ({
-  event,
+const buildVariables = ({ bid, participation }) => ({
   commodity: toTemplateString(bid.commodity),
   group: toTemplateString(bid.group),
   origin: toTemplateString(bid.origin),
@@ -16,8 +15,6 @@ const buildVariables = ({ event, bid, participation, notes, recipient }) => ({
     participation?.acceptedRate ?? participation?.rate ?? bid.rate,
   ),
   endTime: toTemplateString(bid.endTime),
-  sellerMobile: toTemplateString(participation?.mobile || recipient),
-  notes: toTemplateString(notes ?? participation?.remarks ?? bid.notes),
 });
 
 const sendMessage = async (toUserId, payload) => {
@@ -58,7 +55,6 @@ export const sendBidMessages = async ({
   bid,
   recipients,
   participation,
-  notes,
 }) => {
   const toUserIds = [
     ...new Set(
@@ -90,7 +86,7 @@ export const sendBidMessages = async ({
     toUserIds.map((toUserId) =>
       sendMessage(
         toUserId,
-        buildVariables({ event, bid, participation, notes, recipient: toUserId }),
+        buildVariables({ bid, participation }),
       ),
     ),
   );
