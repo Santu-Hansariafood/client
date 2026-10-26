@@ -49,6 +49,28 @@ const sendBidClosedMessages = async (bid) => {
   }
 };
 
+const sendNewBidSmsMessages = async (bid) => {
+  try {
+    const sellers = await Seller.find({})
+      .select("phoneNumbers.value")
+      .lean();
+    const recipients = sellers.flatMap((seller) =>
+      (seller.phoneNumbers || []).map((phone) => phone.value),
+    );
+    const delivery = await sendBidMessages({
+      event: "new_bid",
+      bid,
+      recipients,
+    });
+    console.info("New bid HF Connect delivery completed:", {
+      bidId: bid._id.toString(),
+      ...delivery,
+    });
+  } catch (error) {
+    console.error("Error sending new bid SMS messages:", error);
+  }
+};
+
 router.get("/consignee-sellers", employeeOrAdmin, async (req, res) => {
   try {
     const consignee = String(req.query.consignee || "").trim();
@@ -469,22 +491,7 @@ router.post("/", authJwt, async (req, res) => {
       closedAt,
     });
 
-    let smsDelivery = null;
-    try {
-      const sellers = await Seller.find({})
-        .select("phoneNumbers.value")
-        .lean();
-      const recipients = sellers.flatMap((seller) =>
-        (seller.phoneNumbers || []).map((phone) => phone.value),
-      );
-      smsDelivery = await sendBidMessages({
-        event: "new_bid",
-        bid: item,
-        recipients,
-      });
-    } catch (smsError) {
-      console.error("Error sending new bid SMS messages:", smsError);
-    }
+    void sendNewBidSmsMessages(item);
 
     try {
       // Format quality parameters for notification
@@ -552,7 +559,10 @@ router.post("/", authJwt, async (req, res) => {
     });
 
     invalidate("/api/bids");
-    res.status(201).json({ ...item.toObject(), smsDelivery });
+    res.status(201).json({
+      ...item.toObject(),
+      smsDelivery: { status: "queued" },
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

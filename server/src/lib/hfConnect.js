@@ -1,4 +1,6 @@
 const HF_CONNECT_URL = "https://hfconnect.in/api/v1/messages/send";
+const HF_CONNECT_TEMPLATE_ID = "6adc9a4deb0ca67bcb66b81e";
+
 const normalizeRecipient = (recipient) => {
   const value = String(recipient || "").trim();
   const digits = value.replace(/\D/g, "");
@@ -17,7 +19,7 @@ const normalizeRecipient = (recipient) => {
 const toTemplateString = (value) =>
   value === undefined || value === null ? "" : String(value);
 
-const buildVariables = ({ bid, participation }) => ({
+const buildVariables = ({ bid, participation, sellerMobile, notes }) => ({
   commodity: toTemplateString(bid.commodity),
   group: toTemplateString(bid.group),
   origin: toTemplateString(bid.origin),
@@ -28,7 +30,8 @@ const buildVariables = ({ bid, participation }) => ({
   rate: toTemplateString(
     participation?.acceptedRate ?? participation?.rate ?? bid.rate,
   ),
-  endTime: toTemplateString(bid.endTime),
+  sellerMobile: toTemplateString(sellerMobile),
+  notes: toTemplateString(notes ?? bid.notes),
 });
 
 const sendMessage = async (toUserId, payload) => {
@@ -39,7 +42,7 @@ const sendMessage = async (toUserId, payload) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      templateId: process.env.HANSARIA_TEMPLATE_ID,
+      templateId: HF_CONNECT_TEMPLATE_ID,
       toUserId,
       variables: payload,
     }),
@@ -72,6 +75,7 @@ export const sendBidMessages = async ({
   bid,
   recipients,
   participation,
+  notes,
 }) => {
   const uniqueRecipients = [
     ...new Set(
@@ -97,7 +101,7 @@ export const sendBidMessages = async ({
     return { recipients: recipientCount, sent: 0, failed: invalidRecipients };
   }
 
-  const requiredConfig = ["HANSARIA_API_KEY", "HANSARIA_TEMPLATE_ID"];
+  const requiredConfig = ["HANSARIA_API_KEY"];
   const missingConfig = requiredConfig.filter((key) => !process.env[key]);
   if (missingConfig.length > 0) {
     console.error(
@@ -111,7 +115,12 @@ export const sendBidMessages = async ({
     toUserIds.map((toUserId) =>
       sendMessage(
         toUserId,
-        buildVariables({ bid, participation }),
+        buildVariables({
+          bid,
+          participation,
+          sellerMobile: toUserId,
+          notes,
+        }),
       ),
     ),
   );

@@ -263,22 +263,11 @@ const BaseBid = ({ type }) => {
         createdByRole: userRole || "",
       });
 
-      const messageDelivery = response.data.smsDelivery;
-      if (messageDelivery) {
-        if (messageDelivery.failed > 0) {
-          toast.warn(
-            `Bid submitted; SMS sent to ${messageDelivery.sent} of ${messageDelivery.recipients} seller numbers (${messageDelivery.failed} failed).`,
-          );
-        } else if (messageDelivery.recipients === 0) {
-          toast.warn("Bid submitted, but no seller mobile numbers were found.");
-        } else {
-          toast.success(
-            `Bid submitted; SMS sent to all ${messageDelivery.sent} seller numbers.`,
-          );
-        }
-      } else {
-        toast.warn("Bid submitted, but seller SMS delivery could not be confirmed.");
-      }
+      toast.success(
+        response.data.smsDelivery?.status === "queued"
+          ? "Bid submitted successfully. Seller SMS messages are sending in the background."
+          : "Bid submitted successfully.",
+      );
       setTimeout(() => {
         navigate("/manage-bids/bid-list");
       }, 2000);
