@@ -266,11 +266,15 @@ const BaseBid = ({ type }) => {
       const messageDelivery = response.data.smsDelivery;
       if (messageDelivery) {
         if (messageDelivery.failed > 0) {
-          toast.warn("Bid submitted, but one or more messages could not be sent.");
-        } else if (messageDelivery.sent === 0) {
-          toast.warn("Bid submitted, but no registered seller mobile numbers were found.");
+          toast.warn(
+            `Bid submitted; SMS sent to ${messageDelivery.sent} of ${messageDelivery.recipients} seller numbers (${messageDelivery.failed} failed).`,
+          );
+        } else if (messageDelivery.recipients === 0) {
+          toast.warn("Bid submitted, but no seller mobile numbers were found.");
         } else {
-          toast.success("Bid submitted successfully and messages sent!");
+          toast.success(
+            `Bid submitted; SMS sent to all ${messageDelivery.sent} seller numbers.`,
+          );
         }
       } else {
         toast.warn("Bid submitted, but seller SMS delivery could not be confirmed.");
