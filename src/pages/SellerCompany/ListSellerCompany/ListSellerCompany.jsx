@@ -6,8 +6,12 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import stateCityData from "../../../data/state-city.json";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
 const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
@@ -26,7 +30,13 @@ const ListSellerCompany = () => {
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(searchText);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedState, setSelectedState] = useState(null);
   const itemsPerPage = 10;
+
+  const stateOptions = stateCityData.map((item) => ({
+    value: item.state,
+    label: item.state,
+  }));
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -43,7 +53,7 @@ const ListSellerCompany = () => {
 
     const fetchCompanies = async () => {
       try {
-        if (!debouncedSearch && currentPage === 1) {
+        if (!debouncedSearch && !selectedState && currentPage === 1) {
           setLoading(true);
         }
 
@@ -55,6 +65,7 @@ const ListSellerCompany = () => {
             page: currentPage,
             limit: itemsPerPage,
             search: debouncedSearch || undefined,
+            state: selectedState?.value || undefined,
             stats: "true",
           },
         });
@@ -78,7 +89,7 @@ const ListSellerCompany = () => {
     return () => {
       controller.abort();
     };
-  }, [currentPage, debouncedSearch]);
+  }, [currentPage, debouncedSearch, selectedState]);
 
   const capitalizeWords = (str) => {
     if (!str) return "";
@@ -106,6 +117,11 @@ const ListSellerCompany = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  const handleStateChange = (selected) => {
+    setSelectedState(selected || null);
+    setCurrentPage(1);
   };
 
   const handleDelete = async (id) => {
@@ -206,17 +222,30 @@ const ListSellerCompany = () => {
         <ToastContainer position="top-right" autoClose={3000} />
         <div className="mx-auto w-full max-w-6xl space-y-6">
           <div className="lux-card lux-gold-top w-full p-4 sm:p-6 lg:p-8">
-            <div className="flex w-full max-w-md items-center rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 shadow-sm transition focus-within:border-lux-gold focus-within:ring-2 focus-within:ring-lux-gold/40">
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => {
-                  setSearchText(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search by name, GST, PAN or account number..."
-                className="w-full min-w-0 bg-transparent px-3 py-2 text-lux-ink placeholder:text-lux-muted focus:outline-none"
-              />
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex w-full max-w-md items-center rounded-xl border border-[#e6dcc4] bg-lux-cream px-4 py-2.5 shadow-sm transition focus-within:border-lux-gold focus-within:ring-2 focus-within:ring-lux-gold/40">
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search by name, GST, PAN or account number..."
+                  className="w-full min-w-0 bg-transparent px-3 py-2 text-lux-ink placeholder:text-lux-muted focus:outline-none"
+                />
+              </div>
+
+              <div className="w-full shrink-0 [&>div]:mb-0 sm:ml-auto sm:w-64 lg:w-72">
+                <DataDropdown
+                  name="state"
+                  options={stateOptions}
+                  selectedOptions={selectedState}
+                  onChange={handleStateChange}
+                  placeholder="Filter by state..."
+                  isClearable={true}
+                />
+              </div>
             </div>
           </div>
 

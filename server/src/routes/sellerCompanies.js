@@ -9,13 +9,14 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = req.query.search || "";
+    const state = req.query.state || "";
 
     const dropdown = req.query.dropdown === "true";
     const includeStats = req.query.stats === "true";
 
-    let query = {};
+    const filters = [];
     if (search) {
-      query = {
+      filters.push({
         $or: [
           { companyName: { $regex: search, $options: "i" } },
           { gstNo: { $regex: search, $options: "i" } },
@@ -23,8 +24,20 @@ router.get("/", async (req, res) => {
           { address: { $regex: search, $options: "i" } },
           { "bankDetails.accountNumber": { $regex: search, $options: "i" } },
         ],
-      };
+      });
     }
+
+    if (state) {
+      filters.push({
+        state: {
+          $regex: `^${state.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          $options: "i",
+        },
+      });
+    }
+
+    const query =
+      filters.length === 0 ? {} : filters.length === 1 ? filters[0] : { $and: filters };
 
     if (dropdown) {
       const items = await SellerCompany.find(query, "companyName")
