@@ -649,6 +649,22 @@ const getBrokeragePartyLabel = (data = [], type = "buyer") => {
   return uniqueParties.length > 1 ? "Multiple Parties" : "N/A";
 };
 
+const getBrokerageExportFilename = (partyName, type, isSummary, extension) => {
+  const safePartyName = Array.from(String(partyName || "N_A"), (character) =>
+    /[<>:"/\\|?*]/.test(character) || character.charCodeAt(0) < 32
+      ? "_"
+      : character,
+  )
+    .join("")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[. ]+$/g, "");
+  const reportType = type === "buyer" ? "Buyer" : "Seller";
+  const reportName = isSummary ? "Summary" : "Report";
+
+  return `${safePartyName}_${reportType}_Brokerage_${reportName}.${extension}`;
+};
+
 router.get("/brokerage-report", async (req, res) => {
   try {
     const {
@@ -797,6 +813,7 @@ router.get("/brokerage-report/excel", async (req, res) => {
     const data = await getBrokerageReportData(queryParams);
     const isSummary = isSummaryRequest(summary);
     const summaryRows = isSummary ? getBrokerageSummaryRows(data) : [];
+    const partyName = getBrokeragePartyLabel(data, type);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(
@@ -882,11 +899,22 @@ router.get("/brokerage-report/excel", async (req, res) => {
       });
     }
 
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).alignment = { horizontal: "center" };
+    if (isSummary) {
+      worksheet.insertRow(
+        1,
+        [`${partyName} - ${isBuyerReport ? "BUYER" : "SELLER"} BROKERAGE SUMMARY`],
+      );
+      worksheet.mergeCells("A1:K1");
+      worksheet.getCell("A1").font = { bold: true, size: 14 };
+      worksheet.getCell("A1").alignment = { horizontal: "center" };
+    }
+
+    const headerRow = isSummary ? 2 : 1;
+    worksheet.getRow(headerRow).font = { bold: true };
+    worksheet.getRow(headerRow).alignment = { horizontal: "center" };
     worksheet.autoFilter = {
-      from: "A1",
-      to: `${String.fromCharCode(64 + worksheet.columnCount)}1`,
+      from: `A${headerRow}`,
+      to: `${String.fromCharCode(64 + worksheet.columnCount)}${headerRow}`,
     };
 
     res.setHeader(
@@ -895,8 +923,7 @@ router.get("/brokerage-report/excel", async (req, res) => {
     );
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=" +
-        `${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_${isSummary ? "Summary" : "Report"}.xlsx`,
+      `attachment; filename="${getBrokerageExportFilename(partyName, type, isSummary, "xlsx")}"`,
     );
 
     await workbook.xlsx.write(res);
@@ -940,6 +967,12 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const margin = 10;
     const isBuyerReport = type === "buyer";
     const partyName = getBrokeragePartyLabel(data, type);
+    const exportFilename = getBrokerageExportFilename(
+      partyName,
+      type,
+      isSummary,
+      "pdf",
+    );
     const reportTitle = isSummary
       ? `${type.toUpperCase()} BROKERAGE SUMMARY`
       : `${type.toUpperCase()} BROKERAGE ADVICE`;
@@ -1279,7 +1312,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_${isSummary ? "Summary" : "Report"}.pdf`,
+      `attachment; filename="${exportFilename}"`,
     );
     res.send(Buffer.from(pdfBuffer));
   } catch (error) {
