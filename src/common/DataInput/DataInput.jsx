@@ -7,6 +7,9 @@ const DataInput = ({
   placeholder = "",
   minLength,
   maxLength,
+  min,
+  max,
+  step,
   inputType = "text",
   value = "",
   onChange,
@@ -105,6 +108,9 @@ const DataInput = ({
           }}
           minLength={minLength}
           maxLength={maxLength}
+          min={min}
+          max={max}
+          step={step}
           autoComplete="off"
           onWheel={(e) => e.target.blur()}
           required={required}
@@ -159,6 +165,9 @@ DataInput.propTypes = {
   placeholder: PropTypes.string,
   minLength: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   maxLength: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  min: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  max: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  step: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   inputType: PropTypes.string,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func,

@@ -2,6 +2,7 @@ import express from "express";
 import ExpenseRequest from "../models/ExpenseRequest.js";
 import User from "../models/User.js";
 import Employee from "../models/Employee.js";
+import Seller from "../models/Seller.js";
 import authJwt from "../middleware/authJwt.js";
 import { adminOnly, employeeOrAdmin } from "../middleware/roleMiddleware.js";
 
@@ -59,7 +60,9 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const requests = await ExpenseRequest.find(query)
       .populate("category", "name")
+      .populate("lineItems.category", "name")
       .populate("employee", "name email")
+      .populate("seller", "sellerName")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -79,11 +82,81 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
 
 router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
-    const { items } = req.body;
     const userId = req.user.sub;
     const userRole = req.user.role;
     const employeeModel = userRole === "Admin" ? "User" : "Employee";
 
+    if (Array.isArray(req.body.expenses)) {
+      if (req.body.expenses.length === 0) {
+        return res.status(400).json({ message: "Add at least one expense" });
+      }
+
+      const preparedExpenses = await Promise.all(
+        req.body.expenses.map(async (expense) => {
+          if (
+            !expense.seller ||
+            !expense.sellerCompany ||
+            !["Seller", "Office"].includes(expense.receivedFrom) ||
+            !Array.isArray(expense.items) ||
+            expense.items.length === 0
+          ) {
+            throw new Error(
+              "Seller, seller company, received-from source, and at least one item are required",
+            );
+          }
+
+          const seller = await Seller.findById(expense.seller).select(
+            "sellerName companies",
+          );
+          if (!seller) {
+            throw new Error("Selected seller was not found");
+          }
+          const selectedCompany = seller.companies.find(
+            (company) =>
+              company.trim().toLowerCase() ===
+              String(expense.sellerCompany).trim().toLowerCase(),
+          );
+          if (!selectedCompany) {
+            throw new Error("Selected company does not belong to this seller");
+          }
+
+          const lineItems = expense.items.map((item) => {
+            const amount = Number(item.amount);
+            if (!item.category || !Number.isFinite(amount) || amount <= 0) {
+              throw new Error(
+                "Each expense item must have a category and an amount greater than zero",
+              );
+            }
+            return {
+              category: item.category,
+              description: item.description || "",
+              amount,
+            };
+          });
+
+          return {
+            seller: seller._id,
+            sellerName: seller.sellerName,
+            sellerCompany: selectedCompany,
+            receivedFrom: expense.receivedFrom,
+            description: expense.description || "",
+            lineItems,
+            category: lineItems[0].category,
+            amount:
+              Math.round(
+                lineItems.reduce((total, item) => total + item.amount, 0) * 100,
+              ) / 100,
+            employee: userId,
+            employeeModel,
+          };
+        }),
+      );
+
+      const createdRequests = await ExpenseRequest.create(preparedExpenses);
+      return res.status(201).json(createdRequests);
+    }
+
+    const { items } = req.body;
     if (!items || !Array.isArray(items) || items.length === 0) {
       const { category, amount, description } = req.body;
       if (!category || !amount) {

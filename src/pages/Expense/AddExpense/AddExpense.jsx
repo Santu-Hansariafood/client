@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+import api from "../../../utils/apiClient/apiClient";
 
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaFilter } from "react-icons/fa";
+import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf } from "react-icons/fa";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
@@ -13,6 +13,21 @@ import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import { downloadFile } from "../../../utils/fileDownloader";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+
+const createEmptyExpense = () => ({
+  seller: "",
+  sellerCompany: "",
+  receivedFrom: "",
+  description: "",
+  items: [{ category: "", description: "", amount: "" }],
+});
+
+const calculateTotalAmount = (items) =>
+  items.reduce(
+    (totalCents, item) =>
+      totalCents + Math.round((Number(item.amount) || 0) * 100),
+    0,
+  ) / 100;
 
 const AddExpense = () => {
   const { userRole, user } = useAuth();
@@ -26,11 +41,9 @@ const AddExpense = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
 
-  const [expenseItems, setExpenseItems] = useState([
-    { category: "", amount: "", description: "" }
-  ]);
+  const [sellers, setSellers] = useState([]);
+  const [expenseItems, setExpenseItems] = useState([createEmptyExpense()]);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   // Filters for Admin
@@ -50,6 +63,10 @@ const AddExpense = () => {
     }
   }, [page, filters]);
 
+  useEffect(() => {
+    fetchSellers();
+  }, []);
+
   const fetchCategories = async () => {
     try {
       const res = await api.get("/expense-categories");
@@ -68,6 +85,15 @@ const AddExpense = () => {
     }
   };
 
+  const fetchSellers = async () => {
+    try {
+      const res = await api.get("/sellers?status=active&limit=1000");
+      setSellers(Array.isArray(res.data) ? res.data : res.data.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch sellers");
+    }
+  };
+
   const fetchRequests = async () => {
     try {
       const queryParams = new URLSearchParams({
@@ -78,7 +104,6 @@ const AddExpense = () => {
       const res = await api.get(`/expense-requests?${queryParams}`);
       setRequests(res.data.requests);
       setTotal(res.data.total);
-      setTotalPages(res.data.pages);
     } catch (error) {
       toast.error("Failed to fetch expense requests");
     }
@@ -113,35 +138,102 @@ const AddExpense = () => {
   };
 
   const addExpenseItem = () => {
-    setExpenseItems([...expenseItems, { category: "", amount: "", description: "" }]);
+    setExpenseItems((current) => [...current, createEmptyExpense()]);
   };
 
   const removeExpenseItem = (index) => {
-    if (expenseItems.length > 1) {
-      const newItems = expenseItems.filter((_, i) => i !== index);
-      setExpenseItems(newItems);
-    }
+    setExpenseItems((current) =>
+      current.length > 1 ? current.filter((_, i) => i !== index) : current,
+    );
   };
 
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...expenseItems];
-    newItems[index][field] = value;
-    setExpenseItems(newItems);
+  const handleExpenseChange = (expenseIndex, field, value) => {
+    setExpenseItems((current) =>
+      current.map((expense, index) =>
+        index === expenseIndex ? { ...expense, [field]: value } : expense,
+      ),
+    );
+  };
+
+  const handleLineItemChange = (expenseIndex, itemIndex, field, value) => {
+    setExpenseItems((current) =>
+      current.map((expense, index) =>
+        index === expenseIndex
+          ? {
+              ...expense,
+              items: expense.items.map((item, lineIndex) =>
+                lineIndex === itemIndex ? { ...item, [field]: value } : item,
+              ),
+            }
+          : expense,
+      ),
+    );
+  };
+
+  const addLineItem = (expenseIndex) => {
+    setExpenseItems((current) =>
+      current.map((expense, index) =>
+        index === expenseIndex
+          ? {
+              ...expense,
+              items: [
+                ...expense.items,
+                { category: "", description: "", amount: "" },
+              ],
+            }
+          : expense,
+      ),
+    );
+  };
+
+  const removeLineItem = (expenseIndex, itemIndex) => {
+    setExpenseItems((current) =>
+      current.map((expense, index) =>
+        index === expenseIndex && expense.items.length > 1
+          ? {
+              ...expense,
+              items: expense.items.filter((_, lineIndex) => lineIndex !== itemIndex),
+            }
+          : expense,
+      ),
+    );
   };
 
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
-    const isValid = expenseItems.every(item => item.category && item.amount);
+    const isValid = expenseItems.every(
+      (expense) =>
+        expense.seller &&
+        expense.sellerCompany &&
+        expense.receivedFrom &&
+        expense.items.length > 0 &&
+        expense.items.every(
+          (item) =>
+            item.category &&
+            Number.isFinite(Number(item.amount)) &&
+            Number(item.amount) > 0,
+        ),
+    );
     if (!isValid) {
-      toast.error("Please fill required fields for all items");
+      toast.error("Complete seller details and all expense item fields");
       return;
     }
 
     setIsSubmittingRequest(true);
     try {
-      await api.post("/expense-requests", { items: expenseItems });
-      toast.success("Expense request(s) submitted for approval");
-      setExpenseItems([{ category: "", amount: "", description: "" }]);
+      const response = await api.post("/expense-requests", {
+        expenses: expenseItems,
+      });
+      const vouchers = (response.data || [])
+        .map((expense) => expense.voucherNumber)
+        .filter(Boolean)
+        .join(", ");
+      toast.success(
+        vouchers
+          ? `Expense(s) submitted. Voucher No.: ${vouchers}`
+          : "Expense(s) submitted successfully",
+      );
+      setExpenseItems([createEmptyExpense()]);
       fetchRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to submit request");
@@ -171,8 +263,14 @@ const AddExpense = () => {
 
       const data = allRequests.map(req => ({
         Date: new Date(req.createdAt).toLocaleDateString(),
+        Voucher: req.voucherNumber || "—",
         Employee: req.employee?.name || "N/A",
-        Category: req.category?.name || "N/A",
+        Seller: req.sellerName || req.seller?.sellerName || "—",
+        Company: req.sellerCompany || "—",
+        "Received From": req.receivedFrom || "—",
+        Items: (req.lineItems || [])
+          .map((item) => `${item.category?.name || "N/A"}: ${item.amount}`)
+          .join("; ") || req.category?.name || "N/A",
         Amount: req.amount,
         Description: req.description || "",
         Status: req.status
@@ -201,11 +299,29 @@ const AddExpense = () => {
         if (empName) doc.text(`Employee: ${empName}`, 14, 28);
       }
 
-      const tableColumn = ["Date", "Category", "Amount", "Description", "Status"];
+      const tableColumn = [
+        "Date",
+        "Voucher",
+        "Employee",
+        "Seller / Company",
+        "Received From",
+        "Items",
+        "Amount",
+        "Description",
+        "Status",
+      ];
       const tableRows = allRequests.map(req => [
         new Date(req.createdAt).toLocaleDateString(),
-        req.category?.name || "N/A",
-        `Rs. ${req.amount}`,
+        req.voucherNumber || "-",
+        req.employee?.name || "N/A",
+        [req.sellerName || req.seller?.sellerName, req.sellerCompany]
+          .filter(Boolean)
+          .join(" / ") || "-",
+        req.receivedFrom || "-",
+        (req.lineItems || [])
+          .map((item) => `${item.category?.name || "N/A"} (${item.amount})`)
+          .join(", ") || req.category?.name || "N/A",
+        `Rs. ${Number(req.amount) || 0}`,
         req.description || "-",
         req.status
       ]);
@@ -216,7 +332,10 @@ const AddExpense = () => {
         startY: isAdmin && filters.employeeId ? 35 : 30,
       });
 
-      const totalAmount = allRequests.reduce((sum, req) => sum + req.amount, 0);
+      const totalAmount = allRequests.reduce(
+        (sum, req) => sum + (Number(req.amount) || 0),
+        0,
+      );
       doc.text(`Total Amount: Rs. ${totalAmount}`, 14, doc.lastAutoTable.finalY + 10);
 
       await downloadFile(doc, `Expense_Report_${new Date().getTime()}.pdf`);
@@ -230,6 +349,15 @@ const AddExpense = () => {
     label: c.name,
   }));
 
+  const sellerOptions = sellers.map((seller) => ({
+    value: seller._id,
+    label: seller.sellerName,
+  }));
+  const receivedFromOptions = [
+    { value: "Seller", label: "Seller" },
+    { value: "Office", label: "Office" },
+  ];
+
   const employeeOptions = [
     { value: "", label: "All Employees" },
     ...employees.map(emp => ({ value: emp._id, label: emp.name }))
@@ -241,6 +369,10 @@ const AddExpense = () => {
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
   ];
+
+  const allExpensesTotal = calculateTotalAmount(
+    expenseItems.flatMap((expense) => expense.items),
+  );
 
   return (
     <AdminPageShell title="Expense Management" icon={FaMoneyBillWave}>
@@ -290,58 +422,212 @@ const AddExpense = () => {
         <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
-              <FaPaperPlane className="text-lux-emerald text-sm" /> Submit Expense Request
+              <FaPaperPlane className="text-lux-emerald text-sm" /> Create Expenses
             </h2>
             <button
+              type="button"
               onClick={addExpenseItem}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
             >
-              <FaPlus size={12} /> Add More
+              <FaPlus size={12} /> Add Another Expense
             </button>
           </div>
           
           <form onSubmit={handleRequestSubmit} className="space-y-6">
-            {expenseItems.map((item, index) => (
-              <div key={index} className="relative grid grid-cols-1 items-end gap-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5 md:grid-cols-12 md:gap-6">
-                {expenseItems.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeExpenseItem(index)}
-                    className="absolute -top-2 -right-2 rounded-full border border-rose-100 bg-rose-50 p-1.5 text-rose-500 shadow-sm transition-colors hover:bg-rose-100"
-                  >
-                    <FaTimes size={10} />
-                  </button>
-                )}
-                <div className="md:col-span-4">
-                  <DataDropdown
-                    label="Expense Category"
-                    options={categoryOptions}
-                    selectedOptions={categoryOptions.find((o) => o.value === item.category)}
-                    onChange={(opt) => handleItemChange(index, "category", opt?.value || "")}
-                    required
-                  />
-                </div>
-                <div className="md:col-span-3">
-                  <DataInput
-                    label="Amount (Rs.)"
-                    type="number"
-                    value={item.amount}
-                    onChange={(e) => handleItemChange(index, "amount", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="md:col-span-5">
-                  <DataInput
-                    label="Description"
-                    value={item.description}
-                    onChange={(e) => handleItemChange(index, "description", e.target.value)}
-                    placeholder="Optional details..."
-                  />
-                </div>
-              </div>
-            ))}
+            {expenseItems.map((expense, index) => {
+              const selectedSeller = sellers.find(
+                (seller) => seller._id === expense.seller,
+              );
+              const companyOptions = (selectedSeller?.companies || []).map(
+                (company) => ({ value: company, label: company }),
+              );
+              const expenseTotal = calculateTotalAmount(expense.items);
+
+              return (
+                <section
+                  key={index}
+                  className="relative space-y-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5"
+                >
+                  {expenseItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeExpenseItem(index)}
+                      className="absolute right-3 top-3 rounded-full border border-rose-100 bg-rose-50 p-1.5 text-rose-500 shadow-sm transition-colors hover:bg-rose-100"
+                      aria-label={`Remove expense ${index + 1}`}
+                    >
+                      <FaTimes size={10} />
+                    </button>
+                  )}
+                  <h3 className="font-serif font-semibold text-lux-ink">
+                    Expense {index + 1}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <DataDropdown
+                      label="Seller Name"
+                      options={sellerOptions}
+                      selectedOptions={sellerOptions.find(
+                        (option) => option.value === expense.seller,
+                      )}
+                      onChange={(option) => {
+                        handleExpenseChange(index, "seller", option?.value || "");
+                        handleExpenseChange(index, "sellerCompany", "");
+                      }}
+                      required
+                      placeholder="Select seller..."
+                    />
+                    <DataDropdown
+                      label="Seller Company"
+                      options={companyOptions}
+                      selectedOptions={companyOptions.find(
+                        (option) => option.value === expense.sellerCompany,
+                      )}
+                      onChange={(option) =>
+                        handleExpenseChange(
+                          index,
+                          "sellerCompany",
+                          option?.value || "",
+                        )
+                      }
+                      required
+                      disabled={!expense.seller}
+                      placeholder="Select company..."
+                    />
+                    <DataDropdown
+                      label="Received From"
+                      options={receivedFromOptions}
+                      selectedOptions={receivedFromOptions.find(
+                        (option) => option.value === expense.receivedFrom,
+                      )}
+                      onChange={(option) =>
+                        handleExpenseChange(
+                          index,
+                          "receivedFrom",
+                          option?.value || "",
+                        )
+                      }
+                      required
+                    />
+                    <DataInput
+                      label="Added By"
+                      value={user?.name || "Current user"}
+                      readOnly
+                    />
+                    <DataInput
+                      label="Voucher No."
+                      value="Assigned automatically in serial order"
+                      readOnly
+                    />
+                    <DataInput
+                      label="Expense Description"
+                      value={expense.description}
+                      onChange={(event) =>
+                        handleExpenseChange(index, "description", event.target.value)
+                      }
+                      placeholder="Enter a description..."
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h4 className="font-serif text-sm font-semibold text-lux-ink">
+                        Expense Items
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => addLineItem(index)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-white px-3 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald"
+                      >
+                        <FaPlus size={10} /> Add Item
+                      </button>
+                    </div>
+                    {expense.items.map((item, itemIndex) => (
+                      <div
+                        key={itemIndex}
+                        className="relative grid grid-cols-1 items-end gap-3 rounded-xl border border-[#ece4d2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-4"
+                      >
+                        {expense.items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeLineItem(index, itemIndex)}
+                            className="absolute right-2 top-2 text-rose-500"
+                            aria-label={`Remove item ${itemIndex + 1}`}
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        )}
+                        <DataDropdown
+                          label="Expense Category"
+                          options={categoryOptions}
+                          selectedOptions={categoryOptions.find(
+                            (option) => option.value === item.category,
+                          )}
+                          onChange={(option) =>
+                            handleLineItemChange(
+                              index,
+                              itemIndex,
+                              "category",
+                              option?.value || "",
+                            )
+                          }
+                          required
+                        />
+                        <DataInput
+                          label="Amount (Rs.)"
+                          inputType="number"
+                          min="0.01"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(event) =>
+                            handleLineItemChange(
+                              index,
+                              itemIndex,
+                              "amount",
+                              event.target.value,
+                            )
+                          }
+                          required
+                        />
+                        <div className="lg:col-span-2">
+                          <DataInput
+                            label="Item Description"
+                            value={item.description}
+                            onChange={(event) =>
+                              handleLineItemChange(
+                                index,
+                                itemIndex,
+                                "description",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Optional item details..."
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="w-full sm:w-64">
+                      <DataInput
+                        label="Total Amount (Rs.)"
+                        inputType="number"
+                        value={expenseTotal.toFixed(2)}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
             
-            <div className="flex flex-wrap justify-end gap-3 pt-2">
+            <div className="flex flex-col items-end gap-3 pt-2">
+              <div className="w-full sm:w-64">
+                <DataInput
+                  label="Overall Total Amount (Rs.)"
+                  inputType="number"
+                  value={allExpensesTotal.toFixed(2)}
+                  readOnly
+                />
+              </div>
               <Buttons
                 type="submit"
                 label={isSubmittingRequest ? "Submitting..." : "Send for Approval"}
@@ -411,9 +697,12 @@ const AddExpense = () => {
               <thead>
                 <tr className="border-b border-[#ece4d2]">
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Date</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Voucher No.</th>
                   {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Employee</th>}
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Category</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Amount</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Seller / Company</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Received From</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Items</th>
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Total Amount</th>
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Description</th>
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-center">Status</th>
                   {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-right">Actions</th>}
@@ -426,6 +715,9 @@ const AddExpense = () => {
                       <td className="py-4 text-sm text-lux-muted">
                         {new Date(req.createdAt).toLocaleDateString()}
                       </td>
+                      <td className="py-4 text-sm font-bold text-lux-ink">
+                        {req.voucherNumber || "-"}
+                      </td>
                       {isAdmin && (
                         <td className="py-4">
                           <div className="flex flex-col">
@@ -434,8 +726,26 @@ const AddExpense = () => {
                           </div>
                         </td>
                       )}
-                      <td className="py-4 text-sm font-medium text-lux-ink">{req.category?.name}</td>
-                      <td className="py-4 text-sm font-bold text-lux-emerald">Rs. {req.amount}</td>
+                      <td className="py-4 text-sm text-lux-ink">
+                        <div className="font-medium">
+                          {req.sellerName || req.seller?.sellerName || "-"}
+                        </div>
+                        <div className="text-xs text-lux-muted">{req.sellerCompany || ""}</div>
+                      </td>
+                      <td className="py-4 text-sm text-lux-muted">{req.receivedFrom || "-"}</td>
+                      <td className="py-4 text-sm text-lux-ink">
+                        {(req.lineItems || []).length > 0
+                          ? req.lineItems.map((item, itemIndex) => (
+                              <div key={item._id || itemIndex}>
+                                {item.category?.name || "Expense"}: Rs. {item.amount}
+                                {item.description ? ` - ${item.description}` : ""}
+                              </div>
+                            ))
+                          : req.category?.name || "-"}
+                      </td>
+                      <td className="py-4 text-sm font-bold text-lux-emerald">
+                        Rs. {Number(req.amount) || 0}
+                      </td>
                       <td className="py-4 text-sm text-lux-muted">{req.description || "-"}</td>
                       <td className="py-4 text-center">
                         <span
@@ -476,7 +786,7 @@ const AddExpense = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={isAdmin ? 7 : 5} className="py-10 text-center italic text-lux-muted">
+                    <td colSpan={isAdmin ? 10 : 8} className="py-10 text-center italic text-lux-muted">
                       No expense requests found
                     </td>
                   </tr>
