@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../../../utils/apiClient/apiClient";
 
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf } from "react-icons/fa";
+import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaWhatsapp, FaEdit } from "react-icons/fa";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
@@ -19,6 +19,8 @@ const createEmptyExpense = () => ({
   sellerCompany: "",
   receivedFrom: "",
   description: "",
+  employeeId: "",
+  createdByName: "",
   items: [{ category: "", description: "", amount: "" }],
 });
 
@@ -39,12 +41,15 @@ const AddExpense = () => {
 
   const [requests, setRequests] = useState([]);
   const [total, setTotal] = useState(0);
+  const [trackedAmount, setTrackedAmount] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
   const [sellers, setSellers] = useState([]);
   const [expenseItems, setExpenseItems] = useState([createEmptyExpense()]);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState("");
+  const expenseFormRef = useRef(null);
 
   // Filters for Admin
   const [employees, setEmployees] = useState([]);
@@ -104,6 +109,7 @@ const AddExpense = () => {
       const res = await api.get(`/expense-requests?${queryParams}`);
       setRequests(res.data.requests);
       setTotal(res.data.total);
+      setTrackedAmount(res.data.totalAmount || 0);
     } catch (error) {
       toast.error("Failed to fetch expense requests");
     }
@@ -206,6 +212,7 @@ const AddExpense = () => {
         expense.seller &&
         expense.sellerCompany &&
         expense.receivedFrom &&
+        (!isAdmin || expense.employeeId) &&
         expense.items.length > 0 &&
         expense.items.every(
           (item) =>
@@ -215,30 +222,188 @@ const AddExpense = () => {
         ),
     );
     if (!isValid) {
-      toast.error("Complete seller details and all expense item fields");
+      toast.error(
+        isAdmin
+          ? "Select an employee and complete all expense fields"
+          : "Complete seller details and all expense item fields",
+      );
       return;
     }
 
     setIsSubmittingRequest(true);
     try {
-      const response = await api.post("/expense-requests", {
-        expenses: expenseItems,
-      });
-      const vouchers = (response.data || [])
-        .map((expense) => expense.voucherNumber)
-        .filter(Boolean)
-        .join(", ");
-      toast.success(
-        vouchers
-          ? `Expense(s) submitted. Voucher No.: ${vouchers}`
-          : "Expense(s) submitted successfully",
-      );
+      if (editingExpenseId) {
+        await api.put(`/expense-requests/${editingExpenseId}`, {
+          expense: expenseItems[0],
+        });
+        toast.success("Expense updated successfully");
+        setEditingExpenseId("");
+      } else {
+        const response = await api.post("/expense-requests", {
+          expenses: expenseItems,
+        });
+        const vouchers = (response.data || [])
+          .map((expense) => expense.voucherNumber)
+          .filter(Boolean)
+          .join(", ");
+        toast.success(
+          vouchers
+            ? `Expense(s) submitted. Voucher No.: ${vouchers}`
+            : "Expense(s) submitted successfully",
+        );
+      }
       setExpenseItems([createEmptyExpense()]);
-      fetchRequests();
+      await fetchRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to submit request");
     } finally {
       setIsSubmittingRequest(false);
+    }
+  };
+
+  const handleEditExpense = (request) => {
+    const requestSellerId =
+      typeof request.seller === "object" ? request.seller?._id : request.seller;
+    const items =
+      request.lineItems?.length > 0
+        ? request.lineItems.map((item) => ({
+            category:
+              typeof item.category === "object"
+                ? item.category?._id
+                : item.category || "",
+            description: item.description || "",
+            amount: String(item.amount ?? ""),
+          }))
+        : [
+            {
+              category:
+                typeof request.category === "object"
+                  ? request.category?._id
+                  : request.category || "",
+              description: "",
+              amount: String(request.amount ?? ""),
+            },
+          ];
+
+    setExpenseItems([
+      {
+        seller: requestSellerId || "",
+        sellerCompany: request.sellerCompany || "",
+        receivedFrom: request.receivedFrom || "",
+        description: request.description || "",
+        createdByName: request.createdBy?.name || request.employee?.name || "",
+        employeeId:
+          request.employee?._id ||
+          (typeof request.employee === "string" ? request.employee : ""),
+        items,
+      },
+    ]);
+    setEditingExpenseId(request._id);
+    requestAnimationFrame(() =>
+      expenseFormRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
+  };
+
+  const cancelEdit = () => {
+    setEditingExpenseId("");
+    setExpenseItems([createEmptyExpense()]);
+  };
+
+  const handleShareExpense = async (request) => {
+    const employee = request.employee || {};
+    const phone = String(employee.mobile || employee.phone || "").replace(
+      /\D/g,
+      "",
+    );
+    const whatsappNumber =
+      phone.length === 10 ? `91${phone}` : phone.length === 12 ? phone : "";
+    const voucherNumber = request.voucherNumber || request._id;
+    const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Expense Voucher", 14, 18);
+    doc.setFontSize(10);
+    doc.text(`Voucher No.: ${request.voucherNumber || "N/A"}`, 14, 27);
+    doc.text(
+      `Date: ${new Date(request.createdAt).toLocaleDateString()}`,
+      14,
+      33,
+    );
+    doc.text(`Employee: ${employee.name || "N/A"}`, 14, 39);
+    doc.text(
+      `Added By: ${request.createdBy?.name || employee.name || "N/A"}`,
+      14,
+      45,
+    );
+    doc.text(`Seller: ${request.sellerName || request.seller?.sellerName || "N/A"}`, 14, 51);
+    doc.text(`Company: ${request.sellerCompany || "N/A"}`, 14, 57);
+    doc.text(`Received From: ${request.receivedFrom || "N/A"}`, 14, 63);
+    doc.autoTable({
+      head: [["Category", "Description", "Amount (Rs.)"]],
+      body:
+        request.lineItems?.length > 0
+          ? request.lineItems.map((item) => [
+              item.category?.name || "Expense",
+              item.description || "-",
+              Number(item.amount || 0).toFixed(2),
+            ])
+          : [[request.category?.name || "Expense", "-", Number(request.amount || 0).toFixed(2)]],
+      startY: 70,
+    });
+    const finalY = doc.lastAutoTable.finalY + 9;
+    doc.setFontSize(12);
+    doc.text(`Total Amount: Rs. ${Number(request.amount || 0).toFixed(2)}`, 14, finalY);
+    doc.setFontSize(10);
+    doc.text(`Status: ${request.status || "pending"}`, 14, finalY + 8);
+    if (request.description) {
+      doc.text(`Description: ${request.description}`, 14, finalY + 16, {
+        maxWidth: 180,
+      });
+    }
+
+    let shareWindow;
+    if (whatsappNumber) {
+      shareWindow = window.open("about:blank", "_blank");
+    }
+
+    try {
+      const file = new File([doc.output("blob")], fileName, {
+        type: "application/pdf",
+      });
+      const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
+      if (
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        shareWindow?.close();
+        await navigator.share({
+          files: [file],
+          title: fileName,
+          text: `${shareText} Share with ${employee.name || "the employee"} (${employee.mobile || employee.phone || "number unavailable"}).`,
+        });
+        toast.success("Expense voucher shared");
+        return;
+      }
+
+      await downloadFile(doc, fileName);
+      if (!whatsappNumber) {
+        shareWindow?.close();
+        toast.error("Employee WhatsApp number is unavailable; the voucher PDF was downloaded.");
+        return;
+      }
+
+      const message = `${shareText} The voucher PDF has been downloaded; please attach it to this chat.`;
+      shareWindow.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      toast.info("Voucher downloaded. Attach the PDF in the opened WhatsApp chat.");
+    } catch (error) {
+      shareWindow?.close();
+      if (error.name !== "AbortError") {
+        toast.error(error.message || "Failed to share the expense voucher");
+      }
     }
   };
 
@@ -362,6 +527,12 @@ const AddExpense = () => {
     { value: "", label: "All Employees" },
     ...employees.map(emp => ({ value: emp._id, label: emp.name }))
   ];
+  const assignableEmployeeOptions = employees
+    .filter((employee) => employee.status === "Active")
+    .map((employee) => ({
+      value: employee._id,
+      label: `${employee.name}${employee.employeeId ? ` (${employee.employeeId})` : ""}`,
+    }));
 
   const statusOptions = [
     { value: "", label: "All Status" },
@@ -422,18 +593,36 @@ const AddExpense = () => {
         <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
-              <FaPaperPlane className="text-lux-emerald text-sm" /> Create Expenses
+              <FaPaperPlane className="text-lux-emerald text-sm" />{" "}
+              {editingExpenseId ? "Edit Expense Voucher" : "Create Expenses"}
             </h2>
-            <button
-              type="button"
-              onClick={addExpenseItem}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
-            >
-              <FaPlus size={12} /> Add Another Expense
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {editingExpenseId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-muted"
+                >
+                  Cancel Edit
+                </button>
+              )}
+              {!editingExpenseId && (
+                <button
+                  type="button"
+                  onClick={addExpenseItem}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
+                >
+                  <FaPlus size={12} /> Add Another Expense
+                </button>
+              )}
+            </div>
           </div>
           
-          <form onSubmit={handleRequestSubmit} className="space-y-6">
+          <form
+            ref={expenseFormRef}
+            onSubmit={handleRequestSubmit}
+            className="space-y-6"
+          >
             {expenseItems.map((expense, index) => {
               const selectedSeller = sellers.find(
                 (seller) => seller._id === expense.seller,
@@ -509,12 +698,39 @@ const AddExpense = () => {
                     />
                     <DataInput
                       label="Added By"
-                      value={user?.name || "Current user"}
+                      value={
+                        editingExpenseId
+                          ? expense.createdByName || user?.name || "Current user"
+                          : user?.name || "Current user"
+                      }
                       readOnly
                     />
+                    {isAdmin && (
+                      <DataDropdown
+                        label="Assign to Employee"
+                        options={assignableEmployeeOptions}
+                        selectedOptions={assignableEmployeeOptions.find(
+                          (option) => option.value === expense.employeeId,
+                        )}
+                        onChange={(option) =>
+                          handleExpenseChange(
+                            index,
+                            "employeeId",
+                            option?.value || "",
+                          )
+                        }
+                        required
+                        placeholder="Select employee..."
+                      />
+                    )}
                     <DataInput
                       label="Voucher No."
-                      value="Assigned automatically in serial order"
+                      value={
+                        editingExpenseId
+                          ? requests.find((request) => request._id === editingExpenseId)
+                              ?.voucherNumber || "Existing voucher"
+                          : "Assigned automatically in serial order"
+                      }
                       readOnly
                     />
                     <DataInput
@@ -630,7 +846,15 @@ const AddExpense = () => {
               </div>
               <Buttons
                 type="submit"
-                label={isSubmittingRequest ? "Submitting..." : "Send for Approval"}
+                label={
+                  isSubmittingRequest
+                    ? editingExpenseId
+                      ? "Saving..."
+                      : "Submitting..."
+                    : editingExpenseId
+                      ? "Save Changes"
+                      : "Send for Approval"
+                }
                 variant="primary"
                 disabled={isSubmittingRequest}
               />
@@ -692,6 +916,19 @@ const AddExpense = () => {
             />
           </div>
 
+          <div className="flex flex-col gap-1 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold text-lux-ink">
+              {isAdmin && filters.employeeId
+                ? `Expense tracker: ${employees.find((employee) => employee._id === filters.employeeId)?.name || "Selected employee"}`
+                : isAdmin
+                  ? "Expense tracker: all employees"
+                  : "Your expense tracker"}
+            </span>
+            <span className="text-lg font-bold text-lux-emerald">
+              {total} vouchers · Rs. {Number(trackedAmount).toFixed(2)}
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -705,7 +942,7 @@ const AddExpense = () => {
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Total Amount</th>
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Description</th>
                   <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-center">Status</th>
-                  {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-right">Actions</th>}
+                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#ece4d2]">
@@ -722,7 +959,12 @@ const AddExpense = () => {
                         <td className="py-4">
                           <div className="flex flex-col">
                             <span className="text-sm font-bold text-lux-ink">{req.employee?.name}</span>
-                            <span className="text-[10px] text-lux-muted">{req.employee?.email}</span>
+                            <span className="text-[10px] text-lux-muted">
+                              {req.employee?.email}
+                            </span>
+                            <span className="text-[10px] text-lux-muted">
+                              Added by: {req.createdBy?.name || req.employee?.name || "N/A"}
+                            </span>
                           </div>
                         </td>
                       )}
@@ -760,33 +1002,55 @@ const AddExpense = () => {
                           {req.status}
                         </span>
                       </td>
-                      {isAdmin && (
-                        <td className="py-4 text-right">
-                          {req.status === "pending" && (
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={() => handleStatusUpdate(req._id, "approved")}
-                                className="rounded-xl bg-emerald-50 p-2 text-emerald-600 transition-colors hover:bg-emerald-100"
-                                title="Approve"
-                              >
-                                <FaCheck size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleStatusUpdate(req._id, "rejected")}
-                                className="rounded-xl bg-rose-50 p-2 text-rose-600 transition-colors hover:bg-rose-100"
-                                title="Reject"
-                              >
-                                <FaTimes size={14} />
-                              </button>
-                            </div>
+                      <td className="py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {(isAdmin || req.status === "pending") && (
+                            <button
+                              type="button"
+                              onClick={() => handleEditExpense(req)}
+                              className="rounded-xl bg-sky-50 p-2 text-sky-700 transition-colors hover:bg-sky-100"
+                              title="Edit expense"
+                            >
+                              <FaEdit size={14} />
+                            </button>
                           )}
-                        </td>
-                      )}
+                          <button
+                            type="button"
+                            onClick={() => handleShareExpense(req)}
+                            className="rounded-xl bg-emerald-50 p-2 text-emerald-700 transition-colors hover:bg-emerald-100"
+                            title="Share voucher PDF on WhatsApp"
+                          >
+                            <FaWhatsapp size={15} />
+                          </button>
+                          {req.status === "pending" && (
+                            isAdmin && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStatusUpdate(req._id, "approved")}
+                                  className="rounded-xl bg-emerald-50 p-2 text-emerald-600 transition-colors hover:bg-emerald-100"
+                                  title="Approve"
+                                >
+                                  <FaCheck size={14} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStatusUpdate(req._id, "rejected")}
+                                  className="rounded-xl bg-rose-50 p-2 text-rose-600 transition-colors hover:bg-rose-100"
+                                  title="Reject"
+                                >
+                                  <FaTimes size={14} />
+                                </button>
+                              </>
+                            )
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={isAdmin ? 10 : 8} className="py-10 text-center italic text-lux-muted">
+                    <td colSpan={isAdmin ? 11 : 9} className="py-10 text-center italic text-lux-muted">
                       No expense requests found
                     </td>
                   </tr>

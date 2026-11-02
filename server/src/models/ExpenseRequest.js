@@ -39,6 +39,14 @@ const expenseRequestSchema = new mongoose.Schema(
       enum: ["User", "Employee"],
       default: "User",
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: "createdByModel",
+    },
+    createdByModel: {
+      type: String,
+      enum: ["User", "Employee"],
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
