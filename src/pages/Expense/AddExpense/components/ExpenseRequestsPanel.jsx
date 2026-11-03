@@ -104,9 +104,9 @@ const ExpenseRequestsPanel = ({
 
   const renderActions = (request) => {
     const buttonClass =
-      "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-50 px-2 py-2 text-sm font-semibold transition-colors hover:bg-slate-100 md:flex-none md:p-2";
+      "inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-50 px-2 py-2 text-xs font-semibold transition-colors hover:bg-slate-100 sm:gap-2 sm:text-sm md:flex-none md:p-2";
     return (
-      <div className="flex flex-wrap gap-2 md:justify-end">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
         {(isAdmin || request.status === "pending") && (
           <button
             type="button"
@@ -116,7 +116,7 @@ const ExpenseRequestsPanel = ({
             aria-label="Edit expense"
           >
             <FaEdit size={14} />
-            <span className="md:hidden">Edit</span>
+            <span>Edit</span>
           </button>
         )}
         <button
@@ -127,7 +127,7 @@ const ExpenseRequestsPanel = ({
           aria-label="Download expense voucher PDF"
         >
           <FaDownload size={14} />
-          <span className="md:hidden">PDF</span>
+          <span>PDF</span>
         </button>
         <button
           type="button"
@@ -137,7 +137,7 @@ const ExpenseRequestsPanel = ({
           aria-label="Share voucher PDF on WhatsApp"
         >
           <FaWhatsapp size={15} />
-          <span className="md:hidden">WhatsApp</span>
+          <span>Share</span>
         </button>
         {isAdmin && request.status === "pending" && (
           <>
@@ -149,7 +149,7 @@ const ExpenseRequestsPanel = ({
               aria-label="Approve expense"
             >
               <FaCheck size={14} />
-              <span className="md:hidden">Approve</span>
+              <span>Approve</span>
             </button>
             <button
               type="button"
@@ -159,7 +159,7 @@ const ExpenseRequestsPanel = ({
               aria-label="Reject expense"
             >
               <FaTimes size={14} />
-              <span className="md:hidden">Reject</span>
+              <span>Reject</span>
             </button>
           </>
         )}

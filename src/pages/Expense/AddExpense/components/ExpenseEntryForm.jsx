@@ -214,6 +214,35 @@ const ExpenseEntryForm = ({
               </div>
 
               <div className="space-y-3">
+                <h4 className="font-serif text-sm font-semibold text-lux-ink">
+                  Additional Details <span className="font-normal text-lux-muted">(Optional)</span>
+                </h4>
+                <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    ["rejectedLorryNo", "Reject Lorry No"],
+                    ["loading", "Loading"],
+                    ["unloading", "Unloading"],
+                    ["balance", "Balance"],
+                    ["netWeight", "Net Weight"],
+                    ["newLorryNo", "New Lorry No"],
+                    ["newWeight", "New Weight"],
+                    ["challanWeight", "Challan Weight"],
+                  ].map(([field, label]) => (
+                    <DataInput
+                      key={field}
+                      label={label}
+                      value={expense[field] || ""}
+                      onChange={(event) =>
+                        onExpenseChange(index, field, event.target.value)
+                      }
+                      placeholder={`Enter ${label.toLowerCase()}...`}
+                      maxLength={100}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-serif text-sm font-semibold text-lux-ink">
                     Expense Items

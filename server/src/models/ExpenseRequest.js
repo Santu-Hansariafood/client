@@ -29,6 +29,16 @@ const expenseRequestSchema = new mongoose.Schema(
     },
     amount: { type: Number, required: true, min: 0 },
     description: { type: String, trim: true },
+    transportDetails: {
+      rejectedLorryNo: { type: String, trim: true, maxlength: 100 },
+      loading: { type: String, trim: true, maxlength: 100 },
+      unloading: { type: String, trim: true, maxlength: 100 },
+      balance: { type: String, trim: true, maxlength: 100 },
+      netWeight: { type: String, trim: true, maxlength: 100 },
+      newLorryNo: { type: String, trim: true, maxlength: 100 },
+      newWeight: { type: String, trim: true, maxlength: 100 },
+      challanWeight: { type: String, trim: true, maxlength: 100 },
+    },
     employee: {
       type: mongoose.Schema.Types.ObjectId,
       refPath: "employeeModel",

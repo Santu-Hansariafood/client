@@ -17,6 +17,18 @@ const getFinancialYearStart = (date) => {
     : indiaDate.getUTCFullYear() - 1;
 };
 
+const getOptionalDetail = (value) => {
+  if (value === undefined || value === null || value === "") return "";
+  if (typeof value !== "string") {
+    throw new Error("Additional expense details must be text");
+  }
+  const detail = value.trim();
+  if (detail.length > 100) {
+    throw new Error("Additional expense details must be 100 characters or fewer");
+  }
+  return detail;
+};
+
 const prepareExpenseData = async (expense) => {
   if (
     !expense.seller ||
@@ -86,6 +98,16 @@ const prepareExpenseData = async (expense) => {
     sellerCompany: selectedCompany,
     receivedFrom: expense.receivedFrom,
     description: expense.description || "",
+    transportDetails: {
+      rejectedLorryNo: getOptionalDetail(expense.rejectedLorryNo),
+      loading: getOptionalDetail(expense.loading),
+      unloading: getOptionalDetail(expense.unloading),
+      balance: getOptionalDetail(expense.balance),
+      netWeight: getOptionalDetail(expense.netWeight),
+      newLorryNo: getOptionalDetail(expense.newLorryNo),
+      newWeight: getOptionalDetail(expense.newWeight),
+      challanWeight: getOptionalDetail(expense.challanWeight),
+    },
     lineItems: preparedLineItems,
     category: preparedLineItems[0].category,
     amount: totalCents / 100,
