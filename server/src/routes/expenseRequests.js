@@ -8,6 +8,14 @@ import authJwt from "../middleware/authJwt.js";
 import { adminOnly, employeeOrAdmin } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+const INDIA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+const getFinancialYearStart = (date) => {
+  const indiaDate = new Date(date.getTime() + INDIA_OFFSET_MS);
+  return indiaDate.getUTCMonth() >= 3
+    ? indiaDate.getUTCFullYear()
+    : indiaDate.getUTCFullYear() - 1;
+};
 
 const prepareExpenseData = async (expense) => {
   if (
@@ -110,6 +118,7 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       employeeId,
       startDate,
       endDate,
+      financialYear,
       status,
     } = req.query;
     let query = {};
@@ -123,13 +132,42 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
     }
 
     if (status) query.status = status;
+    if (financialYear !== undefined && financialYear !== "") {
+      const startYear = Number(financialYear);
+      const currentFinancialYear = getFinancialYearStart(new Date());
+      if (
+        !Number.isInteger(startYear) ||
+        startYear < 1900 ||
+        startYear > currentFinancialYear
+      ) {
+        return res.status(400).json({ message: "Invalid financial year filter" });
+      }
+
+      query.createdAt = {
+        $gte: new Date(Date.UTC(startYear, 3, 1) - INDIA_OFFSET_MS),
+        $lt: new Date(Date.UTC(startYear + 1, 3, 1) - INDIA_OFFSET_MS),
+      };
+    }
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
+      query.createdAt = { ...query.createdAt };
+      if (startDate) {
+        const start = new Date(startDate);
+        if (Number.isNaN(start.getTime())) {
+          return res.status(400).json({ message: "Invalid start date filter" });
+        }
+        query.createdAt.$gte = query.createdAt.$gte
+          ? new Date(Math.max(start.getTime(), query.createdAt.$gte.getTime()))
+          : start;
+      }
       if (endDate) {
         const end = new Date(endDate);
+        if (Number.isNaN(end.getTime())) {
+          return res.status(400).json({ message: "Invalid end date filter" });
+        }
         end.setHours(23, 59, 59, 999);
-        query.createdAt.$lte = end;
+        query.createdAt.$lte = query.createdAt.$lte
+          ? new Date(Math.min(end.getTime(), query.createdAt.$lte.getTime()))
+          : end;
       }
     }
 
@@ -146,18 +184,35 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    const [total, amountResult] = await Promise.all([
+    const [total, amountResult, earliestRequest] = await Promise.all([
       ExpenseRequest.countDocuments(query),
       ExpenseRequest.aggregate([
         { $match: query },
         { $group: { _id: null, totalAmount: { $sum: "$amount" } } },
       ]),
+      ExpenseRequest.findOne(
+        req.user.role === "Admin" && !employeeId
+          ? {}
+          : { employee: query.employee },
+      )
+        .sort({ createdAt: 1 })
+        .select("createdAt")
+        .lean(),
     ]);
+    const currentFinancialYear = getFinancialYearStart(new Date());
+    const earliestFinancialYear = earliestRequest
+      ? getFinancialYearStart(new Date(earliestRequest.createdAt))
+      : currentFinancialYear;
+    const financialYears = [];
+    for (let year = currentFinancialYear; year >= earliestFinancialYear; year -= 1) {
+      financialYears.push(year);
+    }
 
     res.json({
       requests,
       total,
       totalAmount: amountResult[0]?.totalAmount || 0,
+      financialYears,
       page: parseInt(page),
       pages: Math.ceil(total / parseInt(limit)),
     });

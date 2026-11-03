@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef } from "react";
-import api from "../../../utils/apiClient/apiClient";
-
+import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaWhatsapp, FaEdit, FaDownload } from "react-icons/fa";
-import DataInput from "../../../common/DataInput/DataInput";
-import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import Buttons from "../../../common/Buttons/Buttons";
+import { FaMoneyBillWave } from "react-icons/fa";
+import api from "../../../utils/apiClient/apiClient";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
-import Paginations from "../../../common/Paginations/Paginations";
-import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
-import { downloadFile } from "../../../utils/fileDownloader";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import ExpenseCategoryManager from "./components/ExpenseCategoryManager";
+import ExpenseEntryForm from "./components/ExpenseEntryForm";
+import ExpenseRequestsPanel from "./components/ExpenseRequestsPanel";
+import useExpenseData from "./hooks/useExpenseData";
+import useExpenseDocuments from "./hooks/useExpenseDocuments";
+import {
+  formatFinancialYear,
+  getCurrentFinancialYear,
+} from "./utils/financialYear";
 
 const createEmptyExpense = () => ({
   seller: "",
@@ -24,135 +24,41 @@ const createEmptyExpense = () => ({
   items: [{ category: "", description: "", quantity: "1", amount: "" }],
 });
 
-const calculateTotalAmount = (items) =>
-  items.reduce(
-    (totalCents, item) =>
-      totalCents +
-      Math.round(
-        (Number(item.quantity ?? 1) || 0) *
-          Math.round((Number(item.amount) || 0) * 100),
-      ),
-    0,
-  ) / 100;
-
-const calculateLineTotal = (item) =>
-  (Math.round(
-    (Number(item.quantity ?? 1) || 0) *
-      Math.round((Number(item.amount) || 0) * 100),
-  ) /
-    100).toFixed(2);
-
 const AddExpense = () => {
   const { userRole, user } = useAuth();
   const isAdmin = userRole === "Admin";
-
-  const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState("");
-  const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
-
-  const [requests, setRequests] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [trackedAmount, setTrackedAmount] = useState(0);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-
-  const [sellers, setSellers] = useState([]);
-  const [expenseItems, setExpenseItems] = useState([createEmptyExpense()]);
-  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
-  const [editingExpenseId, setEditingExpenseId] = useState("");
-  const expenseFormRef = useRef(null);
-
-  // Filters for Admin
-  const [employees, setEmployees] = useState([]);
   const [filters, setFilters] = useState({
     employeeId: "",
     startDate: "",
     endDate: "",
-    status: ""
+    status: "",
+    financialYear: String(getCurrentFinancialYear()),
   });
+  const [expenseItems, setExpenseItems] = useState([createEmptyExpense()]);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState("");
+  const expenseFormRef = useRef(null);
+  const limit = 10;
 
-  useEffect(() => {
-    fetchCategories();
-    fetchRequests();
-    if (isAdmin) {
-      fetchEmployees();
-    }
-  }, [page, filters]);
-
-  useEffect(() => {
-    fetchSellers();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get("/expense-categories");
-      setCategories(res.data);
-    } catch (error) {
-      toast.error("Failed to fetch categories");
-    }
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      const res = await api.get("/expense-requests/employees");
-      setEmployees(res.data || []);
-    } catch (error) {
-      toast.error("Failed to fetch employees");
-    }
-  };
-
-  const fetchSellers = async () => {
-    try {
-      const res = await api.get("/sellers?status=active&limit=1000");
-      setSellers(Array.isArray(res.data) ? res.data : res.data.data || []);
-    } catch (error) {
-      toast.error("Failed to fetch sellers");
-    }
-  };
-
-  const fetchRequests = async () => {
-    try {
-      const queryParams = new URLSearchParams({
-        page,
-        limit,
-        ...filters
-      }).toString();
-      const res = await api.get(`/expense-requests?${queryParams}`);
-      setRequests(res.data.requests);
-      setTotal(res.data.total);
-      setTrackedAmount(res.data.totalAmount || 0);
-    } catch (error) {
-      toast.error("Failed to fetch expense requests");
-    }
-  };
-
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCategory.trim()) return;
-
-    setIsSubmittingCategory(true);
-    try {
-      await api.post("/expense-categories", { name: newCategory.trim() });
-      toast.success("Category added successfully");
-      setNewCategory("");
-      fetchCategories();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add category");
-    } finally {
-      setIsSubmittingCategory(false);
-    }
-  };
-
-  const handleDeleteCategory = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-    try {
-      await api.delete(`/expense-categories/${id}`);
-      toast.success("Category deleted");
-      fetchCategories();
-    } catch (error) {
-      toast.error("Failed to delete category");
-    }
-  };
+  const {
+    categories,
+    employees,
+    fetchCategories,
+    fetchRequests,
+    financialYears,
+    handleStatusUpdate,
+    requests,
+    sellers,
+    total,
+    trackedAmount,
+  } = useExpenseData({ isAdmin, page, limit, filters });
+  const {
+    downloadExpenseVoucher,
+    exportExcel,
+    exportPdf,
+    shareExpenseVoucher,
+  } = useExpenseDocuments({ isAdmin, filters, employees });
 
   const addExpenseItem = () => {
     setExpenseItems((current) => [...current, createEmptyExpense()]);
@@ -160,7 +66,7 @@ const AddExpense = () => {
 
   const removeExpenseItem = (index) => {
     setExpenseItems((current) =>
-      current.length > 1 ? current.filter((_, i) => i !== index) : current,
+      current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current,
     );
   };
 
@@ -216,8 +122,8 @@ const AddExpense = () => {
     );
   };
 
-  const handleRequestSubmit = async (e) => {
-    e.preventDefault();
+  const handleRequestSubmit = async (event) => {
+    event.preventDefault();
     const isValid = expenseItems.every(
       (expense) =>
         expense.seller &&
@@ -327,834 +233,57 @@ const AddExpense = () => {
     setExpenseItems([createEmptyExpense()]);
   };
 
-  const createExpenseVoucherPdf = (request) => {
-    const employee = request.employee || {};
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Expense Voucher", 14, 18);
-    doc.setFontSize(10);
-    doc.text(`Voucher No.: ${request.voucherNumber || "N/A"}`, 14, 27);
-    doc.text(
-      `Date: ${new Date(request.createdAt).toLocaleDateString()}`,
-      14,
-      33,
-    );
-    doc.text(`Employee: ${employee.name || "N/A"}`, 14, 39);
-    doc.text(
-      `Added By: ${request.createdBy?.name || employee.name || "N/A"}`,
-      14,
-      45,
-    );
-    doc.text(`Seller: ${request.sellerName || request.seller?.sellerName || "N/A"}`, 14, 51);
-    doc.text(`Company: ${request.sellerCompany || "N/A"}`, 14, 57);
-    doc.text(`Received From: ${request.receivedFrom || "N/A"}`, 14, 63);
-    doc.autoTable({
-      head: [["Category", "Description", "Quantity", "Rate (Rs.)", "Total (Rs.)"]],
-      body:
-        request.lineItems?.length > 0
-          ? request.lineItems.map((item) => [
-              item.category?.name || "Expense",
-              item.description || "-",
-              Number(item.quantity ?? 1),
-              Number(item.amount || 0).toFixed(2),
-              calculateLineTotal(item),
-            ])
-          : [[request.category?.name || "Expense", "-", "1", Number(request.amount || 0).toFixed(2), Number(request.amount || 0).toFixed(2)]],
-      startY: 70,
-    });
-    const finalY = doc.lastAutoTable.finalY + 9;
-    doc.setFontSize(12);
-    doc.text(`Total Amount: Rs. ${Number(request.amount || 0).toFixed(2)}`, 14, finalY);
-    doc.setFontSize(10);
-    doc.text(`Status: ${request.status || "pending"}`, 14, finalY + 8);
-    const decidedBy =
-      request.status === "approved"
-        ? request.approvedBy?.name
-        : request.status === "rejected"
-          ? request.rejectedBy?.name
-          : "";
-    if (decidedBy) {
-      doc.text(
-        `${request.status === "approved" ? "Approved" : "Rejected"} by: ${decidedBy}`,
-        14,
-        finalY + 16,
-      );
-    }
-    if (request.rejectionReason) {
-      doc.text(`Rejection reason: ${request.rejectionReason}`, 14, finalY + 24, {
-        maxWidth: 180,
-      });
-    }
-    if (request.description) {
-      doc.text(`Description: ${request.description}`, 14, finalY + (decidedBy || request.rejectionReason ? 32 : 16), {
-        maxWidth: 180,
-      });
-    }
-    return doc;
-  };
-
-  const handleDownloadExpenseVoucher = async (request) => {
-    const voucherNumber = request.voucherNumber || request._id;
-    try {
-      const doc = createExpenseVoucherPdf(request);
-      await downloadFile(doc, `Expense-Voucher-${voucherNumber}.pdf`);
-    } catch (error) {
-      toast.error(error.message || "Failed to download the expense voucher");
-    }
-  };
-
-  const handleShareExpense = async (request) => {
-    const employee = request.employee || {};
-    const phone = String(employee.mobile || employee.phone || "").replace(
-      /\D/g,
-      "",
-    );
-    const whatsappNumber =
-      phone.length === 10 ? `91${phone}` : phone.length === 12 ? phone : "";
-    const voucherNumber = request.voucherNumber || request._id;
-    const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
-    try {
-      const doc = createExpenseVoucherPdf(request);
-      const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
-      if (!whatsappNumber) {
-        await downloadFile(doc, fileName);
-        toast.error("Employee WhatsApp number is unavailable; the voucher PDF was downloaded.");
-        return;
-      }
-
-      const message = `${shareText} The voucher PDF has been downloaded; please attach it to this chat.`;
-      const shareWindow = window.open(
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
-        "_blank",
-      );
-      await downloadFile(doc, fileName);
-      toast.info(
-        shareWindow
-          ? `Voucher downloaded. Attach the PDF in the WhatsApp chat for ${employee.name || "this employee"}.`
-          : "Voucher downloaded, but the WhatsApp chat could not open. Check popup settings and try again.",
-      );
-    } catch (error) {
-      toast.error(error.message || "Failed to prepare the expense voucher for WhatsApp");
-    }
-  };
-
-  const handleStatusUpdate = async (id, status) => {
-    try {
-      await api.put(`/expense-requests/${id}/status`, { status });
-      toast.success(`Request ${status} successfully`);
-      fetchRequests();
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
-  };
-
-  const downloadExcel = async () => {
-    try {
-      const queryParams = new URLSearchParams({
-        ...filters,
-        limit: 10000 // Large limit to get all filtered requests
-      }).toString();
-      const res = await api.get(`/expense-requests?${queryParams}`);
-      const allRequests = res.data.requests;
-
-      const data = allRequests.map(req => ({
-        Date: new Date(req.createdAt).toLocaleDateString(),
-        Voucher: req.voucherNumber || "—",
-        Employee: req.employee?.name || "N/A",
-        Seller: req.sellerName || req.seller?.sellerName || "—",
-        Company: req.sellerCompany || "—",
-        "Received From": req.receivedFrom || "—",
-        Items: (req.lineItems || [])
-          .map((item) =>
-            `${item.category?.name || "N/A"}: ${Number(item.quantity ?? 1)} x ${Number(item.amount || 0).toFixed(2)} = ${calculateLineTotal(item)}`,
-          )
-          .join("; ") || req.category?.name || "N/A",
-        Amount: req.amount,
-        Description: req.description || "",
-        Status: req.status
-      }));
-      generateExcel(data, `Expenses_${new Date().toLocaleDateString()}.xlsx`);
-    } catch (error) {
-      toast.error("Failed to export Excel");
-    }
-  };
-
-  const generatePDF = async () => {
-    try {
-      const queryParams = new URLSearchParams({
-        ...filters,
-        limit: 10000
-      }).toString();
-      const res = await api.get(`/expense-requests?${queryParams}`);
-      const allRequests = res.data.requests;
-
-      const doc = new jsPDF();
-      doc.text("Expense Report", 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-      if (isAdmin && filters.employeeId) {
-        const empName = employees.find(e => e._id === filters.employeeId)?.name;
-        if (empName) doc.text(`Employee: ${empName}`, 14, 28);
-      }
-
-      const tableColumn = [
-        "Date",
-        "Voucher",
-        "Employee",
-        "Seller / Company",
-        "Received From",
-        "Items",
-        "Amount",
-        "Description",
-        "Status",
-      ];
-      const tableRows = allRequests.map(req => [
-        new Date(req.createdAt).toLocaleDateString(),
-        req.voucherNumber || "-",
-        req.employee?.name || "N/A",
-        [req.sellerName || req.seller?.sellerName, req.sellerCompany]
-          .filter(Boolean)
-          .join(" / ") || "-",
-        req.receivedFrom || "-",
-        (req.lineItems || [])
-          .map((item) =>
-            `${item.category?.name || "N/A"} (${Number(item.quantity ?? 1)} x ${Number(item.amount || 0).toFixed(2)} = ${calculateLineTotal(item)})`,
-          )
-          .join(", ") || req.category?.name || "N/A",
-        `Rs. ${Number(req.amount) || 0}`,
-        req.description || "-",
-        req.status
-      ]);
-
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: isAdmin && filters.employeeId ? 35 : 30,
-      });
-
-      const totalAmount = allRequests.reduce(
-        (sum, req) => sum + (Number(req.amount) || 0),
-        0,
-      );
-      doc.text(`Total Amount: Rs. ${totalAmount}`, 14, doc.lastAutoTable.finalY + 10);
-
-      await downloadFile(doc, `Expense_Report_${new Date().getTime()}.pdf`);
-    } catch (error) {
-      toast.error("Failed to generate PDF");
-    }
-  };
-
-  const categoryOptions = categories.map((c) => ({
-    value: c._id,
-    label: c.name,
-  }));
-
-  const sellerOptions = sellers.map((seller) => ({
-    value: seller._id,
-    label: seller.sellerName,
-  }));
-  const receivedFromOptions = [
-    { value: "Seller", label: "Seller" },
-    { value: "Office", label: "Office" },
-  ];
-
-  const employeeOptions = [
-    { value: "", label: "All Employees" },
-    ...employees.map(emp => ({ value: emp._id, label: emp.name }))
-  ];
-  const assignableEmployeeOptions = employees
-    .filter((employee) => employee.status === "Active")
-    .map((employee) => ({
-      value: employee._id,
-      label: `${employee.name}${employee.employeeId ? ` (${employee.employeeId})` : ""}`,
-    }));
-
-  const statusOptions = [
-    { value: "", label: "All Status" },
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
-  ];
-
-  const allExpensesTotal = calculateTotalAmount(
-    expenseItems.flatMap((expense) => expense.items),
-  );
-
   return (
     <AdminPageShell title="Expense Management" icon={FaMoneyBillWave}>
       <div className="space-y-8">
-        {/* Admin Section: Category Management */}
         {isAdmin && (
-          <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
-            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
-              <FaPlus className="text-lux-emerald text-sm" /> Create Expense Category
-            </h2>
-            <form onSubmit={handleAddCategory} className="flex flex-col gap-4 sm:flex-row">
-              <div className="flex-1 min-w-0">
-                <DataInput
-                  placeholder="Enter category name (e.g. Fuel, Stationery)"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                />
-              </div>
-              <Buttons
-                type="submit"
-                label={isSubmittingCategory ? "Adding..." : "Add Category"}
-                variant="primary"
-                disabled={isSubmittingCategory}
-              />
-            </form>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-              {categories.map((cat) => (
-                <div
-                  key={cat._id}
-                  className="group flex items-center justify-between gap-2 rounded-xl border border-[#ece4d2] bg-lux-cream px-4 py-2 transition-all hover:border-lux-gold/40"
-                >
-                  <span className="text-sm font-medium text-lux-ink">{cat.name}</span>
-                  <button
-                    onClick={() => handleDeleteCategory(cat._id)}
-                    className="text-lux-muted opacity-0 transition-colors group-hover:text-rose-500 group-hover:opacity-100"
-                  >
-                    <FaTrash size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ExpenseCategoryManager
+            categories={categories}
+            refreshCategories={fetchCategories}
+          />
         )}
-
-        {/* Request Submission Section */}
-        <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-lux-ink">
-              <FaPaperPlane className="text-lux-emerald text-sm" />{" "}
-              {editingExpenseId ? "Edit Expense Voucher" : "Create Expenses"}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {editingExpenseId && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-muted"
-                >
-                  Cancel Edit
-                </button>
-              )}
-              {!editingExpenseId && (
-                <button
-                  type="button"
-                  onClick={addExpenseItem}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
-                >
-                  <FaPlus size={12} /> Add Another Expense
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <form
-            ref={expenseFormRef}
-            onSubmit={handleRequestSubmit}
-            className="space-y-6"
-          >
-            {expenseItems.map((expense, index) => {
-              const selectedSeller = sellers.find(
-                (seller) => seller._id === expense.seller,
-              );
-              const companyOptions = (selectedSeller?.companies || []).map(
-                (company) => ({ value: company, label: company }),
-              );
-              const expenseTotal = calculateTotalAmount(expense.items);
-
-              return (
-                <section
-                  key={index}
-                  className="relative space-y-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5"
-                >
-                  {expenseItems.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeExpenseItem(index)}
-                      className="absolute right-3 top-3 rounded-full border border-rose-100 bg-rose-50 p-1.5 text-rose-500 shadow-sm transition-colors hover:bg-rose-100"
-                      aria-label={`Remove expense ${index + 1}`}
-                    >
-                      <FaTimes size={10} />
-                    </button>
-                  )}
-                  <h3 className="font-serif font-semibold text-lux-ink">
-                    Expense {index + 1}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <DataDropdown
-                      label="Seller Name"
-                      options={sellerOptions}
-                      selectedOptions={sellerOptions.find(
-                        (option) => option.value === expense.seller,
-                      )}
-                      onChange={(option) => {
-                        handleExpenseChange(index, "seller", option?.value || "");
-                        handleExpenseChange(index, "sellerCompany", "");
-                      }}
-                      required
-                      placeholder="Select seller..."
-                    />
-                    <DataDropdown
-                      label="Seller Company"
-                      options={companyOptions}
-                      selectedOptions={companyOptions.find(
-                        (option) => option.value === expense.sellerCompany,
-                      )}
-                      onChange={(option) =>
-                        handleExpenseChange(
-                          index,
-                          "sellerCompany",
-                          option?.value || "",
-                        )
-                      }
-                      required
-                      disabled={!expense.seller}
-                      placeholder="Select company..."
-                    />
-                    <DataDropdown
-                      label="Received From"
-                      options={receivedFromOptions}
-                      selectedOptions={receivedFromOptions.find(
-                        (option) => option.value === expense.receivedFrom,
-                      )}
-                      onChange={(option) =>
-                        handleExpenseChange(
-                          index,
-                          "receivedFrom",
-                          option?.value || "",
-                        )
-                      }
-                      required
-                    />
-                    <DataInput
-                      label="Added By"
-                      value={
-                        editingExpenseId
-                          ? expense.createdByName || user?.name || "Current user"
-                          : user?.name || "Current user"
-                      }
-                      readOnly
-                    />
-                    {isAdmin && (
-                      <DataDropdown
-                        label="Assign to Employee"
-                        options={assignableEmployeeOptions}
-                        selectedOptions={assignableEmployeeOptions.find(
-                          (option) => option.value === expense.employeeId,
-                        )}
-                        onChange={(option) =>
-                          handleExpenseChange(
-                            index,
-                            "employeeId",
-                            option?.value || "",
-                          )
-                        }
-                        required
-                        placeholder="Select employee..."
-                      />
-                    )}
-                    <DataInput
-                      label="Voucher No."
-                      value={
-                        editingExpenseId
-                          ? requests.find((request) => request._id === editingExpenseId)
-                              ?.voucherNumber || "Existing voucher"
-                          : "Assigned automatically in serial order"
-                      }
-                      readOnly
-                    />
-                    <DataInput
-                      label="Expense Description"
-                      value={expense.description}
-                      onChange={(event) =>
-                        handleExpenseChange(index, "description", event.target.value)
-                      }
-                      placeholder="Enter a description..."
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-serif text-sm font-semibold text-lux-ink">
-                        Expense Items
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() => addLineItem(index)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-[#e4dbc6] bg-white px-3 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald"
-                      >
-                        <FaPlus size={10} /> Add Item
-                      </button>
-                    </div>
-                    {expense.items.map((item, itemIndex) => (
-                      <div
-                        key={itemIndex}
-                        className="relative grid grid-cols-1 items-end gap-3 rounded-xl border border-[#ece4d2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-5"
-                      >
-                        {expense.items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeLineItem(index, itemIndex)}
-                            className="absolute right-2 top-2 text-rose-500"
-                            aria-label={`Remove item ${itemIndex + 1}`}
-                          >
-                            <FaTimes size={12} />
-                          </button>
-                        )}
-                        <DataDropdown
-                          label="Expense Category"
-                          options={categoryOptions}
-                          selectedOptions={categoryOptions.find(
-                            (option) => option.value === item.category,
-                          )}
-                          onChange={(option) =>
-                            handleLineItemChange(
-                              index,
-                              itemIndex,
-                              "category",
-                              option?.value || "",
-                            )
-                          }
-                          required
-                        />
-                        <DataInput
-                          label="Quantity"
-                          inputType="number"
-                          min="0.01"
-                          step="any"
-                          value={item.quantity ?? "1"}
-                          onChange={(event) =>
-                            handleLineItemChange(
-                              index,
-                              itemIndex,
-                              "quantity",
-                              event.target.value,
-                            )
-                          }
-                          required
-                        />
-                        <DataInput
-                          label="Amount per Unit (Rs.)"
-                          inputType="number"
-                          min="0.01"
-                          step="0.01"
-                          value={item.amount}
-                          onChange={(event) =>
-                            handleLineItemChange(
-                              index,
-                              itemIndex,
-                              "amount",
-                              event.target.value,
-                            )
-                          }
-                          required
-                        />
-                        <div className="lg:col-span-2">
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <DataInput
-                              label="Item Description"
-                              value={item.description}
-                              onChange={(event) =>
-                                handleLineItemChange(
-                                  index,
-                                  itemIndex,
-                                  "description",
-                                  event.target.value,
-                                )
-                              }
-                              placeholder="Optional item details..."
-                            />
-                            <DataInput
-                              label="Line Total (Rs.)"
-                              inputType="number"
-                              value={calculateLineTotal(item)}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end">
-                    <div className="w-full sm:w-64">
-                      <DataInput
-                        label="Total Amount (Rs.)"
-                        inputType="number"
-                        value={expenseTotal.toFixed(2)}
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                </section>
-              );
-            })}
-            
-            <div className="flex flex-col items-end gap-3 pt-2">
-              <div className="w-full sm:w-64">
-                <DataInput
-                  label="Overall Total Amount (Rs.)"
-                  inputType="number"
-                  value={allExpensesTotal.toFixed(2)}
-                  readOnly
-                />
-              </div>
-              <Buttons
-                type="submit"
-                label={
-                  isSubmittingRequest
-                    ? editingExpenseId
-                      ? "Saving..."
-                      : "Submitting..."
-                    : editingExpenseId
-                      ? "Save Changes"
-                      : "Send for Approval"
-                }
-                variant="primary"
-                disabled={isSubmittingRequest}
-              />
-            </div>
-          </form>
-        </div>
-
-        {/* Filters and List Section */}
-        <div className="rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6 space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="font-serif text-lg font-semibold text-lux-ink">
-              {isAdmin ? "Recent Expense Requests" : "Your Expense History"}
-            </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={downloadExcel}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4dbc6] bg-lux-cream px-4 py-2 text-xs font-bold uppercase tracking-widest text-lux-emerald shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
-                title="Download Excel"
-              >
-                <FaFileExcel /> Excel
-              </button>
-              <button
-                onClick={generatePDF}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-lg"
-                title="Generate PDF"
-              >
-                <FaFilePdf /> PDF
-              </button>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="grid grid-cols-1 gap-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5 md:grid-cols-4">
-            {isAdmin && (
-              <DataDropdown
-                label="Employee"
-                options={employeeOptions}
-                selectedOptions={employeeOptions.find(o => o.value === filters.employeeId)}
-                onChange={(opt) => setFilters({ ...filters, employeeId: opt?.value || "" })}
-              />
-            )}
-            <DataInput
-              label="From Date"
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-            />
-            <DataInput
-              label="To Date"
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-            />
-            <DataDropdown
-              label="Status"
-              options={statusOptions}
-              selectedOptions={statusOptions.find(o => o.value === filters.status)}
-              onChange={(opt) => setFilters({ ...filters, status: opt?.value || "" })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-sm font-semibold text-lux-ink">
-              {isAdmin && filters.employeeId
-                ? `Expense tracker: ${employees.find((employee) => employee._id === filters.employeeId)?.name || "Selected employee"}`
-                : isAdmin
-                  ? "Expense tracker: all employees"
-                  : "Your expense tracker"}
-            </span>
-            <span className="text-lg font-bold text-lux-emerald">
-              {total} vouchers · Rs. {Number(trackedAmount).toFixed(2)}
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#ece4d2]">
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Date</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Voucher No.</th>
-                  {isAdmin && <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Employee</th>}
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Seller / Company</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Received From</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Items</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Total Amount</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted">Description</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-center">Status</th>
-                  <th className="pb-4 font-serif text-xs font-bold uppercase tracking-widest text-lux-muted text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#ece4d2]">
-                {requests.length > 0 ? (
-                  requests.map((req) => (
-                    <tr key={req._id} className="hover:bg-lux-ivory/60 transition-colors">
-                      <td className="py-4 text-sm text-lux-muted">
-                        {new Date(req.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 text-sm font-bold text-lux-ink">
-                        {req.voucherNumber || "-"}
-                      </td>
-                      {isAdmin && (
-                        <td className="py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-lux-ink">{req.employee?.name}</span>
-                            <span className="text-[10px] text-lux-muted">
-                              {req.employee?.email}
-                            </span>
-                            <span className="text-[10px] text-lux-muted">
-                              Added by: {req.createdBy?.name || req.employee?.name || "N/A"}
-                            </span>
-                          </div>
-                        </td>
-                      )}
-                      <td className="py-4 text-sm text-lux-ink">
-                        <div className="font-medium">
-                          {req.sellerName || req.seller?.sellerName || "-"}
-                        </div>
-                        <div className="text-xs text-lux-muted">{req.sellerCompany || ""}</div>
-                      </td>
-                      <td className="py-4 text-sm text-lux-muted">{req.receivedFrom || "-"}</td>
-                      <td className="py-4 text-sm text-lux-ink">
-                        {(req.lineItems || []).length > 0
-                          ? req.lineItems.map((item, itemIndex) => (
-                              <div key={item._id || itemIndex}>
-                                {item.category?.name || "Expense"}: {Number(item.quantity ?? 1)} x Rs. {Number(item.amount || 0).toFixed(2)} = Rs. {calculateLineTotal(item)}
-                                {item.description ? ` - ${item.description}` : ""}
-                              </div>
-                            ))
-                          : req.category?.name
-                            ? `${req.category.name}: 1 x Rs. ${Number(req.amount || 0).toFixed(2)} = Rs. ${Number(req.amount || 0).toFixed(2)}`
-                            : "-"}
-                      </td>
-                      <td className="py-4 text-sm font-bold text-lux-emerald">
-                        Rs. {Number(req.amount) || 0}
-                      </td>
-                      <td className="py-4 text-sm text-lux-muted">{req.description || "-"}</td>
-                      <td className="py-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
-                            req.status === "approved"
-                              ? "border-emerald-200 bg-emerald-100 text-emerald-700"
-                              : req.status === "rejected"
-                              ? "border-rose-200 bg-rose-100 text-rose-700"
-                              : "border-amber-200 bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {req.status}
-                          </span>
-                          {req.status === "approved" && req.approvedBy?.name && (
-                            <span className="text-[10px] text-lux-muted">
-                              Approved by: {req.approvedBy.name}
-                            </span>
-                          )}
-                          {req.status === "rejected" && req.rejectedBy?.name && (
-                            <span className="text-[10px] text-lux-muted">
-                              Rejected by: {req.rejectedBy.name}
-                            </span>
-                          )}
-                          {req.status === "rejected" && req.rejectionReason && (
-                            <span className="max-w-40 text-[10px] text-rose-600">
-                              {req.rejectionReason}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          {(isAdmin || req.status === "pending") && (
-                            <button
-                              type="button"
-                              onClick={() => handleEditExpense(req)}
-                              className="rounded-xl bg-sky-50 p-2 text-sky-700 transition-colors hover:bg-sky-100"
-                              title="Edit expense"
-                            >
-                              <FaEdit size={14} />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadExpenseVoucher(req)}
-                            className="rounded-xl bg-sky-50 p-2 text-sky-700 transition-colors hover:bg-sky-100"
-                            title="Download expense voucher PDF"
-                          >
-                            <FaDownload size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleShareExpense(req)}
-                            className="rounded-xl bg-emerald-50 p-2 text-emerald-700 transition-colors hover:bg-emerald-100"
-                            title="Share voucher PDF on WhatsApp"
-                          >
-                            <FaWhatsapp size={15} />
-                          </button>
-                          {req.status === "pending" && (
-                            isAdmin && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleStatusUpdate(req._id, "approved")}
-                                  className="rounded-xl bg-emerald-50 p-2 text-emerald-600 transition-colors hover:bg-emerald-100"
-                                  title="Approve"
-                                >
-                                  <FaCheck size={14} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleStatusUpdate(req._id, "rejected")}
-                                  className="rounded-xl bg-rose-50 p-2 text-rose-600 transition-colors hover:bg-rose-100"
-                                  title="Reject"
-                                >
-                                  <FaTimes size={14} />
-                                </button>
-                              </>
-                            )
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={isAdmin ? 11 : 9} className="py-10 text-center italic text-lux-muted">
-                      No expense requests found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex justify-center pt-4">
-            <Paginations
-              currentPage={page}
-              totalItems={total}
-              itemsPerPage={limit}
-              onPageChange={setPage}
-            />
-          </div>
-        </div>
+        <ExpenseEntryForm
+          isAdmin={isAdmin}
+          user={user}
+          categories={categories}
+          sellers={sellers}
+          employees={employees}
+          financialYears={financialYears.map((year) => ({
+            value: String(year),
+            label: formatFinancialYear(year),
+          }))}
+          requests={requests}
+          expenseItems={expenseItems}
+          isSubmittingRequest={isSubmittingRequest}
+          editingExpenseId={editingExpenseId}
+          expenseFormRef={expenseFormRef}
+          onSubmit={handleRequestSubmit}
+          onCancelEdit={cancelEdit}
+          onAddExpense={addExpenseItem}
+          onRemoveExpense={removeExpenseItem}
+          onExpenseChange={handleExpenseChange}
+          onLineItemChange={handleLineItemChange}
+          onAddLineItem={addLineItem}
+          onRemoveLineItem={removeLineItem}
+        />
+        <ExpenseRequestsPanel
+          isAdmin={isAdmin}
+          employees={employees}
+          filters={filters}
+          setFilters={setFilters}
+          requests={requests}
+          total={total}
+          trackedAmount={trackedAmount}
+          page={page}
+          limit={limit}
+          setPage={setPage}
+          onExportExcel={exportExcel}
+          onExportPdf={exportPdf}
+          onEdit={handleEditExpense}
+          onDownloadVoucher={downloadExpenseVoucher}
+          onShareVoucher={shareExpenseVoucher}
+          onStatusUpdate={handleStatusUpdate}
+        />
       </div>
     </AdminPageShell>
   );
