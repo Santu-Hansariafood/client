@@ -7,11 +7,11 @@ import { calculateLineTotal } from "../utils/expenseCalculations";
 
 const ExpenseRequestsPanel = ({
   isAdmin,
-  employees,
-  financialYears,
+  employees = [],
+  financialYears = [],
   filters,
   setFilters,
-  requests,
+  requests = [],
   total,
   trackedAmount,
   page,

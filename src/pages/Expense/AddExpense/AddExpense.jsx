@@ -248,10 +248,6 @@ const AddExpense = () => {
           categories={categories}
           sellers={sellers}
           employees={employees}
-          financialYears={financialYears.map((year) => ({
-            value: String(year),
-            label: formatFinancialYear(year),
-          }))}
           requests={requests}
           expenseItems={expenseItems}
           isSubmittingRequest={isSubmittingRequest}
@@ -269,6 +265,10 @@ const AddExpense = () => {
         <ExpenseRequestsPanel
           isAdmin={isAdmin}
           employees={employees}
+          financialYears={financialYears.map((year) => ({
+            value: String(year),
+            label: formatFinancialYear(year),
+          }))}
           filters={filters}
           setFilters={setFilters}
           requests={requests}
