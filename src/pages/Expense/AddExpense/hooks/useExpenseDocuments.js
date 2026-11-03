@@ -7,62 +7,182 @@ import { downloadFile } from "../../../../utils/fileDownloader";
 import generateExcel from "../../../../common/GenerateExcel/GenerateExcel";
 import { calculateLineTotal } from "../utils/expenseCalculations";
 
-const createExpenseVoucherPdf = (request) => {
+const loadMonochromeLogo = async () => {
+  const image = new Image();
+  image.src = `${import.meta.env.BASE_URL}logo/logo.png`;
+  await image.decode();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Unable to prepare the company logo for the voucher");
+  }
+  context.filter = "grayscale(100%) contrast(140%)";
+  context.drawImage(image, 0, 0);
+  return canvas.toDataURL("image/png");
+};
+
+const createExpenseVoucherPdf = async (request) => {
   const employee = request.employee || {};
+  const logo = await loadMonochromeLogo();
   const doc = new jsPDF();
-  doc.setFontSize(18);
-  doc.text("Expense Voucher", 14, 18);
-  doc.setFontSize(10);
-  doc.text(`Voucher No.: ${request.voucherNumber || "N/A"}`, 14, 27);
-  doc.text(
-    `Date: ${new Date(request.createdAt).toLocaleDateString()}`,
-    14,
-    33,
-  );
-  doc.text(`Employee: ${employee.name || "N/A"}`, 14, 39);
-  doc.text(
-    `Added By: ${request.createdBy?.name || employee.name || "N/A"}`,
-    14,
-    45,
-  );
-  doc.text(
-    `Seller: ${request.sellerName || request.seller?.sellerName || "N/A"}`,
-    14,
-    51,
-  );
-  doc.text(`Company: ${request.sellerCompany || "N/A"}`, 14, 57);
-  doc.text(`Received From: ${request.receivedFrom || "N/A"}`, 14, 63);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 14;
+  const contentWidth = pageWidth - margin * 2;
+  const status = String(request.status || "pending").toUpperCase();
+  const lineItems = Array.isArray(request.lineItems) ? request.lineItems : [];
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(20);
+  doc.addImage(logo, "PNG", margin, 10, 48, 16);
+  doc.text("EXPENSE VOUCHER", pageWidth - margin, 17, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(90);
+  doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth - margin, 23, {
+    align: "right",
+  });
+  doc.setDrawColor(20);
+  doc.setLineWidth(0.6);
+  doc.line(margin, 31, pageWidth - margin, 31);
+
   autoTable(doc, {
-    head: [["Category", "Description", "Quantity", "Rate (Rs.)", "Total (Rs.)"]],
-    body:
-      request.lineItems?.length > 0
-        ? request.lineItems.map((item) => [
+    startY: 35,
+    theme: "grid",
+    head: [["VOUCHER NUMBER", "DATE", "STATUS"]],
+    body: [[
+      request.voucherNumber || "N/A",
+      request.createdAt
+        ? new Date(request.createdAt).toLocaleDateString()
+        : "N/A",
+      status,
+    ]],
+    margin: { left: margin, right: margin },
+    styles: {
+      font: "helvetica",
+      fontSize: 9,
+      textColor: [20, 20, 20],
+      lineColor: [80, 80, 80],
+      lineWidth: 0.2,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [235, 235, 235],
+      textColor: [35, 35, 35],
+      fontStyle: "bold",
+      fontSize: 7,
+    },
+    columnStyles: {
+      0: { cellWidth: contentWidth * 0.42 },
+      1: { cellWidth: contentWidth * 0.29 },
+      2: { cellWidth: contentWidth * 0.29 },
+    },
+  });
+
+  const seller =
+    request.sellerName || request.seller?.sellerName || "N/A";
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 5,
+    theme: "grid",
+    head: [["EMPLOYEE / CLAIMANT", "SELLER / VENDOR", "PAYMENT DETAILS"]],
+    body: [[
+      `Employee: ${employee.name || "N/A"}\nAdded by: ${request.createdBy?.name || employee.name || "N/A"}`,
+      `${seller}\nCompany: ${request.sellerCompany || "N/A"}`,
+      `Received from: ${request.receivedFrom || "N/A"}`,
+    ]],
+    margin: { left: margin, right: margin },
+    styles: {
+      font: "helvetica",
+      fontSize: 8,
+      textColor: [25, 25, 25],
+      lineColor: [80, 80, 80],
+      lineWidth: 0.2,
+      cellPadding: 3,
+      valign: "top",
+      overflow: "linebreak",
+    },
+    headStyles: {
+      fillColor: [235, 235, 235],
+      textColor: [35, 35, 35],
+      fontStyle: "bold",
+      fontSize: 7,
+    },
+    columnStyles: {
+      0: { cellWidth: contentWidth / 3 },
+      1: { cellWidth: contentWidth / 3 },
+      2: { cellWidth: contentWidth / 3 },
+    },
+  });
+
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 8,
+    head: [["PARTICULARS", "DESCRIPTION", "QTY", "RATE (Rs.)", "AMOUNT (Rs.)"]],
+    body: lineItems.length > 0
+      ? lineItems.map((item) => [
             item.category?.name || "Expense",
             item.description || "-",
             Number(item.quantity ?? 1),
             Number(item.amount || 0).toFixed(2),
             calculateLineTotal(item),
           ])
-        : [
-            [
-              request.category?.name || "Expense",
-              "-",
-              "1",
-              Number(request.amount || 0).toFixed(2),
-              Number(request.amount || 0).toFixed(2),
-            ],
-          ],
-    startY: 70,
+      : [[
+          request.category?.name || "Expense",
+          "-",
+          "1",
+          Number(request.amount || 0).toFixed(2),
+          Number(request.amount || 0).toFixed(2),
+        ]],
+    margin: { left: margin, right: margin, bottom: 20 },
+    theme: "grid",
+    styles: {
+      font: "helvetica",
+      fontSize: 8,
+      textColor: [25, 25, 25],
+      lineColor: [90, 90, 90],
+      lineWidth: 0.2,
+      cellPadding: 3,
+      overflow: "linebreak",
+    },
+    headStyles: {
+      fillColor: [30, 30, 30],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 7,
+    },
+    alternateRowStyles: { fillColor: [246, 246, 246] },
+    columnStyles: {
+      0: { cellWidth: 39 },
+      1: { cellWidth: 67 },
+      2: { cellWidth: 14, halign: "right" },
+      3: { cellWidth: 27, halign: "right" },
+      4: { cellWidth: 35, halign: "right" },
+    },
   });
-  const finalY = doc.lastAutoTable.finalY + 9;
-  doc.setFontSize(12);
+
+  let finalY = doc.lastAutoTable.finalY + 8;
+  if (finalY > pageHeight - 60) {
+    doc.addPage();
+    finalY = margin;
+  }
+  const total = Number(request.amount) || 0;
+  doc.setDrawColor(30);
+  doc.setLineWidth(0.4);
+  doc.rect(pageWidth - margin - 72, finalY, 72, 14);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(20);
+  doc.text("GRAND TOTAL", pageWidth - margin - 68, finalY + 9);
+  doc.setFontSize(11);
   doc.text(
-    `Total Amount: Rs. ${Number(request.amount || 0).toFixed(2)}`,
-    14,
-    finalY,
+    `Rs. ${total.toFixed(2)}`,
+    pageWidth - margin - 4,
+    finalY + 9,
+    { align: "right" },
   );
-  doc.setFontSize(10);
-  doc.text(`Status: ${request.status || "pending"}`, 14, finalY + 8);
 
   const decidedBy =
     request.status === "approved"
@@ -70,26 +190,65 @@ const createExpenseVoucherPdf = (request) => {
       : request.status === "rejected"
         ? request.rejectedBy?.name
         : "";
+  const notes = [];
   if (decidedBy) {
-    doc.text(
+    notes.push(
       `${request.status === "approved" ? "Approved" : "Rejected"} by: ${decidedBy}`,
-      14,
-      finalY + 16,
     );
   }
   if (request.rejectionReason) {
-    doc.text(`Rejection reason: ${request.rejectionReason}`, 14, finalY + 24, {
-      maxWidth: 180,
-    });
+    notes.push(`Rejection reason: ${request.rejectionReason}`);
   }
   if (request.description) {
-    doc.text(
-      `Description: ${request.description}`,
-      14,
-      finalY + (decidedBy || request.rejectionReason ? 32 : 16),
-      { maxWidth: 180 },
-    );
+    notes.push(`Notes: ${request.description}`);
   }
+  let contentEndY = finalY + 14;
+  if (notes.length) {
+    const noteLines = doc.splitTextToSize(notes.join("\n"), contentWidth);
+    let noteY = finalY + 23;
+    if (noteY + noteLines.length * 4 > pageHeight - 38) {
+      doc.addPage();
+      noteY = margin + 6;
+    }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(45);
+    doc.text(noteLines, margin, noteY);
+    contentEndY = noteY + noteLines.length * 4;
+  }
+
+  let signatureY = contentEndY + 16;
+  if (signatureY > pageHeight - 20) {
+    doc.addPage();
+    signatureY = pageHeight - 25;
+  }
+  doc.setDrawColor(100);
+  doc.setLineWidth(0.2);
+  doc.line(margin, signatureY, margin + 52, signatureY);
+  doc.line(pageWidth - margin - 52, signatureY, pageWidth - margin, signatureY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(80);
+  doc.text("Prepared by", margin + 26, signatureY + 4, { align: "center" });
+  doc.text("Authorized signatory", pageWidth - margin - 26, signatureY + 4, {
+    align: "center",
+  });
+
+  for (let page = 1; page <= doc.internal.getNumberOfPages(); page += 1) {
+    doc.setPage(page);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100);
+    doc.text(
+      "Hansaria Food Private Limited | Expense Voucher",
+      margin,
+      pageHeight - 8,
+    );
+    doc.text(`Page ${page}`, pageWidth - margin, pageHeight - 8, {
+      align: "right",
+    });
+  }
+
   return doc;
 };
 
@@ -98,7 +257,7 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
     const voucherNumber = request.voucherNumber || request._id;
     try {
       await downloadFile(
-        createExpenseVoucherPdf(request),
+        await createExpenseVoucherPdf(request),
         `Expense-Voucher-${voucherNumber}.pdf`,
       );
     } catch (error) {
@@ -118,7 +277,7 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
     const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
 
     try {
-      const doc = createExpenseVoucherPdf(request);
+      const doc = await createExpenseVoucherPdf(request);
       const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
       if (!whatsappNumber) {
         await downloadFile(doc, fileName);
