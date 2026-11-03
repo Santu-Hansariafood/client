@@ -24,9 +24,12 @@ const ExpenseRequestsPanel = ({
   onShareVoucher,
   onStatusUpdate,
 }) => {
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const safeFinancialYears = Array.isArray(financialYears) ? financialYears : [];
+  const safeRequests = Array.isArray(requests) ? requests : [];
   const employeeOptions = [
     { value: "", label: "All Employees" },
-    ...employees.map((employee) => ({
+    ...safeEmployees.map((employee) => ({
       value: employee._id,
       label: employee.name,
     })),
@@ -39,8 +42,8 @@ const ExpenseRequestsPanel = ({
   ];
   const financialYearOptions = [
     { value: "", label: "All financial years" },
-    ...(financialYears.length
-      ? financialYears
+    ...(safeFinancialYears.length
+      ? safeFinancialYears
       : [
         {
           value: String(new Date().getMonth() >= 3
@@ -52,7 +55,7 @@ const ExpenseRequestsPanel = ({
   ];
 
   const renderItems = (request) =>
-    (request.lineItems || []).length > 0
+    (Array.isArray(request.lineItems) ? request.lineItems : []).length > 0
       ? request.lineItems.map((item, index) => (
           <div key={item._id || index} className="break-words">
             <span className="font-medium">{item.category?.name || "Expense"}</span>
@@ -177,7 +180,7 @@ const ExpenseRequestsPanel = ({
     "Actions",
   ];
 
-  const rows = requests.map((request) => [
+  const rows = safeRequests.map((request) => [
     new Date(request.createdAt).toLocaleDateString(),
     request.voucherNumber || "-",
     ...(isAdmin
@@ -299,7 +302,7 @@ const ExpenseRequestsPanel = ({
       <div className="flex flex-col gap-1 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm font-semibold text-lux-ink">
           {isAdmin && filters.employeeId
-            ? `Expense tracker: ${employees.find((employee) => employee._id === filters.employeeId)?.name || "Selected employee"}`
+            ? `Expense tracker: ${safeEmployees.find((employee) => employee._id === filters.employeeId)?.name || "Selected employee"}`
             : isAdmin
               ? "Expense tracker: all employees"
               : "Your expense tracker"}

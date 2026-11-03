@@ -265,7 +265,7 @@ const AddExpense = () => {
         <ExpenseRequestsPanel
           isAdmin={isAdmin}
           employees={employees}
-          financialYears={financialYears.map((year) => ({
+          financialYears={(Array.isArray(financialYears) ? financialYears : []).map((year) => ({
             value: String(year),
             label: formatFinancialYear(year),
           }))}

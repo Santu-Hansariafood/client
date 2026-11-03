@@ -14,6 +14,9 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await api.get("/expense-categories");
+      if (!Array.isArray(response.data)) {
+        throw new Error("Expense categories response is not a list");
+      }
       setCategories(response.data);
     } catch {
       toast.error("Failed to fetch categories");
@@ -23,6 +26,9 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
   const fetchEmployees = useCallback(async () => {
     try {
       const response = await api.get("/expense-requests/employees");
+      if (!Array.isArray(response.data)) {
+        throw new Error("Employee response is not a list");
+      }
       setEmployees(response.data || []);
     } catch {
       toast.error("Failed to fetch employees");
@@ -32,11 +38,13 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
   const fetchSellers = useCallback(async () => {
     try {
       const response = await api.get("/sellers?status=active&limit=1000");
-      setSellers(
-        Array.isArray(response.data)
-          ? response.data
-          : response.data.data || [],
-      );
+      const sellerList = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data;
+      if (!Array.isArray(sellerList)) {
+        throw new Error("Sellers response is not a list");
+      }
+      setSellers(sellerList);
     } catch {
       toast.error("Failed to fetch sellers");
     }
@@ -50,6 +58,9 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
         ...filters,
       }).toString();
       const response = await api.get(`/expense-requests?${queryParams}`);
+      if (!Array.isArray(response.data.requests)) {
+        throw new Error("Expense requests response is not a list");
+      }
       setRequests(response.data.requests);
       setTotal(response.data.total);
       setTrackedAmount(response.data.totalAmount || 0);

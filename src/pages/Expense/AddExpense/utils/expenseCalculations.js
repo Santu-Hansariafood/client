@@ -1,5 +1,5 @@
 export const calculateTotalAmount = (items) =>
-  items.reduce(
+  (Array.isArray(items) ? items : []).reduce(
     (totalCents, item) =>
       totalCents +
       Math.round(

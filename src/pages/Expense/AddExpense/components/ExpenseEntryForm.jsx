@@ -10,11 +10,11 @@ import {
 const ExpenseEntryForm = ({
   isAdmin,
   user,
-  categories,
-  sellers,
-  employees,
-  requests,
-  expenseItems,
+  categories = [],
+  sellers = [],
+  employees = [],
+  requests = [],
+  expenseItems = [],
   isSubmittingRequest,
   editingExpenseId,
   expenseFormRef,
@@ -27,11 +27,16 @@ const ExpenseEntryForm = ({
   onAddLineItem,
   onRemoveLineItem,
 }) => {
-  const categoryOptions = categories.map((category) => ({
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeSellers = Array.isArray(sellers) ? sellers : [];
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const safeExpenseItems = Array.isArray(expenseItems) ? expenseItems : [];
+  const categoryOptions = safeCategories.map((category) => ({
     value: category._id,
     label: category.name,
   }));
-  const sellerOptions = sellers.map((seller) => ({
+  const sellerOptions = safeSellers.map((seller) => ({
     value: seller._id,
     label: seller.sellerName,
   }));
@@ -39,14 +44,16 @@ const ExpenseEntryForm = ({
     { value: "Seller", label: "Seller" },
     { value: "Office", label: "Office" },
   ];
-  const assignableEmployeeOptions = employees
+  const assignableEmployeeOptions = safeEmployees
     .filter((employee) => employee.status === "Active")
     .map((employee) => ({
       value: employee._id,
       label: `${employee.name}${employee.employeeId ? ` (${employee.employeeId})` : ""}`,
     }));
   const allExpensesTotal = calculateTotalAmount(
-    expenseItems.flatMap((expense) => expense.items),
+    safeExpenseItems.flatMap((expense) =>
+      Array.isArray(expense.items) ? expense.items : [],
+    ),
   );
 
   return (
@@ -82,21 +89,24 @@ const ExpenseEntryForm = ({
         onSubmit={onSubmit}
         className="space-y-6"
       >
-        {expenseItems.map((expense, index) => {
-          const selectedSeller = sellers.find(
+        {safeExpenseItems.map((expense, index) => {
+          const expenseLineItems = Array.isArray(expense.items)
+            ? expense.items
+            : [];
+          const selectedSeller = safeSellers.find(
             (seller) => seller._id === expense.seller,
           );
           const companyOptions = (selectedSeller?.companies || []).map(
             (company) => ({ value: company, label: company }),
           );
-          const expenseTotal = calculateTotalAmount(expense.items);
+          const expenseTotal = calculateTotalAmount(expenseLineItems);
 
           return (
             <section
               key={index}
               className="relative space-y-4 rounded-2xl border border-[#ece4d2] bg-lux-cream p-4 sm:p-5"
             >
-              {expenseItems.length > 1 && (
+              {safeExpenseItems.length > 1 && (
                 <button
                   type="button"
                   onClick={() => onRemoveExpense(index)}
@@ -186,7 +196,7 @@ const ExpenseEntryForm = ({
                   label="Voucher No."
                   value={
                     editingExpenseId
-                      ? requests.find(
+                      ? safeRequests.find(
                           (request) => request._id === editingExpenseId,
                         )?.voucherNumber || "Existing voucher"
                       : "Assigned automatically in serial order"
@@ -216,12 +226,12 @@ const ExpenseEntryForm = ({
                     <FaPlus size={10} /> Add Item
                   </button>
                 </div>
-                {expense.items.map((item, itemIndex) => (
+                {expenseLineItems.map((item, itemIndex) => (
                   <div
                     key={itemIndex}
                     className="relative grid grid-cols-1 items-end gap-3 rounded-xl border border-[#ece4d2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-5"
                   >
-                    {expense.items.length > 1 && (
+                    {expenseLineItems.length > 1 && (
                       <button
                         type="button"
                         onClick={() => onRemoveLineItem(index, itemIndex)}
