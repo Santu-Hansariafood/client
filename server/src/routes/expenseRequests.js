@@ -39,30 +39,38 @@ const prepareExpenseData = async (expense) => {
 
   const lineItems = expense.items.map((item) => {
     const rawAmount = Number(item.amount);
+    const quantity = item.quantity === undefined ? 1 : Number(item.quantity);
     const amountCents = Math.round(rawAmount * 100);
+    const lineTotalCents = Math.round(quantity * amountCents);
     if (
       !item.category ||
       !Number.isFinite(rawAmount) ||
       !Number.isSafeInteger(amountCents) ||
-      amountCents <= 0
+      amountCents <= 0 ||
+      !Number.isFinite(quantity) ||
+      quantity < 0.01 ||
+      !Number.isSafeInteger(lineTotalCents)
     ) {
       throw new Error(
-        "Each expense item must have a category and an amount greater than zero",
+        "Each expense item must have a category, quantity, and amount greater than zero",
       );
     }
     return {
       category: item.category,
       description: item.description || "",
+      quantity,
       amount: amountCents / 100,
+      lineTotalCents,
     };
   });
   const totalCents = lineItems.reduce(
-    (total, item) => total + Math.round(item.amount * 100),
+    (total, item) => total + item.lineTotalCents,
     0,
   );
   if (!Number.isSafeInteger(totalCents)) {
     throw new Error("Expense total is too large");
   }
+  const preparedLineItems = lineItems.map(({ lineTotalCents, ...item }) => item);
 
   return {
     seller: seller._id,
@@ -70,8 +78,8 @@ const prepareExpenseData = async (expense) => {
     sellerCompany: selectedCompany,
     receivedFrom: expense.receivedFrom,
     description: expense.description || "",
-    lineItems,
-    category: lineItems[0].category,
+    lineItems: preparedLineItems,
+    category: preparedLineItems[0].category,
     amount: totalCents / 100,
   };
 };
@@ -131,6 +139,8 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       .populate("lineItems.category", "name")
       .populate("employee", "name email mobile phone")
       .populate("createdBy", "name email")
+      .populate("approvedBy", "name")
+      .populate("rejectedBy", "name")
       .populate("seller", "sellerName")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -307,8 +317,13 @@ router.put("/:id/status", authJwt, adminOnly, async (req, res) => {
 
     if (request) {
       request.status = status;
-      request.approvedBy = req.user.sub;
-      if (status === "rejected") {
+      if (status === "approved") {
+        request.approvedBy = req.user.sub;
+        request.rejectedBy = undefined;
+        request.rejectionReason = undefined;
+      } else {
+        request.rejectedBy = req.user.sub;
+        request.approvedBy = undefined;
         request.rejectionReason = rejectionReason;
       }
       const updatedRequest = await request.save();

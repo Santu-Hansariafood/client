@@ -3,7 +3,7 @@ import api from "../../../utils/apiClient/apiClient";
 
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaWhatsapp, FaEdit } from "react-icons/fa";
+import { FaMoneyBillWave, FaPlus, FaTrash, FaPaperPlane, FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaWhatsapp, FaEdit, FaDownload } from "react-icons/fa";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
@@ -21,15 +21,26 @@ const createEmptyExpense = () => ({
   description: "",
   employeeId: "",
   createdByName: "",
-  items: [{ category: "", description: "", amount: "" }],
+  items: [{ category: "", description: "", quantity: "1", amount: "" }],
 });
 
 const calculateTotalAmount = (items) =>
   items.reduce(
     (totalCents, item) =>
-      totalCents + Math.round((Number(item.amount) || 0) * 100),
+      totalCents +
+      Math.round(
+        (Number(item.quantity ?? 1) || 0) *
+          Math.round((Number(item.amount) || 0) * 100),
+      ),
     0,
   ) / 100;
+
+const calculateLineTotal = (item) =>
+  (Math.round(
+    (Number(item.quantity ?? 1) || 0) *
+      Math.round((Number(item.amount) || 0) * 100),
+  ) /
+    100).toFixed(2);
 
 const AddExpense = () => {
   const { userRole, user } = useAuth();
@@ -184,7 +195,7 @@ const AddExpense = () => {
               ...expense,
               items: [
                 ...expense.items,
-                { category: "", description: "", amount: "" },
+                { category: "", description: "", quantity: "1", amount: "" },
               ],
             }
           : expense,
@@ -217,6 +228,8 @@ const AddExpense = () => {
         expense.items.every(
           (item) =>
             item.category &&
+            Number.isFinite(Number(item.quantity ?? 1)) &&
+            Number(item.quantity ?? 1) > 0 &&
             Number.isFinite(Number(item.amount)) &&
             Number(item.amount) > 0,
         ),
@@ -272,6 +285,7 @@ const AddExpense = () => {
                 ? item.category?._id
                 : item.category || "",
             description: item.description || "",
+            quantity: String(item.quantity ?? 1),
             amount: String(item.amount ?? ""),
           }))
         : [
@@ -281,6 +295,7 @@ const AddExpense = () => {
                   ? request.category?._id
                   : request.category || "",
               description: "",
+              quantity: "1",
               amount: String(request.amount ?? ""),
             },
           ];
@@ -312,16 +327,8 @@ const AddExpense = () => {
     setExpenseItems([createEmptyExpense()]);
   };
 
-  const handleShareExpense = async (request) => {
+  const createExpenseVoucherPdf = (request) => {
     const employee = request.employee || {};
-    const phone = String(employee.mobile || employee.phone || "").replace(
-      /\D/g,
-      "",
-    );
-    const whatsappNumber =
-      phone.length === 10 ? `91${phone}` : phone.length === 12 ? phone : "";
-    const voucherNumber = request.voucherNumber || request._id;
-    const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Expense Voucher", 14, 18);
@@ -342,15 +349,17 @@ const AddExpense = () => {
     doc.text(`Company: ${request.sellerCompany || "N/A"}`, 14, 57);
     doc.text(`Received From: ${request.receivedFrom || "N/A"}`, 14, 63);
     doc.autoTable({
-      head: [["Category", "Description", "Amount (Rs.)"]],
+      head: [["Category", "Description", "Quantity", "Rate (Rs.)", "Total (Rs.)"]],
       body:
         request.lineItems?.length > 0
           ? request.lineItems.map((item) => [
               item.category?.name || "Expense",
               item.description || "-",
+              Number(item.quantity ?? 1),
               Number(item.amount || 0).toFixed(2),
+              calculateLineTotal(item),
             ])
-          : [[request.category?.name || "Expense", "-", Number(request.amount || 0).toFixed(2)]],
+          : [[request.category?.name || "Expense", "-", "1", Number(request.amount || 0).toFixed(2), Number(request.amount || 0).toFixed(2)]],
       startY: 70,
     });
     const finalY = doc.lastAutoTable.finalY + 9;
@@ -358,52 +367,74 @@ const AddExpense = () => {
     doc.text(`Total Amount: Rs. ${Number(request.amount || 0).toFixed(2)}`, 14, finalY);
     doc.setFontSize(10);
     doc.text(`Status: ${request.status || "pending"}`, 14, finalY + 8);
-    if (request.description) {
-      doc.text(`Description: ${request.description}`, 14, finalY + 16, {
+    const decidedBy =
+      request.status === "approved"
+        ? request.approvedBy?.name
+        : request.status === "rejected"
+          ? request.rejectedBy?.name
+          : "";
+    if (decidedBy) {
+      doc.text(
+        `${request.status === "approved" ? "Approved" : "Rejected"} by: ${decidedBy}`,
+        14,
+        finalY + 16,
+      );
+    }
+    if (request.rejectionReason) {
+      doc.text(`Rejection reason: ${request.rejectionReason}`, 14, finalY + 24, {
         maxWidth: 180,
       });
     }
-
-    let shareWindow;
-    if (whatsappNumber) {
-      shareWindow = window.open("about:blank", "_blank");
-    }
-
-    try {
-      const file = new File([doc.output("blob")], fileName, {
-        type: "application/pdf",
+    if (request.description) {
+      doc.text(`Description: ${request.description}`, 14, finalY + (decidedBy || request.rejectionReason ? 32 : 16), {
+        maxWidth: 180,
       });
-      const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
-      if (
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function" &&
-        navigator.canShare({ files: [file] })
-      ) {
-        shareWindow?.close();
-        await navigator.share({
-          files: [file],
-          title: fileName,
-          text: `${shareText} Share with ${employee.name || "the employee"} (${employee.mobile || employee.phone || "number unavailable"}).`,
-        });
-        toast.success("Expense voucher shared");
-        return;
-      }
+    }
+    return doc;
+  };
 
-      await downloadFile(doc, fileName);
+  const handleDownloadExpenseVoucher = async (request) => {
+    const voucherNumber = request.voucherNumber || request._id;
+    try {
+      const doc = createExpenseVoucherPdf(request);
+      await downloadFile(doc, `Expense-Voucher-${voucherNumber}.pdf`);
+    } catch (error) {
+      toast.error(error.message || "Failed to download the expense voucher");
+    }
+  };
+
+  const handleShareExpense = async (request) => {
+    const employee = request.employee || {};
+    const phone = String(employee.mobile || employee.phone || "").replace(
+      /\D/g,
+      "",
+    );
+    const whatsappNumber =
+      phone.length === 10 ? `91${phone}` : phone.length === 12 ? phone : "";
+    const voucherNumber = request.voucherNumber || request._id;
+    const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
+    try {
+      const doc = createExpenseVoucherPdf(request);
+      const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
       if (!whatsappNumber) {
-        shareWindow?.close();
+        await downloadFile(doc, fileName);
         toast.error("Employee WhatsApp number is unavailable; the voucher PDF was downloaded.");
         return;
       }
 
       const message = `${shareText} The voucher PDF has been downloaded; please attach it to this chat.`;
-      shareWindow.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      toast.info("Voucher downloaded. Attach the PDF in the opened WhatsApp chat.");
+      const shareWindow = window.open(
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+        "_blank",
+      );
+      await downloadFile(doc, fileName);
+      toast.info(
+        shareWindow
+          ? `Voucher downloaded. Attach the PDF in the WhatsApp chat for ${employee.name || "this employee"}.`
+          : "Voucher downloaded, but the WhatsApp chat could not open. Check popup settings and try again.",
+      );
     } catch (error) {
-      shareWindow?.close();
-      if (error.name !== "AbortError") {
-        toast.error(error.message || "Failed to share the expense voucher");
-      }
+      toast.error(error.message || "Failed to prepare the expense voucher for WhatsApp");
     }
   };
 
@@ -434,7 +465,9 @@ const AddExpense = () => {
         Company: req.sellerCompany || "—",
         "Received From": req.receivedFrom || "—",
         Items: (req.lineItems || [])
-          .map((item) => `${item.category?.name || "N/A"}: ${item.amount}`)
+          .map((item) =>
+            `${item.category?.name || "N/A"}: ${Number(item.quantity ?? 1)} x ${Number(item.amount || 0).toFixed(2)} = ${calculateLineTotal(item)}`,
+          )
           .join("; ") || req.category?.name || "N/A",
         Amount: req.amount,
         Description: req.description || "",
@@ -484,7 +517,9 @@ const AddExpense = () => {
           .join(" / ") || "-",
         req.receivedFrom || "-",
         (req.lineItems || [])
-          .map((item) => `${item.category?.name || "N/A"} (${item.amount})`)
+          .map((item) =>
+            `${item.category?.name || "N/A"} (${Number(item.quantity ?? 1)} x ${Number(item.amount || 0).toFixed(2)} = ${calculateLineTotal(item)})`,
+          )
           .join(", ") || req.category?.name || "N/A",
         `Rs. ${Number(req.amount) || 0}`,
         req.description || "-",
@@ -759,7 +794,7 @@ const AddExpense = () => {
                     {expense.items.map((item, itemIndex) => (
                       <div
                         key={itemIndex}
-                        className="relative grid grid-cols-1 items-end gap-3 rounded-xl border border-[#ece4d2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-4"
+                        className="relative grid grid-cols-1 items-end gap-3 rounded-xl border border-[#ece4d2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-5"
                       >
                         {expense.items.length > 1 && (
                           <button
@@ -788,7 +823,23 @@ const AddExpense = () => {
                           required
                         />
                         <DataInput
-                          label="Amount (Rs.)"
+                          label="Quantity"
+                          inputType="number"
+                          min="0.01"
+                          step="any"
+                          value={item.quantity ?? "1"}
+                          onChange={(event) =>
+                            handleLineItemChange(
+                              index,
+                              itemIndex,
+                              "quantity",
+                              event.target.value,
+                            )
+                          }
+                          required
+                        />
+                        <DataInput
+                          label="Amount per Unit (Rs.)"
                           inputType="number"
                           min="0.01"
                           step="0.01"
@@ -804,19 +855,27 @@ const AddExpense = () => {
                           required
                         />
                         <div className="lg:col-span-2">
-                          <DataInput
-                            label="Item Description"
-                            value={item.description}
-                            onChange={(event) =>
-                              handleLineItemChange(
-                                index,
-                                itemIndex,
-                                "description",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="Optional item details..."
-                          />
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <DataInput
+                              label="Item Description"
+                              value={item.description}
+                              onChange={(event) =>
+                                handleLineItemChange(
+                                  index,
+                                  itemIndex,
+                                  "description",
+                                  event.target.value,
+                                )
+                              }
+                              placeholder="Optional item details..."
+                            />
+                            <DataInput
+                              label="Line Total (Rs.)"
+                              inputType="number"
+                              value={calculateLineTotal(item)}
+                              readOnly
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -979,18 +1038,21 @@ const AddExpense = () => {
                         {(req.lineItems || []).length > 0
                           ? req.lineItems.map((item, itemIndex) => (
                               <div key={item._id || itemIndex}>
-                                {item.category?.name || "Expense"}: Rs. {item.amount}
+                                {item.category?.name || "Expense"}: {Number(item.quantity ?? 1)} x Rs. {Number(item.amount || 0).toFixed(2)} = Rs. {calculateLineTotal(item)}
                                 {item.description ? ` - ${item.description}` : ""}
                               </div>
                             ))
-                          : req.category?.name || "-"}
+                          : req.category?.name
+                            ? `${req.category.name}: 1 x Rs. ${Number(req.amount || 0).toFixed(2)} = Rs. ${Number(req.amount || 0).toFixed(2)}`
+                            : "-"}
                       </td>
                       <td className="py-4 text-sm font-bold text-lux-emerald">
                         Rs. {Number(req.amount) || 0}
                       </td>
                       <td className="py-4 text-sm text-lux-muted">{req.description || "-"}</td>
                       <td className="py-4 text-center">
-                        <span
+                        <div className="flex flex-col items-center gap-1">
+                          <span
                           className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                             req.status === "approved"
                               ? "border-emerald-200 bg-emerald-100 text-emerald-700"
@@ -1000,7 +1062,23 @@ const AddExpense = () => {
                           }`}
                         >
                           {req.status}
-                        </span>
+                          </span>
+                          {req.status === "approved" && req.approvedBy?.name && (
+                            <span className="text-[10px] text-lux-muted">
+                              Approved by: {req.approvedBy.name}
+                            </span>
+                          )}
+                          {req.status === "rejected" && req.rejectedBy?.name && (
+                            <span className="text-[10px] text-lux-muted">
+                              Rejected by: {req.rejectedBy.name}
+                            </span>
+                          )}
+                          {req.status === "rejected" && req.rejectionReason && (
+                            <span className="max-w-40 text-[10px] text-rose-600">
+                              {req.rejectionReason}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 text-right">
                         <div className="flex justify-end gap-2">
@@ -1014,6 +1092,14 @@ const AddExpense = () => {
                               <FaEdit size={14} />
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadExpenseVoucher(req)}
+                            className="rounded-xl bg-sky-50 p-2 text-sky-700 transition-colors hover:bg-sky-100"
+                            title="Download expense voucher PDF"
+                          >
+                            <FaDownload size={14} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleShareExpense(req)}
