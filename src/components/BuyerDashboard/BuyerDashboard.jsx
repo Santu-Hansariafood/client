@@ -143,7 +143,9 @@ const StatCard = memo(
         className={`w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${colorClass} shadow-inner ring-2 md:ring-4 ring-lux-cream shrink-0`}
       >
         <span
-          className={`text-xl md:text-2xl ${colorClass.replace("bg-", "text-")}`}
+          className={`text-xl md:text-2xl ${
+            colorClass === "bg-lux-gold" ? "text-lux-night" : "text-lux-gold-soft"
+          }`}
         >
           {typeof icon === "function" ? icon({}) : icon}
         </span>
