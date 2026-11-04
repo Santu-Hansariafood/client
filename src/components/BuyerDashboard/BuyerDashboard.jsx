@@ -14,19 +14,15 @@ import {
   FaGavel,
   FaBoxOpen,
   FaChartLine,
-  FaWallet,
-  FaWeightHanging,
-  FaClock,
-  FaPlus,
   FaHistory,
   FaChartBar,
   FaDownload,
   FaExclamationTriangle,
   FaSync,
-  FaCheckCircle,
   FaArrowLeft,
   FaSyncAlt,
 } from "react-icons/fa";
+import DiyaIcon, { DiyaGarland } from "../../common/DiyaIcon/DiyaIcon";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import api, { clearApiCache } from "../../utils/apiClient/apiClient";
@@ -55,6 +51,7 @@ const HeaderSection = memo(
     return (
       <div className="relative lux-card rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-lux-gold/10 skew-x-12 translate-x-1/4" />
+        <div className="diwali-aura" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-4 md:gap-8">
@@ -71,6 +68,10 @@ const HeaderSection = memo(
                 <p className="text-[8px] md:text-[10px] font-black text-lux-gold font-display uppercase tracking-[0.2em] md:tracking-[0.3em]">
                   Hansaria Buyer Portal
                 </p>
+                <span className="diwali-chip hidden sm:inline-flex text-[7px] md:text-[9px]">
+                  <DiyaIcon className="h-3 w-3 md:h-3.5 md:w-3.5" glow={false} />
+                  Happy Diwali
+                </span>
               </div>
               <h1 className="text-xl sm:text-2xl md:text-4xl font-black font-serif text-lux-ink tracking-tighter">
                 {greeting},{" "}
@@ -135,7 +136,7 @@ const StatCard = memo(
       tabIndex={onClick ? 0 : undefined}
       className={`lux-card p-4 md:p-6 rounded-2xl md:rounded-[2rem] shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${
         onClick
-          ? "cursor-pointer hover:shadow-xl hover:shadow-lux-emerald/15 hover:border-[#dccfa8] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
+          ? "cursor-pointer hover:shadow-xl hover:shadow-[0_20px_45px_-20px_rgba(251,191,36,0.6)] hover:border-lux-gold/40 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
           : ""
       }`}
     >
@@ -678,35 +679,35 @@ const BuyerDashboard = () => {
     () => [
       {
         label: "Market Bids",
-        icon: <FaGavel />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         link: "/manage-bids/bid-list",
         count: "Live",
       },
       {
         label: "New Bid",
-        icon: <FaPlus />,
+        icon: <DiyaIcon />,
         color: "bg-lux-deep",
         link: "/manage-bids/buyer",
         count: "Post",
       },
       {
         label: "Accept Bids",
-        icon: <FaCheckCircle />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         link: "/manage-bids/bid-list/participate-bid-admin",
         count: stats.pendingBidAcceptances || 0, // now dynamic
       },
       {
         label: "Order History",
-        icon: <FaBoxOpen />,
+        icon: <DiyaIcon />,
         color: "bg-lux-gold",
         link: "/manage-order/list-self-order",
         count: stats.totalSaudas,
       },
       {
         label: "Transactions",
-        icon: <FaHistory />,
+        icon: <DiyaIcon />,
         color: "bg-lux-deep",
         link: "/buyer/bid-history",
         count: "View",
@@ -756,6 +757,8 @@ const BuyerDashboard = () => {
             isPrinting={isPrinting}
           />
 
+          <DiyaGarland />
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {navigationItems.map((item, idx) => (
               <StatCard
@@ -775,7 +778,7 @@ const BuyerDashboard = () => {
               title="Procured Volume"
               value={stats.totalUnloadingWeight.toFixed(2)}
               unit="Tons"
-              icon={FaWeightHanging}
+              icon={<DiyaIcon />}
               colorClass="bg-lux-deep"
               subtitle="Material Total"
             />
@@ -784,21 +787,21 @@ const BuyerDashboard = () => {
               value={`Rs. ${Math.floor(stats.totalBrokerage).toLocaleString(
                 "en-IN",
               )}`}
-              icon={FaWallet}
+              icon={<DiyaIcon />}
               colorClass="bg-lux-gold"
               subtitle="Brokerage Dues"
             />
             <StatCard
               title="Active Saudas"
               value={stats.pendingSaudas}
-              icon={FaClock}
+              icon={<DiyaIcon />}
               colorClass="bg-lux-emerald"
               subtitle="Awaiting Delivery"
             />
             <StatCard
               title="Material Reach"
               value={stats.commodityBreakdown.length}
-              icon={FaChartLine}
+              icon={<DiyaIcon />}
               colorClass="bg-lux-emerald"
               subtitle="Diverse Portfolio"
             />
@@ -896,8 +899,9 @@ const BuyerDashboard = () => {
           </div>
 
           {/* Footer CTA */}
-          <div className="bg-gradient-to-br from-lux-night via-lux-deep to-lux-night p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] ring-1 ring-lux-gold/20 shadow-2xl shadow-lux-emerald/20 flex flex-wrap items-center justify-between gap-4 sm:gap-6 md:gap-12">
-            <div className="flex items-center gap-4 sm:gap-6 md:gap-12">
+          <div className="relative overflow-hidden bg-gradient-to-br from-lux-night via-lux-deep to-lux-night p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] ring-1 ring-lux-gold/20 shadow-2xl shadow-lux-emerald/20 flex flex-wrap items-center justify-between gap-4 sm:gap-6 md:gap-12">
+            <div className="diwali-aura z-0" />
+            <div className="relative z-10 flex items-center gap-4 sm:gap-6 md:gap-12">
               <div className="flex flex-col">
                 <p className="text-lux-gold text-[7px] sm:text-[8px] md:text-[10px] font-black font-display uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 sm:mb-1 md:mb-2">
                   Account Status
@@ -913,7 +917,7 @@ const BuyerDashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
+            <div className="relative z-10 flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
               <button
                 onClick={() => navigate("/buyer/market-analytics")}
                 className="flex-1 sm:flex-none px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 bg-lux-gold/10 hover:bg-lux-gold/20 border border-lux-gold/30 text-lux-gold-soft rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[7px] sm:text-[8px] md:text-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3"

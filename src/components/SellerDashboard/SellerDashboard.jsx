@@ -16,17 +16,13 @@ import {
   FaBoxOpen,
   FaChevronRight,
   FaChartBar,
-  FaWeightHanging,
-  FaWallet,
   FaHistory,
   FaDownload,
   FaBell,
-  FaBook,
-  FaTruckLoading,
   FaArrowLeft,
   FaSyncAlt,
-  FaCreditCard,
 } from "react-icons/fa";
+import DiyaIcon, { DiyaGarland } from "../../common/DiyaIcon/DiyaIcon";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
@@ -54,6 +50,7 @@ const HeaderSection = memo(
     return (
       <div className="relative lux-card rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden group">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-lux-gold/10 skew-x-12 translate-x-1/4" />
+        <div className="diwali-aura" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-3 sm:gap-4 md:gap-8">
@@ -70,6 +67,10 @@ const HeaderSection = memo(
                 <p className="text-[7px] md:text-[10px] font-display font-black text-lux-gold uppercase tracking-[0.1em] md:tracking-[0.3em] truncate">
                   Hansaria Seller Portal
                 </p>
+                <span className="diwali-chip hidden sm:inline-flex text-[7px] md:text-[9px]">
+                  <DiyaIcon className="h-3 w-3 md:h-3.5 md:w-3.5" glow={false} />
+                  Happy Diwali
+                </span>
               </div>
               <h1 className="text-lg sm:text-2xl md:text-4xl font-serif font-black text-lux-ink tracking-tighter leading-tight">
                 {greeting},{" "}
@@ -140,7 +141,7 @@ const StatCard = memo(
         aria-label={`${title}: ${value} ${unit || ""}`}
         className={`lux-card p-3 sm:p-4 md:p-6 rounded-2xl md:rounded-[2rem] shadow-sm flex items-center gap-3 md:gap-6 transition-all duration-500 ${
           onClick
-            ? "cursor-pointer hover:shadow-xl hover:shadow-lux-emerald/15 hover:border-[#dccfa8] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
+            ? "cursor-pointer hover:shadow-xl hover:shadow-[0_20px_45px_-20px_rgba(251,191,36,0.6)] hover:border-lux-gold/40 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lux-gold/50"
             : ""
         }`}
       >
@@ -703,7 +704,7 @@ const SellerDashboard = () => {
     () => [
       {
         label: "Today's Bids",
-        icon: <FaGavel />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         link: "/Supplier-Bid-List",
         state: { mobile },
@@ -711,7 +712,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Add Loading",
-        icon: <FaTruckLoading />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         link: "/Loading-Entry/add-loading-entry",
         state: { mobile },
@@ -719,7 +720,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Order History",
-        icon: <FaBoxOpen />,
+        icon: <DiyaIcon />,
         color: "bg-lux-deep",
         link: "/manage-order/list-self-order",
         state: { mobile },
@@ -727,7 +728,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Pending Sauda",
-        icon: <FaBook />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         link: "/Loading-Entry/pending-loading-list",
         state: { mobile },
@@ -735,7 +736,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Loading List",
-        icon: <FaHistory />,
+        icon: <DiyaIcon />,
         color: "bg-lux-deep",
         link: "/Loading-Entry/list-loading-entry",
         state: { mobile },
@@ -743,7 +744,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Alerts",
-        icon: <FaBell />,
+        icon: <DiyaIcon />,
         color: "bg-lux-gold",
         isNotif: true,
         count: "Notifications",
@@ -751,7 +752,7 @@ const SellerDashboard = () => {
       },
       {
         label: "Payment Release",
-        icon: <FaCreditCard />,
+        icon: <DiyaIcon />,
         color: "bg-lux-emerald",
         count: "Under Development",
         subtitle: "Will live soon",
@@ -842,6 +843,8 @@ const SellerDashboard = () => {
             />
           </header>
 
+          <DiyaGarland />
+
           <section aria-label="Quick Navigation">
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
               {navigationItems.map((item, idx) => (
@@ -867,7 +870,7 @@ const SellerDashboard = () => {
                 title="Consolidated Volume"
                 value={totalQuantity.toFixed(2)}
                 unit="Tons"
-                icon={FaWeightHanging}
+                icon={<DiyaIcon />}
                 colorClass="bg-lux-deep"
                 subtitle="Material Total"
               />
@@ -876,14 +879,14 @@ const SellerDashboard = () => {
                 value={`Rs. ${Math.floor(totalBrokerage).toLocaleString(
                   "en-IN",
                 )}`}
-                icon={FaWallet}
+                icon={<DiyaIcon />}
                 colorClass="bg-lux-emerald"
                 subtitle="Settled Brokerage"
               />
               <StatCard
                 title="Market Participation"
                 value={participateBidCount}
-                icon={FaGavel}
+                icon={<DiyaIcon />}
                 colorClass="bg-lux-emerald"
                 subtitle="Live Opportunities"
               />
@@ -893,7 +896,7 @@ const SellerDashboard = () => {
                   (s, c) => s + (c.trips || 0),
                   0,
                 )}
-                icon={FaHistory}
+                icon={<DiyaIcon />}
                 colorClass="bg-lux-emerald"
                 subtitle="Aggregate Trips"
               />
@@ -1015,8 +1018,9 @@ const SellerDashboard = () => {
             </section>
           </div>
 
-          <footer className="bg-gradient-to-br from-lux-night via-lux-deep to-lux-night ring-1 ring-lux-gold/20 p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-lux-emerald/20 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 md:gap-12">
-            <div className="flex items-center gap-4 sm:gap-6 md:gap-12 w-full sm:w-auto justify-center sm:justify-start">
+          <footer className="relative overflow-hidden bg-gradient-to-br from-lux-night via-lux-deep to-lux-night ring-1 ring-lux-gold/20 p-4 sm:p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-lux-emerald/20 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 md:gap-12">
+            <div className="diwali-aura z-0" />
+            <div className="relative z-10 flex items-center gap-4 sm:gap-6 md:gap-12 w-full sm:w-auto justify-center sm:justify-start">
               <div className="flex flex-col">
                 <p className="text-lux-gold text-[7px] sm:text-[8px] md:text-[10px] font-display font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 sm:mb-1 md:mb-2">
                   Account Status
@@ -1032,7 +1036,7 @@ const SellerDashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
+            <div className="relative z-10 flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
               <button
                 onClick={() =>
                   navigate("/Supplier-Bid-List", { state: { mobile } })
