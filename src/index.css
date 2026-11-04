@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light-theme surface + text tokens (consumed by the `lux` palette in
+       tailwind.config.js). Flipped inside the prefers-color-scheme block
+       at the bottom of this file so the whole app follows the OS theme. */
+    --lux-ivory: 247 244 236;
+    --lux-cream: 255 254 251;
+    --lux-ink: 18 38 31;
+    --lux-muted: 95 111 104;
+    color-scheme: light;
+  }
+
   body {
     @apply font-sans antialiased text-slate-900 bg-slate-50;
     -webkit-tap-highlight-color: transparent;
@@ -515,4 +526,274 @@
 
 .react-select__multi-value {
   animation: popIn 260ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* =================================================================
+   AUTOMATIC DARK MODE
+   Driven purely by the device / browser colour scheme through
+   `prefers-color-scheme`. There is no manual toggle anywhere.
+   ================================================================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lux-ivory: 10 22 19; /* #0a1613 */
+    --lux-cream: 17 34 28; /* #11221c */
+    --lux-ink: 231 240 235; /* #e7f0eb */
+    --lux-muted: 148 166 158; /* #94a69e */
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #060f0d;
+    color: #e7f0eb;
+  }
+
+  /* ---------------------------------------------------------------
+     Luxury canvas, cards and admin chart surfaces
+     --------------------------------------------------------------- */
+  .lux-canvas {
+    background-color: #081310;
+    background-image:
+      radial-gradient(1100px 560px at 100% -10%, rgba(6, 95, 70, 0.32), transparent 62%),
+      radial-gradient(900px 520px at -10% 110%, rgba(201, 162, 39, 0.1), transparent 60%),
+      linear-gradient(180deg, #0b1815 0%, #081310 55%, #060f0d 100%);
+  }
+
+  .lux-card {
+    border-color: #22392f;
+    background-color: #11221c;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.5),
+      0 22px 48px -30px rgba(0, 0, 0, 0.8);
+  }
+
+  .lux-card-hover:hover {
+    border-color: rgba(201, 162, 39, 0.45);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.5),
+      0 32px 64px -34px rgba(0, 0, 0, 0.85);
+  }
+
+  .admin-chart-card {
+    border-color: #22392f;
+    background-image: linear-gradient(145deg, #12241e 0%, #0f1f1a 58%, #0b1a16 100%);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.5),
+      0 22px 44px -30px rgba(0, 0, 0, 0.8),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .admin-chart-card:hover {
+    border-color: rgba(201, 162, 39, 0.45);
+  }
+
+  .admin-chart-card__title {
+    color: #e7f0eb;
+  }
+
+  .admin-chart-card__glow {
+    background: radial-gradient(circle, rgb(201 162 39 / 0.18), transparent 68%);
+  }
+
+  .dashboard-chart-stage::before {
+    background-image:
+      radial-gradient(ellipse at 50% 100%, rgb(201 162 39 / 0.16), transparent 68%),
+      linear-gradient(rgb(201 162 39 / 0.08) 1px, transparent 1px);
+  }
+
+  .lux-sheen::after {
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.08) 48%, transparent 64%);
+  }
+
+  /* ---------------------------------------------------------------
+     Neutral surfaces (app shell, tables, generic cards)
+     --------------------------------------------------------------- */
+  .bg-white { background-color: #11221c !important; }
+  .hover\:bg-white:hover { background-color: #1a2f27 !important; }
+  .bg-gray-100, .bg-gray-50 { background-color: #081310 !important; }
+  .bg-slate-50 { background-color: #081310 !important; }
+  .bg-slate-100 { background-color: #16291f !important; }
+  .bg-slate-200 { background-color: #1c3329 !important; }
+  .bg-slate-300 { background-color: #22392f !important; }
+  .text-gray-800 { color: #e7f0eb !important; }
+  .text-slate-800, .text-slate-700 { color: #cfdcd4 !important; }
+  .text-slate-600 { color: #a9bcb2 !important; }
+  .text-slate-400 { color: #86988f !important; }
+
+  /* ---------------------------------------------------------------
+     `lux` token overloads — tokens that also carry light-on-dark
+     meaning must keep their light value.
+     --------------------------------------------------------------- */
+  .bg-lux-ink { background-color: #12261f !important; }
+  .hover\:bg-lux-ink:hover { background-color: #12261f !important; }
+  .bg-lux-muted { background-color: #3d4a45 !important; }
+  .bg-lux-muted\/40 { background-color: rgba(61, 74, 69, 0.4) !important; }
+  .bg-lux-muted\/60 { background-color: rgba(61, 74, 69, 0.6) !important; }
+
+  .text-lux-cream { color: #eef4f0 !important; }
+  .hover\:text-lux-cream:hover { color: #eef4f0 !important; }
+  .group-hover\:text-lux-cream:is(:where(.group):hover *) { color: #eef4f0 !important; }
+  .text-lux-cream\/85 { color: rgba(238, 244, 240, 0.85) !important; }
+  .text-lux-cream\/80 { color: rgba(238, 244, 240, 0.8) !important; }
+  .text-lux-cream\/70 { color: rgba(238, 244, 240, 0.7) !important; }
+  .text-lux-cream\/60 { color: rgba(238, 244, 240, 0.6) !important; }
+  .text-lux-cream\/50 { color: rgba(238, 244, 240, 0.5) !important; }
+  .text-lux-cream\/40 { color: rgba(238, 244, 240, 0.4) !important; }
+  .text-lux-cream\/20 { color: rgba(238, 244, 240, 0.2) !important; }
+  .text-lux-ivory { color: #f3f7f4 !important; }
+  .dark\:text-lux-ivory { color: #e7f0eb !important; }
+
+  .bg-lux-cream\/5 { background-color: rgba(255, 255, 255, 0.05) !important; }
+  .bg-lux-cream\/10 { background-color: rgba(255, 255, 255, 0.08) !important; }
+  .bg-lux-cream\/15 { background-color: rgba(255, 255, 255, 0.1) !important; }
+  .bg-lux-cream\/25 { background-color: rgba(255, 255, 255, 0.15) !important; }
+  .group-hover\:bg-lux-cream\/25:is(:where(.group):hover *) { background-color: rgba(255, 255, 255, 0.15) !important; }
+  .border-lux-cream { border-color: rgba(255, 255, 255, 0.25) !important; }
+  .border-lux-cream\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
+  .border-lux-cream\/20 { border-color: rgba(255, 255, 255, 0.2) !important; }
+
+  /* Emerald accents sitting on light surfaces need to lift for contrast */
+  .text-lux-emerald { color: #34d399 !important; }
+  .hover\:text-lux-emerald:hover { color: #34d399 !important; }
+  .text-lux-emerald\/80 { color: rgba(52, 211, 153, 0.8) !important; }
+  .text-lux-deep { color: #6ee7b7 !important; }
+  .hover\:text-lux-deep:hover { color: #6ee7b7 !important; }
+  .group-hover\:text-lux-deep:is(:where(.group):hover *) { color: #6ee7b7 !important; }
+  .border-lux-emerald { border-color: rgba(52, 211, 153, 0.5) !important; }
+  .border-lux-emerald\/40 { border-color: rgba(52, 211, 153, 0.4) !important; }
+  .ring-lux-emerald\/30 { --tw-ring-color: rgba(52, 211, 153, 0.3) !important; }
+  .ring-lux-emerald\/20 { --tw-ring-color: rgba(52, 211, 153, 0.2) !important; }
+  .bg-lux-emerald\/10 { background-color: rgba(52, 211, 153, 0.12) !important; }
+  .bg-lux-emerald\/20 { background-color: rgba(52, 211, 153, 0.2) !important; }
+  .hover\:bg-lux-emerald\/20:hover { background-color: rgba(52, 211, 153, 0.22) !important; }
+
+  /* ---------------------------------------------------------------
+     Hard-coded light hex backgrounds (canvas / panels / skeletons)
+     --------------------------------------------------------------- */
+  .bg-\[\#f7f4ec\] { background-color: #0e1d18 !important; }
+  .hover\:bg-\[\#f7f4ec\]:hover { background-color: #0e1d18 !important; }
+  .bg-\[\#f7f2e4\] { background-color: #0e1d18 !important; }
+  .bg-\[\#fff8ed\] { background-color: #12241d !important; }
+  .bg-\[\#f2eee2\] { background-color: #16291f !important; }
+  .hover\:bg-\[\#f2eee2\]:hover { background-color: #16291f !important; }
+  .bg-\[\#f2eee2\]\/70 { background-color: rgba(22, 41, 31, 0.7) !important; }
+  .bg-\[\#f5f0e4\] { background-color: #14251d !important; }
+  .hover\:bg-\[\#f5f0e4\]:hover { background-color: #14251d !important; }
+  .bg-\[\#efe9dc\] { background-color: #12241d !important; }
+  .bg-\[\#efe9d8\] { background-color: #12241d !important; }
+  .hover\:bg-\[\#efe9d8\]:hover { background-color: #12241d !important; }
+  .bg-\[\#ece4d2\] { background-color: #1c3329 !important; }
+  .hover\:bg-\[\#ece4d2\]:hover { background-color: #1c3329 !important; }
+  .bg-\[\#e5ddc9\] { background-color: #1c3329 !important; }
+  .bg-\[\#e0d8c6\] { background-color: #1a2f27 !important; }
+  .bg-\[\#e9e2d3\] { background-color: #1a2f27 !important; }
+  .bg-\[\#e4dbc6\] { background-color: #1c3329 !important; }
+  .bg-\[\#e6dcc4\] { background-color: #1c3329 !important; }
+  .bg-\[\#e2d9c5\] { background-color: #1a2f27 !important; }
+  .bg-\[\#d9d0b8\] { background-color: #20362d !important; }
+  .bg-\[\#dccfa8\] { background-color: #2a4a3c !important; }
+  .hover\:bg-\[\#dccfa8\]:hover { background-color: #2a4a3c !important; }
+
+  /* ---------------------------------------------------------------
+     Hard-coded light hex borders
+     --------------------------------------------------------------- */
+  .border-\[\#ece4d2\] { border-color: #284238 !important; }
+  .hover\:border-\[\#ece4d2\]:hover { border-color: #284238 !important; }
+  .border-\[\#ece4d2\]\/40 { border-color: rgba(40, 66, 56, 0.4) !important; }
+  .border-\[\#e4dbc6\] { border-color: #284238 !important; }
+  .border-\[\#e6dcc4\] { border-color: #284238 !important; }
+  .hover\:border-\[\#e6dcc4\]:hover { border-color: #284238 !important; }
+  .border-\[\#e5ddc9\] { border-color: #284238 !important; }
+  .border-\[\#e0d8c6\] { border-color: #284238 !important; }
+  .border-\[\#e2d9c5\] { border-color: #284238 !important; }
+  .border-\[\#e9e2d3\] { border-color: #223a30 !important; }
+  .hover\:border-\[\#e9e2d3\]:hover { border-color: #223a30 !important; }
+  .border-\[\#e9e2d3\]\/60 { border-color: rgba(34, 58, 48, 0.6) !important; }
+  .border-\[\#f2eee2\] { border-color: #223a30 !important; }
+  .border-\[\#f5f0e4\] { border-color: #223a30 !important; }
+  .border-\[\#efe9dc\] { border-color: #223a30 !important; }
+  .border-\[\#efe9d8\] { border-color: #223a30 !important; }
+  .border-\[\#f7f4ec\] { border-color: #223a30 !important; }
+  .border-\[\#d8cfb8\] { border-color: #2e4d3f !important; }
+  .border-\[\#d9d0b8\] { border-color: #2e4d3f !important; }
+  .border-\[\#dccfa8\] { border-color: rgba(201, 162, 39, 0.5) !important; }
+  .hover\:border-\[\#dccfa8\]:hover { border-color: rgba(201, 162, 39, 0.6) !important; }
+  .border-\[\#d9eddf\] { border-color: rgba(16, 185, 129, 0.4) !important; }
+
+  .divide-\[\#ece4d2\] > :not([hidden]) ~ :not([hidden]) { border-color: #284238 !important; }
+
+  /* ---------------------------------------------------------------
+     Hard-coded dark-ink text on light surfaces
+     --------------------------------------------------------------- */
+  .text-\[\#1e3a5f\] { color: #cfe0f5 !important; }
+  .text-\[\#172d4f\] { color: #cfe0f5 !important; }
+
+  /* ---------------------------------------------------------------
+     Gradients built from light hex stops
+     --------------------------------------------------------------- */
+  .from-\[\#efe9dc\] {
+    --tw-gradient-from: #12241d var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(18 36 29 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .from-\[\#f2eee2\] {
+    --tw-gradient-from: #16291f var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(22 41 31 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .from-\[\#f7f4ec\] {
+    --tw-gradient-from: #0e1d18 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(14 29 24 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .from-\[\#e6dcc4\] {
+    --tw-gradient-from: #1c3329 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(28 51 41 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .from-\[\#d9cfb4\] {
+    --tw-gradient-from: #244034 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(36 64 52 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .from-lux-ink {
+    --tw-gradient-from: #12261f var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(18 38 31 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .via-\[\#f7f4ec\] {
+    --tw-gradient-to: rgb(14 29 24 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #0e1d18 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#f7f2e4\] {
+    --tw-gradient-to: rgb(14 29 24 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #0e1d18 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#ece4d2\] {
+    --tw-gradient-to: rgb(28 51 41 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #1c3329 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#e5ddc9\] {
+    --tw-gradient-to: rgb(28 51 41 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #1c3329 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#e6dcc4\] {
+    --tw-gradient-to: rgb(28 51 41 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #1c3329 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#e9e2d3\] {
+    --tw-gradient-to: rgb(28 51 41 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #1c3329 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+  .via-\[\#dccfa8\] {
+    --tw-gradient-to: rgb(201 162 39 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), rgba(201, 162, 39, 0.5) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+
+  .to-\[\#efe9dc\] { --tw-gradient-to: #12241d var(--tw-gradient-to-position) !important; }
+  .to-\[\#f2eee2\] { --tw-gradient-to: #16291f var(--tw-gradient-to-position) !important; }
+  .to-\[\#e6dcc4\] { --tw-gradient-to: #1c3329 var(--tw-gradient-to-position) !important; }
+  .to-\[\#f7f4ec\] { --tw-gradient-to: #0e1d18 var(--tw-gradient-to-position) !important; }
+  .to-\[\#fff8ed\] { --tw-gradient-to: #12241d var(--tw-gradient-to-position) !important; }
+  .to-lux-ink { --tw-gradient-to: #12261f var(--tw-gradient-to-position) !important; }
 }

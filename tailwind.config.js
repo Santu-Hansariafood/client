@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  // Follows the OS / browser colour scheme automatically (no manual toggle).
+  darkMode: "media",
   theme: {
     extend: {
       fontFamily: {
@@ -10,10 +12,13 @@ export default {
       },
       colors: {
         lux: {
-          ivory: "#f7f4ec",
-          cream: "#fffefb",
-          ink: "#12261f",
-          muted: "#5f6f68",
+          // Surface + text tokens are CSS variables so they can flip with the
+          // system colour scheme (see :root / prefers-color-scheme in index.css).
+          ivory: "rgb(var(--lux-ivory) / <alpha-value>)",
+          cream: "rgb(var(--lux-cream) / <alpha-value>)",
+          ink: "rgb(var(--lux-ink) / <alpha-value>)",
+          muted: "rgb(var(--lux-muted) / <alpha-value>)",
+          // Brand accents stay constant in both themes.
           gold: "#c9a227",
           "gold-soft": "#e6cf86",
           emerald: "#065f46",
