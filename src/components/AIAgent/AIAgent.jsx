@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import { SARIA_AI_ORDER_EDIT_RESULT_EVENT } from "../../utils/sariaAIOrderEdit";
 import { useAIAgentCore } from "./hooks/useAIAgentCore";
 import { useAIAgentLearning } from "./hooks/useAIAgentLearning";
 import { useAIAgentAPI } from "./hooks/useAIAgentAPI";
@@ -36,6 +38,26 @@ const AIAgent = () => {
     pageHistory,
     currentPath,
   } = useAIAgentCore(userName);
+
+  useEffect(() => {
+    const handleOrderEditResult = (event) => {
+      if (!event.detail?.content) return;
+      setMessages((previous) => [
+        ...previous,
+        { role: "assistant", content: event.detail.content },
+      ]);
+    };
+
+    window.addEventListener(
+      SARIA_AI_ORDER_EDIT_RESULT_EVENT,
+      handleOrderEditResult,
+    );
+    return () =>
+      window.removeEventListener(
+        SARIA_AI_ORDER_EDIT_RESULT_EVENT,
+        handleOrderEditResult,
+      );
+  }, [setMessages]);
 
   const { trackInteraction, getDynamicSuggestions, checkSafety } =
     useAIAgentLearning();

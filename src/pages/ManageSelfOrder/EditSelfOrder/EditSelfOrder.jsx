@@ -16,6 +16,12 @@ import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
+import statesData from "../../../data/state-city.json";
+import {
+  parseSariaOrderEditCommand,
+  SARIA_AI_ORDER_EDIT_EVENT,
+  SARIA_AI_ORDER_EDIT_RESULT_EVENT,
+} from "../../../utils/sariaAIOrderEdit";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -110,6 +116,9 @@ const EditSelfOrder = () => {
     buyer: true,
     supplier: true,
   });
+  const [hasPendingSariaAISave, setHasPendingSariaAISave] = useState(false);
+  const pendingCommandHandled = useRef(false);
+  const pendingSariaAISnapshot = useRef(null);
 
   const abortControllerRef = useRef(null);
   const hasFetchedInitialData = useRef(false);
@@ -283,6 +292,434 @@ const EditSelfOrder = () => {
     });
   }, []);
 
+  const applySariaAIOrderEdit = useCallback(
+    (command) => {
+      const currentCommodity = (formData.buyerCommodity || []).find(
+        (item) =>
+          (item.name || item.label) === formData.commodity ||
+          String(item.commodityId || item._id || item.value) ===
+            String(formData.commodity),
+      );
+      const edit = parseSariaOrderEditCommand(
+        command,
+        currentCommodity?.parameters || [],
+      );
+
+      if (!edit || edit.invalidField) {
+        return [
+          "Tell me one field and its new value, for example:",
+          "`Change Commodity to Wheat`",
+          "`Set Buyers PO Number to PO-123`",
+          "`Change Supplier to Hansaria Traders`",
+          "`Set Quantity to 120`",
+          "`Set Notes to Call buyer tomorrow`",
+          "You can also say `clear Buyers PO Number`. I will ask you to reply yes or no before saving.",
+        ].join("\n");
+      }
+
+      const value = edit.value.trim();
+      const normalize = (text) => String(text || "").trim().toLowerCase();
+      const findByNameOrId = (rows, candidate, nameKeys) =>
+        rows.find(
+          (item) =>
+            nameKeys.some((key) => normalize(item?.[key]) === normalize(candidate)) ||
+            String(item?._id || item?.value || "") === candidate,
+        );
+      const toEmailList = (rawEmails) =>
+        (Array.isArray(rawEmails) ? rawEmails : [])
+          .map((email) =>
+            typeof email === "string"
+              ? email
+              : (email?.value ?? email?.email ?? ""),
+          )
+          .filter(Boolean);
+      const beginPendingSave = () => {
+        if (!pendingSariaAISnapshot.current) {
+          pendingSariaAISnapshot.current = {
+            formData: { ...formData },
+            selectedEmails: { ...selectedEmails },
+          };
+        }
+        setHasPendingSariaAISave(true);
+      };
+      const stage = (updates) => {
+        beginPendingSave();
+        setFormData((previous) => ({ ...previous, ...updates }));
+      };
+
+      if (edit.type === "parameter") {
+        if (!value && edit.operation !== "clear") {
+          return "Enter a value for that quality parameter.";
+        }
+        const parameter = (formData.parameters || []).find(
+          (item) =>
+            String(item.id || item.parameterId || item._id) ===
+            String(edit.parameterId),
+        );
+        if (!parameter) {
+          return "That quality parameter is no longer available for the selected commodity.";
+        }
+        const updatedParameters = formData.parameters.map((item) =>
+          String(item.id || item.parameterId || item._id) ===
+          String(edit.parameterId)
+            ? { ...item, [edit.parameterField]: value }
+            : item,
+        );
+        stage({ parameters: updatedParameters });
+        return `Staged ${edit.name} as ${value || "blank"}. Save these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Buyer") {
+        const buyer = findByNameOrId(buyers, value, ["name"]);
+        if (!buyer) return `I could not find a buyer matching "${value}".`;
+
+        const currentCompany = companies.find(
+          (company) =>
+            String(company._id) === String(formData.companyId) ||
+            normalize(company.companyName) === normalize(formData.buyerCompany),
+        );
+        const canKeepCompany = (buyer.companyIds || []).some(
+          (companyId) => String(companyId) === String(currentCompany?._id),
+        );
+        const buyerEmails = toEmailList(buyer.email);
+        const updates = {
+          buyer: buyer.name,
+          buyerMobile: Array.isArray(buyer.mobile)
+            ? buyer.mobile[0] || ""
+            : buyer.mobile || "",
+          buyerEmail: buyerEmails[0] || "",
+          buyerEmails: buyerEmails.length ? buyerEmails : [""],
+        };
+
+        if (!canKeepCompany) {
+          Object.assign(updates, {
+            buyerCompany: "",
+            companyId: null,
+            consignee: "",
+            commodity: "",
+            parameters: [],
+            buyerCommodity: [],
+          });
+          handleChange("buyerBrokerageMap", {});
+        }
+        stage(updates);
+        return `Staged Buyer as ${buyer.name}${canKeepCompany ? "" : ". Choose a company and commodity if needed"}\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Buyer Company") {
+        const company = findByNameOrId(companies, value, ["companyName"]);
+        if (!company) return `I could not find a buyer company matching "${value}".`;
+
+        let buyer = buyers.find((item) =>
+          (item.companyIds || []).some(
+            (companyId) => String(companyId) === String(company._id),
+          ),
+        );
+        const currentBuyer = buyers.find(
+          (item) =>
+            item.name === formData.buyer ||
+            String(item._id) === String(formData.buyer),
+        );
+        if (
+          currentBuyer &&
+          (currentBuyer.companyIds || []).some(
+            (companyId) => String(companyId) === String(company._id),
+          )
+        ) {
+          buyer = currentBuyer;
+        }
+        if (!buyer) {
+          return `The company "${company.companyName}" is not linked to a buyer.`;
+        }
+
+        const buyerEmails = toEmailList(buyer.email);
+        const enrichedCommodities = (company.commodities || []).map(
+          (companyCommodity) => {
+            const commodity = allCommodities.find(
+              (item) =>
+                String(item._id) === String(companyCommodity.commodityId),
+            );
+            if (!commodity) return companyCommodity;
+            return {
+              ...companyCommodity,
+              name: commodity.name,
+              hsnCode: commodity.hsnCode,
+              parameters: (companyCommodity.parameters || []).map(
+                (companyParameter) => {
+                  const parameter = (commodity.parameters || []).find(
+                    (item) =>
+                      String(item._id) ===
+                      String(companyParameter.parameterId),
+                  );
+                  return {
+                    ...companyParameter,
+                    parameter: parameter?.parameter || "",
+                  };
+                },
+              ),
+            };
+          },
+        );
+        const brokerageMap = {};
+        enrichedCommodities.forEach((item) => {
+          if (item.name && item.brokerage != null) {
+            brokerageMap[item.name] = item.brokerage;
+          }
+        });
+        Object.entries(buyer.brokerageByName || {}).forEach(
+          ([name, brokerage]) => {
+            if (brokerageMap[name] == null) brokerageMap[name] = brokerage;
+          },
+        );
+        Object.entries(buyer.brokerage || {}).forEach(
+          ([commodityId, brokerage]) => {
+            const commodity = allCommodities.find(
+              (item) => String(item._id) === String(commodityId),
+            );
+            if (commodity && brokerageMap[commodity.name] == null) {
+              brokerageMap[commodity.name] = brokerage;
+            }
+          },
+        );
+
+        stage({
+          buyer: buyer.name,
+          buyerCompany: company.companyName || "",
+          companyId: company._id,
+          location: company.location || "",
+          state: company.state || "",
+          district: company.district || "",
+          pinCode: company.pinCode || "",
+          gstNumber: company.gstNumber || "",
+          panNumber: company.panNumber || "",
+          buyerEmail: buyerEmails[0] || "",
+          buyerMobile: Array.isArray(buyer.mobile)
+            ? buyer.mobile[0] || ""
+            : buyer.mobile || "",
+          buyerEmails: buyerEmails.length ? buyerEmails : [""],
+          buyerCommodity: enrichedCommodities,
+          consignee: "",
+          commodity: "",
+          parameters: [],
+        });
+        handleChange("buyerBrokerageMap", brokerageMap);
+        return `Staged Buyer Company as ${company.companyName}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Commodity") {
+        const commodity = findByNameOrId(
+          formData.buyerCommodity || [],
+          value,
+          ["name", "label"],
+        );
+        if (!commodity) {
+          return `I could not find "${value}" in the selected buyer company's commodities. Choose a buyer company first.`;
+        }
+        const parameters = (commodity.parameters || []).map((item) => {
+          const parameterId =
+            item._id ||
+            item.id ||
+            item.parameterId ||
+            item.parameter?._id ||
+            item.parameter?.value ||
+            "";
+          const parameterValue = item.values?.[0] || {};
+          return {
+            id: parameterId,
+            parameterId,
+            value: item.value ?? "",
+            baseValue: parameterValue.baseValue ?? item.value ?? "",
+            maxValue: parameterValue.maxValue ?? "",
+          };
+        });
+        stage({
+          commodity: commodity.name || commodity.label,
+          parameters,
+        });
+        return `Staged Commodity as ${commodity.name || commodity.label}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Supplier") {
+        const supplier = findByNameOrId(suppliers, value, [
+          "sellerName",
+          "name",
+        ]);
+        if (!supplier) return `I could not find a supplier matching "${value}".`;
+        const sellerEmails = toEmailList(supplier.emails);
+        const sellerPhones = (Array.isArray(supplier.phoneNumbers)
+          ? supplier.phoneNumbers
+          : []
+        )
+          .map((phone) =>
+            typeof phone === "string"
+              ? phone
+              : (phone?.value ?? phone?.phone ?? ""),
+          )
+          .filter(Boolean);
+        const supplierBrokerage = (supplier.commodities || []).map((item) => ({
+          name: item.name,
+          brokerage: item.brokerage,
+        }));
+        const supplierCompany = (supplier.companies || []).includes(
+          formData.supplierCompany,
+        )
+          ? formData.supplierCompany
+          : "";
+        stage({
+          supplier: supplier._id,
+          supplierName: supplier.sellerName || supplier.name || "",
+          supplierCompany,
+          sellerEmails: sellerEmails.length ? sellerEmails : [""],
+          sellerMobile: sellerPhones[0] || "",
+          supplierBrokerage,
+          supplierBrokerageDetails: supplierBrokerage,
+        });
+        return `Staged Supplier as ${supplier.sellerName || supplier.name}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Supplier Company") {
+        const supplier = suppliers.find(
+          (item) =>
+            String(item._id) === String(formData.supplier?._id || formData.supplier),
+        );
+        const company = (supplier?.companies || []).find(
+          (item) => normalize(item) === normalize(value),
+        );
+        if (!company) {
+          return `I could not find "${value}" among the selected supplier's companies.`;
+        }
+        stage({ supplierCompany: company });
+        return `Staged Supplier Company as ${company}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.name === "Consignee") {
+        const consignee = findByNameOrId(consignees, value, ["name", "label"]);
+        if (!consignee) return `I could not find a consignee matching "${value}".`;
+        const company = companies.find(
+          (item) =>
+            String(item._id) === String(formData.companyId) ||
+            normalize(item.companyName) === normalize(formData.buyerCompany),
+        );
+        if (
+          company &&
+          !(company.consigneeIds || []).some(
+            (idValue) => String(idValue) === String(consignee._id),
+          )
+        ) {
+          return `"${consignee.name || consignee.label}" is not linked to the selected buyer company.`;
+        }
+        stage({
+          consignee: consignee.name || consignee.label,
+          billTo: "consignee",
+        });
+        return `Staged Consignee as ${consignee.name || consignee.label}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      if (edit.type === "number" && value !== "" && !Number.isFinite(Number(value))) {
+        return `${edit.name} must be a number.`;
+      }
+      if (edit.type === "yesNo" && !["yes", "no"].includes(normalize(value))) {
+        return `${edit.name} must be set to yes or no.`;
+      }
+      if (edit.type === "billTo" && !["buyer", "consignee"].includes(normalize(value))) {
+        return "Bill To must be set to buyer or consignee.";
+      }
+
+      let updatedValue = value;
+      if (edit.type === "number" && value !== "") {
+        updatedValue = Number(value);
+      } else if (edit.type === "date") {
+        updatedValue = value ? new Date(value) : null;
+        if (value && Number.isNaN(updatedValue.getTime())) {
+          return `I could not read "${value}" as a date. Use a date such as 2026-10-25.`;
+        }
+      } else if (edit.type === "yesNo" || edit.type === "billTo") {
+        updatedValue = normalize(value);
+      }
+
+      if (
+        edit.name === "Email Notification to Buyer" ||
+        edit.name === "Email Notification to Supplier"
+      ) {
+        const recipient =
+          edit.name === "Email Notification to Buyer" ? "buyer" : "supplier";
+        beginPendingSave();
+        setSelectedEmails((previous) => ({
+          ...previous,
+          [recipient]: updatedValue === "yes",
+        }));
+        setHasPendingSariaAISave(true);
+        return `Staged email notification to ${recipient} as ${updatedValue}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+      }
+
+      const directFieldByName = {
+        "Buyers PO Number": "poNumber",
+        "PO Date": "poDate",
+        State: "state",
+        Quantity: "quantity",
+        "Pending Quantity": "pendingQuantity",
+        Rate: "rate",
+        GST: "gst",
+        CD: "cd",
+        Weight: "weight",
+        "Payment Terms": "paymentTerms",
+        "Delivery Date": "deliveryDate",
+        "Loading Date": "loadingDate",
+        Location: "location",
+        District: "district",
+        "PIN Code": "pinCode",
+        "GST Number": "gstNumber",
+        "PAN Number": "panNumber",
+        "Buyer Email": "buyerEmail",
+        "Buyer Mobile": "buyerMobile",
+        "Seller Email": "sellerEmails",
+        "Seller Mobile": "sellerMobile",
+        "Agent Name": "agentName",
+        Notes: "notes",
+        "Send PO to Buyer": "sendPOToBuyer",
+        "Send PO to Supplier": "sendPOToSupplier",
+        "Bill To": "billTo",
+        "Sauda Number": "saudaNo",
+      };
+      const directField = directFieldByName[edit.name];
+      if (!directField) return `I cannot edit ${edit.name} from this order form.`;
+
+      if (directField === "State" && value) {
+        const state = statesData.find(
+          (item) => normalize(item.state) === normalize(value),
+        );
+        if (!state) return `I could not find the state "${value}" in the list.`;
+        updatedValue = state.state;
+      }
+      if (directField === "Buyer Email") {
+        stage({
+          buyerEmail: updatedValue,
+          buyerEmails: [updatedValue || ""],
+        });
+      } else if (directField === "Seller Email") {
+        stage({ sellerEmails: [updatedValue || ""] });
+      } else if (directField === "Notes") {
+        stage({ notes: [updatedValue || ""] });
+      } else if (directField === "Agent Name") {
+        stage({ [directField]: String(updatedValue).toUpperCase() });
+      } else {
+        stage({ [directField]: updatedValue });
+      }
+
+      return `Staged ${edit.name} as ${value || "blank"}.\n\nSave these changes to Sauda ${formData.saudaNo}? Reply yes to save or no to cancel.`;
+    },
+    [
+      allCommodities,
+      buyers,
+      companies,
+      consignees,
+      formData,
+      handleChange,
+      selectedEmails,
+      suppliers,
+    ],
+  );
+
   const getChangedFields = useCallback(() => {
     if (!originalFormData) return formData;
 
@@ -365,10 +802,10 @@ const EditSelfOrder = () => {
   }, [formData]);
 
   const handleSubmit = useCallback(async () => {
-    if (!validateFormData()) return;
+    if (!validateFormData()) return false;
     if (!id) {
       toast.error("Cannot update: missing order id.");
-      return;
+      return false;
     }
 
     setIsLoading(true);
@@ -416,7 +853,10 @@ const EditSelfOrder = () => {
       toast.success("Order updated successfully! Redirecting...", {
         position: "top-right",
       });
+      setHasPendingSariaAISave(false);
+      pendingSariaAISnapshot.current = null;
       navigate("/manage-order/list-self-order");
+      return true;
     } catch (error) {
       console.error(
         "Update Order API Error:",
@@ -431,10 +871,75 @@ const EditSelfOrder = () => {
       } else {
         toast.error(`Update failed: ${errorMsg}`);
       }
+      return false;
     } finally {
       setIsLoading(false);
     }
   }, [formData, id, navigate, validateFormData, getChangedFields, selectedEmails]);
+
+  useEffect(() => {
+    if (
+      isFetching ||
+      !hasFetchedInitialData.current ||
+      !state?.aiOrderEditCommand ||
+      pendingCommandHandled.current
+    ) {
+      return;
+    }
+
+    pendingCommandHandled.current = true;
+    const response = applySariaAIOrderEdit(state.aiOrderEditCommand);
+    window.dispatchEvent(
+      new CustomEvent(SARIA_AI_ORDER_EDIT_RESULT_EVENT, {
+        detail: { content: response },
+      }),
+    );
+  }, [applySariaAIOrderEdit, isFetching, state]);
+
+  useEffect(() => {
+    const handleSariaOrderEdit = async (event) => {
+      event.preventDefault();
+      const command = event.detail.command.trim();
+      let response;
+
+      if (/^(?:yes|confirm|save)\s*[.!]?$/i.test(command)) {
+        if (!hasPendingSariaAISave) {
+          response = "There are no pending Saria AI changes to save.";
+        } else {
+          response = (await handleSubmit())
+            ? `Sauda ${formData.saudaNo} was updated successfully.`
+            : "The order was not saved. Check the form errors and try again.";
+        }
+      } else if (/^(?:no|cancel)\s*[.!]?$/i.test(command)) {
+        if (hasPendingSariaAISave && pendingSariaAISnapshot.current) {
+          setFormData(pendingSariaAISnapshot.current.formData);
+          setSelectedEmails(pendingSariaAISnapshot.current.selectedEmails);
+          setHasPendingSariaAISave(false);
+          pendingSariaAISnapshot.current = null;
+          response = `Cancelled the changes to Sauda ${formData.saudaNo}. Nothing was saved.`;
+        } else {
+          response = "There are no pending changes to cancel.";
+        }
+      } else {
+        response = applySariaAIOrderEdit(command);
+      }
+
+      event.detail.response = response;
+      event.detail.respond?.(response);
+    };
+
+    window.addEventListener(SARIA_AI_ORDER_EDIT_EVENT, handleSariaOrderEdit);
+    return () =>
+      window.removeEventListener(
+        SARIA_AI_ORDER_EDIT_EVENT,
+        handleSariaOrderEdit,
+      );
+  }, [
+    applySariaAIOrderEdit,
+    formData.saudaNo,
+    handleSubmit,
+    hasPendingSariaAISave,
+  ]);
 
   if (isFetching) return <Loading />;
 

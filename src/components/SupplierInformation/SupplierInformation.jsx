@@ -52,6 +52,12 @@ const SupplierInformation = ({
     }
   }, [formData.supplier, formData.supplierCompany, sellerOptions]);
 
+  useEffect(() => {
+    const supplierId = formData.supplier?._id || formData.supplier || null;
+    setSelectedSupplierId(supplierId);
+    setSelectedCompany(formData.supplierCompany || "");
+  }, [formData.supplier, formData.supplierCompany]);
+
   const onSupplierChange = (option) => {
     const supplierId = option?.value || null;
     setSelectedSupplierId(supplierId);

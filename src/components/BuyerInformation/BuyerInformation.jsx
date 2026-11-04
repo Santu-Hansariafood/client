@@ -295,6 +295,42 @@ const BuyerInformation = ({
     getBrokerageMap,
   ]);
 
+  useEffect(() => {
+    const buyer = buyers.find(
+      (item) =>
+        String(item._id) === String(formData.buyer) ||
+        item.name === formData.buyer,
+    );
+    setSelectedBuyerId(buyer?._id || null);
+
+    const company = companies.find(
+      (item) =>
+        String(item._id) === String(formData.companyId) ||
+        item.companyName === formData.buyerCompany,
+    );
+    setSelectedCompanyId(company?._id || null);
+
+    const consigneeValue =
+      formData.consignee?._id ||
+      formData.consignee?.value ||
+      formData.consignee;
+    const consignee = consignees.find(
+      (item) =>
+        String(item._id) === String(consigneeValue) ||
+        item.name === consigneeValue ||
+        item.label === consigneeValue,
+    );
+    setSelectedConsignee(consignee ? String(consignee._id) : "");
+  }, [
+    buyers,
+    companies,
+    consignees,
+    formData.buyer,
+    formData.buyerCompany,
+    formData.companyId,
+    formData.consignee,
+  ]);
+
   const onBuyerChange = (option) => {
     setHasManuallySelected(true);
     const buyerId = option?.value || null;

@@ -1,5 +1,10 @@
 import { useRef, useMemo } from "react";
 import dashboardData from "../../../data/dashboardData.json";
+import api from "../../../utils/apiClient/apiClient";
+import {
+  parseSariaTargetedOrderEditCommand,
+  SARIA_AI_ORDER_EDIT_EVENT,
+} from "../../../utils/sariaAIOrderEdit";
 
 export const useAIAgentCommands = ({
   input,
@@ -294,6 +299,107 @@ export const useAIAgentCommands = ({
     const rawCmd = cmd.trim().toLowerCase();
     const cleanCmd = rectifyTypo(rawCmd); // Auto-rectify typos
     let response = null;
+
+    const isOrderEditPage =
+      /^\/manage-order\/edit-self-order\/[^/]+\/?$/.test(currentPath);
+    const targetedOrderEdit = parseSariaTargetedOrderEditCommand(cmd);
+
+    if (targetedOrderEdit) {
+      try {
+        const orderResponse = await api.get(
+          `/self-order?saudaNo=${encodeURIComponent(targetedOrderEdit.saudaNo)}`,
+        );
+        const responseData = orderResponse.data?.data ?? orderResponse.data;
+        const orders = Array.isArray(responseData)
+          ? responseData
+          : responseData
+            ? [responseData]
+            : [];
+        const order = orders.find(
+          (item) => String(item.saudaNo) === targetedOrderEdit.saudaNo,
+        );
+
+        if (!order?._id) {
+          response = {
+            role: "assistant",
+            content: `I could not find Sauda ${targetedOrderEdit.saudaNo}. Check the number and try again.`,
+            suggestions: ["Show recent saudas", "Total sauda today"],
+          };
+        } else if (
+          isOrderEditPage &&
+          currentPath.endsWith(`/${order._id}`)
+        ) {
+          const editEvent = new CustomEvent(SARIA_AI_ORDER_EDIT_EVENT, {
+            cancelable: true,
+            detail: { command: targetedOrderEdit.editCommand },
+          });
+          window.dispatchEvent(editEvent);
+          response = {
+            role: "assistant",
+            content:
+              editEvent.detail.response ||
+              `I could not apply the requested change to Sauda ${targetedOrderEdit.saudaNo}.`,
+            suggestions: ["yes", "no"],
+          };
+        } else {
+          navigate(`/manage-order/edit-self-order/${order._id}`, {
+            state: {
+              orderData: order,
+              aiOrderEditCommand: targetedOrderEdit.editCommand,
+            },
+          });
+          response = {
+            role: "assistant",
+            content: `Opening Sauda ${targetedOrderEdit.saudaNo} and staging your requested change. I will ask you to confirm before saving.`,
+            suggestions: ["yes", "no"],
+          };
+        }
+      } catch (error) {
+        console.error("Saria AI order lookup failed:", error);
+        response = {
+          role: "assistant",
+          content: `I could not load Sauda ${targetedOrderEdit.saudaNo}. Please try again.`,
+          suggestions: ["Show recent saudas", "Total sauda today"],
+        };
+      }
+
+      setMessages((prev) => [...prev, response]);
+      trackInteraction(cmd, response.content);
+      return;
+    }
+
+    if (
+      isOrderEditPage &&
+      (/^(?:please\s+)?(?:change|set|update|edit|clear)\b/i.test(
+        cmd.trim(),
+      ) ||
+        /^(?:yes|no|cancel|confirm|save)\s*[.!]?$/i.test(cmd.trim()))
+    ) {
+      let resolveResponse;
+      const responsePromise = new Promise((resolve) => {
+        resolveResponse = resolve;
+      });
+      const editEvent = new CustomEvent(SARIA_AI_ORDER_EDIT_EVENT, {
+        cancelable: true,
+        detail: { command: cmd, respond: resolveResponse },
+      });
+      const wasHandled = window.dispatchEvent(editEvent) === false;
+      response = {
+        role: "assistant",
+        content:
+          wasHandled
+            ? await responsePromise
+            : "I could not connect to the open order form. Reopen Saria AI and try again.",
+        suggestions: [
+          "yes",
+          "no",
+          "Sauda no 123, change Commodity to Wheat",
+        ],
+      };
+      setMessages((prev) => [...prev, response]);
+      trackInteraction(cmd, response.content);
+      return;
+    }
 
     const rememberMatch = rawCmd.match(
       /remember\s+(?:that\s+)?when\s+(?:i\s+)?(?:say|ask)\s+["']?(.+?)["']?\s*,?\s*(?:show|do|open|run)\s+(.+)/i,
@@ -853,7 +959,7 @@ export const useAIAgentCommands = ({
     const sendMessage = () => {
       setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
       setInput("");
-      processCommand(userMessage.toLowerCase());
+      processCommand(userMessage);
     };
 
     if (immediate) {
