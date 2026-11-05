@@ -1,6 +1,11 @@
-const getBrokerageSummaryFilename = (partyName, type, extension) => {
+export const getBrokerageReportFilename = (
+  partyName,
+  type,
+  reportName,
+  extension,
+) => {
   const fallbackName = type === "buyer" ? "All_Buyers" : "All_Sellers";
-  const sanitizedPartyName = Array.from(partyName || fallbackName, (character) =>
+  const sanitizedPartyName = Array.from(String(partyName || fallbackName), (character) =>
     /[<>:"/\\|?*]/.test(character) || character.charCodeAt(0) < 32
       ? "_"
       : character,
@@ -13,7 +18,15 @@ const getBrokerageSummaryFilename = (partyName, type, extension) => {
   const reportType = type === "buyer" ? "Buyer" : "Seller";
   const date = new Date().toISOString().split("T")[0];
 
-  return `${safePartyName}_${reportType}_Brokerage_Summary_${date}.${extension}`;
+  return `${safePartyName}_${reportType}_${reportName}_${date}.${extension}`;
 };
+
+const getBrokerageSummaryFilename = (partyName, type, extension) =>
+  getBrokerageReportFilename(
+    partyName,
+    type,
+    "Brokerage_Summary",
+    extension,
+  );
 
 export default getBrokerageSummaryFilename;

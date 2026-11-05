@@ -20,7 +20,9 @@ import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import getBrokerageSummaryFilename from "../../utils/brokerageReportFilename";
+import getBrokerageSummaryFilename, {
+  getBrokerageReportFilename,
+} from "../../utils/brokerageReportFilename";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
@@ -301,7 +303,12 @@ const SellerBrokerage = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `SellerBrokerage_${new Date().toISOString().split("T")[0]}.pdf`,
+        getBrokerageReportFilename(
+          selectedSeller?.label || selectedSeller?.value,
+          "seller",
+          "Brokerage",
+          "pdf",
+        ),
       );
       document.body.appendChild(link);
       link.click();
@@ -423,7 +430,11 @@ const SellerBrokerage = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        getBrokerageSummaryFilename(selectedSeller?.value, "seller", "pdf"),
+        getBrokerageSummaryFilename(
+          selectedSeller?.label || selectedSeller?.value,
+          "seller",
+          "pdf",
+        ),
       );
       document.body.appendChild(link);
       link.click();
