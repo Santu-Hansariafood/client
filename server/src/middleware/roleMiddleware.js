@@ -17,4 +17,30 @@ const employeeOrAdmin = (req, res, next) => {
   }
 };
 
-export { adminOnly, employeeOrAdmin };
+const hasExpenseManagementPermission = (req) => {
+  if (req.user?.role === "Admin") return true;
+  if (req.user?.role !== "Employee") return false;
+
+  return (req.authUser?.allowedPermissions || []).some((permission) => {
+    if (typeof permission !== "string") return false;
+    const normalizedPermission = permission.startsWith("/")
+      ? permission
+      : `/${permission}`;
+    return normalizedPermission === "/expense/add";
+  });
+};
+
+const expenseManager = (req, res, next) => {
+  if (hasExpenseManagementPermission(req)) {
+    next();
+  } else {
+    res.status(403).json({ message: "Expense management permission required." });
+  }
+};
+
+export {
+  adminOnly,
+  employeeOrAdmin,
+  expenseManager,
+  hasExpenseManagementPermission,
+};

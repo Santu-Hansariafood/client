@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../../utils/apiClient/apiClient";
 
-const useExpenseData = ({ isAdmin, page, limit, filters }) => {
+const useExpenseData = ({ canManageExpenses, page, limit, filters }) => {
   const [categories, setCategories] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [approvers, setApprovers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [total, setTotal] = useState(0);
@@ -32,6 +33,18 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
       setEmployees(response.data || []);
     } catch {
       toast.error("Failed to fetch employees");
+    }
+  }, []);
+
+  const fetchApprovers = useCallback(async () => {
+    try {
+      const response = await api.get("/expense-requests/approvers");
+      if (!Array.isArray(response.data)) {
+        throw new Error("Approver response is not a list");
+      }
+      setApprovers(response.data);
+    } catch {
+      toast.error("Failed to fetch Admin approvers");
     }
   }, []);
 
@@ -76,8 +89,8 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
         await api.put(`/expense-requests/${id}/status`, { status });
         toast.success(`Request ${status} successfully`);
         await fetchRequests();
-      } catch {
-        toast.error("Failed to update status");
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to update status");
       }
     },
     [fetchRequests],
@@ -89,8 +102,11 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
   }, [fetchCategories, fetchSellers]);
 
   useEffect(() => {
-    if (isAdmin) fetchEmployees();
-  }, [fetchEmployees, isAdmin]);
+    if (canManageExpenses) {
+      fetchEmployees();
+      fetchApprovers();
+    }
+  }, [canManageExpenses, fetchApprovers, fetchEmployees]);
 
   useEffect(() => {
     fetchRequests();
@@ -98,6 +114,7 @@ const useExpenseData = ({ isAdmin, page, limit, filters }) => {
 
   return {
     categories,
+    approvers,
     employees,
     fetchCategories,
     fetchRequests,

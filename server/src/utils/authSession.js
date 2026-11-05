@@ -31,7 +31,11 @@ export const getAuthUserFromTokenPayload = async (decoded) => {
     return null;
   }
 
-  return Model.findById(decoded.sub).select("_id passwordChangedAt");
+  const selectedFields =
+    decoded.role === "Employee"
+      ? "_id passwordChangedAt allowedPermissions"
+      : "_id passwordChangedAt";
+  return Model.findById(decoded.sub).select(selectedFields);
 };
 
 export const isTokenIssuedBeforePasswordChange = (decoded, user) => {

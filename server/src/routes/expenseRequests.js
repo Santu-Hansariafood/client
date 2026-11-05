@@ -5,7 +5,12 @@ import User from "../models/User.js";
 import Employee from "../models/Employee.js";
 import Seller from "../models/Seller.js";
 import authJwt from "../middleware/authJwt.js";
-import { adminOnly, employeeOrAdmin } from "../middleware/roleMiddleware.js";
+import {
+  adminOnly,
+  employeeOrAdmin,
+  expenseManager,
+  hasExpenseManagementPermission,
+} from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 const INDIA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -114,7 +119,7 @@ const prepareExpenseData = async (expense) => {
   };
 };
 
-router.get("/employees", authJwt, adminOnly, async (req, res) => {
+router.get("/employees", authJwt, expenseManager, async (req, res) => {
   try {
     const adminIds = await ExpenseRequest.distinct("employee", {
       employeeModel: "User",
@@ -132,6 +137,221 @@ router.get("/employees", authJwt, adminOnly, async (req, res) => {
   }
 });
 
+router.get("/approvers", authJwt, expenseManager, async (req, res) => {
+  try {
+    const admins = await User.find({ role: "Admin" }, "name email mobile phone")
+      .sort({ name: 1 })
+      .lean();
+    res.json(admins);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+const getAssignedApprover = async (approverId) => {
+  if (!mongoose.isValidObjectId(approverId)) {
+    throw new Error("Select an Admin approver for every expense");
+  }
+  const approver = await User.findOne({ _id: approverId, role: "Admin" }).select("_id");
+  if (!approver) {
+    throw new Error("Selected approver is not an Admin or was not found");
+  }
+  return approver._id;
+};
+
+router.get("/analytics", authJwt, employeeOrAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const year = Number(req.query.year ?? now.getFullYear());
+    const month = Number(req.query.month ?? now.getMonth() + 1);
+    if (!Number.isInteger(year) || year < 1900 || year > now.getFullYear()) {
+      return res.status(400).json({ message: "Invalid expense year" });
+    }
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      return res.status(400).json({ message: "Invalid expense month" });
+    }
+
+    const query = {
+      createdAt: {
+        $gte: new Date(Date.UTC(year, 0, 1) - INDIA_OFFSET_MS),
+        $lt: new Date(Date.UTC(year + 1, 0, 1) - INDIA_OFFSET_MS),
+      },
+    };
+    if (!hasExpenseManagementPermission(req)) {
+      query.employee = new mongoose.Types.ObjectId(req.user.sub);
+    } else if (req.query.employeeId) {
+      if (!mongoose.isValidObjectId(req.query.employeeId)) {
+        return res.status(400).json({ message: "Invalid employee filter" });
+      }
+      query.employee = new mongoose.Types.ObjectId(req.query.employeeId);
+    }
+
+    const monthQuery = {
+      ...query,
+      createdAt: {
+        $gte: new Date(Date.UTC(year, month - 1, 1) - INDIA_OFFSET_MS),
+        $lt: new Date(Date.UTC(year, month, 1) - INDIA_OFFSET_MS),
+      },
+    };
+    const annualQuery = {
+      ...query,
+      createdAt: {
+        $gte: new Date(Date.UTC(year - 5, 0, 1) - INDIA_OFFSET_MS),
+        $lt: new Date(Date.UTC(year + 1, 0, 1) - INDIA_OFFSET_MS),
+      },
+    };
+    const expenseSort = String(req.query.expenseSort || "amount-desc");
+    const expenseSortOptions = {
+      "amount-desc": { amount: -1, createdAt: -1 },
+      "amount-asc": { amount: 1, createdAt: -1 },
+      "date-desc": { createdAt: -1 },
+      "date-asc": { createdAt: 1 },
+    };
+    if (!expenseSortOptions[expenseSort]) {
+      return res.status(400).json({ message: "Invalid expense sort order" });
+    }
+
+    const [monthly, yearly, daily, employees, totals, recentExpenses] =
+      await Promise.all([
+        ExpenseRequest.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%m",
+                  date: "$createdAt",
+                  timezone: "Asia/Kolkata",
+                },
+              },
+              amount: { $sum: "$amount" },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+        ExpenseRequest.aggregate([
+          { $match: annualQuery },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y",
+                  date: "$createdAt",
+                  timezone: "Asia/Kolkata",
+                },
+              },
+              amount: { $sum: "$amount" },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+        ExpenseRequest.aggregate([
+          { $match: monthQuery },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                  timezone: "Asia/Kolkata",
+                },
+              },
+              amount: { $sum: "$amount" },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+        req.user.role === "Admin"
+          ? ExpenseRequest.aggregate([
+              { $match: query },
+              {
+                $group: {
+                  _id: {
+                    employee: "$employee",
+                    model: "$employeeModel",
+                  },
+                  amount: { $sum: "$amount" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $lookup: {
+                  from: "employees",
+                  localField: "_id.employee",
+                  foreignField: "_id",
+                  as: "employeeRecord",
+                },
+              },
+              {
+                $lookup: {
+                  from: "users",
+                  localField: "_id.employee",
+                  foreignField: "_id",
+                  as: "userRecord",
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  employeeId: "$_id.employee",
+                  name: {
+                    $ifNull: [
+                      { $arrayElemAt: ["$employeeRecord.name", 0] },
+                      {
+                        $ifNull: [
+                          { $arrayElemAt: ["$userRecord.name", 0] },
+                          "Unknown employee",
+                        ],
+                      },
+                    ],
+                  },
+                  amount: 1,
+                  count: 1,
+                },
+              },
+              { $sort: { amount: -1, name: 1 } },
+            ])
+          : Promise.resolve([]),
+        ExpenseRequest.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: null,
+              amount: { $sum: "$amount" },
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+        ExpenseRequest.find(monthQuery)
+          .populate("category", "name")
+          .populate("lineItems.category", "name")
+          .populate("employee", "name")
+          .populate("seller", "sellerName")
+          .sort(expenseSortOptions[expenseSort])
+          .limit(50)
+          .lean(),
+      ]);
+
+    res.json({
+      year,
+      month,
+      totalAmount: totals[0]?.amount || 0,
+      totalCount: totals[0]?.count || 0,
+      yearly,
+      monthly,
+      daily,
+      employees,
+      recentExpenses,
+    });
+  } catch (error) {
+    console.error("Expense analytics error:", error);
+    res.status(500).json({ message: "Failed to fetch expense analytics" });
+  }
+});
+
 router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
     const {
@@ -144,7 +364,7 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       status,
     } = req.query;
     let query = {};
-    if (req.user.role !== "Admin") {
+    if (!hasExpenseManagementPermission(req)) {
       query.employee = new mongoose.Types.ObjectId(req.user.sub);
     } else if (employeeId) {
       if (!mongoose.isValidObjectId(employeeId)) {
@@ -199,6 +419,7 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       .populate("lineItems.category", "name")
       .populate("employee", "name email mobile phone")
       .populate("createdBy", "name email")
+      .populate("assignedApprover", "name email")
       .populate("approvedBy", "name")
       .populate("rejectedBy", "name")
       .populate("seller", "sellerName")
@@ -247,6 +468,7 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
     const userId = req.user.sub;
     const userRole = req.user.role;
+    const canManageExpenses = hasExpenseManagementPermission(req);
     const employeeModel = userRole === "Admin" ? "User" : "Employee";
 
     if (Array.isArray(req.body.expenses)) {
@@ -260,7 +482,7 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
           let assignedEmployeeId = userId;
           let assignedEmployeeModel = employeeModel;
 
-          if (userRole === "Admin") {
+          if (canManageExpenses) {
             if (!expense.employeeId) {
               throw new Error("Select an employee for every expense");
             }
@@ -276,6 +498,9 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
           }
           return {
             ...expenseData,
+            ...(canManageExpenses
+              ? { assignedApprover: await getAssignedApprover(expense.assignedApproverId) }
+              : {}),
             employee: assignedEmployeeId,
             employeeModel: assignedEmployeeModel,
             createdBy: userId,
@@ -300,6 +525,13 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
         category,
         amount,
         description,
+        ...(canManageExpenses
+          ? {
+              assignedApprover: await getAssignedApprover(
+                req.body.assignedApproverId,
+              ),
+            }
+          : {}),
         employee: userId,
         employeeModel,
         createdBy: userId,
@@ -315,6 +547,13 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
         }
         return await ExpenseRequest.create({
           ...item,
+          ...(canManageExpenses
+            ? {
+                assignedApprover: await getAssignedApprover(
+                  item.assignedApproverId,
+                ),
+              }
+            : {}),
           employee: userId,
           employeeModel,
           createdBy: userId,
@@ -336,8 +575,8 @@ router.put("/:id", authJwt, employeeOrAdmin, async (req, res) => {
       return res.status(404).json({ message: "Request not found" });
     }
 
-    const isAdmin = req.user.role === "Admin";
-    if (!isAdmin) {
+    const canManageExpenses = hasExpenseManagementPermission(req);
+    if (!canManageExpenses) {
       const isAssignedEmployee =
         request.employeeModel === "Employee" &&
         String(request.employee) === String(req.user.sub);
@@ -357,7 +596,7 @@ router.put("/:id", authJwt, employeeOrAdmin, async (req, res) => {
     }
 
     const expenseData = await prepareExpenseData(expense);
-    if (isAdmin) {
+    if (canManageExpenses) {
       if (!expense.employeeId) {
         return res.status(400).json({ message: "Select an employee" });
       }
@@ -372,6 +611,19 @@ router.put("/:id", authJwt, employeeOrAdmin, async (req, res) => {
       }
       request.employee = assignedEmployee._id;
       request.employeeModel = "Employee";
+      const selectedApprover = await getAssignedApprover(
+        expense.assignedApproverId,
+      );
+      if (
+        request.assignedApprover &&
+        String(request.assignedApprover) !== String(selectedApprover) &&
+        String(request.assignedApprover) !== String(req.user.sub)
+      ) {
+        return res.status(403).json({
+          message: "Only the assigned Admin can reassign this expense",
+        });
+      }
+      request.assignedApprover = selectedApprover;
     }
 
     request.set(expenseData);
@@ -393,6 +645,14 @@ router.put("/:id/status", authJwt, adminOnly, async (req, res) => {
     const request = await ExpenseRequest.findById(req.params.id);
 
     if (request) {
+      if (
+        request.assignedApprover &&
+        String(request.assignedApprover) !== String(req.user.sub)
+      ) {
+        return res.status(403).json({
+          message: "Only the assigned Admin can approve or reject this expense",
+        });
+      }
       request.status = status;
       if (status === "approved") {
         request.approvedBy = req.user.sub;

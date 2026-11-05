@@ -21,6 +21,7 @@ import EmployeeIDCardPDF from "./EmployeeIDCardPDF";
 import logo from "../../assets/Hans.png";
 import { toast } from "react-toastify";
 import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSection";
+import ExpenseDashboard from "../ExpenseDashboard/ExpenseDashboard";
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
@@ -279,6 +280,9 @@ const EmployeeDashboard = () => {
           </div>
         )}
       </section>
+      <div className="relative z-10">
+        <ExpenseDashboard />
+      </div>
       <div className="relative z-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
         <div className="lux-card bg-lux-cream/80 backdrop-blur-2xl rounded-[2.5rem] border border-[#e9e2d3] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden group hover:shadow-[0_20px_50px_rgba(6,95,70,0.12)] transition-all duration-700">
           <div className="p-8 sm:p-10 border-b border-[#e9e2d3]/60 flex items-center justify-between bg-gradient-to-r from-lux-ivory to-transparent">

@@ -28,6 +28,7 @@ const createEmptyExpense = () => ({
   newWeight: "",
   challanWeight: "",
   employeeId: "",
+  assignedApproverId: "",
   createdByName: "",
   items: [{ category: "", description: "", quantity: "1", amount: "" }],
 });
@@ -35,6 +36,16 @@ const createEmptyExpense = () => ({
 const AddExpense = () => {
   const { userRole, user } = useAuth();
   const isAdmin = userRole === "Admin";
+  const canManageExpenses =
+    isAdmin ||
+    (userRole === "Employee" &&
+      (user?.allowedPermissions || []).some((permission) => {
+        if (typeof permission !== "string") return false;
+        const normalizedPermission = permission.startsWith("/")
+          ? permission
+          : `/${permission}`;
+        return normalizedPermission === "/expense/add";
+      }));
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     employeeId: "",
@@ -51,6 +62,7 @@ const AddExpense = () => {
 
   const {
     categories,
+    approvers,
     employees,
     fetchCategories,
     fetchRequests,
@@ -60,13 +72,13 @@ const AddExpense = () => {
     sellers,
     total,
     trackedAmount,
-  } = useExpenseData({ isAdmin, page, limit, filters });
+  } = useExpenseData({ canManageExpenses, page, limit, filters });
   const {
     downloadExpenseVoucher,
     exportExcel,
     exportPdf,
     shareExpenseVoucher,
-  } = useExpenseDocuments({ isAdmin, filters, employees });
+  } = useExpenseDocuments({ canManageExpenses, filters, employees });
 
   const addExpenseItem = () => {
     setExpenseItems((current) => [...current, createEmptyExpense()]);
@@ -137,7 +149,8 @@ const AddExpense = () => {
         expense.seller &&
         expense.sellerCompany &&
         expense.receivedFrom &&
-        (!isAdmin || expense.employeeId) &&
+        (!canManageExpenses || expense.employeeId) &&
+        (!canManageExpenses || expense.assignedApproverId) &&
         expense.items.length > 0 &&
         expense.items.every(
           (item) =>
@@ -150,8 +163,8 @@ const AddExpense = () => {
     );
     if (!isValid) {
       toast.error(
-        isAdmin
-          ? "Select an employee and complete all expense fields"
+        canManageExpenses
+          ? "Select an employee and approving Admin, then complete all expense fields"
           : "Complete seller details and all expense item fields",
       );
       return;
@@ -232,6 +245,11 @@ const AddExpense = () => {
         employeeId:
           request.employee?._id ||
           (typeof request.employee === "string" ? request.employee : ""),
+        assignedApproverId:
+          request.assignedApprover?._id ||
+          (typeof request.assignedApprover === "string"
+            ? request.assignedApprover
+            : ""),
         items,
       },
     ]);
@@ -259,11 +277,12 @@ const AddExpense = () => {
           />
         )}
         <ExpenseEntryForm
-          isAdmin={isAdmin}
+          isAdmin={canManageExpenses}
           user={user}
           categories={categories}
           sellers={sellers}
           employees={employees}
+          approvers={approvers}
           requests={requests}
           expenseItems={expenseItems}
           isSubmittingRequest={isSubmittingRequest}
@@ -280,6 +299,7 @@ const AddExpense = () => {
         />
         <ExpenseRequestsPanel
           isAdmin={isAdmin}
+          canManageExpenses={canManageExpenses}
           employees={employees}
           financialYears={(Array.isArray(financialYears) ? financialYears : []).map((year) => ({
             value: String(year),
@@ -299,6 +319,7 @@ const AddExpense = () => {
           onDownloadVoucher={downloadExpenseVoucher}
           onShareVoucher={shareExpenseVoucher}
           onStatusUpdate={handleStatusUpdate}
+          currentUserId={user?._id || user?.id}
         />
       </div>
     </AdminPageShell>

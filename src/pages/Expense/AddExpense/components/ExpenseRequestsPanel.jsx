@@ -7,6 +7,8 @@ import { calculateLineTotal } from "../utils/expenseCalculations";
 
 const ExpenseRequestsPanel = ({
   isAdmin,
+  canManageExpenses,
+  currentUserId,
   employees = [],
   financialYears = [],
   filters,
@@ -99,15 +101,30 @@ const ExpenseRequestsPanel = ({
           {request.rejectionReason}
         </span>
       )}
+      {canManageExpenses && (
+        <span className="text-[10px] text-lux-muted">
+          Approving Admin: {request.assignedApprover?.name || "Any Admin"}
+        </span>
+      )}
     </div>
   );
 
   const renderActions = (request) => {
+    const assignedApproverId =
+      typeof request.assignedApprover === "object"
+        ? request.assignedApprover?._id
+        : request.assignedApprover;
+    const canEdit =
+      (canManageExpenses || request.status === "pending") &&
+      (!assignedApproverId || assignedApproverId === currentUserId);
+    const canApprove =
+      isAdmin &&
+      (!assignedApproverId || assignedApproverId === currentUserId);
     const buttonClass =
       "inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-50 px-2 py-2 text-xs font-semibold transition-colors hover:bg-slate-100 sm:gap-2 sm:text-sm md:flex-none md:p-2";
     return (
       <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-        {(isAdmin || request.status === "pending") && (
+        {canEdit && (
           <button
             type="button"
             onClick={() => onEdit(request)}
@@ -139,7 +156,7 @@ const ExpenseRequestsPanel = ({
           <FaWhatsapp size={15} />
           <span>Share</span>
         </button>
-        {isAdmin && request.status === "pending" && (
+        {canApprove && request.status === "pending" && (
           <>
             <button
               type="button"
@@ -170,7 +187,7 @@ const ExpenseRequestsPanel = ({
   const headers = [
     "Date",
     "Voucher No.",
-    ...(isAdmin ? ["Employee"] : []),
+    ...(canManageExpenses ? ["Employee"] : []),
     "Seller / Company",
     "Received From",
     "Items",
@@ -183,7 +200,7 @@ const ExpenseRequestsPanel = ({
   const rows = safeRequests.map((request) => [
     new Date(request.createdAt).toLocaleDateString(),
     request.voucherNumber || "-",
-    ...(isAdmin
+    ...(canManageExpenses
       ? [
           <div key={`employee-${request._id}`} className="flex min-w-32 flex-col">
             <span className="font-bold">{request.employee?.name || "N/A"}</span>
@@ -223,7 +240,7 @@ const ExpenseRequestsPanel = ({
     <section className="space-y-6 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-4 sm:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h2 className="font-serif text-lg font-semibold text-lux-ink">
-          {isAdmin ? "Recent Expense Requests" : "Your Expense History"}
+          {canManageExpenses ? "Recent Expense Requests" : "Your Expense History"}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -259,7 +276,7 @@ const ExpenseRequestsPanel = ({
             })
           }
         />
-        {isAdmin && (
+        {canManageExpenses && (
           <DataDropdown
             label="Employee"
             options={employeeOptions}
@@ -301,9 +318,9 @@ const ExpenseRequestsPanel = ({
 
       <div className="flex flex-col gap-1 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm font-semibold text-lux-ink">
-          {isAdmin && filters.employeeId
+          {canManageExpenses && filters.employeeId
             ? `Expense tracker: ${safeEmployees.find((employee) => employee._id === filters.employeeId)?.name || "Selected employee"}`
-            : isAdmin
+            : canManageExpenses
               ? "Expense tracker: all employees"
               : "Your expense tracker"}
         </span>

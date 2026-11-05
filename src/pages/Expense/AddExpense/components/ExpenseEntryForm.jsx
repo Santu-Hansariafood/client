@@ -13,6 +13,7 @@ const ExpenseEntryForm = ({
   categories = [],
   sellers = [],
   employees = [],
+  approvers = [],
   requests = [],
   expenseItems = [],
   isSubmittingRequest,
@@ -30,6 +31,7 @@ const ExpenseEntryForm = ({
   const safeCategories = Array.isArray(categories) ? categories : [];
   const safeSellers = Array.isArray(sellers) ? sellers : [];
   const safeEmployees = Array.isArray(employees) ? employees : [];
+  const safeApprovers = Array.isArray(approvers) ? approvers : [];
   const safeRequests = Array.isArray(requests) ? requests : [];
   const safeExpenseItems = Array.isArray(expenseItems) ? expenseItems : [];
   const categoryOptions = safeCategories.map((category) => ({
@@ -50,6 +52,10 @@ const ExpenseEntryForm = ({
       value: employee._id,
       label: `${employee.name}${employee.employeeId ? ` (${employee.employeeId})` : ""}`,
     }));
+  const approverOptions = safeApprovers.map((approver) => ({
+    value: approver._id,
+    label: `${approver.name}${approver.email ? ` (${approver.email})` : ""}`,
+  }));
   const allExpensesTotal = calculateTotalAmount(
     safeExpenseItems.flatMap((expense) =>
       Array.isArray(expense.items) ? expense.items : [],
@@ -190,6 +196,24 @@ const ExpenseEntryForm = ({
                     }
                     required
                     placeholder="Select employee..."
+                  />
+                )}
+                {isAdmin && (
+                  <DataDropdown
+                    label="Approving Admin"
+                    options={approverOptions}
+                    selectedOptions={approverOptions.find(
+                      (option) => option.value === expense.assignedApproverId,
+                    )}
+                    onChange={(option) =>
+                      onExpenseChange(
+                        index,
+                        "assignedApproverId",
+                        option?.value || "",
+                      )
+                    }
+                    required
+                    placeholder="Select approving Admin..."
                   />
                 )}
                 <DataInput

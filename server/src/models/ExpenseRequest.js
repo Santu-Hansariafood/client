@@ -63,6 +63,7 @@ const expenseRequestSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    assignedApprover: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     rejectionReason: { type: String },

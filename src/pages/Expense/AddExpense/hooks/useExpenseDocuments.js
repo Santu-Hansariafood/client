@@ -2,27 +2,11 @@ import { useCallback } from "react";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import QRCode from "qrcode";
 import api from "../../../../utils/apiClient/apiClient";
 import { downloadFile } from "../../../../utils/fileDownloader";
 import generateExcel from "../../../../common/GenerateExcel/GenerateExcel";
 import { calculateLineTotal } from "../utils/expenseCalculations";
-
-const loadCompanyLogo = async () => {
-  const image = new Image();
-  image.src = `${import.meta.env.BASE_URL}logo/logo.png`;
-  await image.decode();
-
-  const canvas = document.createElement("canvas");
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error("Unable to prepare the company logo for the voucher");
-  }
-  context.drawImage(image, 0, 0);
-  return canvas.toDataURL("image/png");
-};
+import { extractUploadUrl } from "../../../../utils/saudaPdf/resolveUploadUrl";
 
 const toTitleCase = (value) =>
   String(value ?? "")
@@ -85,90 +69,46 @@ const amountInWords = (amount) => {
   return `Rupees ${numberToIndianWords(rupees)}${paise ? ` And ${numberToIndianWords(paise)} Paise` : ""} Only`;
 };
 
-const createVoucherQrText = (request, lineItems, detailLabels) => {
-  const employee = request.employee || {};
-  const seller = request.sellerName || request.seller?.sellerName || "N/A";
-  const lines = [
-    "Hansaria Food Private Limited",
-    "Expense Voucher",
-    `Voucher No: ${request.voucherNumber || "N/A"}`,
-    `Date: ${request.createdAt ? new Date(request.createdAt).toLocaleDateString() : "N/A"}`,
-    `Status: ${toTitleCase(request.status || "Pending")}`,
-    `Employee: ${toTitleCase(employee.name || "N/A")}`,
-    `Added By: ${toTitleCase(request.createdBy?.name || employee.name || "N/A")}`,
-    `Seller: ${toTitleCase(seller)}`,
-    `Company: ${toTitleCase(request.sellerCompany || "N/A")}`,
-    `Received From: ${toTitleCase(request.receivedFrom || "N/A")}`,
-    `Expense Description: ${toTitleCase(request.description || "N/A")}`,
-    "Expense Items:",
-  ];
-  if (lineItems.length) {
-    lineItems.forEach((item, index) => {
-      lines.push(
-        `${index + 1}. ${toTitleCase(item.category?.name || "Expense")}; Description: ${toTitleCase(item.description || "N/A")}; Quantity: ${Number(item.quantity ?? 1)}; Rate: Rs. ${Number(item.amount || 0).toFixed(2)}; Amount: Rs. ${calculateLineTotal(item)}`,
-      );
-    });
-  } else {
-    lines.push(
-      `1. ${toTitleCase(request.category?.name || "Expense")}; Quantity: 1; Rate: Rs. ${Number(request.amount || 0).toFixed(2)}; Amount: Rs. ${Number(request.amount || 0).toFixed(2)}`,
-    );
-  }
-  lines.push(
-    `Total Amount: Rs. ${(Number(request.amount) || 0).toFixed(2)}`,
-    `Amount In Words: ${amountInWords(request.amount)}`,
-  );
-  detailLabels.forEach(([field, label]) => {
-    const value = request.transportDetails?.[field];
-    if (String(value || "").trim()) {
-      lines.push(`${label}: ${toTitleCase(value)}`);
-    }
-  });
-  if (request.status === "approved" && request.approvedBy?.name) {
-    lines.push(`Approved By: ${toTitleCase(request.approvedBy.name)}`);
-  }
-  if (request.status === "rejected" && request.rejectedBy?.name) {
-    lines.push(`Rejected By: ${toTitleCase(request.rejectedBy.name)}`);
-  }
-  if (request.rejectionReason) {
-    lines.push(`Rejection Reason: ${toTitleCase(request.rejectionReason)}`);
-  }
-  return lines.join("\n");
-};
-
 const createExpenseVoucherPdf = async (request) => {
   const employee = request.employee || {};
-  const logo = await loadCompanyLogo();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 14;
+  const margin = 10;
   const contentWidth = pageWidth - margin * 2;
   const status = toTitleCase(request.status || "Pending");
   const lineItems = Array.isArray(request.lineItems) ? request.lineItems : [];
 
-  doc.setFillColor(6, 95, 70);
-  doc.rect(0, 0, pageWidth, 34, "F");
-  doc.setFillColor(212, 175, 55);
-  doc.rect(0, 34, pageWidth, 1.5, "F");
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(margin - 1, 8, 52, 20, 1.5, 1.5, "F");
+  const tableStyles = {
+    font: "helvetica",
+    fontSize: 8,
+    textColor: [0, 0, 0],
+    lineColor: [0, 0, 0],
+    lineWidth: 0.15,
+    cellPadding: 1.5,
+    overflow: "linebreak",
+  };
+  const tableHeadStyles = {
+    fillColor: [255, 255, 255],
+    textColor: [0, 0, 0],
+    lineColor: [0, 0, 0],
+    lineWidth: 0.15,
+    fontStyle: "bold",
+    fontSize: 7,
+  };
+
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Expense Voucher", pageWidth - margin, 17, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.text("Hansaria Food Private Limited", pageWidth - margin, 23, {
-    align: "right",
-  });
-  doc.addImage(logo, "PNG", margin, 10, 48, 16);
-  doc.setTextColor(20);
-  doc.setDrawColor(20);
-  doc.setLineWidth(0.6);
-  doc.line(margin, 40, pageWidth - margin, 40);
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+  doc.text("HANSARIA FOOD PRIVATE LIMITED", margin, 12);
+  doc.setFontSize(10);
+  doc.text("EXPENSE VOUCHER", pageWidth - margin, 12, { align: "right" });
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.35);
+  doc.line(margin, 15, pageWidth - margin, 15);
 
   autoTable(doc, {
-    startY: 44,
+    startY: 18,
     theme: "grid",
     head: [["Voucher Number", "Date", "Status"]],
     body: [[
@@ -179,20 +119,8 @@ const createExpenseVoucherPdf = async (request) => {
       status,
     ]],
     margin: { left: margin, right: margin },
-    styles: {
-      font: "helvetica",
-      fontSize: 9,
-      textColor: [20, 20, 20],
-      lineColor: [80, 80, 80],
-      lineWidth: 0.2,
-      cellPadding: 3,
-    },
-    headStyles: {
-      fillColor: [6, 95, 70],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 7,
-    },
+    styles: tableStyles,
+    headStyles: tableHeadStyles,
     columnStyles: {
       0: { cellWidth: contentWidth * 0.42 },
       1: { cellWidth: contentWidth * 0.29 },
@@ -203,7 +131,7 @@ const createExpenseVoucherPdf = async (request) => {
   const seller =
     request.sellerName || request.seller?.sellerName || "N/A";
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 5,
+    startY: doc.lastAutoTable.finalY + 2,
     theme: "grid",
     head: [["Employee / Claimant", "Seller / Vendor", "Payment Details"]],
     body: [[
@@ -212,22 +140,8 @@ const createExpenseVoucherPdf = async (request) => {
       `Received From: ${toTitleCase(request.receivedFrom || "N/A")}`,
     ]],
     margin: { left: margin, right: margin },
-    styles: {
-      font: "helvetica",
-      fontSize: 8,
-      textColor: [25, 25, 25],
-      lineColor: [80, 80, 80],
-      lineWidth: 0.2,
-      cellPadding: 3,
-      valign: "top",
-      overflow: "linebreak",
-    },
-    headStyles: {
-      fillColor: [6, 95, 70],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 7,
-    },
+    styles: { ...tableStyles, valign: "top" },
+    headStyles: tableHeadStyles,
     columnStyles: {
       0: { cellWidth: contentWidth / 3 },
       1: { cellWidth: contentWidth / 3 },
@@ -236,7 +150,7 @@ const createExpenseVoucherPdf = async (request) => {
   });
 
   autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 8,
+    startY: doc.lastAutoTable.finalY + 3,
     head: [["Particulars", "Description", "Qty", "Rate (Rs.)", "Amount (Rs.)"]],
     body: lineItems.length > 0
       ? lineItems.map((item) => [
@@ -255,22 +169,8 @@ const createExpenseVoucherPdf = async (request) => {
         ]],
     margin: { left: margin, right: margin, bottom: 20 },
     theme: "grid",
-    styles: {
-      font: "helvetica",
-      fontSize: 8,
-      textColor: [25, 25, 25],
-      lineColor: [90, 90, 90],
-      lineWidth: 0.2,
-      cellPadding: 3,
-      overflow: "linebreak",
-    },
-    headStyles: {
-      fillColor: [6, 95, 70],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 7,
-    },
-    alternateRowStyles: { fillColor: [239, 247, 244] },
+    styles: tableStyles,
+    headStyles: tableHeadStyles,
     columnStyles: {
       0: { cellWidth: 39 },
       1: { cellWidth: 67 },
@@ -296,44 +196,15 @@ const createExpenseVoucherPdf = async (request) => {
       toTitleCase(request.transportDetails?.[field] || ""),
     ])
     .filter(([, value]) => String(value).trim());
-  let qrCode;
-  try {
-    qrCode = await QRCode.toDataURL(
-      createVoucherQrText(request, lineItems, detailLabels),
-      {
-        errorCorrectionLevel: "L",
-        margin: 2,
-        width: 512,
-        color: { dark: "#000000", light: "#FFFFFF" },
-      },
-    );
-  } catch (error) {
-    throw new Error(
-      `Could not create the voucher QR code. Shorten the expense descriptions and try again. ${error.message}`,
-    );
-  }
   if (detailRows.length) {
     autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 7,
+      startY: doc.lastAutoTable.finalY + 3,
       head: [["Additional Expense Details", "Value"]],
       body: detailRows,
       margin: { left: margin, right: margin, bottom: 20 },
       theme: "grid",
-      styles: {
-        font: "helvetica",
-        fontSize: 8,
-        textColor: [25, 25, 25],
-        lineColor: [90, 90, 90],
-        lineWidth: 0.2,
-        cellPadding: 2.5,
-        overflow: "linebreak",
-      },
-      headStyles: {
-        fillColor: [6, 95, 70],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-        fontSize: 7,
-      },
+      styles: tableStyles,
+      headStyles: tableHeadStyles,
       columnStyles: {
         0: { cellWidth: 70, fontStyle: "bold" },
         1: { cellWidth: contentWidth - 70 },
@@ -359,84 +230,66 @@ const createExpenseVoucherPdf = async (request) => {
   if (request.description) {
     notes.push(`Notes: ${toTitleCase(request.description)}`);
   }
-  let footerStartY = doc.lastAutoTable.finalY + 8;
+  let footerStartY = doc.lastAutoTable.finalY + 4;
   if (notes.length) {
     const noteLines = doc.splitTextToSize(notes.join("\n"), contentWidth);
     let noteY = footerStartY;
-    if (noteY + noteLines.length * 4 > pageHeight - 72) {
+    if (noteY + noteLines.length * 3.5 > pageHeight - 42) {
       doc.addPage();
       noteY = margin;
     }
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(45);
+    doc.setFontSize(7);
+    doc.setTextColor(0);
     doc.text(noteLines, margin, noteY);
-    footerStartY = noteY + noteLines.length * 4 + 8;
+    footerStartY = noteY + noteLines.length * 3.5 + 4;
   }
 
-  if (footerStartY > pageHeight - 65) {
+  if (footerStartY > pageHeight - 36) {
     doc.addPage();
     footerStartY = margin;
   }
   const total = Number(request.amount) || 0;
-  const qrSize = 38;
-  doc.addImage(qrCode, "PNG", margin, footerStartY, qrSize, qrSize);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(70);
-  doc.text("Scan For Full Voucher Details", margin + qrSize / 2, footerStartY + qrSize + 4, {
-    align: "center",
-  });
-
-  const detailsX = margin + qrSize + 8;
-  const detailsWidth = pageWidth - margin - detailsX;
-  const totalBoxWidth = Math.min(82, detailsWidth);
-  const totalBoxX = pageWidth - margin - totalBoxWidth;
-  doc.setDrawColor(6, 95, 70);
-  doc.setLineWidth(0.5);
-  doc.setFillColor(239, 247, 244);
-  doc.roundedRect(totalBoxX, footerStartY, totalBoxWidth, 14, 1.5, 1.5, "FD");
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.2);
+  doc.line(margin, footerStartY, pageWidth - margin, footerStartY);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(20);
-  doc.text("Grand Total", totalBoxX + 4, footerStartY + 9);
-  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text("Grand Total", margin, footerStartY + 6);
   doc.text(
     `Rs. ${total.toFixed(2)}`,
-    totalBoxX + totalBoxWidth - 4,
-    footerStartY + 9,
+    pageWidth - margin,
+    footerStartY + 6,
     { align: "right" },
   );
   doc.setFontSize(7);
-  doc.setTextColor(70);
-  doc.text("Amount In Words", detailsX, footerStartY + 21);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(25);
-  const amountLines = doc.splitTextToSize(
-    amountInWords(total),
-    detailsWidth,
-  );
-  doc.text(amountLines, detailsX, footerStartY + 27);
-
-  const signatureY = footerStartY + 48;
-  doc.setDrawColor(100);
-  doc.setLineWidth(0.2);
-  doc.line(margin, signatureY, margin + 52, signatureY);
-  doc.line(pageWidth - margin - 52, signatureY, pageWidth - margin, signatureY);
+  doc.text("Amount In Words:", margin, footerStartY + 12);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.setTextColor(80);
-  doc.text("Prepared By", margin + 26, signatureY + 4, { align: "center" });
-  doc.text("Authorized Signatory", pageWidth - margin - 26, signatureY + 4, {
+  const amountLines = doc.splitTextToSize(
+    amountInWords(total),
+    contentWidth - 30,
+  );
+  doc.text(amountLines, margin + 30, footerStartY + 12);
+
+  const signatureY = footerStartY + 25;
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.2);
+  doc.line(margin, signatureY, margin + 42, signatureY);
+  doc.line(pageWidth - margin - 42, signatureY, pageWidth - margin, signatureY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.text("Prepared By", margin + 21, signatureY + 3, { align: "center" });
+  doc.text("Authorized Signatory", pageWidth - margin - 21, signatureY + 3, {
     align: "center",
   });
 
   for (let page = 1; page <= doc.internal.getNumberOfPages(); page += 1) {
     doc.setPage(page);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(100);
+    doc.setFontSize(6);
+    doc.setTextColor(0);
     doc.text(
       "Hansaria Food Private Limited | Expense Voucher",
       margin,
@@ -450,27 +303,7 @@ const createExpenseVoucherPdf = async (request) => {
   return doc;
 };
 
-const supportsPdfFileSharing = (fileName) => {
-  if (
-    !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    typeof File === "undefined" ||
-    typeof navigator.share !== "function" ||
-    typeof navigator.canShare !== "function"
-  ) {
-    return false;
-  }
-
-  try {
-    return navigator.canShare({
-      files: [new File([], fileName, { type: "application/pdf" })],
-    });
-  } catch (error) {
-    console.warn("PDF file sharing is unavailable on this device:", error);
-    return false;
-  }
-};
-
-const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
+const useExpenseDocuments = ({ canManageExpenses, filters, employees }) => {
   const downloadExpenseVoucher = useCallback(async (request) => {
     const voucherNumber = request.voucherNumber || request._id;
     try {
@@ -494,60 +327,47 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
     const voucherNumber = request.voucherNumber || request._id;
     const fileName = `Expense-Voucher-${voucherNumber}.pdf`;
     const shareText = `Expense voucher ${request.voucherNumber || ""} for ${employee.name || "employee"}.`;
-    const whatsappUrl = whatsappNumber
-      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`${shareText} The voucher PDF has been downloaded; please attach it to this chat.`)}`
-      : "";
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const canShareFiles =
-      Boolean(whatsappUrl) && supportsPdfFileSharing(fileName);
-    const shareWindow =
-      whatsappUrl && !isMobile && !canShareFiles
-        ? window.open("about:blank", "_blank")
-        : null;
+    const shareWindow = !isMobile ? window.open("about:blank", "_blank") : null;
 
     try {
-      const doc = await createExpenseVoucherPdf(request);
-      if (canShareFiles) {
-        const file = new File([doc.output("blob")], fileName, {
-          type: "application/pdf",
-        });
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Expense voucher",
-            text: shareText,
-          });
-          toast.success("Choose WhatsApp and the employee to share the voucher.");
-          return;
-        } catch (error) {
-          if (error.name === "AbortError") return;
-          console.error("Native voucher sharing failed:", error);
-        }
-      }
-
       if (!whatsappNumber) {
-        await downloadFile(doc, fileName);
+        await downloadFile(await createExpenseVoucherPdf(request), fileName);
         toast.error(
           "Employee WhatsApp number is unavailable; the voucher PDF was downloaded.",
         );
+        shareWindow?.close();
         return;
       }
 
-      await downloadFile(doc, fileName);
+      const doc = await createExpenseVoucherPdf(request);
+      const voucherBlob = doc.output("blob");
+      if (!voucherBlob.size) {
+        throw new Error("Generated expense voucher PDF is empty");
+      }
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", voucherBlob, fileName);
+      uploadFormData.append("saudaNo", `Expense-Voucher-${voucherNumber}`);
+
+      const uploadResponse = await api.post(
+        "/uploads/whatsapp",
+        uploadFormData,
+      );
+      const fileUrl = extractUploadUrl(uploadResponse.data);
+      if (!fileUrl || !/^https?:\/\//i.test(fileUrl)) {
+        throw new Error("The uploaded voucher did not return a shareable PDF link");
+      }
+
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`${shareText}\n\nView / Download Expense Voucher PDF:\n${fileUrl}`)}`;
       if (isMobile) {
         window.location.assign(whatsappUrl);
-        toast.info(
-          `Voucher downloaded. Attach the PDF in the WhatsApp chat for ${employee.name || "this employee"}.`,
-        );
+        toast.success("WhatsApp opened with the expense voucher PDF link.");
       } else if (shareWindow) {
         shareWindow.location = whatsappUrl;
-        toast.info(
-          `Voucher downloaded. Attach the PDF in the WhatsApp chat for ${employee.name || "this employee"}.`,
-        );
+        toast.success("WhatsApp opened with the expense voucher PDF link.");
       } else {
-        toast.error(
-          "WhatsApp could not open. Allow popups and try sharing the voucher again.",
-        );
+        await downloadFile(doc, fileName);
+        toast.error("WhatsApp could not open. The voucher PDF was downloaded.");
       }
     } catch (error) {
       shareWindow?.close();
@@ -602,7 +422,7 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
       doc.text("Expense Report", 14, 15);
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-      if (isAdmin && filters.employeeId) {
+      if (canManageExpenses && filters.employeeId) {
         const employeeName = employees.find(
           (employee) => employee._id === filters.employeeId,
         )?.name;
@@ -644,7 +464,7 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
       autoTable(doc, {
         head: [tableColumns],
         body: tableRows,
-        startY: isAdmin && filters.employeeId ? 35 : 30,
+        startY: canManageExpenses && filters.employeeId ? 35 : 30,
         theme: "grid",
         styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
         headStyles: { fontSize: 7 },
@@ -665,7 +485,7 @@ const useExpenseDocuments = ({ isAdmin, filters, employees }) => {
     } catch {
       toast.error("Failed to generate PDF");
     }
-  }, [employees, filters, isAdmin]);
+  }, [canManageExpenses, employees, filters]);
 
   return {
     downloadExpenseVoucher,

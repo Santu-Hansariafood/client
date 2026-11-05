@@ -13,6 +13,7 @@ import DateRangeSelector from "../../common/DateSelector/DateRangeSelector";
 import Pagination from "../../common/Paginations/Paginations";
 import DataDropdown from "../../common/DataDropdown/DataDropdown";
 import ScrollToTop from "../../common/ScrollToTop/ScrollToTop";
+import ExpenseDashboard from "../../components/ExpenseDashboard/ExpenseDashboard";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 const AdminAnalysisSection = lazy(() => import("./AdminAnalysisSection/AdminAnalysisSection"));
@@ -205,6 +206,8 @@ const Dashboard = () => {
               employeeWiseWorks={employeeWiseWorks}
             />
           </section>
+
+          <ExpenseDashboard />
 
           <div className="animate-fade-in-up [animation-delay:300ms]">
             <AdminAnalysisSection />
