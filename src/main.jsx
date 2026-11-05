@@ -90,10 +90,7 @@ axios.interceptors.response.use(
 );
 
 registerSW({
-  immediate: true,
-  onRegisteredSW(swUrl, r) {},
-  onNeedRefresh() {},
-  onOfflineReady() {},
+  immediate: false,
 });
 
 root.render(

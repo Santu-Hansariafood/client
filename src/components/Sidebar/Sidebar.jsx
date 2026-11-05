@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
+import { prefetchRoute } from "../../utils/LazyPages/LazyPages";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
@@ -221,6 +222,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                             <Link
                               key={idx}
                               to={action.link}
+                              onMouseEnter={() => prefetchRoute(action.link)}
+                              onFocus={() => prefetchRoute(action.link)}
                               onClick={() => setIsSidebarOpen(false)}
                               className={`
                                 group relative flex items-center gap-3
