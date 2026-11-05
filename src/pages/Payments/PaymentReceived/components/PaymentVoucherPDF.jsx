@@ -581,6 +581,10 @@ const PaymentVoucherPDF = ({
   const loadingEntry = firstEntry?.loadingEntry;
   const firstMapping = firstEntry?.mapping;
   const reference = row.reference || (row.raw?.isRejected ? "Rejected" : "");
+  const referenceNumber = reference || voucherNumber || "-";
+  const displayedReferenceNumber = /^\d+$/.test(String(referenceNumber))
+    ? String(referenceNumber).slice(-4)
+    : referenceNumber;
 
   const billNo = getValue(
     loadingEntry?.billNumber,
@@ -653,7 +657,7 @@ const PaymentVoucherPDF = ({
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Ref. No</Text>
             <Text style={styles.metaValue}>
-              {reference || voucherNumber || "-"}
+              {displayedReferenceNumber}
             </Text>
           </View>
           <View style={styles.metaItem}>
