@@ -4,6 +4,7 @@ const loaders = {
   Login: () => import("../../pages/Login/Login"),
   Dashboard: () => import("../../pages/Dashboard/Dashboard"),
   AddBuyer: () => import("../../pages/Buyer/AddBuyer/AddBuyer"),
+  AgentManagement: () => import("../../pages/Agent/AgentManagement"),
   ListBuyer: () => import("../../pages/Buyer/BuyerList/BuyerList"),
   AddCommodity: () => import("../../pages/Commodity/AddCommodity/AddCommodity"),
   EditCommodity: () =>
@@ -137,6 +138,7 @@ const pathToKey = {
   "/seller/dashboard": "SellerDashboard",
   "/transporter/dashboard": "TransporterDashboard",
   "/buyer/add": "AddBuyer",
+  "/agents": "AgentManagement",
   "/buyer/list": "ListBuyer",
   "/group-of-company/add": "AddGroupOfCompany",
   "/group-of-company/list": "ListGroupOfCompany",
@@ -242,6 +244,7 @@ const LazyPages = {
   Login: lazy(loaders.Login),
   Dashboard: lazy(loaders.Dashboard),
   AddBuyer: lazy(loaders.AddBuyer),
+  AgentManagement: lazy(loaders.AgentManagement),
   ListBuyer: lazy(loaders.ListBuyer),
   AddCommodity: lazy(loaders.AddCommodity),
   EditCommodity: lazy(loaders.EditCommodity),

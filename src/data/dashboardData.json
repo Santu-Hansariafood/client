@@ -142,10 +142,15 @@
       ]
     },
     {
-      "section": "Add Agent",
-      "icon": "FaBook",
+      "section": "Agents",
+      "icon": "FaUserTie",
       "actions": [
-        { "name": "Add Agent", "link": "/sodabook/list", "icon": "FaList" }
+        {
+          "name": "Manage Agents",
+          "link": "/agents",
+          "icon": "FaUserTie",
+          "roles": ["Admin"]
+        }
       ]
     },
     {

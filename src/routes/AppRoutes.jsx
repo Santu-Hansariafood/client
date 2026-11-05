@@ -85,6 +85,11 @@ const privateRoutes = [
   },
 
   {
+    path: "agents",
+    component: LazyPages.AgentManagement,
+    roles: ["Admin"],
+  },
+  {
     path: "buyer/add",
     component: LazyPages.AddBuyer,
     roles: ["Admin", "Employee"],

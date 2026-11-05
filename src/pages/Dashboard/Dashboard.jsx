@@ -2,18 +2,17 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { toast } from "react-toastify";
 import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
-import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import {
   FaTachometerAlt,
-  FaClipboardList,
   FaCalendarCheck,
 } from "react-icons/fa";
-import DashboardBlogSection from "../Blog/components/DashboardBlogSection";
-import DateRangeSelector from "../../common/DateSelector/DateRangeSelector";
-import Pagination from "../../common/Paginations/Paginations";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import ScrollToTop from "../../common/ScrollToTop/ScrollToTop";
-import ExpenseDashboard from "../../components/ExpenseDashboard/ExpenseDashboard";
+const AdminPageShell = lazy(() => import("../../common/AdminPageShell/AdminPageShell"));
+const DashboardBlogSection = lazy(() => import("../Blog/components/DashboardBlogSection"));
+const DateRangeSelector = lazy(() => import("../../common/DateSelector/DateRangeSelector"));
+const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
+const DataDropdown = lazy(() => import("../../common/DataDropdown/DataDropdown"));
+const ScrollToTop = lazy(() => import("../../common/ScrollToTop/ScrollToTop"));
+const ExpenseDashboard = lazy(() => import("../../components/ExpenseDashboard/ExpenseDashboard"));
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 const AdminAnalysisSection = lazy(() => import("./AdminAnalysisSection/AdminAnalysisSection"));
@@ -27,6 +26,7 @@ const Dashboard = () => {
     bids: 0,
   });
   const [agentSaudas, setAgentSaudas] = useState([]);
+  const [agentDailySaudas, setAgentDailySaudas] = useState([]);
   const [dateWiseWorks, setDateWiseWorks] = useState([]);
   const [employeeWiseWorks, setEmployeeWiseWorks] = useState([]);
   const [works, setWorks] = useState([]);
@@ -49,6 +49,7 @@ const Dashboard = () => {
       const data = response.data;
 
       setAgentSaudas(data.agentSaudas || []);
+      setAgentDailySaudas(data.agentDailySaudas || []);
       setDateWiseWorks(data.dateWiseWorks || []);
       setEmployeeWiseWorks(data.employeeWiseWorks || []);
       setCounts({
@@ -202,6 +203,7 @@ const Dashboard = () => {
 
             <ChartSection
               agentSaudas={agentSaudas}
+              agentDailySaudas={agentDailySaudas}
               dateWiseWorks={dateWiseWorks}
               employeeWiseWorks={employeeWiseWorks}
             />

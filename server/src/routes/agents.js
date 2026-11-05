@@ -1,5 +1,7 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import Agent from "../models/Agent.js";
+import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = Router();
 
@@ -33,9 +35,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", adminOnly, async (req, res) => {
   try {
-    if (!req.body.name || req.body.name.trim() === "") {
+    if (typeof req.body.name !== "string" || req.body.name.trim() === "") {
       return res.status(400).json({ message: "Agent name is required" });
     }
 
@@ -57,9 +59,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", adminOnly, async (req, res) => {
   try {
-    if (!req.body.name || req.body.name.trim() === "") {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "Invalid agent ID" });
+    }
+    if (typeof req.body.name !== "string" || req.body.name.trim() === "") {
       return res.status(400).json({ message: "Agent name is required" });
     }
 
@@ -92,8 +97,11 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminOnly, async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "Invalid agent ID" });
+    }
     const deleted = await Agent.findByIdAndDelete(req.params.id);
 
     if (!deleted) {

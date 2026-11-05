@@ -234,6 +234,8 @@ router.get("/stats", authJwt, async (req, res) => {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const [
       buyerCount,
@@ -248,6 +250,7 @@ router.get("/stats", authJwt, async (req, res) => {
       inProgressWorks,
       completedWorks,
       cancelledWorks,
+      agentDailySaudaStats,
     ] = await Promise.all([
       Buyer.countDocuments(),
       Seller.countDocuments(),
@@ -281,6 +284,49 @@ router.get("/stats", authJwt, async (req, res) => {
       EmployeeWork.countDocuments({ status: "In Progress" }),
       EmployeeWork.countDocuments({ status: "Completed" }),
       EmployeeWork.countDocuments({ status: "Cancelled" }),
+      SelfOrder.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: thirtyDaysAgo },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              date: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                  timezone: "Asia/Kolkata",
+                },
+              },
+              agent: {
+                $ifNull: [
+                  {
+                    $cond: [
+                      { $eq: [{ $trim: { input: "$agentName" } }, ""] },
+                      "Direct / Unknown",
+                      { $trim: { input: "$agentName" } },
+                    ],
+                  },
+                  "Direct / Unknown",
+                ],
+              },
+            },
+            saudas: { $sum: 1 },
+            tons: { $sum: { $ifNull: ["$quantity", 0] } },
+            value: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ["$quantity", 0] },
+                  { $ifNull: ["$rate", 0] },
+                ],
+              },
+            },
+          },
+        },
+        { $sort: { "_id.date": 1, "_id.agent": 1 } },
+      ]),
     ]);
 
     const agentSaudaList = agentStats.map((item) => ({
@@ -293,8 +339,6 @@ router.get("/stats", authJwt, async (req, res) => {
       0,
     );
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const dateWiseWorks = await EmployeeWork.aggregate([
       {
         $match: {
@@ -355,6 +399,13 @@ router.get("/stats", authJwt, async (req, res) => {
       orders: orderCount,
       bids: todayBidCount,
       agentSaudas: agentSaudaList,
+      agentDailySaudas: agentDailySaudaStats.map((item) => ({
+        date: item._id.date,
+        agent: item._id.agent,
+        saudas: item.saudas,
+        tons: item.tons,
+        value: item.value,
+      })),
       totalSaudaTons,
       employees: employeeCount,
       totalWorks,

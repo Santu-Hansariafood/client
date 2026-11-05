@@ -15,6 +15,10 @@ const BidChart = lazy(() => import("../../../common/Charts/BidChart/BidChart"));
 const AgentSaudaChart = lazy(
   () => import("../../../common/Charts/AgentSaudaChart/AgentSaudaChart"),
 );
+const AgentDailySaudaChart = lazy(
+  () =>
+    import("../../../common/Charts/AgentDailySaudaChart/AgentDailySaudaChart"),
+);
 const LoadingChart = lazy(
   () => import("../../../common/Charts/LoadingChart/LoadingChart"),
 );
@@ -36,10 +40,10 @@ const CHART_CARDS = [
     label: "Employee Work",
     accent: "from-lux-emerald to-[#0f8a6c]",
     Component: EmployeeWorkChart,
-    props: (chartType, agentSaudas, dateWiseWorks, employeeWiseWorks) => ({ 
-      chartType, 
-      dateWiseData: dateWiseWorks, 
-      employeeWiseData: employeeWiseWorks 
+    props: (chartType, agentSaudas, dateWiseWorks, employeeWiseWorks) => ({
+      chartType,
+      dateWiseData: dateWiseWorks,
+      employeeWiseData: employeeWiseWorks
     }),
   },
   {
@@ -98,6 +102,16 @@ const CHART_CARDS = [
     props: () => ({ apiUrl: "/bids", chartType: "pie" }),
   },
   {
+    id: "agent-daily-sauda",
+    featured: true,
+    label: "Daily agent Sauda",
+    accent: "from-lux-emerald to-lux-gold",
+    Component: AgentDailySaudaChart,
+    props: (_, __, ___, ____, agentDailySaudas) => ({
+      data: agentDailySaudas,
+    }),
+  },
+  {
     id: "agent",
     label: "Agents",
     accent: "from-lux-night to-lux-deep",
@@ -150,7 +164,7 @@ const ChartCard = memo(({ featured, label, accent, parallax, children }) => (
 
 ChartCard.displayName = "ChartCard";
 
-const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseWorks = [] }) => {
+const ChartSection = memo(({ agentSaudas = [], agentDailySaudas = [], dateWiseWorks = [], employeeWiseWorks = [] }) => {
   const [chartType, setChartType] = useState("line");
   const [viewMode, setViewMode] = useState("grid");
   const chartGridRef = useRef(null);
@@ -247,11 +261,10 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
                     type="button"
                     onClick={() => setChartType(type.id)}
                     aria-pressed={chartType === type.id}
-                    className={`justify-center px-3 sm:px-5 py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${
-                      chartType === type.id
+                    className={`justify-center px-3 sm:px-5 py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${chartType === type.id
                         ? "bg-white text-lux-emerald shadow-md ring-1 ring-lux-gold/30"
                         : "text-lux-muted hover:text-lux-emerald hover:bg-white/60"
-                    }`}
+                      }`}
                   >
                     <type.icon size={12} aria-hidden />
                     {type.label}
@@ -273,11 +286,10 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
                     type="button"
                     onClick={() => setViewMode(mode.id)}
                     aria-pressed={viewMode === mode.id}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${
-                      viewMode === mode.id
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${viewMode === mode.id
                         ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
                         : "text-white/50 hover:text-lux-gold-soft"
-                    }`}
+                      }`}
                   >
                     <mode.icon size={14} aria-hidden />
                     <span className="sm:hidden">{mode.label}</span>
@@ -307,7 +319,7 @@ const ChartSection = memo(({ agentSaudas = [], dateWiseWorks = [], employeeWiseW
                 accent={accent}
                 parallax={parallax}
               >
-                <Component {...props(chartType, agentSaudas, dateWiseWorks, employeeWiseWorks)} />
+                <Component {...props(chartType, agentSaudas, dateWiseWorks, employeeWiseWorks, agentDailySaudas)} />
               </ChartCard>
             ),
           )}
