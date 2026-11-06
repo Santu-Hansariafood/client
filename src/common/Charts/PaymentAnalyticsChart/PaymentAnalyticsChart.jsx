@@ -15,15 +15,19 @@ import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import {
   BarGradientDefs,
   BAR_SERIES_THEMES,
+  MODERN_ACTIVE_DOT,
   MODERN_AXIS_TICK,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
+  MODERN_AREA_ANIMATION,
+  ExtrudedBarShape,
   modernActiveBar,
 } from "../modernBarChartShared";
 import {
-  CHART_AREA_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   CHART_LOADING_CLASS,
   ChartPanelHeader,
   ChartSpinner,
@@ -151,7 +155,7 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
   if (!data.length)
     return (
       <div
-        className={`${CHART_AREA_CLASS} flex flex-col items-center justify-center text-lux-muted px-4 text-center`}
+        className={`${CHART_STAGE_CLASS} flex flex-col items-center justify-center text-lux-muted px-4 text-center`}
       >
         <p className="font-serif text-sm font-semibold text-lux-ink">
           No payment data for {currentMonthLabel}
@@ -229,9 +233,10 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
         </div>
       </ChartPanelHeader>
 
-      <div className={CHART_AREA_CLASS}>
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === "bar" ? (
+      <div className={CHART_STAGE_CLASS}>
+        <div className={CHART_STAGE_INNER_CLASS}>
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "bar" ? (
             <BarChart
               data={data}
               margin={MODERN_CHART_MARGIN}
@@ -241,12 +246,15 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
             >
               <BarGradientDefs
                 gradientId={BAR_SERIES_THEMES.pending.gradientId}
+                shadowId="paymentPendingShadow"
+                glossId="paymentPendingGloss"
                 topColor={BAR_SERIES_THEMES.pending.top}
                 midColor={BAR_SERIES_THEMES.pending.mid}
                 bottomColor={BAR_SERIES_THEMES.pending.bottom}
               />
               <BarGradientDefs
                 gradientId={BAR_SERIES_THEMES.received.gradientId}
+                shadowId="paymentReceivedShadow"
                 topColor={BAR_SERIES_THEMES.received.top}
                 midColor={BAR_SERIES_THEMES.received.mid}
                 bottomColor={BAR_SERIES_THEMES.received.bottom}
@@ -273,7 +281,8 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 dataKey="pending"
                 name="Pending"
                 fill={`url(#${BAR_SERIES_THEMES.pending.gradientId})`}
-                radius={[8, 8, 0, 0]}
+                shape={<ExtrudedBarShape />}
+                filter="url(#paymentPendingShadow)"
                 {...MODERN_BAR_ANIMATION}
                 activeBar={modernActiveBar(
                   `url(#${BAR_SERIES_THEMES.pending.gradientId})`,
@@ -283,7 +292,8 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 dataKey="received"
                 name="Received"
                 fill={`url(#${BAR_SERIES_THEMES.received.gradientId})`}
-                radius={[8, 8, 0, 0]}
+                shape={<ExtrudedBarShape />}
+                filter="url(#paymentReceivedShadow)"
                 {...MODERN_BAR_ANIMATION}
                 activeBar={modernActiveBar(
                   `url(#${BAR_SERIES_THEMES.received.gradientId})`,
@@ -330,7 +340,9 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 strokeWidth={4}
                 fillOpacity={1}
                 fill="url(#colorPending)"
-                animationDuration={2000}
+                dot={false}
+                activeDot={MODERN_ACTIVE_DOT}
+                {...MODERN_AREA_ANIMATION}
               />
               <Area
                 type="monotone"
@@ -340,11 +352,14 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 strokeWidth={4}
                 fillOpacity={1}
                 fill="url(#colorReceived)"
-                animationDuration={2000}
+                dot={false}
+                activeDot={MODERN_ACTIVE_DOT}
+                {...MODERN_AREA_ANIMATION}
               />
             </AreaChart>
           )}
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

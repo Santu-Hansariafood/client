@@ -13,30 +13,36 @@ import {
   Pie,
   Cell,
   Legend,
+  Label,
 } from "recharts";
 import { FaGavel } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 
 import {
   BarGradientDefs,
+  PieGradientDefs,
   BAR_SERIES_THEMES,
+  MODERN_ACTIVE_DOT,
   MODERN_GRID_PROPS,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_AREA_ANIMATION,
+  MODERN_PIE_ANIMATION,
   modernActiveBar,
   useResponsiveChartConfig,
   ExtrudedBarShape,
-  darkenHexColor,
+  pieDepthColor,
 } from "../modernBarChartShared";
 import {
-  CHART_AREA_CLASS,
   CHART_LOADING_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   ChartPanelHeader,
   ChartPeriodToggle,
   ChartSpinner,
   ChartSkeleton,
   ChartEmptyState,
+  PieCenterLabel,
   RESPONSIVE_X_AXIS_PROPS,
 } from "../chartLayoutShared";
 
@@ -255,18 +261,10 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       const radius = responsiveCfg.showFullLegend
         ? { inner: "54%", outer: "80%" }
         : { inner: "48%", outer: "72%" };
+      const pieTotal = pieData.reduce((sum, item) => sum + (item.value || 0), 0);
       return (
         <PieChart className="animate-fade-in">
-          <defs>
-            <filter id="bidPieShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3.5" result="blur" />
-              <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          <PieGradientDefs idPrefix="bidPie" colors={COLORS} />
           <Pie
             data={pieData}
             cx="50%"
@@ -276,13 +274,13 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             paddingAngle={pieData.length > 6 ? 3 : 5}
             dataKey="value"
             isAnimationActive={false}
+            stroke="none"
           >
             {pieData.map((entry, index) => (
               <Cell
                 key={`bid-pie-depth-${entry.name}`}
-                fill={darkenHexColor(COLORS[index % COLORS.length])}
-                stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
-                strokeWidth={1}
+                fill={pieDepthColor(COLORS[index % COLORS.length])}
+                stroke="none"
               />
             ))}
           </Pie>
@@ -294,18 +292,26 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             outerRadius={radius.outer}
             paddingAngle={pieData.length > 6 ? 3 : 5}
             dataKey="value"
-            animationDuration={1800}
-            stroke="none"
-            filter="url(#bidPieShadow)"
+            stroke="rgba(255, 255, 255, 0.9)"
+            strokeWidth={1.5}
+            filter="url(#bidPie-shadow)"
+            {...MODERN_PIE_ANIMATION}
           >
             {pieData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-                stroke="white"
-                strokeWidth={1}
+                fill={`url(#bidPie-g-${index % COLORS.length})`}
               />
             ))}
+            <Label
+              position="center"
+              content={
+                <PieCenterLabel
+                  value={pieTotal.toLocaleString("en-IN")}
+                  caption="Bids"
+                />
+              }
+            />
           </Pie>
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#c9a227", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
           <Legend
@@ -345,6 +351,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <BarGradientDefs
             gradientId={theme.gradientId}
             shadowId="bidBarShadow"
+            glossId="bidBarGloss"
             topColor={theme.top}
             midColor={theme.mid}
             bottomColor={theme.bottom}
@@ -423,6 +430,8 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           strokeWidth={responsiveCfg.areaStrokeWidth}
           fillOpacity={1}
           fill="url(#colorBids)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
           filter="url(#bidAreaShadow)"
         />
@@ -450,7 +459,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         )}
       </ChartPanelHeader>
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f2e4] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`}>
+      <div className={CHART_STAGE_CLASS}>
         {!hasData ? (
           <ChartEmptyState
             title="No bid data for this period"
@@ -458,7 +467,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             Icon={FaGavel}
           />
         ) : (
-          <div className="w-full h-full p-2 sm:p-3 animate-fade-in">
+          <div className={CHART_STAGE_INNER_CLASS}>
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
             </ResponsiveContainer>

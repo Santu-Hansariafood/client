@@ -10,6 +10,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  BarGradientDefs,
+  BAR_SERIES_THEMES,
+  MODERN_AXIS_TICK,
+  MODERN_BAR_ANIMATION,
+  MODERN_BAR_CURSOR,
+  MODERN_CHART_MARGIN,
+  MODERN_GRID_PROPS,
+  MODERN_LINE_ANIMATION,
+  MODERN_ACTIVE_DOT,
+  ExtrudedBarShape,
+} from "../modernBarChartShared";
+import {
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
+} from "../chartLayoutShared";
 
 const formatCurrency = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN", {
@@ -21,6 +37,44 @@ const formatCompactCurrency = (value) =>
     notation: "compact",
     maximumFractionDigits: 1,
   })}`;
+
+const DailyTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload || {};
+  return (
+    <div className="bg-lux-cream/95 backdrop-blur-xl p-3.5 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[170px]">
+      <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-2 border-b border-[#ece4d2] pb-2">
+        {row.date
+          ? new Date(`${row.date}T12:00:00`).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : label}
+      </p>
+      <div className="space-y-1.5">
+        <p className="flex items-center justify-between gap-4 text-xs font-bold text-lux-ink">
+          <span className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-lux-emerald shadow-sm" />
+            <span className="text-lux-muted">Saudas:</span>
+          </span>
+          <span className="font-serif text-sm font-semibold text-lux-emerald tabular-nums">
+            {Number(row.saudas || 0).toLocaleString("en-IN")}
+          </span>
+        </p>
+        <p className="flex items-center justify-between gap-4 text-xs font-bold text-lux-ink">
+          <span className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-lux-gold shadow-sm" />
+            <span className="text-lux-muted">Value:</span>
+          </span>
+          <span className="font-serif text-sm font-semibold text-lux-gold tabular-nums">
+            {formatCurrency(row.value)}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const AgentDailySaudaChart = ({ data = [] }) => {
   const [selectedAgent, setSelectedAgent] = useState("");
@@ -83,71 +137,85 @@ const AgentDailySaudaChart = ({ data = [] }) => {
         </select>
       </div>
       {chartData.length ? (
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 8, right: 12, bottom: 8, left: 0 }}
-            >
-              <CartesianGrid stroke="#eee8d9" vertical={false} />
-              <XAxis
-                dataKey="dateLabel"
-                interval={Math.max(0, Math.ceil(chartData.length / 8) - 1)}
-                tick={{ fontSize: 10 }}
-              />
-              <YAxis
-                yAxisId="saudas"
-                allowDecimals={false}
-                tick={{ fontSize: 10 }}
-                width={38}
-              />
-              <YAxis
-                yAxisId="value"
-                orientation="right"
-                tickFormatter={formatCompactCurrency}
-                tick={{ fontSize: 10 }}
-                width={64}
-              />
-              <Tooltip
-                labelFormatter={(_, payload) =>
-                  payload?.[0]?.payload?.date
-                    ? new Date(
-                        `${payload[0].payload.date}T12:00:00`,
-                      ).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : ""
-                }
-                formatter={(value, name) => [
-                  name === "Value" ? formatCurrency(value) : value,
-                  name,
-                ]}
-              />
-              <Legend />
-              <Bar
-                yAxisId="saudas"
-                dataKey="saudas"
-                name="Saudas"
-                fill="#0f766e"
-                radius={[4, 4, 0, 0]}
-              />
-              <Line
-                yAxisId="value"
-                dataKey="value"
-                name="Value"
-                type="monotone"
-                stroke="#b7791f"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4 }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+        <div className={CHART_STAGE_CLASS}>
+          <div className={CHART_STAGE_INNER_CLASS}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ ...MODERN_CHART_MARGIN, left: -6 }}
+              >
+                <BarGradientDefs
+                  gradientId="agentDailyBar"
+                  shadowId="agentDailyBarShadow"
+                  topColor={BAR_SERIES_THEMES.emerald.top}
+                  midColor={BAR_SERIES_THEMES.emerald.mid}
+                  bottomColor={BAR_SERIES_THEMES.emerald.bottom}
+                />
+                <CartesianGrid {...MODERN_GRID_PROPS} />
+                <XAxis
+                  dataKey="dateLabel"
+                  axisLine={false}
+                  tickLine={false}
+                  interval={Math.max(0, Math.ceil(chartData.length / 8) - 1)}
+                  tick={{ ...MODERN_AXIS_TICK, fontSize: 10 }}
+                />
+                <YAxis
+                  yAxisId="saudas"
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ ...MODERN_AXIS_TICK, fontSize: 10 }}
+                  width={38}
+                />
+                <YAxis
+                  yAxisId="value"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatCompactCurrency}
+                  tick={{ ...MODERN_AXIS_TICK, fontSize: 10 }}
+                  width={64}
+                />
+                <Tooltip
+                  content={<DailyTooltip />}
+                  cursor={MODERN_BAR_CURSOR}
+                />
+                <Legend
+                  iconType="circle"
+                  iconSize={9}
+                  wrapperStyle={{ paddingTop: "8px" }}
+                  formatter={(value) => (
+                    <span className="font-serif font-semibold text-lux-muted text-[10px]">
+                      {value}
+                    </span>
+                  )}
+                />
+                <Bar
+                  yAxisId="saudas"
+                  dataKey="saudas"
+                  name="Saudas"
+                  fill="url(#agentDailyBar)"
+                  shape={<ExtrudedBarShape />}
+                  filter="url(#agentDailyBarShadow)"
+                  {...MODERN_BAR_ANIMATION}
+                />
+                <Line
+                  yAxisId="value"
+                  dataKey="value"
+                  name="Value"
+                  type="monotone"
+                  stroke="#c9a227"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={MODERN_ACTIVE_DOT}
+                  {...MODERN_LINE_ANIMATION}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       ) : (
-        <div className="flex h-72 items-center justify-center text-sm text-lux-muted">
+        <div className={`${CHART_STAGE_CLASS} flex items-center justify-center text-sm text-lux-muted`}>
           No Sauda records in the last 30 days.
         </div>
       )}

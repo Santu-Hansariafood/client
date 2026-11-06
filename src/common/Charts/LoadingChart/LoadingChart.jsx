@@ -15,15 +15,19 @@ import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import {
   BarGradientDefs,
   BAR_SERIES_THEMES,
+  MODERN_ACTIVE_DOT,
+  MODERN_AREA_ANIMATION,
   MODERN_AXIS_TICK,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
+  ExtrudedBarShape,
   modernActiveBar,
 } from "../modernBarChartShared";
 import {
-  CHART_AREA_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   CHART_LOADING_CLASS,
   ChartPanelHeader,
   ChartPeriodToggle,
@@ -197,6 +201,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <BarGradientDefs
             gradientId={theme.gradientId}
             shadowId="loadingBarShadow"
+            glossId="loadingBarGloss"
             topColor={theme.top}
             midColor={theme.mid}
             bottomColor={theme.bottom}
@@ -224,7 +229,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <Bar
             dataKey="weight"
             fill={`url(#${theme.gradientId})`}
-            radius={[10, 10, 0, 0]}
+            shape={<ExtrudedBarShape />}
             filter="url(#loadingBarShadow)"
             {...MODERN_BAR_ANIMATION}
             activeBar={modernActiveBar(`url(#${theme.gradientId})`)}
@@ -275,7 +280,9 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorWeight)"
-          animationDuration={2000}
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
+          {...MODERN_AREA_ANIMATION}
           filter="url(#areaShadow)"
         />
       </AreaChart>
@@ -297,7 +304,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         />
       </ChartPanelHeader>
 
-      <div className={CHART_AREA_CLASS}>
+      <div className={CHART_STAGE_CLASS}>
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
             <div className="w-16 h-16 bg-lux-cream rounded-full flex items-center justify-center">
@@ -320,9 +327,11 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            {renderChart()}
-          </ResponsiveContainer>
+          <div className={CHART_STAGE_INNER_CLASS}>
+            <ResponsiveContainer width="100%" height="100%">
+              {renderChart()}
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
     </div>

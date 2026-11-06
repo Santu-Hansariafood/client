@@ -6,20 +6,25 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Label,
 } from "recharts";
 import { FaBalanceScale } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 
 import {
-  CHART_AREA_CLASS,
   CHART_LOADING_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   ChartPanelHeader,
   ChartSpinner,
   ChartSkeleton,
   ChartEmptyState,
+  PieCenterLabel,
 } from "../chartLayoutShared";
 import {
-  darkenHexColor,
+  PieGradientDefs,
+  MODERN_PIE_ANIMATION,
+  pieDepthColor,
   useResponsiveChartConfig,
 } from "../modernBarChartShared";
 
@@ -163,6 +168,8 @@ const CommodityPieChart = ({ apiUrl }) => {
     ? { inner: "54%", outer: "80%" }
     : { inner: "48%", outer: "72%" };
 
+  const pieTotal = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <ChartPanelHeader
@@ -172,7 +179,7 @@ const CommodityPieChart = ({ apiUrl }) => {
         icon={FaBalanceScale}
       />
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`}>
+      <div className={CHART_STAGE_CLASS}>
         {!data.length ? (
           <ChartEmptyState
             title="No commodity data available"
@@ -180,23 +187,10 @@ const CommodityPieChart = ({ apiUrl }) => {
             Icon={FaBalanceScale}
           />
         ) : (
-          <div className="w-full h-full p-2 sm:p-3 animate-fade-in">
+          <div className={CHART_STAGE_INNER_CLASS}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart className="animate-fade-in">
-                <defs>
-                  <filter id="commodityPieShadow" height="200%">
-                    <feGaussianBlur
-                      in="SourceAlpha"
-                      stdDeviation="3.5"
-                      result="blur"
-                    />
-                    <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
-                    <feMerge>
-                      <feMergeNode in="offsetBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
+                <PieGradientDefs idPrefix="commodityPie" colors={COLORS} />
                 <Pie
                   data={data}
                   cx="50%"
@@ -206,36 +200,44 @@ const CommodityPieChart = ({ apiUrl }) => {
                   paddingAngle={data.length > 6 ? 3 : 5}
                   dataKey="value"
                   isAnimationActive={false}
+                  stroke="none"
                 >
                   {data.map((entry, index) => (
                     <Cell
                       key={`commodity-pie-depth-${entry.name}`}
-                      fill={darkenHexColor(COLORS[index % COLORS.length])}
-                      stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
-                      strokeWidth={1}
+                      fill={pieDepthColor(COLORS[index % COLORS.length])}
+                      stroke="none"
                     />
                   ))}
                 </Pie>
                 <Pie
                   data={data}
                   cx="50%"
-                  cy="45%"
+                  cy="44%"
                   innerRadius={radius.inner}
                   outerRadius={radius.outer}
                   paddingAngle={data.length > 6 ? 3 : 5}
                   dataKey="value"
-                  animationDuration={1800}
-                  stroke="none"
-                  filter="url(#commodityPieShadow)"
+                  stroke="rgba(255, 255, 255, 0.9)"
+                  strokeWidth={1.5}
+                  filter="url(#commodityPie-shadow)"
+                  {...MODERN_PIE_ANIMATION}
                 >
                   {data.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                      stroke="white"
-                      strokeWidth={1}
+                      fill={`url(#commodityPie-g-${index % COLORS.length})`}
                     />
                   ))}
+                  <Label
+                    position="center"
+                    content={
+                      <PieCenterLabel
+                        value={pieTotal.toFixed(0)}
+                        caption="MT Loaded"
+                      />
+                    }
+                  />
                 </Pie>
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#065f46", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
                 <Legend

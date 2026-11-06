@@ -13,17 +13,28 @@ import {
   Pie,
   Cell,
   Legend,
+  Label,
 } from "recharts";
 import {
   MultiBarGradientDefs,
+  PieGradientDefs,
+  MODERN_ACTIVE_DOT,
   MODERN_AXIS_TICK,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
+  MODERN_PIE_ANIMATION,
+  ExtrudedBarShape,
+  pieDepthColor,
 } from "../modernBarChartShared";
-import { CHART_AREA_CLASS, ChartPanelHeader } from "../chartLayoutShared";
+import {
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
+  ChartPanelHeader,
+  PieCenterLabel,
+} from "../chartLayoutShared";
 
 const COLORS = {
   total: "#04392c",
@@ -77,14 +88,13 @@ const EmployeeWorkChart = ({
   dateWiseData = [],
   employeeWiseData = [],
   chartType = "area",
-  timeRange = "last_7_days", // 'today', 'last_7_days', 'last_30_days', 'this_month', 'custom'
+  timeRange = "last_7_days",
 }) => {
-  const [viewType, setViewType] = useState("date"); // 'date' or 'employee'
+  const [viewType, setViewType] = useState("date");
 
   const chartData = useMemo(() => {
     let rawData = viewType === "date" ? dateWiseData : employeeWiseData;
 
-    // Filter based on timeRange if dates are present
     if (viewType === "date" && rawData.length > 0) {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -109,7 +119,7 @@ const EmployeeWorkChart = ({
             itemDate.getFullYear() === now.getFullYear()
           );
         }
-        return true; // 'custom' or default passes through
+        return true;
       });
     }
 
@@ -138,37 +148,57 @@ const EmployeeWorkChart = ({
         name: item.name,
         value: item.total,
       }));
+      const pieTotal = pieData.reduce((sum, item) => sum + (item.value || 0), 0);
       return (
-        <PieChart>
-          <defs>
-            <filter id="employeePieShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-              <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+        <PieChart className="animate-fade-in">
+          <PieGradientDefs idPrefix="employeePie" colors={PIE_COLORS} />
           <Pie
             data={pieData}
             cx="50%"
-            cy="50%"
-            innerRadius="48%"
-            outerRadius="78%"
-            paddingAngle={10}
+            cy="48%"
+            innerRadius="54%"
+            outerRadius="80%"
+            paddingAngle={4}
             dataKey="value"
-            animationDuration={2500}
-            animationEasing="ease-out"
+            isAnimationActive={false}
             stroke="none"
-            filter="url(#employeePieShadow)"
+          >
+            {pieData.map((_, index) => (
+              <Cell
+                key={`employee-pie-depth-${index}`}
+                fill={pieDepthColor(PIE_COLORS[index % PIE_COLORS.length])}
+                stroke="none"
+              />
+            ))}
+          </Pie>
+          <Pie
+            data={pieData}
+            cx="50%"
+            cy="44%"
+            innerRadius="54%"
+            outerRadius="80%"
+            paddingAngle={4}
+            dataKey="value"
+            stroke="rgba(255, 255, 255, 0.9)"
+            strokeWidth={1.5}
+            filter="url(#employeePie-shadow)"
+            {...MODERN_PIE_ANIMATION}
           >
             {pieData.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={PIE_COLORS[index % PIE_COLORS.length]}
+                fill={`url(#employeePie-g-${index % PIE_COLORS.length})`}
               />
             ))}
+            <Label
+              position="center"
+              content={
+                <PieCenterLabel
+                  value={pieTotal.toLocaleString("en-IN")}
+                  caption="Works"
+                />
+              }
+            />
           </Pie>
           <Tooltip content={<CustomTooltip />} />
           <Legend
@@ -196,7 +226,11 @@ const EmployeeWorkChart = ({
       const colors = Object.values(COLORS);
       return (
         <BarChart {...commonProps} barCategoryGap="22%" maxBarSize={48}>
-          <MultiBarGradientDefs idPrefix="workBar" colors={colors} />
+          <MultiBarGradientDefs
+            idPrefix="workBar"
+            colors={colors}
+            shadowId="workBarShadow"
+          />
           <CartesianGrid {...MODERN_GRID_PROPS} />
           <XAxis
             dataKey={viewType === "date" ? "date" : "name"}
@@ -223,7 +257,8 @@ const EmployeeWorkChart = ({
           <Bar
             dataKey="total"
             name="Total"
-            radius={[12, 12, 4, 4]}
+            shape={<ExtrudedBarShape />}
+            filter="url(#workBarShadow)"
             {...MODERN_BAR_ANIMATION}
             stackId="a"
           >
@@ -234,7 +269,7 @@ const EmployeeWorkChart = ({
           <Bar
             dataKey="completed"
             name="Completed"
-            radius={[12, 12, 4, 4]}
+            shape={<ExtrudedBarShape />}
             {...MODERN_BAR_ANIMATION}
             stackId="a"
           >
@@ -309,6 +344,8 @@ const EmployeeWorkChart = ({
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorTotal)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
           filter="url(#workAreaShadow)"
         />
@@ -320,6 +357,8 @@ const EmployeeWorkChart = ({
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorCompleted)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
         />
         <Area
@@ -330,6 +369,8 @@ const EmployeeWorkChart = ({
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorPending)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
         />
         <Area
@@ -340,6 +381,8 @@ const EmployeeWorkChart = ({
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorInProgress)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
         />
         <Legend
@@ -394,7 +437,7 @@ const EmployeeWorkChart = ({
         </div>
       </div>
 
-      <div className={CHART_AREA_CLASS}>
+      <div className={CHART_STAGE_CLASS}>
         {!chartData.length ? (
           <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
             <div className="w-20 h-20 bg-lux-cream rounded-full flex items-center justify-center">
@@ -417,9 +460,11 @@ const EmployeeWorkChart = ({
             </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            {renderChart()}
-          </ResponsiveContainer>
+          <div className={CHART_STAGE_INNER_CLASS}>
+            <ResponsiveContainer width="100%" height="100%">
+              {renderChart()}
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
     </div>

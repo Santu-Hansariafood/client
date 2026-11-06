@@ -139,7 +139,7 @@ const ChartCard = memo(({ featured, label, accent, parallax, children }) => (
       "transition-all duration-500 ease-out",
       "hover:border-[#dccfa8] hover:shadow-[0_30px_64px_-34px_rgba(6,95,70,0.5)]",
       "group",
-      featured ? "lg:col-span-2" : "",
+      featured ? "md:col-span-2" : "",
       parallax ? "market-parallax-card" : "",
     ].join(" ")}
   >
@@ -286,13 +286,15 @@ const ChartSection = memo(({ agentSaudas = [], agentDailySaudas = [], dateWiseWo
                     type="button"
                     onClick={() => setViewMode(mode.id)}
                     aria-pressed={viewMode === mode.id}
+                    aria-label={`${mode.label} layout`}
+                    title={`${mode.label} layout`}
                     className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${viewMode === mode.id
                         ? "bg-gradient-to-br from-lux-emerald to-lux-deep text-lux-gold-soft shadow-md ring-1 ring-lux-gold/30"
                         : "text-white/50 hover:text-lux-gold-soft"
                       }`}
                   >
                     <mode.icon size={14} aria-hidden />
-                    <span className="sm:hidden">{mode.label}</span>
+                    <span>{mode.label}</span>
                   </button>
                 ))}
               </div>

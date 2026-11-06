@@ -10,6 +10,16 @@ export const CHART_AREA_CLASS =
 export const CHART_LOADING_CLASS = `${CHART_AREA_CLASS} flex items-center justify-center`;
 
 /**
+ * Framed 3D chart stage shared by every dashboard chart: the gold radial
+ * backdrop + perspective from `.dashboard-chart-stage`, plus the cream
+ * framed surface. Using one class keeps the Grid and Stack layouts uniform.
+ */
+export const CHART_STAGE_CLASS = `${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`;
+
+/** Inner padding wrapper so plots never touch the framed stage border. */
+export const CHART_STAGE_INNER_CLASS = "w-full h-full p-2 sm:p-3 animate-fade-in";
+
+/**
  * Modern animated multi-ring spinner + dots for chart loading states.
  * Matches the luxury emerald/gold visual language.
  */
@@ -36,10 +46,6 @@ export const ChartSpinner = ({ colorClass = "border-lux-emerald", subtitle = "Lo
   </div>
 );
 
-/**
- * Shimmer skeleton for a chart panel — use during the first data fetch
- * so the UI doesn't jump from nothing to a fully-rendered chart.
- */
 export const ChartSkeleton = ({ withHeader = true, rows = 5 }) => {
   const barWidths = ["28%", "52%", "76%", "41%", "63%", "35%"];
   return (
@@ -90,10 +96,6 @@ export const ChartSkeleton = ({ withHeader = true, rows = 5 }) => {
   );
 };
 
-/**
- * Standard chart card header used inside Market Intelligence panels.
- * Luxury treatment: gold eyebrow, serif title, emerald icon tile.
- */
 export const ChartPanelHeader = ({
   accentClass = "bg-gradient-to-b from-lux-gold to-lux-emerald",
   title,
@@ -140,7 +142,6 @@ export const ChartPanelHeader = ({
   </div>
 );
 
-/** Horizontally scrollable period / filter toggles on narrow screens. */
 export const ChartPeriodToggle = ({ options, value, onChange, activeClass }) => (
   <div className="w-full sm:w-auto overflow-x-auto -mx-1 px-1 pb-0.5">
     <div className="inline-flex min-w-max bg-[#f2eee2] p-1 rounded-xl sm:rounded-2xl border border-[#e6dcc4] shadow-inner">
@@ -168,10 +169,6 @@ export const ChartPeriodToggle = ({ options, value, onChange, activeClass }) => 
   </div>
 );
 
-/**
- * Chart empty state — shows a friendly placeholder with icon and
- * a staggered fade-in animation.
- */
 export const ChartEmptyState = ({
   title = "No data for this period",
   subtitle = "Adjust filters or try a different time range.",
@@ -191,14 +188,49 @@ export const ChartEmptyState = ({
   </div>
 );
 
-/**
- * useChartDataFetch — combines caching (respects the apiClient TTL),
- * a "first-load" skeleton, a spinner during subsequent refreshes,
- * and debounced view-type transitions.
- *
- * Usage:
- *   const { data, rawData, loading, firstLoad, refetch } = useChartDataFetch(apiUrl, externalData);
- */
+export const PieCenterLabel = ({ value, caption, viewBox }) => {
+  const cx = viewBox?.cx;
+  const cy = viewBox?.cy;
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
+  return (
+    <g className="text-lux-ink animate-pop-in">
+      <text
+        x={cx}
+        y={cy - 2}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="currentColor"
+        style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontSize: 20,
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </text>
+      {caption && (
+        <text
+          x={cx}
+          y={cy + 16}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="text-lux-muted"
+          fill="currentColor"
+          style={{
+            fontSize: 8.5,
+            fontWeight: 800,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+          }}
+        >
+          {caption}
+        </text>
+      )}
+    </g>
+  );
+};
+
 export const useChartDataFetch = (apiUrl, externalData, api = null) => {
   const [internalRaw, setInternalRaw] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -267,7 +299,6 @@ export const useChartDataFetch = (apiUrl, externalData, api = null) => {
   };
 };
 
-/** Recharts XAxis props that reduce label clutter on small screens. */
 export const RESPONSIVE_X_AXIS_PROPS = {
   minTickGap: 18,
   interval: "preserveStartEnd",

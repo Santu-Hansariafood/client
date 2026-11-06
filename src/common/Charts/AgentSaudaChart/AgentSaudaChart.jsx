@@ -14,22 +14,27 @@ import {
   Cell,
   Legend,
   LabelList,
+  Label,
 } from "recharts";
 import {
-  BarGradientDefs,
   MultiBarGradientDefs,
+  PieGradientDefs,
   MODERN_AXIS_TICK,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
+  MODERN_ACTIVE_DOT,
+  MODERN_PIE_ANIMATION,
   ExtrudedBarShape,
-  darkenHexColor,
+  pieDepthColor,
 } from "../modernBarChartShared";
 import {
-  CHART_AREA_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   ChartPanelHeader,
+  PieCenterLabel,
 } from "../chartLayoutShared";
 
 const COLORS = [
@@ -43,23 +48,27 @@ const COLORS = [
   "#0f8a6c",
 ];
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, colors = [], data = [] }) => {
   if (active && payload && payload.length) {
     const isPie = !label;
-    const data = isPie ? payload[0].payload : null;
+    const item = isPie ? payload[0].payload : null;
+    const pieIndex = isPie
+      ? data.findIndex((row) => row.name === item?.name)
+      : -1;
+    const dotColor = isPie
+      ? colors[pieIndex >= 0 ? pieIndex % colors.length : 0]
+      : "#065f46";
     return (
       <div className="bg-lux-cream/95 backdrop-blur-xl p-5 shadow-2xl border border-[#e9e2d3] rounded-2xl min-w-[180px]">
         <p className="text-[10px] font-black text-lux-gold uppercase tracking-widest mb-3 border-b border-[#ece4d2] pb-2">
-          {isPie ? data.name : label}
+          {isPie ? item?.name : label}
         </p>
         <div className="space-y-2">
           <p className="text-sm font-black text-lux-ink flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
               <span
                 className="w-3 h-3 rounded-full shadow-sm"
-                style={{
-                  backgroundColor: isPie ? payload[0].payload.fill : "#065f46",
-                }}
+                style={{ backgroundColor: dotColor }}
               ></span>
               <span className="text-lux-muted">Volume:</span>
             </span>
@@ -72,7 +81,7 @@ const CustomTooltip = ({ active, payload, label }) => {
               <div className="flex items-center justify-between text-[10px] font-bold text-lux-muted">
                 <span>Performance:</span>
                 <span className="text-lux-emerald bg-lux-emerald/10 px-3 py-1 rounded-xl">
-                  {((data.value / data.total) * 100).toFixed(1)}%
+                  {((item.value / item.total) * 100).toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -102,56 +111,57 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
     if (chartType === "pie") {
       return (
         <PieChart>
-          <defs>
-            <filter id="pieShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-              <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          <PieGradientDefs idPrefix="agentPie" colors={COLORS} />
           <Pie
             data={chartData}
-              cx="50%"
-              cy="54%"
-              innerRadius="48%"
-              outerRadius="78%"
-              paddingAngle={10}
-              dataKey="value"
-              isAnimationActive={false}
-            >
-              {chartData.map((_, index) => (
-                <Cell
-                  key={`pie-depth-${index}`}
-                  fill={darkenHexColor(COLORS[index % COLORS.length])}
-                  stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
-                  strokeWidth={1}
-                />
-              ))}
-            </Pie>
-            <Pie
-              data={chartData}
             cx="50%"
-            cy="50%"
+            cy="48%"
             innerRadius="48%"
             outerRadius="78%"
             paddingAngle={10}
             dataKey="value"
-            animationDuration={2500}
-            animationEasing="ease-out"
+            isAnimationActive={false}
             stroke="none"
-            filter="url(#pieShadow)"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+                key={`pie-depth-${index}`}
+                fill={pieDepthColor(COLORS[index % COLORS.length])}
+                stroke={pieDepthColor(COLORS[index % COLORS.length], 0.48)}
+                strokeWidth={1}
               />
             ))}
           </Pie>
-          <Tooltip content={<CustomTooltip />} />
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="44%"
+            innerRadius="48%"
+            outerRadius="78%"
+            paddingAngle={10}
+            dataKey="value"
+            stroke="rgba(255, 255, 255, 0.9)"
+            strokeWidth={1.5}
+            filter="url(#agentPie-shadow)"
+            {...MODERN_PIE_ANIMATION}
+          >
+            {chartData.map((_, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={`url(#agentPie-g-${index % COLORS.length})`}
+              />
+            ))}
+            <Label
+              position="center"
+              content={
+                <PieCenterLabel
+                  value={totalTons.toLocaleString("en-IN")}
+                  caption="Tons"
+                />
+              }
+            />
+          </Pie>
+          <Tooltip content={<CustomTooltip colors={COLORS} data={chartData} />} />
           <Legend
             verticalAlign="bottom"
             align="center"
@@ -184,7 +194,11 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           barCategoryGap="22%"
           maxBarSize={48}
         >
-          <MultiBarGradientDefs idPrefix="agentBar" colors={barColors} />
+          <MultiBarGradientDefs
+            idPrefix="agentBar"
+            colors={barColors}
+            shadowId="agentBarShadow"
+          />
           <CartesianGrid {...MODERN_GRID_PROPS} />
           <XAxis
             dataKey="name"
@@ -218,6 +232,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
             dataKey="tons"
             radius={[14, 14, 4, 4]}
             shape={<ExtrudedBarShape />}
+            filter="url(#agentBarShadow)"
             {...MODERN_BAR_ANIMATION}
           >
             {chartData.map((_, index) => (
@@ -287,6 +302,8 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           strokeWidth={5}
           fillOpacity={1}
           fill="url(#colorAgent)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
           filter="url(#agentAreaShadow)"
         />
@@ -302,7 +319,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
         subtitle="Volume metrics by representative"
       />
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage`}>
+      <div className={CHART_STAGE_CLASS}>
         {!chartData.length ? (
           <div className="h-full flex flex-col items-center justify-center text-lux-muted gap-4">
             <div className="w-20 h-20 bg-lux-cream rounded-full flex items-center justify-center">
@@ -325,9 +342,11 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
             </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            {renderChart()}
-          </ResponsiveContainer>
+          <div className={CHART_STAGE_INNER_CLASS}>
+            <ResponsiveContainer width="100%" height="100%">
+              {renderChart()}
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
     </div>

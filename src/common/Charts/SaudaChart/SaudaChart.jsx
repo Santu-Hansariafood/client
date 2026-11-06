@@ -13,30 +13,36 @@ import {
   Pie,
   Cell,
   Legend,
+  Label,
 } from "recharts";
 import { FaHandshake } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 
 import {
   BarGradientDefs,
+  PieGradientDefs,
   BAR_SERIES_THEMES,
+  MODERN_ACTIVE_DOT,
   MODERN_GRID_PROPS,
   MODERN_BAR_ANIMATION,
   MODERN_BAR_CURSOR,
   MODERN_AREA_ANIMATION,
+  MODERN_PIE_ANIMATION,
   modernActiveBar,
   useResponsiveChartConfig,
   ExtrudedBarShape,
-  darkenHexColor,
+  pieDepthColor,
 } from "../modernBarChartShared";
 import {
-  CHART_AREA_CLASS,
   CHART_LOADING_CLASS,
+  CHART_STAGE_CLASS,
+  CHART_STAGE_INNER_CLASS,
   ChartPanelHeader,
   ChartPeriodToggle,
   ChartSpinner,
   ChartSkeleton,
   ChartEmptyState,
+  PieCenterLabel,
   RESPONSIVE_X_AXIS_PROPS,
 } from "../chartLayoutShared";
 
@@ -272,57 +278,57 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       const radius = responsiveCfg.showFullLegend
         ? { inner: "54%", outer: "80%" }
         : { inner: "48%", outer: "72%" };
+      const pieTotal = pieData.reduce((sum, item) => sum + (item.value || 0), 0);
       return (
         <PieChart className="animate-fade-in">
-          <defs>
-            <filter id="saudaPieShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3.5" result="blur" />
-              <feOffset in="blur" dx="0" dy="6" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          <PieGradientDefs idPrefix="saudaPie" colors={COLORS} />
           <Pie
             data={pieData}
-              cx="50%"
-              cy="49%"
-              innerRadius={radius.inner}
-              outerRadius={radius.outer}
-              paddingAngle={pieData.length > 6 ? 3 : 5}
-              dataKey="value"
-              isAnimationActive={false}
-            >
-              {pieData.map((entry, index) => (
-                <Cell
-                  key={`sauda-pie-depth-${entry.name}`}
-                  fill={darkenHexColor(COLORS[index % COLORS.length])}
-                  stroke={darkenHexColor(COLORS[index % COLORS.length], 0.48)}
-                  strokeWidth={1}
-                />
-              ))}
-            </Pie>
-            <Pie
-              data={pieData}
+            cx="50%"
+            cy="49%"
+            innerRadius={radius.inner}
+            outerRadius={radius.outer}
+            paddingAngle={pieData.length > 6 ? 3 : 5}
+            dataKey="value"
+            isAnimationActive={false}
+            stroke="none"
+          >
+            {pieData.map((entry, index) => (
+              <Cell
+                key={`sauda-pie-depth-${entry.name}`}
+                fill={pieDepthColor(COLORS[index % COLORS.length])}
+                stroke="none"
+              />
+            ))}
+          </Pie>
+          <Pie
+            data={pieData}
             cx="50%"
             cy="45%"
             innerRadius={radius.inner}
             outerRadius={radius.outer}
             paddingAngle={pieData.length > 6 ? 3 : 5}
             dataKey="value"
-            animationDuration={1800}
-            stroke="none"
-            filter="url(#saudaPieShadow)"
+            stroke="rgba(255, 255, 255, 0.9)"
+            strokeWidth={1.5}
+            filter="url(#saudaPie-shadow)"
+            {...MODERN_PIE_ANIMATION}
           >
             {pieData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-                stroke="white"
-                strokeWidth={1}
+                fill={`url(#saudaPie-g-${index % COLORS.length})`}
               />
             ))}
+            <Label
+              position="center"
+              content={
+                <PieCenterLabel
+                  value={pieTotal.toLocaleString("en-IN")}
+                  caption="Saudas"
+                />
+              }
+            />
           </Pie>
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#065f46", strokeWidth: 1.5, strokeDasharray: "4 4" }} />
           <Legend
@@ -362,6 +368,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <BarGradientDefs
             gradientId={theme.gradientId}
             shadowId="saudaBarShadow"
+            glossId="saudaBarGloss"
             topColor={theme.top}
             midColor={theme.mid}
             bottomColor={theme.bottom}
@@ -440,6 +447,8 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           strokeWidth={responsiveCfg.areaStrokeWidth}
           fillOpacity={1}
           fill="url(#colorSauda)"
+          dot={false}
+          activeDot={MODERN_ACTIVE_DOT}
           {...MODERN_AREA_ANIMATION}
           filter="url(#saudaAreaShadow)"
         />
@@ -467,7 +476,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         )}
       </ChartPanelHeader>
 
-      <div className={`${CHART_AREA_CLASS} dashboard-chart-stage rounded-2xl sm:rounded-3xl bg-gradient-to-br from-lux-cream via-[#f7f4ec] to-lux-cream border border-[#e9e2d3] shadow-sm overflow-hidden`}>
+      <div className={CHART_STAGE_CLASS}>
         {error ? (
           <ChartEmptyState
             title="Unable to load sauda activity"
@@ -480,7 +489,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             Icon={FaHandshake}
           />
         ) : (
-          <div className="w-full h-full p-2 sm:p-3 animate-fade-in">
+          <div className={CHART_STAGE_INNER_CLASS}>
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
             </ResponsiveContainer>
