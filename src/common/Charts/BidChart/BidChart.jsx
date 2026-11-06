@@ -30,8 +30,7 @@ import {
   MODERN_PIE_ANIMATION,
   modernActiveBar,
   useResponsiveChartConfig,
-  ExtrudedBarShape,
-  pieDepthColor,
+  RoundedBarShape,
 } from "../modernBarChartShared";
 import {
   CHART_LOADING_CLASS,
@@ -268,26 +267,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <Pie
             data={pieData}
             cx="50%"
-            cy="49%"
-            innerRadius={radius.inner}
-            outerRadius={radius.outer}
-            paddingAngle={pieData.length > 6 ? 3 : 5}
-            dataKey="value"
-            isAnimationActive={false}
-            stroke="none"
-          >
-            {pieData.map((entry, index) => (
-              <Cell
-                key={`bid-pie-depth-${entry.name}`}
-                fill={pieDepthColor(COLORS[index % COLORS.length])}
-                stroke="none"
-              />
-            ))}
-          </Pie>
-          <Pie
-            data={pieData}
-            cx="50%"
-            cy="45%"
+            cy="50%"
             innerRadius={radius.inner}
             outerRadius={radius.outer}
             paddingAngle={pieData.length > 6 ? 3 : 5}
@@ -379,7 +359,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             fill={`url(#${theme.gradientId})`}
             radius={[10, 10, 2, 2]}
             filter="url(#bidBarShadow)"
-            shape={<ExtrudedBarShape />}
+            shape={<RoundedBarShape />}
             {...MODERN_BAR_ANIMATION}
             activeBar={modernActiveBar(`url(#${theme.gradientId})`)}
           />

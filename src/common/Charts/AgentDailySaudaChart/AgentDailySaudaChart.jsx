@@ -20,7 +20,7 @@ import {
   MODERN_GRID_PROPS,
   MODERN_LINE_ANIMATION,
   MODERN_ACTIVE_DOT,
-  ExtrudedBarShape,
+  RoundedBarShape,
 } from "../modernBarChartShared";
 import {
   CHART_STAGE_CLASS,
@@ -195,7 +195,7 @@ const AgentDailySaudaChart = ({ data = [] }) => {
                   dataKey="saudas"
                   name="Saudas"
                   fill="url(#agentDailyBar)"
-                  shape={<ExtrudedBarShape />}
+                  shape={<RoundedBarShape />}
                   filter="url(#agentDailyBarShadow)"
                   {...MODERN_BAR_ANIMATION}
                 />

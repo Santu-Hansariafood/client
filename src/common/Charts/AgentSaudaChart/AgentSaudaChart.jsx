@@ -27,8 +27,7 @@ import {
   MODERN_AREA_ANIMATION,
   MODERN_ACTIVE_DOT,
   MODERN_PIE_ANIMATION,
-  ExtrudedBarShape,
-  pieDepthColor,
+  RoundedBarShape,
 } from "../modernBarChartShared";
 import {
   CHART_STAGE_CLASS,
@@ -115,27 +114,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           <Pie
             data={chartData}
             cx="50%"
-            cy="48%"
-            innerRadius="48%"
-            outerRadius="78%"
-            paddingAngle={10}
-            dataKey="value"
-            isAnimationActive={false}
-            stroke="none"
-          >
-            {chartData.map((_, index) => (
-              <Cell
-                key={`pie-depth-${index}`}
-                fill={pieDepthColor(COLORS[index % COLORS.length])}
-                stroke={pieDepthColor(COLORS[index % COLORS.length], 0.48)}
-                strokeWidth={1}
-              />
-            ))}
-          </Pie>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="44%"
+            cy="50%"
             innerRadius="48%"
             outerRadius="78%"
             paddingAngle={10}
@@ -231,7 +210,7 @@ const AgentSaudaChart = ({ data: agentSaudasData = [], chartType = "bar" }) => {
           <Bar
             dataKey="tons"
             radius={[14, 14, 4, 4]}
-            shape={<ExtrudedBarShape />}
+            shape={<RoundedBarShape />}
             filter="url(#agentBarShadow)"
             {...MODERN_BAR_ANIMATION}
           >

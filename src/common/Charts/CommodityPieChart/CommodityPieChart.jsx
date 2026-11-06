@@ -24,7 +24,6 @@ import {
 import {
   PieGradientDefs,
   MODERN_PIE_ANIMATION,
-  pieDepthColor,
   useResponsiveChartConfig,
 } from "../modernBarChartShared";
 
@@ -194,26 +193,7 @@ const CommodityPieChart = ({ apiUrl }) => {
                 <Pie
                   data={data}
                   cx="50%"
-                  cy="48%"
-                  innerRadius={radius.inner}
-                  outerRadius={radius.outer}
-                  paddingAngle={data.length > 6 ? 3 : 5}
-                  dataKey="value"
-                  isAnimationActive={false}
-                  stroke="none"
-                >
-                  {data.map((entry, index) => (
-                    <Cell
-                      key={`commodity-pie-depth-${entry.name}`}
-                      fill={pieDepthColor(COLORS[index % COLORS.length])}
-                      stroke="none"
-                    />
-                  ))}
-                </Pie>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="44%"
+                  cy="50%"
                   innerRadius={radius.inner}
                   outerRadius={radius.outer}
                   paddingAngle={data.length > 6 ? 3 : 5}

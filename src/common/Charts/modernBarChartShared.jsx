@@ -169,8 +169,8 @@ export const MultiBarGradientDefs = ({ idPrefix, colors, shadowId, shadowColor }
 );
 
 export const PieGradientDefs = ({
-  idPrefix = "pie3d",
-  colors = PIE_3D_COLORS,
+  idPrefix = "pie",
+  colors = PIE_COLORS,
   withShadow = true,
 }) => (
   <defs>
@@ -226,47 +226,24 @@ export const modernActiveBar = (fillUrl) => ({
   filter: "brightness(1.12) drop-shadow(0 4px 8px rgba(0,0,0,0.12))",
 });
 
-export const ExtrudedBarShape = ({ x, y, width, height, fill }) => {
+/** Flat 2D rounded bar used as the shared `shape` for every bar series. */
+export const RoundedBarShape = ({ x, y, width, height, fill }) => {
   if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
     return null;
   }
 
-  const depth = Math.min(9, width * 0.24, height * 0.22);
-  const right = x + width;
-  const bottom = y + height;
-  const radius = Math.min(9, width / 2);
+  const radius = Math.min(10, width / 2, height / 2);
 
   return (
-    <g>
-      <path
-        d={`M ${right} ${y + radius} L ${right + depth} ${y + radius - depth} L ${right + depth} ${bottom - depth} L ${right} ${bottom} Z`}
-        fill={fill}
-        opacity={0.5}
-      />
-      <path
-        d={`M ${x} ${y} L ${x + depth} ${y - depth} L ${right + depth} ${y - depth} L ${right} ${y} Z`}
-        fill={fill}
-        opacity={0.92}
-      />
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={radius}
-        ry={radius}
-        fill={fill}
-      />
-      <rect
-        x={x + 1}
-        y={y + radius}
-        width={Math.max(1.5, width * 0.16)}
-        height={Math.max(0, height - radius - 3)}
-        rx={1}
-        fill="#ffffff"
-        opacity={0.26}
-      />
-    </g>
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={radius}
+      ry={radius}
+      fill={fill}
+    />
   );
 };
 
@@ -301,9 +278,6 @@ export const lightenHexColor = (color, factor = 1.35) => {
     )
     .join("")}`;
 };
-
-export const pieDepthColor = (color, factor = 0.5) =>
-  darkenHexColor(color, factor);
 
 export const BAR_SERIES_THEMES = {
   emerald: {
@@ -362,7 +336,7 @@ export const BAR_SERIES_THEMES = {
   },
 };
 
-export const PIE_3D_COLORS = [
+export const PIE_COLORS = [
   "#065f46",
   "#0d7a68",
   "#12a594",

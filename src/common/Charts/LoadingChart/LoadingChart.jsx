@@ -22,7 +22,7 @@ import {
   MODERN_BAR_CURSOR,
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
-  ExtrudedBarShape,
+  RoundedBarShape,
   modernActiveBar,
 } from "../modernBarChartShared";
 import {
@@ -229,7 +229,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <Bar
             dataKey="weight"
             fill={`url(#${theme.gradientId})`}
-            shape={<ExtrudedBarShape />}
+            shape={<RoundedBarShape />}
             filter="url(#loadingBarShadow)"
             {...MODERN_BAR_ANIMATION}
             activeBar={modernActiveBar(`url(#${theme.gradientId})`)}

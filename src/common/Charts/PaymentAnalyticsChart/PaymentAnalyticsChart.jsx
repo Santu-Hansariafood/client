@@ -22,7 +22,7 @@ import {
   MODERN_CHART_MARGIN,
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
-  ExtrudedBarShape,
+  RoundedBarShape,
   modernActiveBar,
 } from "../modernBarChartShared";
 import {
@@ -281,7 +281,7 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 dataKey="pending"
                 name="Pending"
                 fill={`url(#${BAR_SERIES_THEMES.pending.gradientId})`}
-                shape={<ExtrudedBarShape />}
+                shape={<RoundedBarShape />}
                 filter="url(#paymentPendingShadow)"
                 {...MODERN_BAR_ANIMATION}
                 activeBar={modernActiveBar(
@@ -292,7 +292,7 @@ const PaymentAnalyticsChart = ({ chartType = "line" }) => {
                 dataKey="received"
                 name="Received"
                 fill={`url(#${BAR_SERIES_THEMES.received.gradientId})`}
-                shape={<ExtrudedBarShape />}
+                shape={<RoundedBarShape />}
                 filter="url(#paymentReceivedShadow)"
                 {...MODERN_BAR_ANIMATION}
                 activeBar={modernActiveBar(

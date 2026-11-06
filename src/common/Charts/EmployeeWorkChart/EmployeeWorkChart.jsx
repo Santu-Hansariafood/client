@@ -26,8 +26,7 @@ import {
   MODERN_GRID_PROPS,
   MODERN_AREA_ANIMATION,
   MODERN_PIE_ANIMATION,
-  ExtrudedBarShape,
-  pieDepthColor,
+  RoundedBarShape,
 } from "../modernBarChartShared";
 import {
   CHART_STAGE_CLASS,
@@ -155,26 +154,7 @@ const EmployeeWorkChart = ({
           <Pie
             data={pieData}
             cx="50%"
-            cy="48%"
-            innerRadius="54%"
-            outerRadius="80%"
-            paddingAngle={4}
-            dataKey="value"
-            isAnimationActive={false}
-            stroke="none"
-          >
-            {pieData.map((_, index) => (
-              <Cell
-                key={`employee-pie-depth-${index}`}
-                fill={pieDepthColor(PIE_COLORS[index % PIE_COLORS.length])}
-                stroke="none"
-              />
-            ))}
-          </Pie>
-          <Pie
-            data={pieData}
-            cx="50%"
-            cy="44%"
+            cy="50%"
             innerRadius="54%"
             outerRadius="80%"
             paddingAngle={4}
@@ -257,7 +237,7 @@ const EmployeeWorkChart = ({
           <Bar
             dataKey="total"
             name="Total"
-            shape={<ExtrudedBarShape />}
+            shape={<RoundedBarShape />}
             filter="url(#workBarShadow)"
             {...MODERN_BAR_ANIMATION}
             stackId="a"
@@ -269,7 +249,7 @@ const EmployeeWorkChart = ({
           <Bar
             dataKey="completed"
             name="Completed"
-            shape={<ExtrudedBarShape />}
+            shape={<RoundedBarShape />}
             {...MODERN_BAR_ANIMATION}
             stackId="a"
           >
