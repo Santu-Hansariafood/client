@@ -911,13 +911,13 @@ const PaymentVoucherPDF = ({
               <Text style={styles.metaLabel}>Payment Mode:</Text>
               <Text style={styles.metaValue}>{paymentMode}</Text>
             </View>
-            <View style={styles.summaryRow}>
+            {/* <View style={styles.summaryRow}>
               <Text style={styles.metaLabel}>Balance:</Text>
               <Text style={styles.metaValue}>
                 {formatAmount(Math.max(Number(row.balance || 0), 0))}
               </Text>
             </View>
-            <View style={styles.grandTotalRow}>
+            <View style={styles.grandTotalRow}> */}
               <Text style={styles.grandTotalLabel}>Total:</Text>
               <Text style={styles.grandTotalValue}>
                 Rs. {formatAmount(finalAmount)}
