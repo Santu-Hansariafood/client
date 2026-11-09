@@ -916,8 +916,8 @@ const PaymentVoucherPDF = ({
               <Text style={styles.metaValue}>
                 {formatAmount(Math.max(Number(row.balance || 0), 0))}
               </Text>
-            </View>
-            <View style={styles.grandTotalRow}> */}
+            </View> */}
+            <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>Total:</Text>
               <Text style={styles.grandTotalValue}>
                 Rs. {formatAmount(finalAmount)}
