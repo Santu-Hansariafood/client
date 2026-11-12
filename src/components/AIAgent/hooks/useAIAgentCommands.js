@@ -1208,18 +1208,6 @@ export const useAIAgentCommands = ({
         });
       },
 
-      // A bare number, for example "12345", is treated as a Sauda number. The
-      // Sauda profile already carries its linked loading entries and payments.
-      // If no Sauda matches, keep going so a bill, lorry or the agent can
-      // answer instead.
-      async () => {
-        if (!/^\d{3,6}$/.test(cleanCmd)) return null;
-
-        const response = await apiMethods.fetchSaudaDetails(cleanCmd);
-        if (!response || response.content.includes("couldn't find")) return null;
-        return response;
-      },
-
       // Bare one-word query, for example "sauda", "payment" or "loading".
       () => buildShortQueryHelp(cleanCmd),
     ];
