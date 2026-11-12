@@ -1,6 +1,34 @@
 import { useState, useCallback } from "react";
-import { FaArrowRight, FaSpinner, FaCopy, FaCheck, FaPhone, FaEnvelope } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaSpinner,
+  FaCopy,
+  FaCheck,
+  FaPhone,
+  FaEnvelope,
+  FaFilePdf,
+  FaFileExcel,
+  FaFileImage,
+} from "react-icons/fa";
+import { toast } from "react-toastify";
 import React from "react";
+import {
+  exportSariaAnswerToPdf,
+  exportSariaAnswerToExcel,
+  exportSariaAnswerToImage,
+} from "../../../utils/sariaAnswerExport";
+
+const DOWNLOAD_FORMATS = [
+  { key: "pdf", label: "PDF", Icon: FaFilePdf },
+  { key: "excel", label: "Excel", Icon: FaFileExcel },
+  { key: "image", label: "Image", Icon: FaFileImage },
+];
+
+const downloadAnswer = (format, content) => {
+  if (format === "pdf") return exportSariaAnswerToPdf(content);
+  if (format === "excel") return exportSariaAnswerToExcel(content);
+  return exportSariaAnswerToImage(content);
+};
 
 // eslint-disable-next-line react/display-name
 const AIAgentMessages = React.memo(({
@@ -13,11 +41,25 @@ const AIAgentMessages = React.memo(({
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [emailSendingIndex, setEmailSendingIndex] = useState(null);
   const [emailSentIndex, setEmailSentIndex] = useState(null);
+  const [downloadingIndex, setDownloadingIndex] = useState(null);
 
   const handleCopy = useCallback((text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  }, []);
+
+  const handleDownload = useCallback(async (format, content, index) => {
+    if (!content) return;
+    setDownloadingIndex(index);
+    try {
+      await downloadAnswer(format, content);
+    } catch (error) {
+      console.error("Saria AI answer download failed:", error);
+      toast.error("Could not create the file. Please try again.");
+    } finally {
+      setDownloadingIndex(null);
+    }
   }, []);
 
   return (
@@ -103,6 +145,28 @@ const AIAgentMessages = React.memo(({
                   <FaCopy size={12} />
                 )}
               </button>
+            )}
+
+            {msg.role === "assistant" && msg.content && (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {DOWNLOAD_FORMATS.map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={downloadingIndex === idx}
+                    onClick={() => handleDownload(key, msg.content, idx)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#e9e2d3] bg-lux-ivory px-2.5 py-1 text-[11px] font-semibold text-lux-muted transition hover:border-[#dccfa8] hover:bg-lux-cream hover:text-lux-emerald disabled:cursor-not-allowed disabled:opacity-60"
+                    title={`Download as ${label}`}
+                  >
+                    {downloadingIndex === idx ? (
+                      <FaSpinner className="animate-spin" size={11} />
+                    ) : (
+                      <Icon size={11} />
+                    )}
+                    {label}
+                  </button>
+                ))}
+              </div>
             )}
 
             {msg.suggestions && (

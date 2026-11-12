@@ -14,6 +14,11 @@ const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 import buyerLabels from "../../../language/en/buyer";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
+import {
+  sariaToFieldList as toAgentList,
+  sariaFindOption as findOptionByLabel,
+} from "../../../utils/sariaAIAction";
 
 const AddBuyer = () => {
   const [formData, setFormData] = useState({
@@ -77,76 +82,87 @@ const AddBuyer = () => {
     fetchDropdownData();
   }, []);
 
+  const buildCompanySelection = (selectedCompanies, currentGroup) => {
+    const selectedCompanyIds = selectedCompanies.map((c) => String(c.value));
+    const selectedCompaniesData = companiesData.filter((c) =>
+      selectedCompanyIds.includes(String(c._id)),
+    );
+
+    const allCommoditiesMap = new Map();
+    const allConsigneesMap = new Map();
+
+    selectedCompaniesData.forEach((company) => {
+      (company.commodities || []).forEach((c) => {
+        const commodityId = String(c._id || c.commodityId);
+        if (!allCommoditiesMap.has(commodityId)) {
+          allCommoditiesMap.set(commodityId, {
+            value: commodityId,
+            label: c.name,
+            brokerage: c.brokerage ?? 0,
+          });
+        }
+      });
+
+      if (Array.isArray(company.consigneeIds)) {
+        company.consigneeIds.forEach((id, idx) => {
+          const consigneeId = String(id);
+          if (!allConsigneesMap.has(consigneeId)) {
+            allConsigneesMap.set(consigneeId, {
+              value: consigneeId,
+              label: company.consignee?.[idx] || "Consignee",
+            });
+          }
+        });
+      }
+    });
+
+    const combinedCommodities = Array.from(allCommoditiesMap.values()).sort(
+      (a, b) => a.label.localeCompare(b.label),
+    );
+    const combinedConsignees = Array.from(allConsigneesMap.values()).sort(
+      (a, b) => a.label.localeCompare(b.label),
+    );
+
+    const newBrokerage = {};
+    combinedCommodities.forEach((c) => {
+      newBrokerage[c.value] = Number(c.brokerage || 0);
+    });
+
+    let autoGroup = currentGroup;
+    if (selectedCompaniesData.length === 1) {
+      const selectedCompany = selectedCompaniesData[0];
+      if (selectedCompany?.groupId && selectedCompany?.group) {
+        autoGroup = {
+          value: String(selectedCompany.groupId),
+          label: selectedCompany.group,
+        };
+      }
+    }
+
+    return {
+      commodityOptions: combinedCommodities,
+      consigneeOptions: combinedConsignees,
+      group: autoGroup,
+      brokerage: newBrokerage,
+    };
+  };
+
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const fieldName = actionMeta.name;
 
     if (fieldName === "company") {
       const selectedCompanies = selectedOption || [];
-      const selectedCompanyIds = selectedCompanies.map((c) => String(c.value));
-      const selectedCompaniesData = companiesData.filter((c) =>
-        selectedCompanyIds.includes(String(c._id)),
-      );
+      const derived = buildCompanySelection(selectedCompanies, formData.group);
 
-      const allCommoditiesMap = new Map();
-      const allConsigneesMap = new Map();
-
-      selectedCompaniesData.forEach((company) => {
-        (company.commodities || []).forEach((c) => {
-          const commodityId = String(c._id || c.commodityId);
-          if (!allCommoditiesMap.has(commodityId)) {
-            allCommoditiesMap.set(commodityId, {
-              value: commodityId,
-              label: c.name,
-              brokerage: c.brokerage ?? 0,
-            });
-          }
-        });
-
-        if (Array.isArray(company.consigneeIds)) {
-          company.consigneeIds.forEach((id, idx) => {
-            const consigneeId = String(id);
-            if (!allConsigneesMap.has(consigneeId)) {
-              allConsigneesMap.set(consigneeId, {
-                value: consigneeId,
-                label: company.consignee?.[idx] || "Consignee",
-              });
-            }
-          });
-        }
-      });
-
-      const combinedCommodities = Array.from(allCommoditiesMap.values()).sort(
-        (a, b) => a.label.localeCompare(b.label),
-      );
-      const combinedConsignees = Array.from(allConsigneesMap.values()).sort(
-        (a, b) => a.label.localeCompare(b.label),
-      );
-
-      const newBrokerage = {};
-      combinedCommodities.forEach((c) => {
-        newBrokerage[c.value] = Number(c.brokerage || 0);
-      });
-
-      let autoGroup = formData.group;
-      if (selectedCompaniesData.length === 1) {
-        const selectedCompany = selectedCompaniesData[0];
-        if (selectedCompany?.groupId && selectedCompany?.group) {
-          autoGroup = {
-            value: String(selectedCompany.groupId),
-            label: selectedCompany.group,
-          };
-        }
-      }
-
-      setCommodityOptions(combinedCommodities);
-      setConsigneeOptions(combinedConsignees);
+      setCommodityOptions(derived.commodityOptions);
+      setConsigneeOptions(derived.consigneeOptions);
       setFormData((prev) => ({
         ...prev,
         company: selectedCompanies,
-        group: autoGroup,
+        group: derived.group,
         commodity: [],
         consignee: [],
-        brokerage: newBrokerage,
+        brokerage: derived.brokerage,
       }));
       return;
     }
@@ -210,6 +226,104 @@ const AddBuyer = () => {
       },
     }));
   };
+
+  useSariaAIPrefill({
+    module: "buyer",
+    ready: companyOptions.length > 0 || groupOptions.length > 0,
+    apply: (fields) => {
+      const filled = [];
+      const next = { ...formData };
+
+      const companyMatches = toAgentList(fields.company)
+        .map((label) => findOptionByLabel(companyOptions, label))
+        .filter(Boolean);
+      const derived = companyMatches.length
+        ? buildCompanySelection(companyMatches, formData.group)
+        : null;
+
+      if (fields.name) {
+        next.name = String(fields.name);
+        filled.push("name");
+      }
+      if (fields.password) {
+        next.password = String(fields.password);
+        filled.push("password");
+      }
+
+      const mobiles = toAgentList(fields.mobile);
+      if (mobiles.length) {
+        next.mobile = mobiles;
+        filled.push("mobile");
+      }
+
+      const emails = toAgentList(fields.email);
+      if (emails.length) {
+        next.email = emails;
+        filled.push("email");
+      }
+
+      if (companyMatches.length) {
+        next.company = companyMatches;
+        next.commodity = [];
+        next.consignee = [];
+        next.brokerage = derived.brokerage;
+        filled.push("company");
+      }
+
+      const groupMatch = findOptionByLabel(groupOptions, fields.group);
+      if (groupMatch) {
+        next.group = groupMatch;
+        filled.push("group");
+      } else if (derived?.group) {
+        next.group = derived.group;
+      }
+
+      const statusMatch = findOptionByLabel(statusOptions, fields.status);
+      if (statusMatch) {
+        next.status = statusMatch;
+        filled.push("status");
+      }
+
+      const commoditySource = derived?.commodityOptions || commodityOptions;
+      const commodityMatches = toAgentList(fields.commodity)
+        .map((label) => findOptionByLabel(commoditySource, label))
+        .filter(Boolean);
+      if (commodityMatches.length) {
+        const brokerage = { ...(next.brokerage || {}) };
+        commodityMatches.forEach((commodity) => {
+          if (
+            brokerage[commodity.value] === undefined ||
+            brokerage[commodity.value] === null ||
+            brokerage[commodity.value] === ""
+          ) {
+            brokerage[commodity.value] = Number(commodity.brokerage ?? 0);
+          }
+        });
+        next.commodity = commodityMatches;
+        next.brokerage = brokerage;
+        filled.push("commodity");
+      }
+
+      const consigneeSource = derived?.consigneeOptions || consigneeOptions;
+      const consigneeMatches = toAgentList(fields.consignee)
+        .map((label) => findOptionByLabel(consigneeSource, label))
+        .filter(Boolean);
+      if (consigneeMatches.length) {
+        next.consignee = consigneeMatches;
+        filled.push("consignee");
+      }
+
+      setFormData(next);
+      if (derived) {
+        setCommodityOptions(derived.commodityOptions);
+        setConsigneeOptions(derived.consigneeOptions);
+      }
+
+      return filled.length
+        ? `I filled the buyer form (${filled.join(", ")}). Review and press Submit.`
+        : "I opened the buyer form. Fill it in and press Submit.";
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();

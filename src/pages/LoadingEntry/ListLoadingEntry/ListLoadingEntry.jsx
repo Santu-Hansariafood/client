@@ -248,6 +248,7 @@ const ListLoadingEntry = () => {
   const isMountedRef = useRef(true);
   const staticDataLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
+  const stagedActionOpenedRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -909,6 +910,51 @@ const ListLoadingEntry = () => {
     },
     [currentCompany, currentSelfOrder],
   );
+
+  useEffect(() => {
+    const action = location.state?.aiAction;
+    if (!action || action.module !== "loading" || action.operation !== "edit") {
+      return;
+    }
+    if (stagedActionOpenedRef.current) return;
+    stagedActionOpenedRef.current = true;
+
+    let cancelled = false;
+
+    const openStagedEntry = async () => {
+      try {
+        let entry = null;
+        if (action.recordId) {
+          const response = await api.get(`/loading-entries/${action.recordId}`);
+          entry = response.data?.data || response.data;
+        } else if (action.recordKey) {
+          const response = await api.get("/loading-entries", {
+            params: { search: action.recordKey, limit: 5 },
+          });
+          const rows = response.data?.data || response.data || [];
+          const wanted = String(action.recordKey).trim().toLowerCase();
+          entry =
+            rows.find(
+              (row) =>
+                String(row?._id || "") === action.recordKey ||
+                String(row?.billNumber || "").trim().toLowerCase() === wanted ||
+                String(row?.saudaNo || "").trim().toLowerCase() === wanted ||
+                String(row?.lorryNumber || "").trim().toLowerCase() === wanted,
+            ) || rows[0];
+        }
+
+        if (cancelled || !entry?._id) return;
+        await handleEdit(entry);
+      } catch {
+        // The list stays usable when the staged entry cannot be opened.
+      }
+    };
+
+    openStagedEntry();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.state, handleEdit]);
 
   const handleEditFieldChange = useCallback(
     (e) => {

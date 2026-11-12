@@ -46,6 +46,36 @@ export const useAIAgentAPI = (
       delete responseCacheRef.current[oldestKey];
     }
   };
+  const askSariaAI = async (message, history, context) => {
+    setIsLoadingData(true);
+    setThinkingPath("Saria AI is thinking...");
+    try {
+      const response = await api.post(
+        "/ai/chat",
+        { message, history, context },
+        { timeout: 90000 },
+      );
+      const { content, suggestions, action } = response.data || {};
+      if (!content) return null;
+      return {
+        role: "assistant",
+        content,
+        suggestions: Array.isArray(suggestions) ? suggestions : [],
+        action: action || null,
+      };
+    } catch (error) {
+      if (error?.name === "AbortError") return null;
+      console.warn(
+        "Saria AI agent unavailable, using the local engine:",
+        error?.response?.data?.code || error?.message || error,
+      );
+      return null;
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
   const fetchCommodities = async () => {
     setIsLoadingData(true);
     setThinkingPath("Listing all system commodities...");
@@ -2360,6 +2390,7 @@ export const useAIAgentAPI = (
   };
 
   return {
+    askSariaAI,
     fetchCommodities,
     fetchAccountStatus,
     fetchFinanceReport,

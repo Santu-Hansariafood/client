@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -24,6 +25,7 @@ const toTitleCase = (str) => {
 };
 
 const BuyerList = () => {
+  const location = useLocation();
   const [buyersData, setBuyersData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,6 +62,47 @@ const BuyerList = () => {
     };
     fetchBuyersData();
   }, [currentPage, searchQuery, itemsPerPage]);
+
+  // Saria AI stages buyer edits from this list page: open the matching buyer
+  // in the edit popup so the user reviews and saves.
+  useEffect(() => {
+    const action = location.state?.aiAction;
+    if (!action || action.module !== "buyer") return;
+
+    let cancelled = false;
+
+    const openStagedBuyer = async () => {
+      try {
+        let buyer = null;
+
+        if (action.recordId) {
+          const response = await api.get(`/buyers/${action.recordId}`);
+          buyer = response.data?.data || response.data;
+        } else if (action.recordKey) {
+          const response = await api.get("/buyers", {
+            params: { search: action.recordKey, limit: 5 },
+          });
+          const rows = response.data?.data || [];
+          const wanted = String(action.recordKey).trim().toLowerCase();
+          buyer =
+            rows.find(
+              (row) => String(row?.name || "").trim().toLowerCase() === wanted,
+            ) || rows[0];
+        }
+
+        if (cancelled || !buyer?._id) return;
+        setSelectedBuyer(buyer);
+        setIsEditPopupOpen(true);
+      } catch {
+        // Nothing to open; the list stays usable and the user can pick manually.
+      }
+    };
+
+    openStagedBuyer();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.state]);
 
   const handleSearchByNames = (query) => {
     setSearchQuery(query || "");

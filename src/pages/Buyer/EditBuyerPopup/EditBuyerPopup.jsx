@@ -20,6 +20,11 @@ const DataDropdown = lazy(
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
+import {
+  sariaToFieldList,
+  sariaFindOption,
+} from "../../../utils/sariaAIAction";
 
 const isAbortError = (err) =>
   err?.code === "ERR_CANCELED" || err?.name === "CanceledError";
@@ -120,6 +125,66 @@ const buildFormStateFromBuyer = (buyer, companiesData = []) => {
         : [],
     group: buyer.group || "",
   };
+};
+
+const deriveCompanyState = (next, companiesData, groups, allConsignees) => {
+  const selectedCompanyIds = next.map((c) => String(c.value));
+  const selectedCompaniesData = companiesData.filter((c) =>
+    selectedCompanyIds.includes(String(c._id)),
+  );
+
+  const allCommoditiesMap = new Map();
+  const allConsigneesMap = new Map();
+  const labelById = new Map(
+    allConsignees.map((o) => [String(o.value), o.label]),
+  );
+
+  selectedCompaniesData.forEach((company) => {
+    (company.commodities || []).forEach((c) => {
+      const cid = String(c._id || c.commodityId);
+      if (!allCommoditiesMap.has(cid)) {
+        allCommoditiesMap.set(cid, {
+          value: cid,
+          label: c.name,
+          brokerage: c.brokerage ?? 0,
+        });
+      }
+    });
+
+    if (Array.isArray(company.consigneeIds)) {
+      company.consigneeIds.forEach((id, idx) => {
+        const consigneeId = String(id);
+        if (!allConsigneesMap.has(consigneeId)) {
+          const fromCompany = company.consignee?.[idx];
+          const label =
+            (typeof fromCompany === "string" && fromCompany) ||
+            labelById.get(consigneeId) ||
+            "Consignee";
+          allConsigneesMap.set(consigneeId, { value: consigneeId, label });
+        }
+      });
+    }
+  });
+
+  const commodityOptions = Array.from(allCommoditiesMap.values());
+  const consigneeOptions = Array.from(allConsigneesMap.values()).sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+
+  const brokerage = {};
+  commodityOptions.forEach((c) => {
+    brokerage[c.value] = c.brokerage ?? 0;
+  });
+
+  let autoGroup = null;
+  if (selectedCompaniesData.length === 1) {
+    const c = selectedCompaniesData[0];
+    if (c.groupId) {
+      autoGroup = groups.find((g) => String(g.value) === String(c.groupId)) || null;
+    }
+  }
+
+  return { commodityOptions, consigneeOptions, brokerage, autoGroup };
 };
 
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
@@ -350,66 +415,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   const handleCompanyChange = (selectedCompanies) => {
     const next = selectedCompanies || [];
+    const derived = deriveCompanyState(next, companiesData, groups, allConsignees);
 
-    const selectedCompanyIds = next.map((c) => String(c.value));
-    const selectedCompaniesData = companiesData.filter((c) =>
-      selectedCompanyIds.includes(String(c._id)),
-    );
-
-    const allCommoditiesMap = new Map();
-    const allConsigneesMap = new Map();
-    const labelById = new Map(
-      allConsignees.map((o) => [String(o.value), o.label]),
-    );
-
-    selectedCompaniesData.forEach((company) => {
-      (company.commodities || []).forEach((c) => {
-        const cid = String(c._id || c.commodityId);
-        if (!allCommoditiesMap.has(cid)) {
-          allCommoditiesMap.set(cid, {
-            value: cid,
-            label: c.name,
-            brokerage: c.brokerage ?? 0,
-          });
-        }
-      });
-
-      if (Array.isArray(company.consigneeIds)) {
-        company.consigneeIds.forEach((id, idx) => {
-          const consigneeId = String(id);
-          if (!allConsigneesMap.has(consigneeId)) {
-            const fromCompany = company.consignee?.[idx];
-            const label =
-              (typeof fromCompany === "string" && fromCompany) ||
-              labelById.get(consigneeId) ||
-              "Consignee";
-            allConsigneesMap.set(consigneeId, { value: consigneeId, label });
-          }
-        });
-      }
-    });
-
-    const newCommodityOptions = Array.from(allCommoditiesMap.values());
-    setCommodityOptions(newCommodityOptions);
-    setConsigneeOptions(
-      Array.from(allConsigneesMap.values()).sort((a, b) =>
-        a.label.localeCompare(b.label),
-      ),
-    );
-
-    const newBrokerage = {};
-    newCommodityOptions.forEach((c) => {
-      newBrokerage[c.value] = c.brokerage ?? 0;
-    });
-
-    let autoGroup = null;
-    if (selectedCompaniesData.length === 1) {
-      const c = selectedCompaniesData[0];
-      if (c.groupId) {
-        autoGroup =
-          groups.find((g) => String(g.value) === String(c.groupId)) || null;
-      }
-    }
+    setCommodityOptions(derived.commodityOptions);
+    setConsigneeOptions(derived.consigneeOptions);
 
     setFormData((prevData) => {
       if (!prevData) return prevData;
@@ -417,7 +426,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       const nextKey = sortIdsKey(next);
 
       const currentCommodityIds = new Set(
-        newCommodityOptions.map((c) => c.value),
+        derived.commodityOptions.map((c) => c.value),
       );
       const newSelectedCommodities =
         prevData.commodity?.filter((c) =>
@@ -428,9 +437,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         ...prevData,
         selectedCompanies: next,
         commodity: newSelectedCommodities,
-        brokerage: newBrokerage,
-        group: autoGroup ? autoGroup.label : prevData.group,
-        groupId: autoGroup ? autoGroup.value : prevData.groupId,
+        brokerage: derived.brokerage,
+        group: derived.autoGroup ? derived.autoGroup.label : prevData.group,
+        groupId: derived.autoGroup ? derived.autoGroup.value : prevData.groupId,
         consignee: prevKey === nextKey ? prevData.consignee : [],
       };
     });
@@ -573,6 +582,114 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       setIsSubmitting(false);
     }
   };
+
+  useSariaAIPrefill({
+    module: "buyer",
+    ready: Boolean(formData),
+    apply: (fields) => {
+      const filled = [];
+      const next = { ...formData };
+
+      if (fields.name) {
+        next.name = String(fields.name);
+        filled.push("name");
+      }
+
+      const mobiles = sariaToFieldList(fields.mobile);
+      if (mobiles.length) {
+        next.mobile = mobiles;
+        filled.push("mobile");
+      }
+
+      const emails = sariaToFieldList(fields.email);
+      if (emails.length) {
+        next.email = emails;
+        filled.push("email");
+      }
+
+      const companyMatches = sariaToFieldList(fields.company)
+        .map((label) => sariaFindOption(companies, label))
+        .filter(Boolean);
+
+      let derived = null;
+      if (companyMatches.length) {
+        derived = deriveCompanyState(
+          companyMatches,
+          companiesData,
+          groups,
+          allConsignees,
+        );
+        next.selectedCompanies = companyMatches;
+        next.commodity = [];
+        next.consignee = [];
+        next.brokerage = derived.brokerage;
+        if (derived.autoGroup) {
+          next.group = derived.autoGroup.label;
+          next.groupId = derived.autoGroup.value;
+        }
+        filled.push("company");
+      }
+
+      const groupMatch = groups.find(
+        (g) =>
+          String(g.label).trim().toLowerCase() ===
+          String(fields.group || "").trim().toLowerCase(),
+      );
+      if (groupMatch) {
+        next.group = groupMatch.label;
+        next.groupId = groupMatch.value;
+        filled.push("group");
+      }
+
+      const commoditySource = derived?.commodityOptions || commodityOptions;
+      const commodityMatches = sariaToFieldList(fields.commodity)
+        .map((label) => sariaFindOption(commoditySource, label))
+        .filter(Boolean);
+      if (commodityMatches.length) {
+        const brokerage = { ...(next.brokerage || {}) };
+        commodityMatches.forEach((commodity) => {
+          if (
+            brokerage[commodity.value] === undefined ||
+            brokerage[commodity.value] === null ||
+            brokerage[commodity.value] === ""
+          ) {
+            brokerage[commodity.value] = Number(commodity.brokerage ?? 0);
+          }
+        });
+        next.commodity = commodityMatches;
+        next.brokerage = brokerage;
+        filled.push("commodity");
+      }
+
+      const consigneeSource = derived?.consigneeOptions || consigneeOptions;
+      const consigneeMatches = sariaToFieldList(fields.consignee)
+        .map((label) => sariaFindOption(consigneeSource, label))
+        .filter(Boolean);
+      if (consigneeMatches.length) {
+        next.consignee = consigneeMatches;
+        filled.push("consignee");
+      }
+
+      if (fields.status) {
+        const status =
+          String(fields.status).trim().toLowerCase() === "inactive"
+            ? "Inactive"
+            : "Active";
+        next.status = status;
+        filled.push("status");
+      }
+
+      setFormData(next);
+      if (derived) {
+        setCommodityOptions(derived.commodityOptions);
+        setConsigneeOptions(derived.consigneeOptions);
+      }
+
+      return filled.length
+        ? `I filled the buyer form (${filled.join(", ")}). Review and press Save changes.`
+        : "I opened the buyer form. Review and press Save changes.";
+    },
+  });
 
   if (!isOpen || !formData) return null;
 

@@ -7,6 +7,7 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import AllocationRowActions from "./components/AllocationRowActions";
 import PaymentFormNavigation from "./components/PaymentFormNavigation";
+import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
 
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import {
@@ -225,6 +226,50 @@ const AddPaymentReceived = () => {
 
     setActiveTab("allocation");
   }, [editingPayment]);
+
+  useSariaAIPrefill({
+    module: "payment",
+    ready: !fetchingEditingPayment && (!editingPaymentId || Boolean(editingPayment)),
+    apply: (fields) => {
+      const filled = [];
+      const next = {};
+
+      if (fields.date) {
+        next.date = String(fields.date);
+        filled.push("date");
+      }
+      ["amount", "claim", "tds"].forEach((key) => {
+        const value = fields[key];
+        if (value !== undefined && value !== null && value !== "") {
+          const num = parseFloat(value);
+          if (!Number.isNaN(num)) {
+            next[key] = num;
+            filled.push(key);
+          }
+        }
+      });
+      if (fields.paymentMode) {
+        next.paymentMode = String(fields.paymentMode);
+        filled.push("payment mode");
+      }
+      if (fields.paymentType) {
+        next.paymentType = String(fields.paymentType);
+        filled.push("payment type");
+      }
+      if (fields.remarks) {
+        next.remarks = String(fields.remarks);
+        filled.push("remarks");
+      }
+
+      if (filled.length === 0) {
+        return "I opened the payment form. Fill it in and press save.";
+      }
+
+      setFormData((prev) => ({ ...prev, ...next }));
+      if (next.amount > 0) setActiveTab("allocation");
+      return `I filled the payment form (${filled.join(", ")}). Review and save.`;
+    },
+  });
 
   const getCompanyIdFromRef = (companyRef) => {
     if (!companyRef) return "";

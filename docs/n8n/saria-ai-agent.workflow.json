@@ -1,0 +1,832 @@
+{
+  "name": "Saria AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Saria AI Agent (Hansaria Food)\n\n**Called by** `POST /api/ai/chat` on the Hansaria API server (never from the browser).\n\n### Setup\n1. Import this file, then select your **Gemini (or OpenAI) credential** on the chat model node. The Window Buffer Memory node needs no setup.\n2. On the server `.env` set:\n   - `N8N_AI_WEBHOOK_URL=https://<your-n8n-host>/webhook/saria-ai`\n   - `N8N_AI_APP_API_URL=https://<your-api-host>/api`\n   - `N8N_AI_WEBHOOK_TOKEN=<any-long-random-string>` (optional, sent as the `x-saria-token` header)\n   - `N8N_AI_TIMEOUT_MS=90000` (optional)\n3. Activate the workflow. The production URL must end in `/webhook/saria-ai` — the `/webhook-test/` URL only works while the editor is open.\n\n### How it works\n- The server forwards the signed-in user's JWT in `Authorization` and the app key in `x-api-key`, so every tool reads the API with that user's own permissions.\n- Tools are read-only. To create or edit, the agent stages an `ACTION:` line; the app opens the real form and the user reviews and saves. It never writes and never deletes.\n- The agent must end with a `SUGGESTIONS: a | b | c` line; the Code node turns that into the chips shown under the answer.\n- Request Context passes the current page, recent pages, user name/role and recent chat so the agent can resolve references like \"that sauda\".\n\n### Handled by the app, not here\n- Opening pages, email confirmation, tap-to-call, and the PDF / Excel / Image download buttons under every answer.\n- A bare one-word query (`sauda`, `payment`, `loading`, ...) is answered by the app's own shortcut menu before it ever reaches this workflow.\n\n### Optional hardening\n- Add an IF node after the Webhook to reject requests whose `x-saria-token` header does not match an n8n variable.\n- Add an IF node to restrict the agent to Admin/Employee roles (`body.user.role`).",
+        "height": 660,
+        "width": 540,
+        "color": 5
+      },
+      "id": "sticky-setup",
+      "name": "Setup Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1160, -180]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "saria-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-saria",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-480, 260],
+      "webhookId": "saria-ai"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx-message",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-history",
+              "name": "history",
+              "value": "={{ $json.body.history || [] }}",
+              "type": "array"
+            },
+            {
+              "id": "ctx-auth",
+              "name": "authorization",
+              "value": "={{ $json.headers.authorization || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-apikey",
+              "name": "apiKey",
+              "value": "={{ $json.headers['x-api-key'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-webhooktoken",
+              "name": "webhookToken",
+              "value": "={{ $json.headers['x-saria-token'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-baseurl",
+              "name": "apiBaseUrl",
+              "value": "={{ $json.body.api.baseUrl || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-session",
+              "name": "sessionId",
+              "value": "={{ $json.body.user.id || $json.body.context.userName || 'saria' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-role",
+              "name": "userRole",
+              "value": "={{ $json.body.user.role || 'Admin' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-username",
+              "name": "userName",
+              "value": "={{ $json.body.context.userName || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-path",
+              "name": "currentPath",
+              "value": "={{ $json.body.context.path || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-pagehistory",
+              "name": "pageHistory",
+              "value": "={{ $json.body.context.pageHistory || [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-request-context",
+      "name": "Request Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-240, 260]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message + '\\n\\n--- APP CONTEXT (reference only, do not repeat it back) ---\\nSigned-in user: ' + ($json.userName || 'unknown') + ' (role: ' + $json.userRole + ')\\nCurrent page: ' + ($json.currentPath || 'unknown') + '\\nRecently visited pages: ' + (($json.pageHistory || []).join(' > ') || 'none') + '\\nRecent chat (may repeat your memory, use only to resolve references like \"that sauda\"): ' + (($json.history || []).slice(-6).map(m => (m.role || 'user') + ': ' + (m.content || '')).join(' | ') || 'none') }}",
+        "options": {
+          "systemMessage": "You are Saria AI, the in-app assistant for Hansaria Food Pvt. Ltd., a commodity trading (sauda) ERP.\n\nSTYLE\n- Answer in short, scannable WhatsApp-style markdown using *bold* labels and bullet lines.\n- Prefer \"Label: value\" lines so the answer reads well when the user downloads it.\n- Amounts are Indian Rupees with 2 decimals (Rs. 1,234.56). Weights are in Tons with 3 decimals.\n- Never invent numbers, parties, or records. If the tools return nothing, say so plainly and suggest a narrower search.\n- You never write to the database yourself. You may READ, and you may STAGE a create or edit form for the user to review and save. You can NEVER delete anything.\n\nTOOLS\n- Use the tool nodes to fetch live data before answering any question about saudas, orders, loadings, payments, buyers, sellers, companies, consignees, commodities, quality parameters or bids.\n- Prefer targeted searches (pass the Sauda number, lorry number, bill number, buyer or seller name the user gave you) over large listings.\n- If two tools are relevant, call both and merge the answer into one short reply.\n\nSINGLE-WORD QUERIES\n- If the whole message is one bare keyword (for example `sauda`, `buyer`, `payment`, `loading`, `bill`, `lorry`, `commodity`, `bid`, `rate`, `report`), reply with a short menu: one intro line, then up to 4 bullet lines naming the concrete things you can do for that word. Do not guess a record.\n\nOUT OF SCOPE\n- Opening pages, confirming/sending emails and tap-to-call are handled by the app itself. If asked, tell the user to use those in-app controls.\n- The app already lets the user download your answer as a PDF, Excel sheet or image, so do not offer to make files yourself.\n\nSTAGING FORMS (create and edit)\n- The user can ask you to fill a form for them. You do not save it: you stage the values, the app opens the real form, and the user reviews and presses save.\n- You may stage CREATE and EDIT only. You can NEVER DELETE. If asked to delete, refuse politely and tell the user to delete it from the matching list page.\n- Confirm in words which fields you filled and remind the user to review and press save.\n- Only stage values you are confident about; leave a field out instead of guessing. Never invent records.\n- For an edit, identify the record with recordKey (the name or number the user gave). Never invent ids.\n- Valid module values are exactly: sauda, buyer, seller, commodity, loading, payment.\n\nFIELD NAMES BY MODULE\n- sauda: buyer, buyerCompany, consignee, commodity, supplier, supplierCompany, state, location, quantity, pendingQuantity, rate, gst, cd, weight, poNumber, poDate, paymentTerms, deliveryDate, loadingDate, notes, agentName, buyerMobile, sellerMobile\n- buyer: name, mobile, email, password, group, company, commodity, status, consignee\n- seller: sellerName, password, phoneNumbers, emails, commodities, companies, status\n- commodity: commodityName, hsnCode\n- loading: loadingDate, deliveryDate, saudaNo, billNumber, sellerBillNo, lorryNumber, driverName, driverPhoneNumber, commodity, loadingFrom, loadingWeight, bags, unloadingWeight, unloadingDate, freightRate, advance, balance, dueDate, remarks\n- payment: date, amount, claim, tds, paymentType, paymentMode, remarks\n\nWHEN YOU STAGE A FORM, append one line in exactly this format (single line, valid JSON):\nACTION: {\"module\":\"<module>\",\"operation\":\"create or edit\",\"recordKey\":\"<name or number for an edit, else empty>\",\"fields\":{ }}\nDo not add an ACTION line when the user only asked a question.\n\nALWAYS finish with one final line in exactly this format:\nSUGGESTIONS: first follow-up | second follow-up | third follow-up\n(max 3 short follow-ups, no other text on that line)"
+        }
+      },
+      "id": "agent-saria",
+      "name": "Saria AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [40, 260]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "lm-gemini",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [-140, 480],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL",
+          "name": "Google Gemini (replace me)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Request Context').first().json.sessionId }}",
+        "contextWindowLength": 12
+      },
+      "id": "memory-window",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [80, 480]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over Sauda / self orders. Use it for questions about a Sauda number, contract, quantity, rate, buyer, seller, consignee, payment status or contract details.",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/self-order",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Sauda number, buyer, seller, company or consignee name to search for. Leave empty to list recent orders.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-sauda-orders",
+      "name": "Fetch Sauda Orders",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [230, 480]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over loading entries (lorry wise despatch, loading and unloading weight, bill number, quality claims).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/loading-entries",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Sauda number, lorry number, bill number, buyer, seller or company name. Leave empty to list recent loading entries.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-loading-entries",
+      "name": "Fetch Loading Entries",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [380, 480]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over payment records (vouchers, payment mode, allocated amounts, pending amounts, credit balance).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/payment-received",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Sauda number, bill number, voucher number, buyer, seller or company name. Leave empty to list recent payments.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-payments",
+      "name": "Fetch Payments",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [530, 480]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only dashboard summary: today's totals, counts, market highs and aggregate analytics. Use it for 'today', 'total', 'how many' and overview questions.",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/dashboard/stats",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-dashboard-stats",
+      "name": "Fetch Dashboard Stats",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [680, 480]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over buyers (name, mobile, email, group, company, commodity, consignee, status).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/buyers",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Buyer name, company, consignee or commodity to search for. Leave empty to list recent buyers.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-buyers",
+      "name": "Fetch Buyers",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [-140, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over sellers (name, phone numbers, emails, commodities, companies, status).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/sellers",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Seller name, company, commodity or phone number to search for. Leave empty to list recent sellers.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-sellers",
+      "name": "Fetch Sellers",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [10, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over companies (buyer companies and group of companies).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/companies",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Company or group name to search for. Leave empty to list recent companies.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-companies",
+      "name": "Fetch Companies",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [160, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over consignees (the consignee parties used on saudas).",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/consignees",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Consignee name to search for. Leave empty to list consignees.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-consignees",
+      "name": "Fetch Consignees",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [310, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over commodities (name, HSN code). Use it before answering a rate or commodity question.",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/commodities",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Commodity name or HSN code to search for. Leave empty to list commodities.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-commodities",
+      "name": "Fetch Commodities",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [460, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only search over quality parameters used in quality claims.",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/quality-parameters",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $fromAI('search', 'Quality parameter name to search for. Leave empty to list all quality parameters.', 'string') }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-quality-params",
+      "name": "Fetch Quality Parameters",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [610, 680]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read-only list of active market bids (commodity, buyer/seller party, rate, quantity). Use it for 'active bids', 'today's bids' and market rate questions.",
+        "method": "GET",
+        "url": "={{ $('Request Context').first().json.apiBaseUrl }}/bids",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "active"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            },
+            {
+              "name": "date",
+              "value": "={{ $fromAI('date', 'Optional bid date in YYYY-MM-DD, or leave empty for all active bids.', 'string') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Request Context').first().json.authorization }}"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Request Context').first().json.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-active-bids",
+      "name": "Fetch Active Bids",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [760, 680]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($input.first().json.output || '').trim();\nconst suggestionsMatch = raw.match(/^\\s*SUGGESTIONS\\s*:\\s*(.+)$/im);\nconst actionMatch = raw.match(/^\\s*ACTION\\s*:\\s*(\\{.*\\})\\s*$/im);\n\nlet action = null;\nif (actionMatch) {\n  try {\n    const parsed = JSON.parse(actionMatch[1]);\n    const module = String(parsed?.module || '').trim().toLowerCase();\n    const operation = String(parsed?.operation || '').trim().toLowerCase();\n    const allowedModules = ['sauda', 'buyer', 'seller', 'commodity', 'loading', 'payment'];\n    if (allowedModules.includes(module) && (operation === 'create' || operation === 'edit')) {\n      action = {\n        module,\n        operation,\n        recordKey: parsed.recordKey ? String(parsed.recordKey).trim() : '',\n        fields: parsed.fields && typeof parsed.fields === 'object' ? parsed.fields : {},\n      };\n    }\n  } catch (error) {\n    action = null;\n  }\n}\n\nconst suggestions = suggestionsMatch\n  ? suggestionsMatch[1]\n      .split('|')\n      .map((item) => item.trim())\n      .filter(Boolean)\n      .slice(0, 3)\n  : [];\n\nlet content = raw;\nif (suggestionsMatch) content = content.replace(suggestionsMatch[0], '');\nif (actionMatch) content = content.replace(actionMatch[0], '');\ncontent = content.trim();\n\nreturn [\n  {\n    json: {\n      content: content || \"I couldn't find an answer for that. Try rephrasing or narrowing the search.\",\n      suggestions,\n      action,\n    },\n  },\n];"
+      },
+      "id": "code-format-reply",
+      "name": "Format Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { content: $json.content, suggestions: $json.suggestions, action: $json.action || null } }}",
+        "options": {}
+      },
+      "id": "respond-saria",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [560, 260]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Context": {
+      "main": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Sauda Orders": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Loading Entries": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Payments": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Dashboard Stats": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Buyers": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Sellers": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Companies": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Consignees": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Commodities": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Quality Parameters": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Bids": {
+      "ai_tool": [
+        [
+          {
+            "node": "Saria AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saria AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Reply": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

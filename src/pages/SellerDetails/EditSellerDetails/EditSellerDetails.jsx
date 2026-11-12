@@ -17,6 +17,11 @@ import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
+import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
+import {
+  sariaToFieldList,
+  sariaFindOption,
+} from "../../../utils/sariaAIAction";
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -297,6 +302,72 @@ const EditSellerDetails = ({
       setSaving(false);
     }
   };
+
+  useSariaAIPrefill({
+    module: "seller",
+    ready: !loading,
+    apply: (fields) => {
+      const filled = [];
+
+      if (fields.sellerName) {
+        setSellerName(String(fields.sellerName));
+        filled.push("seller name");
+      }
+      if (fields.password) {
+        setPassword(String(fields.password));
+        filled.push("password");
+      }
+
+      const phones = sariaToFieldList(fields.phoneNumbers);
+      if (phones.length) {
+        setPhoneNumbers(
+          phones.map((value, index) => ({ id: Date.now() + index, value })),
+        );
+        filled.push("phone numbers");
+      }
+
+      const mailList = sariaToFieldList(fields.emails);
+      if (mailList.length) {
+        setEmails(
+          mailList.map((value, index) => ({ id: Date.now() + index, value })),
+        );
+        filled.push("emails");
+      }
+
+      const commodityMatches = sariaToFieldList(fields.commodities)
+        .map((name) => sariaFindOption(commodityOptions, name))
+        .filter(Boolean);
+      if (commodityMatches.length) {
+        setSelectedCommodity(commodityMatches);
+        setBrokerageAmounts((prev) => {
+          const next = { ...prev };
+          commodityMatches.forEach((option) => {
+            if (next[option.value] === undefined) next[option.value] = 0;
+          });
+          return next;
+        });
+        filled.push("commodities");
+      }
+
+      const companyMatches = sariaToFieldList(fields.companies)
+        .map((name) => sariaFindOption(companyOptions, name))
+        .filter(Boolean);
+      if (companyMatches.length) {
+        setSelectedCompany(companyMatches);
+        filled.push("companies");
+      }
+
+      const statusMatch = sariaFindOption(statusOptions, fields.status);
+      if (statusMatch) {
+        setSelectedStatus(statusMatch);
+        filled.push("status");
+      }
+
+      return filled.length
+        ? `I filled the seller form (${filled.join(", ")}). Review and press Save.`
+        : "I opened the seller form. Fill it in and press Save.";
+    },
+  });
 
   if (loading) return <Loading />;
 
