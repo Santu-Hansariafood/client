@@ -1,6 +1,5 @@
 import { lazy } from "react";
 import { FaMoneyBillWave } from "react-icons/fa";
-import useSariaAIPrefill from "../../../../hooks/useSariaAIPrefill";
 import QualityClaimsTable, { calculateClaimAmount } from "./QualityClaimsTable";
 
 const DataDropdown = lazy(
@@ -28,69 +27,6 @@ const EditLoadingEntryPopup = ({
   isSaving,
   onNavigateToPaymentReceived,
 }) => {
-  useSariaAIPrefill({
-    module: "loading",
-    ready: Boolean(editEntry),
-    apply: (fields) => {
-      if (!editEntry) return null;
-      const filled = [];
-      const next = { ...editEntry };
-
-      const assignText = (key, label) => {
-        const value = fields[key];
-        if (value !== undefined && value !== null && value !== "") {
-          next[key] = String(value);
-          filled.push(label);
-        }
-      };
-
-      assignText("loadingDate", "loading date");
-      assignText("deliveryDate", "delivery date");
-      assignText("saudaNo", "sauda no");
-      assignText("billNumber", "bill no");
-      assignText("sellerBillNo", "seller bill no");
-      assignText("lorryNumber", "lorry number");
-      assignText("driverName", "driver name");
-      assignText("driverPhoneNumber", "driver phone");
-      assignText("commodity", "commodity");
-      assignText("bags", "bags");
-      assignText("unloadingDate", "unloading date");
-      assignText("loadingWeight", "loading weight");
-      assignText("unloadingWeight", "unloading weight");
-      assignText("freightRate", "freight rate");
-      assignText("advance", "advance");
-
-      if (fields.loadingFrom) {
-        const wanted = String(fields.loadingFrom).trim().toLowerCase();
-        const match = (stateOptions || []).find(
-          (option) => String(option.value).trim().toLowerCase() === wanted,
-        );
-        if (match) {
-          next.loadingFrom = match.value;
-          filled.push("loading from");
-        }
-      }
-
-      if (
-        fields.loadingWeight !== undefined ||
-        fields.freightRate !== undefined ||
-        fields.advance !== undefined
-      ) {
-        const weight = parseFloat(next.loadingWeight) || 0;
-        const rate = parseFloat(next.freightRate) || 0;
-        const advance = parseFloat(next.advance) || 0;
-        next.totalFreight = +(weight * rate).toFixed(2);
-        next.balance = +(next.totalFreight - advance).toFixed(2);
-      }
-
-      setEditEntry(next);
-
-      return filled.length
-        ? `I filled the loading entry (${filled.join(", ")}). Review and press Update Entry.`
-        : "I opened the loading entry. Review it and press Update Entry.";
-    },
-  });
-
   const qualityClaims = Array.isArray(editEntry?.qualityClaims)
     ? editEntry.qualityClaims
     : [];

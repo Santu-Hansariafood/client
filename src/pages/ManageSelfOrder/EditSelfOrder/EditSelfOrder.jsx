@@ -22,8 +22,6 @@ import {
   SARIA_AI_ORDER_EDIT_EVENT,
   SARIA_AI_ORDER_EDIT_RESULT_EVENT,
 } from "../../../utils/sariaAIOrderEdit";
-import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
-import { buildSaudaStagedFields } from "../../../utils/sariaAIAction";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -105,7 +103,6 @@ const EditSelfOrder = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
-  const [isDataReady, setIsDataReady] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
   const [consignees, setConsignees] = useState(state?.consigneeData || []);
   const [buyers, setBuyers] = useState(state?.buyerData || []);
@@ -256,7 +253,6 @@ const EditSelfOrder = () => {
         if (needsCommodities) setAllCommodities(commoditiesRows);
 
         hasFetchedInitialData.current = true;
-        setIsDataReady(true);
       } catch (error) {
         if (api.isCancel(error)) return;
         console.error("Error fetching data:", error);
@@ -899,19 +895,6 @@ const EditSelfOrder = () => {
       }),
     );
   }, [applySariaAIOrderEdit, isFetching, state]);
-
-  useSariaAIPrefill({
-    module: "sauda",
-    ready: isDataReady,
-    apply: (fields) => {
-      const { updates, filled } = buildSaudaStagedFields(fields);
-      if (filled.length === 0) {
-        return `I opened Sauda ${formData.saudaNo}. Review it and press Save changes.`;
-      }
-      setFormData((prev) => ({ ...prev, ...updates }));
-      return `I filled Sauda ${formData.saudaNo} (${filled.join(", ")}). Review and press Save changes.`;
-    },
-  });
 
   useEffect(() => {
     const handleSariaOrderEdit = async (event) => {

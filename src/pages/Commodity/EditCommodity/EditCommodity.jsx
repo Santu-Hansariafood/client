@@ -8,7 +8,6 @@ import { FaCubes, FaArrowLeft } from "react-icons/fa";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import ScrollToTop from "../../../common/ScrollToTop/ScrollToTop";
 import Buttons from "../../../common/Buttons/Buttons";
-import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -64,25 +63,6 @@ const EditCommodity = () => {
 
     fetchData();
   }, [id]);
-
-  useSariaAIPrefill({
-    module: "commodity",
-    ready: !isFetching,
-    apply: (fields) => {
-      const filled = [];
-      if (fields.commodityName) {
-        setCommodityName(String(fields.commodityName));
-        filled.push("commodity name");
-      }
-      if (fields.hsnCode) {
-        setHsnCode(String(fields.hsnCode));
-        filled.push("HSN code");
-      }
-      return filled.length
-        ? `I filled the commodity form (${filled.join(", ")}). Review and press Save.`
-        : "I opened the commodity form. Fill it in and press Save.";
-    },
-  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

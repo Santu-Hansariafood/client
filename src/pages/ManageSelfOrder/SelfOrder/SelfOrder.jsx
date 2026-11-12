@@ -13,8 +13,6 @@ import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
-import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
-import { buildSaudaStagedFields } from "../../../utils/sariaAIAction";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -208,18 +206,6 @@ const SelfOrder = () => {
       return { ...prev, [field]: value };
     });
   };
-
-  useSariaAIPrefill({
-    module: "sauda",
-    apply: (fields) => {
-      const { updates, filled } = buildSaudaStagedFields(fields);
-      if (filled.length === 0) {
-        return "I opened the new sauda form. Fill it in and press Submit Order.";
-      }
-      setFormData((prev) => ({ ...prev, ...updates }));
-      return `I filled the sauda form (${filled.join(", ")}). Review and press Submit Order.`;
-    },
-  });
 
   const validateFormData = () => {
     const errors = [];

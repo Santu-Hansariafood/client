@@ -17,11 +17,6 @@ import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
-import useSariaAIPrefill from "../../../hooks/useSariaAIPrefill";
-import {
-  sariaToFieldList,
-  sariaFindOption,
-} from "../../../utils/sariaAIAction";
 
 const AddSellerDetails = () => {
   const [loading, setLoading] = useState(false);
@@ -210,68 +205,6 @@ const AddSellerDetails = () => {
     setBrokerageAmounts({});
     setSelectedStatus("active");
   };
-
-  useSariaAIPrefill({
-    module: "seller",
-    ready: !loading,
-    apply: (fields) => {
-      const filled = [];
-
-      if (fields.sellerName) {
-        setSellerName(String(fields.sellerName));
-        filled.push("seller name");
-      }
-      if (fields.password) {
-        setPassword(String(fields.password));
-        filled.push("password");
-      }
-
-      const phones = sariaToFieldList(fields.phoneNumbers);
-      if (phones.length) {
-        setPhoneNumbers(
-          phones.map((value, index) => ({ id: Date.now() + index, value })),
-        );
-        filled.push("phone numbers");
-      }
-
-      const mailList = sariaToFieldList(fields.emails);
-      if (mailList.length) {
-        setEmails(
-          mailList.map((value, index) => ({ id: Date.now() + index, value })),
-        );
-        filled.push("emails");
-      }
-
-      const commodityMatches = sariaToFieldList(fields.commodities)
-        .map((name) => sariaFindOption(commodityOptions, name))
-        .filter(Boolean);
-      if (commodityMatches.length) {
-        setSelectedCommodity(commodityMatches.map((option) => option.value));
-        filled.push("commodities");
-      }
-
-      const companyMatches = sariaToFieldList(fields.companies)
-        .map((name) => sariaFindOption(companyOptions, name))
-        .filter(Boolean);
-      if (companyMatches.length) {
-        setSelectedCompany(companyMatches);
-        filled.push("companies");
-      }
-
-      if (fields.status) {
-        setSelectedStatus(
-          String(fields.status).trim().toLowerCase() === "inactive"
-            ? "inactive"
-            : "active",
-        );
-        filled.push("status");
-      }
-
-      return filled.length
-        ? `I filled the seller form (${filled.join(", ")}). Review and press Create Seller Account.`
-        : "I opened the seller form. Fill it in and press Create Seller Account.";
-    },
-  });
 
   if (loading && commodityOptions.length === 0) return <Loading />;
 

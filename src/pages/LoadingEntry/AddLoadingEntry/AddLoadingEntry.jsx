@@ -15,7 +15,6 @@ import {
   FaTruckLoading,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
@@ -25,10 +24,6 @@ import { capitalizeWords } from "../../../utils/textUtils/textUtils";
 import useLoadingEntryData from "../../../hooks/useLoadingEntryData";
 import useSaudaSuggestions from "../../../hooks/useSaudaSuggestions";
 import useLoadingEntrySearch from "../../../hooks/useLoadingEntrySearch";
-import {
-  SARIA_AI_ACTION_EVENT,
-  SARIA_AI_ACTION_RESULT_EVENT,
-} from "../../../utils/sariaAIAction";
 import stateCityData from "../../../data/state-city.json";
 
 const DataDropdown = lazy(
@@ -409,7 +404,6 @@ const OrdersTableCard = ({
 
 const AddLoadingEntry = () => {
   const { userRole, user } = useAuth();
-  const location = useLocation();
 
   const {
     groups,
@@ -617,114 +611,6 @@ const AddLoadingEntry = () => {
       console.error("Error fetching existing entries:", error);
     }
   };
-
-  // Saria AI stages loading entries: the sauda is resolved, then the entry
-  // form opens prefilled for the user to review and save.
-  const stageSariaLoadingEntry = useCallback(async (action) => {
-    if (!action || action.module !== "loading" || action.operation !== "create") {
-      return null;
-    }
-
-    const saudaNo = action.fields?.saudaNo
-      ? String(action.fields.saudaNo).trim()
-      : "";
-    if (!saudaNo) {
-      return "Tell me the Sauda number and I'll prefill the loading entry.";
-    }
-
-    try {
-      const response = await api.get("/self-order", {
-        params: { search: saudaNo, limit: 5 },
-      });
-      const rows = response.data?.data || [];
-      const wanted = saudaNo.toLowerCase();
-      const order =
-        rows.find(
-          (row) =>
-            String(row?.saudaNo ?? "").trim().toLowerCase() === wanted,
-        ) || rows[0];
-
-      if (!order) {
-        return `I could not find Sauda ${saudaNo}. Open the loading entry page and search for it.`;
-      }
-
-      const staged = {};
-      Object.keys(INITIAL_ENTRY).forEach((key) => {
-        const value = action.fields?.[key];
-        if (value !== undefined && value !== null && value !== "") {
-          staged[key] = String(value);
-        }
-      });
-
-      const deliveryDate = order.poDate || order.createdAt || "";
-      const formattedDeliveryDate = deliveryDate
-        ? new Date(deliveryDate).toISOString().split("T")[0]
-        : "";
-
-      const entry = {
-        ...INITIAL_ENTRY,
-        deliveryDate: formattedDeliveryDate,
-        ...staged,
-      };
-      const weight = parseFloat(entry.loadingWeight) || 0;
-      const rate = parseFloat(entry.freightRate) || 0;
-      const advance = parseFloat(entry.advance) || 0;
-      entry.totalFreight = +(weight * rate).toFixed(2);
-      entry.balance = +(entry.totalFreight - advance).toFixed(2);
-
-      setSelectedOrder(order);
-      setLoadingEntries([entry]);
-      setActiveView("add");
-      setExistingEntries([]);
-
-      try {
-        const existingRes = await api.get(
-          `/loading-entries/sauda/${order.saudaNo}`,
-        );
-        setExistingEntries(Array.isArray(existingRes.data) ? existingRes.data : []);
-      } catch {
-        setExistingEntries([]);
-      }
-
-      return `I staged a loading entry for Sauda ${order.saudaNo}. Review and press Save.`;
-    } catch {
-      return "I could not prepare that loading entry. Please try again.";
-    }
-  }, []);
-
-  useEffect(() => {
-    const action = location.state?.aiAction;
-    if (!action || action.module !== "loading") return;
-
-    let cancelled = false;
-    stageSariaLoadingEntry(action).then((note) => {
-      if (cancelled || !note) return;
-      window.dispatchEvent(
-        new CustomEvent(SARIA_AI_ACTION_RESULT_EVENT, {
-          detail: { content: note },
-        }),
-      );
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [location.state, stageSariaLoadingEntry]);
-
-  useEffect(() => {
-    const handleAction = (event) => {
-      const action = event.detail?.action;
-      if (!action || action.module !== "loading") return;
-
-      event.preventDefault();
-      stageSariaLoadingEntry(action).then((note) => {
-        if (note) event.detail.respond?.(note);
-      });
-    };
-
-    window.addEventListener(SARIA_AI_ACTION_EVENT, handleAction);
-    return () => window.removeEventListener(SARIA_AI_ACTION_EVENT, handleAction);
-  }, [stageSariaLoadingEntry]);
 
   const handleAddMore = () => {
     const deliveryDate =

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { SARIA_AI_ORDER_EDIT_RESULT_EVENT } from "../../utils/sariaAIOrderEdit";
-import { SARIA_AI_ACTION_RESULT_EVENT } from "../../utils/sariaAIAction";
 import { useAIAgentCore } from "./hooks/useAIAgentCore";
 import { useAIAgentLearning } from "./hooks/useAIAgentLearning";
 import { useAIAgentAPI } from "./hooks/useAIAgentAPI";
@@ -53,20 +52,11 @@ const AIAgent = () => {
       SARIA_AI_ORDER_EDIT_RESULT_EVENT,
       handleOrderEditResult,
     );
-    window.addEventListener(
-      SARIA_AI_ACTION_RESULT_EVENT,
-      handleOrderEditResult,
-    );
-    return () => {
+    return () =>
       window.removeEventListener(
         SARIA_AI_ORDER_EDIT_RESULT_EVENT,
         handleOrderEditResult,
       );
-      window.removeEventListener(
-        SARIA_AI_ACTION_RESULT_EVENT,
-        handleOrderEditResult,
-      );
-    };
   }, [setMessages]);
 
   const { trackInteraction, getDynamicSuggestions, checkSafety } =
@@ -85,11 +75,10 @@ const AIAgent = () => {
       ),
   );
 
-  const { handleSend, liveSuggestions } = useAIAgentCommands({
+  const { handleSend } = useAIAgentCommands({
     input,
     setInput,
     setMessages,
-    messages,
     isLoadingData,
     navigate,
     apiMethods,
@@ -136,7 +125,6 @@ const AIAgent = () => {
             handleSend={handleSend}
             startListening={startListening}
             isListening={isListening}
-            suggestions={liveSuggestions}
           />
         </div>
       )}
