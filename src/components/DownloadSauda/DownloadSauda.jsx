@@ -9,6 +9,7 @@ import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../utils/saudaPdf/buildSaudaPdfData";
+import { addSaudaVendorCode } from "../../utils/saudaPdf/addSaudaVendorCode";
 
 const DownloadSauda = ({
   data,
@@ -245,7 +246,8 @@ const DownloadSauda = ({
     setSendingEmail(true);
 
     try {
-      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+      const pdfData = await addSaudaVendorCode(transformedData);
+      const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = async () => {
@@ -292,7 +294,8 @@ const DownloadSauda = ({
   const handleManualDownload = async () => {
     setIsGenerating(true);
     try {
-      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+      const pdfData = await addSaudaVendorCode(transformedData);
+      const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
       await downloadFile(blob, `HANS-2026-2027-${data.saudaNo}.pdf`);
       if (autoEmail) {
         await handleAutoEmail();

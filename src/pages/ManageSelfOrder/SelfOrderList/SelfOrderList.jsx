@@ -20,6 +20,7 @@ import { downloadFile } from "../../../utils/fileDownloader";
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { addSaudaVendorCode } from "../../../utils/saudaPdf/addSaudaVendorCode";
 import { extractUploadUrl } from "../../../utils/saudaPdf/resolveUploadUrl";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -215,8 +216,11 @@ const SelfOrderList = () => {
           sellerProfileData,
           getConsigneeDisplay,
         });
+        const pdfDataWithVendorCode = await addSaudaVendorCode(pdfData);
 
-        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        const blob = await pdf(
+          <SaudaPDF data={pdfDataWithVendorCode} />,
+        ).toBlob();
         console.log("[SelfOrderList WhatsApp] PDF blob:", {
           size: blob?.size,
           type: blob?.type,

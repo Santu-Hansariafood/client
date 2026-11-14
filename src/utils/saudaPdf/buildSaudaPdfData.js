@@ -279,6 +279,14 @@ export const buildSaudaPdfData = ({
     companyFromBuyerName ||
     companyFromBuyerProfile ||
     matchingBuyerProfile;
+  const matchingBuyerCompany =
+    companyFromCompanyId ||
+    companyFromBuyerKeyId ||
+    companyFromBuyerName ||
+    companyFromBuyerProfile;
+  const buyerGroupId =
+    matchingBuyerCompany?.groupId?._id || matchingBuyerCompany?.groupId || "";
+  const sellerId = item?.supplier?._id || item?.supplier || "";
 
   const resolvedConsigneeName =
     typeof getConsigneeDisplay === "function"
@@ -362,6 +370,9 @@ export const buildSaudaPdfData = ({
 
   let transformed = {
     ...item,
+    vendorCodeBuyerId: matchingBuyerCompany?._id || "",
+    vendorCodeGroupId: buyerGroupId,
+    vendorCodeSellerId: sellerId,
     consignee: resolvedConsigneeName,
     consigneeDetails: finalConsigneeDetails,
     supplierDetails: toUnifiedDetails(matchingSupplier),

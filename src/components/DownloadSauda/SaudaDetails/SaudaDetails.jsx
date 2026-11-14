@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
 });
 
 const SaudaDetails = ({ data }) => {
-  const renderAddressDetails = (details) => {
-    if (!details) return null;
+  const renderAddressDetails = (details, vendorCode = "") => {
+    if (!details && !vendorCode) return null;
 
     const {
       address,
@@ -86,7 +86,7 @@ const SaudaDetails = ({ data }) => {
       gstNumber,
       msmeNo,
       mandiLicense,
-    } = details;
+    } = details || {};
 
     let parts = [];
     const addr = address || location || "";
@@ -108,6 +108,7 @@ const SaudaDetails = ({ data }) => {
     if (panVal) parts.push(`PAN No: ${panVal}`);
     if (gstVal) parts.push(`GST: ${gstVal}`);
     if (msme) parts.push(`Mandii License ${msme}`);
+    if (vendorCode) parts.push(`Vendor Code: ${vendorCode}`);
 
     if (parts.length === 0) return null;
 
@@ -152,7 +153,7 @@ const SaudaDetails = ({ data }) => {
         <View style={styles.gridItem}>
           <Text style={styles.label}>Supplier Company</Text>
           <Text style={styles.value}>{data.supplierCompany}</Text>
-          {renderAddressDetails(data.supplierDetails)}
+          {renderAddressDetails(data.supplierDetails, data.vendorCode)}
         </View>
         <View style={[styles.gridItem, { borderRight: "none" }]}>
           <Text style={styles.label}>Ship To (Consignee)</Text>

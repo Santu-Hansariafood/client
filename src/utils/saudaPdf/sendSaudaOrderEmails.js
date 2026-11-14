@@ -4,6 +4,7 @@ import { createElement } from "react";
 import SaudaPDF from "../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "./buildSaudaPdfData";
+import { addSaudaVendorCode } from "./addSaudaVendorCode";
 
 const toTrimmed = (value) => String(value || "").trim();
 
@@ -75,9 +76,10 @@ export const sendSaudaOrderEmails = async (order) => {
       return String(c || "N/A");
     },
   });
+  const pdfData = await addSaudaVendorCode(transformedData);
 
   const blob = await pdf(
-    createElement(SaudaPDF, { data: transformedData }),
+    createElement(SaudaPDF, { data: pdfData }),
   ).toBlob();
   const base64data = await new Promise((resolve, reject) => {
     const reader = new FileReader();

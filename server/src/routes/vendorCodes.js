@@ -58,6 +58,9 @@ router.get("/", async (req, res) => {
         { vendorCode: { $regex: search, $options: "i" } },
       ];
     }
+    if (req.query.group) query.group = req.query.group;
+    if (req.query.buyer) query.buyer = req.query.buyer;
+    if (req.query.seller) query.seller = req.query.seller;
 
     const items = await VendorCode.find(query)
       .populate("group", "groupName")
