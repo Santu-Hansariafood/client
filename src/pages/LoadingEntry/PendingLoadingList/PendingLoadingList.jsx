@@ -129,6 +129,7 @@ const PendingLoadingList = () => {
         endDate: toDateBoundary(endDate, true),
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
+        consignee: selectedConsignee?.value || undefined,
         status: "active",
       };
 
@@ -151,6 +152,7 @@ const PendingLoadingList = () => {
     endDate,
     selectedBuyerCompany,
     selectedSellerCompany,
+    selectedConsignee,
   ]);
 
   useEffect(() => {
@@ -159,13 +161,15 @@ const PendingLoadingList = () => {
 
   const [buyerCompanyOptions, setBuyerCompanyOptions] = useState([]);
   const [sellerCompanyOptions, setSellerCompanyOptions] = useState([]);
+  const [consigneeOptions, setConsigneeOptions] = useState([]);
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [buyers, sellers] = await Promise.all([
+        const [buyers, sellers, consignees] = await Promise.all([
           fetchAllPages("/buyers"),
           fetchAllPages("/sellers"),
+          fetchAllPages("/consignees"),
         ]);
 
         const buyerCompanies = new Set();
@@ -191,6 +195,11 @@ const PendingLoadingList = () => {
 
         setBuyerCompanyOptions(buildDropdownOptions([...buyerCompanies]));
         setSellerCompanyOptions(buildDropdownOptions([...sellerCompanies]));
+        setConsigneeOptions(
+          buildDropdownOptions(
+            consignees.map((consignee) => consignee.name || consignee.label),
+          ),
+        );
       } catch (error) {
         console.error("Error fetching options:", error);
       }
@@ -232,6 +241,7 @@ const PendingLoadingList = () => {
         endDate: toDateBoundary(endDate, true),
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
+        consignee: selectedConsignee?.value || undefined,
       };
 
       const response = await api.get("/self-order/pending/export/excel", {
@@ -612,6 +622,20 @@ const PendingLoadingList = () => {
                     selectedOptions={selectedBuyerCompany}
                     onChange={setSelectedBuyerCompany}
                     placeholder="Select Buyer Company"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-lux-muted font-serif">
+                    <span className="w-2 h-2 rounded-full bg-lux-gold"></span>
+                    Consignee
+                  </label>
+                  <DataDropdown
+                    options={consigneeOptions}
+                    selectedOptions={selectedConsignee}
+                    onChange={setSelectedConsignee}
+                    placeholder="Select Consignee"
                     isMulti={false}
                     isClearable
                   />

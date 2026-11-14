@@ -929,6 +929,7 @@ router.get("/pending/list", async (req, res) => {
     const endDate = req.query.endDate;
     const buyerCompany = req.query.buyerCompany;
     const supplierCompany = req.query.sellerCompany;
+    const consignee = req.query.consignee;
     const mobile = req.query.mobile;
     const userRole = req.query.userRole;
     const isComplete = req.query.all === "true" || req.query.status === "closed";
@@ -1010,6 +1011,13 @@ router.get("/pending/list", async (req, res) => {
       query.$and.push({ supplierCompany: { $regex: new RegExp(escapeRegex(supplierCompany), "i") } });
     }
 
+    if (consignee) {
+      if (!query.$and) query.$and = [];
+      query.$and.push({
+        consignee: { $regex: new RegExp(escapeRegex(consignee), "i") },
+      });
+    }
+
     if (startDate || endDate) {
       if (!query.$and) query.$and = [];
       query.$and.push(getPendingSaudaDateQuery(startDate, endDate));
@@ -1080,6 +1088,7 @@ router.get("/pending/export/excel", async (req, res) => {
     const endDate = req.query.endDate;
     const buyerCompany = req.query.buyerCompany;
     const supplierCompany = req.query.sellerCompany;
+    const consignee = req.query.consignee;
     const mobile = req.query.mobile;
     const userRole = req.query.userRole;
 
@@ -1154,6 +1163,13 @@ router.get("/pending/export/excel", async (req, res) => {
     if (supplierCompany) {
       if (!query.$and) query.$and = [];
       query.$and.push({ supplierCompany: { $regex: new RegExp(escapeRegex(supplierCompany), "i") } });
+    }
+
+    if (consignee) {
+      if (!query.$and) query.$and = [];
+      query.$and.push({
+        consignee: { $regex: new RegExp(escapeRegex(consignee), "i") },
+      });
     }
 
     if (startDate || endDate) {
