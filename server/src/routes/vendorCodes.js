@@ -3,12 +3,31 @@ import VendorCode from "../models/VendorCode.js";
 
 const router = Router();
 
+const normalizeVendorCode = (value) => String(value || "").trim().toUpperCase();
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const isDuplicateKeyError = (error) => error?.code === 11000;
+
+const findDuplicateVendorCode = (vendorCode, excludeId) =>
+  VendorCode.findOne({
+    vendorCode: {
+      $regex: `^${escapeRegex(vendorCode)}$`,
+      $options: "i",
+    },
+    ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+  });
+
 router.post("/", async (req, res) => {
   try {
-    const { group, buyer, seller, vendorCode } = req.body;
+    const { group, buyer, seller } = req.body;
+    const vendorCode = normalizeVendorCode(req.body.vendorCode);
 
     if (!group || !buyer || !seller || !vendorCode) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (await findDuplicateVendorCode(vendorCode)) {
+      return res.status(409).json({ message: "Vendor code must be unique" });
     }
 
     const existingCode = await VendorCode.findOne({ group, buyer, seller });
@@ -19,6 +38,9 @@ router.post("/", async (req, res) => {
     const newVendorCode = await VendorCode.create({ group, buyer, seller, vendorCode });
     res.status(201).json(newVendorCode);
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return res.status(409).json({ message: "Vendor code or combination already exists" });
+    }
     res.status(500).json({ message: error.message });
   }
 });
@@ -40,7 +62,7 @@ router.get("/", async (req, res) => {
     const items = await VendorCode.find(query)
       .populate("group", "groupName")
       .populate("buyer", "companyName")
-      .populate("seller", "sellerName")
+      .populate("seller", "sellerName companies")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -64,7 +86,7 @@ router.get("/:id", async (req, res) => {
     const vendorCode = await VendorCode.findById(req.params.id)
       .populate("group", "groupName")
       .populate("buyer", "companyName")
-      .populate("seller", "sellerName")
+      .populate("seller", "sellerName companies")
       .lean();
 
     if (!vendorCode) {
@@ -79,16 +101,33 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const { vendorCode } = req.body;
+    const { group, buyer, seller } = req.body;
+    const vendorCode = normalizeVendorCode(req.body.vendorCode);
 
-    if (!vendorCode) {
-      return res.status(400).json({ message: "Vendor code is required" });
+    if (!group || !buyer || !seller || !vendorCode) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (await findDuplicateVendorCode(vendorCode, req.params.id)) {
+      return res.status(409).json({ message: "Vendor code must be unique" });
+    }
+
+    const existingCombination = await VendorCode.findOne({
+      group,
+      buyer,
+      seller,
+      _id: { $ne: req.params.id },
+    });
+    if (existingCombination) {
+      return res.status(409).json({
+        message: "Vendor code already exists for this combination",
+      });
     }
 
     const updatedVendorCode = await VendorCode.findByIdAndUpdate(
       req.params.id,
-      { vendorCode },
-      { new: true }
+      { group, buyer, seller, vendorCode },
+      { new: true, runValidators: true },
     );
 
     if (!updatedVendorCode) {
@@ -97,6 +136,9 @@ router.put("/:id", async (req, res) => {
 
     res.json(updatedVendorCode);
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return res.status(409).json({ message: "Vendor code or combination already exists" });
+    }
     res.status(500).json({ message: error.message });
   }
 });

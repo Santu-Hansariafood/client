@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import DataInput from "../../../common/DataInput/DataInput";
 import api, { clearApiCache } from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
 import { FaArrowLeft, FaSave, FaList, FaBarcode } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -41,10 +42,9 @@ const AddVendorCode = () => {
   const fetchBuyers = async (groupId) => {
     setFetchingBuyers(true);
     try {
-      const res = await api.get(`/companies`, {
-        params: { groupId, limit: 0 },
+      const data = await fetchAllPages("/companies", {
+        params: { groupId },
       });
-      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       setBuyers(
         data.map((c) => ({
           value: c._id,
@@ -60,8 +60,7 @@ const AddVendorCode = () => {
 
   const fetchSellers = async () => {
     try {
-      const res = await api.get("/sellers", { params: { limit: 0 } });
-      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+      const data = await fetchAllPages("/sellers");
       const formatted = data.map((s) => ({
         value: s._id,
         label:

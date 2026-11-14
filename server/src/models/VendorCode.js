@@ -23,5 +23,6 @@ const vendorCodeSchema = new mongoose.Schema(
 );
 
 vendorCodeSchema.index({ group: 1, buyer: 1, seller: 1 }, { unique: true });
+vendorCodeSchema.index({ vendorCode: 1 }, { unique: true });
 
 export default mongoose.model("VendorCode", vendorCodeSchema);
