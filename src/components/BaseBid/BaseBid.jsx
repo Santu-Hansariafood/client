@@ -60,9 +60,10 @@ const BaseBid = ({ type }) => {
           : null;
 
       const formatName = (name) => {
-        if (!name) return "";
+        if (typeof name !== "string" || !name.trim()) return "";
         return name
-          .split(" ")
+          .trim()
+          .split(/\s+/)
           .map(
             (word) =>
               word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
@@ -79,7 +80,13 @@ const BaseBid = ({ type }) => {
           return;
         }
 
-        const formattedGroupName = formatName(c.group);
+        const groupName =
+          typeof c.group === "string"
+            ? c.group
+            : c.group?.groupName || c.group?.label || c.group?.name;
+        const formattedGroupName = formatName(groupName);
+        if (!formattedGroupName) return;
+
         if (groupMap.has(formattedGroupName)) {
           const existingGroup = groupMap.get(formattedGroupName);
           existingGroup.consignees = [
