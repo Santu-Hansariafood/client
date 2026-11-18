@@ -135,7 +135,7 @@ const BuyerInformation = ({
   const selectedBuyer = useMemo(
     () =>
       (Array.isArray(buyers) ? buyers : []).find(
-        ({ _id }) => _id === selectedBuyerId,
+        ({ _id }) => String(_id) === String(selectedBuyerId),
       ),
     [buyers, selectedBuyerId],
   );
@@ -143,7 +143,7 @@ const BuyerInformation = ({
   const selectedCompany = useMemo(
     () =>
       (Array.isArray(companies) ? companies : []).find(
-        ({ _id }) => _id === selectedCompanyId,
+        ({ _id }) => String(_id) === String(selectedCompanyId),
       ),
     [companies, selectedCompanyId],
   );
@@ -174,13 +174,25 @@ const BuyerInformation = ({
     const linkedCompanyIds = (selectedBuyer.companyIds || []).map((id) =>
       String(id),
     );
-    return (Array.isArray(companies) ? companies : [])
+    const options = (Array.isArray(companies) ? companies : [])
       .filter((c) => linkedCompanyIds.includes(String(c._id)))
       .map((c) => ({
         value: c._id,
         label: c.companyName,
       }));
-  }, [selectedBuyer, companies]);
+    if (
+      selectedCompany &&
+      !options.some(
+        ({ value }) => String(value) === String(selectedCompany._id),
+      )
+    ) {
+      options.push({
+        value: selectedCompany._id,
+        label: selectedCompany.companyName,
+      });
+    }
+    return options;
+  }, [selectedBuyer, selectedCompany, companies]);
 
   useEffect(() => {
     if (loading || hasManuallySelected || isInitialMatchDone.current) return;
@@ -296,18 +308,31 @@ const BuyerInformation = ({
   ]);
 
   useEffect(() => {
+    const normalizedBuyerName = String(formData.buyer || "")
+      .trim()
+      .toLowerCase();
     const buyer = buyers.find(
       (item) =>
         String(item._id) === String(formData.buyer) ||
-        item.name === formData.buyer,
+        String(item.name || "").trim().toLowerCase() === normalizedBuyerName,
     );
-    setSelectedBuyerId(buyer?._id || null);
 
     const company = companies.find(
       (item) =>
         String(item._id) === String(formData.companyId) ||
-        item.companyName === formData.buyerCompany,
+        String(item.companyName || "").trim().toLowerCase() ===
+          String(formData.buyerCompany || "")
+            .trim()
+            .toLowerCase(),
     );
+    const buyerForCompany =
+      buyer ||
+      buyers.find((item) =>
+        (item.companyIds || []).some(
+          (companyId) => String(companyId) === String(company?._id),
+        ),
+      );
+    setSelectedBuyerId(buyerForCompany?._id || null);
     setSelectedCompanyId(company?._id || null);
 
     const consigneeValue =

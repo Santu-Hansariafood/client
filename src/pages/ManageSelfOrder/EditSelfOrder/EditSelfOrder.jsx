@@ -762,13 +762,27 @@ const EditSelfOrder = () => {
 
     if (formData.commodity) {
       const buyerCommodities = formData.buyerCommodity || [];
-      const supplierCommodities = formData.supplierBrokerage || [];
+      const selectedSupplierId =
+        formData.supplier?._id || formData.supplier;
+      const selectedSupplier = suppliers.find(
+        (supplier) => String(supplier._id) === String(selectedSupplierId),
+      );
+      const supplierCommodities = selectedSupplier
+        ? selectedSupplier.commodities || []
+        : formData.supplierBrokerage || [];
+      const normalizedCommodity = formData.commodity.trim().toLowerCase();
 
       const buyerHasCommodity = buyerCommodities.some(
-        (c) => (typeof c === "string" ? c : c.name) === formData.commodity,
+        (c) =>
+          String(typeof c === "string" ? c : c?.name || c?.label || "")
+            .trim()
+            .toLowerCase() === normalizedCommodity,
       );
       const supplierHasCommodity = supplierCommodities.some(
-        (c) => (typeof c === "string" ? c : c.name) === formData.commodity,
+        (c) =>
+          String(typeof c === "string" ? c : c?.name || c?.label || "")
+            .trim()
+            .toLowerCase() === normalizedCommodity,
       );
 
       if (!buyerHasCommodity) {
@@ -799,7 +813,7 @@ const EditSelfOrder = () => {
       return false;
     }
     return true;
-  }, [formData]);
+  }, [formData, suppliers]);
 
   const handleSubmit = useCallback(async () => {
     if (!validateFormData()) return false;
