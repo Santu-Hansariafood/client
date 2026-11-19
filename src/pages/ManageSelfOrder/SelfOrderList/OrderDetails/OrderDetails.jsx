@@ -49,8 +49,10 @@ const OrderDetails = ({ item, qualityParameters = [], commodities = [] }) => {
   const getParameterValue = (parameter) => {
     const baseValue = parameter.baseValue;
     const maxValue = parameter.maxValue;
-    const hasBaseValue = baseValue !== "" && baseValue != null;
-    const hasMaxValue = maxValue !== "" && maxValue != null;
+    const hasValue = (value) =>
+      value != null && String(value).trim() !== "";
+    const hasBaseValue = hasValue(baseValue);
+    const hasMaxValue = hasValue(maxValue);
 
     if (hasBaseValue || hasMaxValue) {
       return [
@@ -61,10 +63,14 @@ const OrderDetails = ({ item, qualityParameters = [], commodities = [] }) => {
         .join(" · ");
     }
 
-    return parameter.value !== "" && parameter.value != null
-      ? `${parameter.value}%`
-      : "—";
+    return hasValue(parameter.value) ? `${parameter.value}%` : null;
   };
+  const displayParameters = (Array.isArray(item.parameters) ? item.parameters : [])
+    .map((parameter) => ({
+      parameter,
+      value: getParameterValue(parameter),
+    }))
+    .filter(({ value }) => value);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -81,16 +87,16 @@ const OrderDetails = ({ item, qualityParameters = [], commodities = [] }) => {
         <p>
           <strong className="font-serif font-semibold text-lux-ink">Commodity:</strong> {item.commodity}
         </p>
-        {Array.isArray(item.parameters) && item.parameters.length > 0 && (
+        {displayParameters.length > 0 && (
           <div className="mt-2 space-y-1 rounded-2xl border border-[#ece4d2] bg-lux-ivory p-3">
             <p className="lux-eyebrow mb-2">Quality Parameters</p>
-            {item.parameters.map((p, idx) => (
+            {displayParameters.map(({ parameter, value }, idx) => (
               <p key={idx} className="text-sm">
                 <span className="font-bold text-lux-ink">
-                  {getParameterName(p)}:
+                  {getParameterName(parameter)}:
                 </span>{" "}
                 <span className="font-black text-lux-emerald">
-                  {getParameterValue(p)}
+                  {value}
                 </span>
               </p>
             ))}
