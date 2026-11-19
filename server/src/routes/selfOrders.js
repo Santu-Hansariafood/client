@@ -1251,6 +1251,7 @@ router.get("/pending/export/excel", async (req, res) => {
     const columns = [
       { header: "Sl No", key: "slNo", width: 10 },
       { header: "Date", key: "date", width: 15 },
+      { header: "Delivery Date", key: "deliveryDate", width: 15 },
       { header: "Sauda No", key: "saudaNo", width: 15 },
       { header: "Seller Company", key: "sellerCompany", width: 30 },
       { header: "Seller Name", key: "sellerName", width: 30 },
@@ -1298,6 +1299,7 @@ router.get("/pending/export/excel", async (req, res) => {
       worksheet.addRow({
         slNo: index + 1,
         date: formatDate(item.poDate || item.createdAt),
+        deliveryDate: formatDate(item.deliveryDate),
         saudaNo: item.saudaNo || "N/A",
         sellerCompany: item.supplierCompany || "N/A",
         sellerName: getSellerName(item) || "N/A",
@@ -1319,6 +1321,7 @@ router.get("/pending/export/excel", async (req, res) => {
       worksheet.addRow({
         slNo: "TOTAL",
         date: "",
+        deliveryDate: "",
         saudaNo: "",
         sellerCompany: "",
         sellerName: "",
