@@ -60,7 +60,7 @@ const OrderDetails = ({ item, qualityParameters = [], commodities = [] }) => {
         hasMaxValue ? `Max: ${maxValue}%` : null,
       ]
         .filter(Boolean)
-        .join(" · ");
+        .join(" Upto ");
     }
 
     return hasValue(parameter.value) ? `${parameter.value}%` : null;
