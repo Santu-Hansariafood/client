@@ -1,6 +1,71 @@
 import PropTypes from "prop-types";
 
-const OrderDetails = ({ item }) => {
+const OrderDetails = ({ item, qualityParameters = [], commodities = [] }) => {
+  const parameterNames = new Map(
+    qualityParameters.map((parameter) => [
+      String(parameter._id),
+      parameter.name,
+    ]),
+  );
+  const commodity = commodities.find(
+    (entry) =>
+      String(entry.name || "").trim().toLowerCase() ===
+      String(item.commodity || "").trim().toLowerCase(),
+  );
+
+  (commodity?.parameters || []).forEach((parameter) => {
+    const id =
+      parameter.parameterId?._id ||
+      parameter.parameterId ||
+      parameter._id;
+    const name =
+      parameter.parameterId?.name ||
+      parameter.parameter ||
+      parameter.name;
+    if (id && name && !parameterNames.has(String(id))) {
+      parameterNames.set(String(id), name);
+    }
+  });
+
+  const getParameterName = (parameter) => {
+    const parameterId =
+      parameter.parameterId?._id ||
+      parameter.parameterId ||
+      parameter.id?._id ||
+      parameter.id;
+    const storedName =
+      typeof parameter.parameter === "string"
+        ? parameter.parameter
+        : parameter.parameter?.name || parameter.name || parameter.label;
+    const isId = /^[a-f\d]{24}$/i.test(String(storedName || ""));
+
+    return (
+      parameterNames.get(String(parameterId)) ||
+      (!isId && storedName) ||
+      "Unknown Parameter"
+    );
+  };
+
+  const getParameterValue = (parameter) => {
+    const baseValue = parameter.baseValue;
+    const maxValue = parameter.maxValue;
+    const hasBaseValue = baseValue !== "" && baseValue != null;
+    const hasMaxValue = maxValue !== "" && maxValue != null;
+
+    if (hasBaseValue || hasMaxValue) {
+      return [
+        hasBaseValue ? `Base: ${baseValue}%` : null,
+        hasMaxValue ? `Max: ${maxValue}%` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
+
+    return parameter.value !== "" && parameter.value != null
+      ? `${parameter.value}%`
+      : "—";
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
       <div className="space-y-2 text-lux-ink">
@@ -21,8 +86,12 @@ const OrderDetails = ({ item }) => {
             <p className="lux-eyebrow mb-2">Quality Parameters</p>
             {item.parameters.map((p, idx) => (
               <p key={idx} className="text-sm">
-                <span className="font-bold text-lux-ink">{p.parameter || p.id || "Parameter"}:</span>{" "}
-                <span className="font-black text-lux-emerald">{p.value}%</span>
+                <span className="font-bold text-lux-ink">
+                  {getParameterName(p)}:
+                </span>{" "}
+                <span className="font-black text-lux-emerald">
+                  {getParameterValue(p)}
+                </span>
               </p>
             ))}
           </div>
@@ -82,6 +151,8 @@ const OrderDetails = ({ item }) => {
 };
 
 OrderDetails.propTypes = {
+  qualityParameters: PropTypes.array,
+  commodities: PropTypes.array,
   item: PropTypes.shape({
     buyer: PropTypes.string.isRequired,
     buyerCompany: PropTypes.string.isRequired,

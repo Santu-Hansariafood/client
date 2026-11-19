@@ -833,7 +833,11 @@ ${pdfSection}
                 title={`Order Intelligence — ${selectedItem.saudaNo}`}
                 width="w-[95vw] sm:w-[800px]"
               >
-                <OrderDetails item={selectedItem} />
+                <OrderDetails
+                  item={selectedItem}
+                  qualityParameters={qualityParameterData}
+                  commodities={commodityData}
+                />
               </PopupBox>
             )}
           </div>
