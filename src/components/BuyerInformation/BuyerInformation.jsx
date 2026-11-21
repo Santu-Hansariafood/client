@@ -264,7 +264,6 @@ const BuyerInformation = ({
       handleChange("companyId", companyData._id);
       handleChange("buyerCompany", companyData.companyName || "");
       handleChange("location", companyData.location || "");
-      handleChange("state", companyData.state || "");
       handleChange("district", companyData.district || "");
       handleChange("pinCode", companyData.pinCode || "");
       handleChange("gstNumber", companyData.gstNumber || "");
@@ -396,7 +395,6 @@ const BuyerInformation = ({
     handleChange("companyId", companyId);
     handleChange("buyerCompany", companyData.companyName || "");
     handleChange("location", companyData.location || "");
-    handleChange("state", companyData.state || "");
     handleChange("district", companyData.district || "");
     handleChange("pinCode", companyData.pinCode || "");
     handleChange("gstNumber", companyData.gstNumber || "");

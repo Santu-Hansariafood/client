@@ -13,8 +13,6 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
     () => [
       { label: "0%", value: 0 },
       { label: "5%", value: 5 },
-      { label: "18%", value: 18 },
-      { label: "40%", value: 40 },
     ],
     [],
   );

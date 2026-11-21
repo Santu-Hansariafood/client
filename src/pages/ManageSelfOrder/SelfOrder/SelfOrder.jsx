@@ -213,6 +213,7 @@ const SelfOrder = () => {
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
     if (!formData.commodity) errors.push("Commodity is required.");
+    if (!formData.state?.trim()) errors.push("Loading Station is required.");
     if (!formData.supplier) errors.push("Supplier is required.");
 
     if (formData.commodity) {

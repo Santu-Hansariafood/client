@@ -28,10 +28,10 @@ const LoadingStation = ({ formData, handleChange }) => {
       </label>
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-muted mb-1">
-            Select State
-          </label>
           <DataDropdown
+            label="Select State"
+            required
+            name="state"
             placeholder="Select State"
             options={stateOptions}
             selectedOptions={

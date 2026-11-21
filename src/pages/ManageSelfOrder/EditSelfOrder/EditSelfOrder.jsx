@@ -220,7 +220,7 @@ const EditSelfOrder = () => {
 
         const data = orderRes.data;
         if (data) {
-          const allowedGstValues = [0, 5, 18, 40];
+          const allowedGstValues = [0, 5];
           const processedGst = allowedGstValues.includes(Number(data.gst))
             ? Number(data.gst)
             : 0;
@@ -487,7 +487,6 @@ const EditSelfOrder = () => {
           buyerCompany: company.companyName || "",
           companyId: company._id,
           location: company.location || "",
-          state: company.state || "",
           district: company.district || "",
           pinCode: company.pinCode || "",
           gstNumber: company.gstNumber || "",
@@ -758,6 +757,7 @@ const EditSelfOrder = () => {
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
     if (!formData.commodity) errors.push("Commodity is required.");
+    if (!formData.state?.trim()) errors.push("Loading Station is required.");
     if (!formData.supplier) errors.push("Supplier is required.");
 
     if (formData.commodity) {
