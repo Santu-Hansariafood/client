@@ -25,6 +25,8 @@ const AdminPageShell = ({
     setRefreshing(true);
     if (onRefresh) {
       onRefresh();
+    } else {
+      window.location.reload();
     }
     setTimeout(() => {
       setRefreshing(false);
