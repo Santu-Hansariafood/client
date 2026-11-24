@@ -717,19 +717,33 @@ router.get("/report", async (req, res) => {
       .lean();
     const buyerOrderMap = new Map(
       adjustedBuyerOrders.map((order) => [
-        `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
+        `${String(order.saudaNo || "").trim().toLowerCase()}|${String(order.buyerCompany || "").trim().toLowerCase()}`,
         order,
       ]),
     );
+    const buyerOrdersBySauda = new Map();
+    adjustedBuyerOrders.forEach((order) => {
+      const key = String(order.saudaNo || "").trim().toLowerCase();
+      const candidates = buyerOrdersBySauda.get(key) || [];
+      candidates.push(order);
+      buyerOrdersBySauda.set(key, candidates);
+    });
     const adjustmentSaudaDateMap = new Map(
       adjustmentSaudas.map((item) => [String(item.saudaNo).toLowerCase(), item.poDate]),
     );
     const adjustmentOrderMap = new Map(
       adjustmentSaudas.map((item) => [
-        `${String(item.saudaNo).toLowerCase()}|${String(item.supplierCompany || "").toLowerCase()}`,
+        `${String(item.saudaNo || "").trim().toLowerCase()}|${String(item.supplierCompany || "").trim().toLowerCase()}`,
         item,
       ]),
     );
+    const adjustmentOrdersBySauda = new Map();
+    adjustmentSaudas.forEach((order) => {
+      const key = String(order.saudaNo || "").trim().toLowerCase();
+      const candidates = adjustmentOrdersBySauda.get(key) || [];
+      candidates.push(order);
+      adjustmentOrdersBySauda.set(key, candidates);
+    });
     const adjustmentGroupIds = [
       ...new Set(
         paginatedAdjustments
@@ -754,11 +768,26 @@ router.get("/report", async (req, res) => {
       groupedAdjustmentSaudas.set(groupId, group);
     });
     const enrichedAdjustments = enrichmentAdjustments.map((adjustment) => {
-      const order = adjustmentOrderMap.get(
-        `${String(adjustment.saudaNo).toLowerCase()}|${String(adjustment.sellerCompany || "").toLowerCase()}`,
-      );
-      const buyerOrder = buyerOrderMap.get(
-        `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`,
+      const saudaNo = String(adjustment.saudaNo || "").trim().toLowerCase();
+      const sellerCompany = String(adjustment.sellerCompany || "")
+        .trim()
+        .toLowerCase();
+      const sellerOrders = adjustmentOrdersBySauda.get(saudaNo) || [];
+      const order =
+        adjustmentOrderMap.get(`${saudaNo}|${sellerCompany}`) ||
+        (sellerOrders.length === 1 ? sellerOrders[0] : null);
+      const buyerSaudaNo = String(adjustment.buyerSaudaNo || "")
+        .trim()
+        .toLowerCase();
+      const buyerCompany = String(adjustment.buyerCompany || "")
+        .trim()
+        .toLowerCase();
+      const buyerOrders = buyerOrdersBySauda.get(buyerSaudaNo) || [];
+      const buyerOrder =
+        buyerOrderMap.get(`${buyerSaudaNo}|${buyerCompany}`) ||
+        (buyerOrders.length === 1 ? buyerOrders[0] : null);
+      const purchaseQuantity = Number(
+        order?.quantity || adjustment.purchaseQuantity || 0,
       );
       const savedMappedSaudas = Array.isArray(adjustment.adjustedWithSaudaNos)
         ? adjustment.adjustedWithSaudaNos
@@ -789,7 +818,8 @@ router.get("/report", async (req, res) => {
         sellerCompany: order?.supplierCompany || adjustment.sellerCompany || "",
         consignee: order?.consignee || adjustment.consignee || "",
         commodity: order?.commodity || "",
-        quantity: Number(order?.quantity || adjustment.purchaseQuantity || 0),
+        purchaseQuantity,
+        quantity: purchaseQuantity,
         rate: Number(order?.rate || 0),
         deliveryDate: order?.deliveryDate || null,
         paymentTerms: order?.paymentTerms || "",

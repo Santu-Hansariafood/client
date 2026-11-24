@@ -25,12 +25,15 @@ const AdjustedSaudasSection = ({
   const tableRows = rows.map((adjustment) => {
     const buyerKey = `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
     const buyerAdjustedTotal = adjustedQuantityByBuyerSauda.get(buyerKey) || 0;
+    const sellerQuantity = Number(
+      adjustment.purchaseQuantity ?? adjustment.quantity ?? 0,
+    );
     const sellerAdjustedQuantity = Number(adjustment.adjustmentQuantity || 0);
     const isEqual =
       getAdjustmentStatus(
         adjustment.buyerSaudaNo
           ? adjustment.buyerQuantity
-          : adjustment.purchaseQuantity,
+          : sellerQuantity,
         adjustment.buyerSaudaNo ? buyerAdjustedTotal : sellerAdjustedQuantity,
       ) === "Equal";
 
@@ -75,13 +78,10 @@ const AdjustedSaudasSection = ({
       adjustment.sellerCompany || "-",
       adjustment.consignee || adjustment.buyerConsignee || "-",
       adjustment.commodity || "-",
-      `${formatNumber(adjustment.purchaseQuantity)} Tons`,
+      `${formatNumber(sellerQuantity)} Tons`,
       `${formatNumber(sellerAdjustedQuantity)} Tons`,
       `${formatNumber(
-        Math.max(
-          0,
-          Number(adjustment.purchaseQuantity || 0) - sellerAdjustedQuantity,
-        ),
+        Math.max(0, sellerQuantity - sellerAdjustedQuantity),
       )} Tons`,
       formatDate(adjustment.saudaDate),
       formatDate(adjustment.adjustmentDate),
