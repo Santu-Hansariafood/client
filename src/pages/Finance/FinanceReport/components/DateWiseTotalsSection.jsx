@@ -1,7 +1,5 @@
 import { AiOutlineEye } from "react-icons/ai";
-import { FaDownload } from "react-icons/fa";
 import Tables from "../../../../common/Tables/Tables";
-import DownloadSauda from "../../../../components/DownloadSauda/DownloadSauda";
 
 const DateWiseTotalsSection = ({
   dateTotals,
@@ -148,18 +146,6 @@ const DateWiseTotalsSection = ({
               >
                 <AiOutlineEye size={17} />
               </button>
-              <DownloadSauda
-                data={adjustment}
-                button={
-                  <button
-                    type="button"
-                    title="Download Sauda"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-ivory text-lux-emerald hover:bg-lux-cream"
-                  >
-                    <FaDownload size={13} />
-                  </button>
-                }
-              />
             </div>,
           ])}
         />

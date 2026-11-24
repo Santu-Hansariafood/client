@@ -153,29 +153,38 @@ router.get("/pending-options", async (req, res) => {
       ]),
     );
 
-    const uniqueSaudaNumbers = [];
-    const seenSaudaNumbers = new Set();
+    const saudaTotals = new Map();
     saudaNumbers.forEach((item) => {
-      const key = `${String(item.saudaNo || "").toLowerCase()}|${String(item.supplierCompany || "").toLowerCase()}`;
-      const saudaNo = String(item.saudaNo || "").toLowerCase();
-      const adjustedQuantity = adjustedQuantityBySauda.get(key) || 0;
-      if (
-        saudaNo &&
-        !seenSaudaNumbers.has(key) &&
-        adjustedQuantity < Number(item.quantity || 0) - 0.01
-      ) {
-        seenSaudaNumbers.add(key);
-        uniqueSaudaNumbers.push({
-          saudaNo: item.saudaNo,
-          poDate: item.poDate,
-          consignee: item.consignee || "",
-          sellerCompany: item.supplierCompany || "",
-          buyerCompany: item.buyerCompany || "",
-          quantity: Number(item.quantity || 0),
-          adjustedQuantity,
-        });
+      const saudaNo = String(item.saudaNo || "").trim();
+      const sellerCompany = String(item.supplierCompany || "").trim();
+      if (!saudaNo || !sellerCompany) return;
+      const key = `${saudaNo.toLowerCase()}|${sellerCompany.toLowerCase()}`;
+      const existing = saudaTotals.get(key);
+      if (existing) {
+        existing.quantity += Number(item.quantity || 0);
+        return;
       }
+      saudaTotals.set(key, {
+        saudaNo: item.saudaNo,
+        poDate: item.poDate,
+        consignee: item.consignee || "",
+        sellerCompany,
+        buyerCompany: item.buyerCompany || "",
+        quantity: Number(item.quantity || 0),
+      });
     });
+    const uniqueSaudaNumbers = [...saudaTotals.entries()]
+      .map(([key, item]) => {
+        const adjustedQuantity = adjustedQuantityBySauda.get(key) || 0;
+        const quantity = Number(item.quantity || 0);
+        return {
+          ...item,
+          quantity,
+          adjustedQuantity,
+          remainingQuantity: Math.max(0, quantity - adjustedQuantity),
+        };
+      })
+      .filter((item) => item.remainingQuantity > 0.01);
 
     return res.json({
       sellerCompanies,

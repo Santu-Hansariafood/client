@@ -284,10 +284,19 @@ const FinanceReport = () => {
         : 0;
       const details = values
         .map((saudaNo) => {
-          const match = matches.find(
+          const matchingOrders = matches.filter(
             (item) =>
               String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase(),
           );
+          const match = matchingOrders.length
+            ? {
+                ...matchingOrders[0],
+                quantity: matchingOrders.reduce(
+                  (total, item) => total + Number(item.quantity || 0),
+                  0,
+                ),
+              }
+            : null;
           const adjustment = adjustments.find(
             (item) =>
               String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
@@ -459,6 +468,7 @@ const FinanceReport = () => {
     rowId,
     sellerCompany = "",
     consignee = selectedConsignee,
+    preserveSelection = false,
   ) => {
     try {
       const response = await api.get("/financers/pending-options", {
@@ -475,21 +485,87 @@ const FinanceReport = () => {
             .toLowerCase() === normalizedConsignee,
       );
       setSaudaRows((rows) =>
-        rows.map((row) =>
-          row.id === rowId
-            ? {
-                ...row,
-                saudaOptions,
-                saudaNo: "",
-                adjustmentId: "",
-                purchaseQuantity: null,
-                consignee: row.buyerSaudaNo ? row.consignee : "",
-                pendingQuantity: null,
-                availableAdjustmentQuantity: null,
-                status: "",
-              }
-            : row,
-        ),
+        rows.map((row) => {
+          if (row.id !== rowId) return row;
+          if (!preserveSelection) {
+            return {
+              ...row,
+              saudaOptions,
+              saudaNo: "",
+              adjustmentId: "",
+              purchaseQuantity: null,
+              consignee: row.buyerSaudaNo ? row.consignee : "",
+              pendingQuantity: null,
+              availableAdjustmentQuantity: null,
+              status: "",
+            };
+          }
+
+          const optionsBySauda = new Map(
+            saudaOptions.map((option) => [
+              String(option.saudaNo).toLowerCase(),
+              option,
+            ]),
+          );
+          const saudaNos = (row.saudaNos || []).filter((saudaNo) =>
+            optionsBySauda.has(String(saudaNo).toLowerCase()),
+          );
+          const saudaDetails = (row.saudaDetails || [])
+            .filter((detail) =>
+              optionsBySauda.has(String(detail.saudaNo).toLowerCase()),
+            )
+            .map((detail) => {
+              const option = optionsBySauda.get(
+                String(detail.saudaNo).toLowerCase(),
+              );
+              return {
+                ...detail,
+                quantity: Number(option.quantity || 0),
+                previouslyAdjustedQuantity: Number(
+                  option.adjustedQuantity || 0,
+                ),
+                availableQuantity: Number(option.remainingQuantity || 0),
+                pendingQuantity: Number(option.remainingQuantity || 0),
+              };
+            });
+          const removedSelectedSauda = saudaNos.length !== row.saudaNos.length;
+          const nextRow = {
+            ...row,
+            saudaOptions,
+            saudaNos,
+            saudaNo: saudaNos.join(", "),
+            saudaDetails,
+            ...(removedSelectedSauda && !saudaNos.length
+              ? {
+                  purchaseQuantity: null,
+                  pendingQuantity: null,
+                  availableAdjustmentQuantity: null,
+                  status: "Select Sauda No",
+                }
+              : saudaDetails.length
+                ? {
+                    purchaseQuantity: saudaDetails.reduce(
+                      (total, detail) => total + Number(detail.quantity || 0),
+                      0,
+                    ),
+                  }
+                : {}),
+          };
+          if (saudaDetails.length && !removedSelectedSauda) {
+            const availableAdjustmentQuantity =
+              getAvailableAdjustmentQuantity(nextRow);
+            return {
+              ...nextRow,
+              availableAdjustmentQuantity,
+              pendingQuantity: Math.max(
+                0,
+                availableAdjustmentQuantity -
+                  Number(row.manualAdjustment || 0),
+              ),
+            };
+          }
+          return nextRow;
+        }),
       );
     } catch (error) {
       toast.error(
@@ -673,6 +749,16 @@ const FinanceReport = () => {
         row.buyerCompany,
         "new",
       );
+      await Promise.all(
+        saudaRows.map((item) =>
+          loadSaudaOptions(
+            item.id,
+            item.sellerCompany,
+            item.buyerSaudaNo ? item.consignee : selectedConsignee,
+            true,
+          ),
+        ),
+      );
       toast.success("Adjustment saved");
       await loadReport();
     } catch (error) {
@@ -716,6 +802,65 @@ const FinanceReport = () => {
       );
       toast.success("Adjustment deleted");
       await loadReport();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete adjustment",
+      );
+    }
+  };
+
+  const deleteAdjustmentRecord = async (adjustment) => {
+    const adjustmentGroupId = String(adjustment.adjustmentGroupId || "").trim();
+    const records = adjustmentGroupId
+      ? adjustmentRows.filter(
+          (item) =>
+            String(item.adjustmentGroupId || "").trim() ===
+            adjustmentGroupId,
+        )
+      : [adjustment];
+    const adjustmentIds = [
+      ...new Set(records.map((item) => item._id).filter(Boolean)),
+    ];
+    if (!adjustmentIds.length) {
+      toast.error("No saved adjustment records were found");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Delete this adjustment${adjustmentIds.length > 1 ? " group and all its records" : ""}?`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const deleteResults = await Promise.allSettled(
+        adjustmentIds.map((id) =>
+          api.delete(`/financers/adjustments/${id}`),
+        ),
+      );
+      await Promise.all(
+        saudaRows.map((row) =>
+          loadSaudaOptions(
+            row.id,
+            row.sellerCompany,
+            row.buyerSaudaNo ? row.consignee : selectedConsignee,
+            true,
+          ),
+        ),
+      );
+      await loadReport();
+      const failedDeletion = deleteResults.find(
+        (result) => result.status === "rejected",
+      );
+      if (failedDeletion) {
+        toast.error(
+          failedDeletion.reason?.response?.data?.message ||
+            "Some adjustment records could not be deleted",
+        );
+        return;
+      }
+      toast.success("Adjustment deleted");
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete adjustment",
@@ -1035,7 +1180,7 @@ const FinanceReport = () => {
       <DataDropdown
         options={(row.saudaOptions || []).map((option) => ({
           value: option.saudaNo,
-          label: `${option.saudaNo} - ${option.sellerCompany || "Seller company"} / ${option.buyerCompany || "Buyer company"} - ${formatDate(option.poDate)}`,
+          label: `${option.saudaNo} - ${formatNumber(option.remainingQuantity)} Tons available - ${option.sellerCompany || "Seller company"} / ${option.buyerCompany || "Buyer company"} - ${formatDate(option.poDate)}`,
           ...option,
         }))}
         selectedOptions={row.saudaNos}
@@ -1546,6 +1691,7 @@ const FinanceReport = () => {
                 getAdjustmentStatus={getAdjustmentStatus}
                 onPageChange={setAdjustedSaudasPage}
                 onAdjust={adjustEqualityRow}
+                onDelete={deleteAdjustmentRecord}
               />
             </section>
           </details>

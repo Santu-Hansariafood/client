@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { AiOutlineEye } from "react-icons/ai";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import Tables from "../../../../common/Tables/Tables";
 import Pagination from "../../../../common/Paginations/Paginations";
 
@@ -12,7 +15,13 @@ const AdjustedSaudasSection = ({
   getAdjustmentStatus,
   onPageChange,
   onAdjust,
+  onDelete,
 }) => {
+  const [viewingAdjustment, setViewingAdjustment] = useState(null);
+  const getBuyerAdjustedTotal = (adjustment) => {
+    const key = `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
+    return adjustedQuantityByBuyerSauda.get(key) || 0;
+  };
   const tableRows = rows.map((adjustment) => {
     const buyerKey = `${String(adjustment.buyerSaudaNo || "").toLowerCase()}|${String(adjustment.buyerCompany || "").toLowerCase()}`;
     const buyerAdjustedTotal = adjustedQuantityByBuyerSauda.get(buyerKey) || 0;
@@ -77,23 +86,42 @@ const AdjustedSaudasSection = ({
       formatDate(adjustment.saudaDate),
       formatDate(adjustment.adjustmentDate),
       isEqual ? (
-        <span
-          key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
-          className="font-bold text-lux-emerald"
-        >
-          Equal
-        </span>
+        <span className="font-bold text-lux-emerald">Equal</span>
       ) : (
+        <span className="font-bold text-amber-600">Not Equal</span>
+      ),
+      <div
+        key={`adjustment-actions-${adjustment._id || adjustment.saudaNo}`}
+        className="flex items-center gap-2"
+      >
         <button
-          key={`adjustment-status-${adjustment._id || adjustment.saudaNo}`}
+          type="button"
+          onClick={() => setViewingAdjustment(adjustment)}
+          title="View adjustment"
+          aria-label="View adjustment"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-ivory text-lux-emerald hover:bg-lux-cream"
+        >
+          <AiOutlineEye size={17} />
+        </button>
+        <button
           type="button"
           onClick={() => onAdjust(adjustment)}
-          title="Load this Sauda for adjustment"
-          className="font-bold text-amber-600 underline decoration-dashed underline-offset-2 hover:text-amber-800 font-serif"
+          title="Edit adjustment"
+          aria-label="Edit adjustment"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ece4d2] bg-lux-ivory text-lux-emerald hover:bg-lux-cream"
         >
-          Not Equal - Adjust
+          <FaEdit size={14} />
         </button>
-      ),
+        <button
+          type="button"
+          onClick={() => onDelete(adjustment)}
+          title="Delete adjustment"
+          aria-label="Delete adjustment"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+        >
+          <FaTrash size={13} />
+        </button>
+      </div>,
     ];
   });
 
@@ -126,6 +154,7 @@ const AdjustedSaudasSection = ({
               "Seller PO Date",
               "Adjustment Date",
               "Status",
+              "Actions",
             ]}
             rows={tableRows}
           />
@@ -140,6 +169,64 @@ const AdjustedSaudasSection = ({
         <p className="py-4 text-sm text-lux-muted">
           No adjusted Saudas match the selected report filters.
         </p>
+      )}
+      {viewingAdjustment && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setViewingAdjustment(null);
+            }
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="adjusted-sauda-view-title"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3
+                id="adjusted-sauda-view-title"
+                className="font-serif text-lg font-bold text-lux-ink"
+              >
+                Adjustment details
+              </h3>
+              <button
+                type="button"
+                onClick={() => setViewingAdjustment(null)}
+                className="rounded-lg px-3 py-1 text-sm font-semibold text-lux-muted hover:bg-lux-ivory"
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              {[
+                ["Buyer Sauda", viewingAdjustment.buyerSaudaNo || "-"],
+                ["Buyer Company", viewingAdjustment.buyerCompany || "-"],
+                ["Buyer Quantity", `${formatNumber(viewingAdjustment.buyerQuantity)} Tons`],
+                ["Buyer Adjusted Total", `${formatNumber(getBuyerAdjustedTotal(viewingAdjustment))} Tons`],
+                ["Seller Sauda", viewingAdjustment.saudaNo || "-"],
+                ["Mapped Seller Saudas", (viewingAdjustment.adjustedWithSaudaNos || []).join(", ") || "-"],
+                ["Seller Company", viewingAdjustment.sellerCompany || "-"],
+                ["Seller Name", viewingAdjustment.sellerName || "-"],
+                ["Consignee", viewingAdjustment.consignee || viewingAdjustment.buyerConsignee || "-"],
+                ["Commodity", viewingAdjustment.commodity || "-"],
+                ["Seller Quantity", `${formatNumber(viewingAdjustment.purchaseQuantity)} Tons`],
+                ["Adjusted Quantity", `${formatNumber(viewingAdjustment.adjustmentQuantity)} Tons`],
+                ["Adjustment Date", formatDate(viewingAdjustment.adjustmentDate)],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl bg-lux-ivory p-3">
+                  <div className="text-xs font-bold uppercase tracking-wide text-lux-muted">
+                    {label}
+                  </div>
+                  <div className="mt-1 font-semibold text-lux-ink">{value}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );
