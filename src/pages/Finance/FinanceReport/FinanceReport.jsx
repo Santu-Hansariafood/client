@@ -34,6 +34,7 @@ const DataDropdown = lazy(
 );
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("en-GB") : "-";
+const normalizeValue = (value) => String(value || "").trim().toLowerCase();
 
 const getAdjustmentStatus = (buyingQuantity, sellingQuantity) =>
   buyingQuantity !== null &&
@@ -272,10 +273,10 @@ const FinanceReport = () => {
         ? adjustments
             .filter(
               (item) =>
-                String(item.buyerSaudaNo || "").toLowerCase() ===
-                  buyerSaudaNo.toLowerCase() &&
-                String(item.buyerCompany || "").toLowerCase() ===
-                  buyerCompany.toLowerCase(),
+                normalizeValue(item.buyerSaudaNo) ===
+                  normalizeValue(buyerSaudaNo) &&
+                normalizeValue(item.buyerCompany) ===
+                  normalizeValue(buyerCompany),
             )
             .reduce(
               (total, item) => total + Number(item.adjustmentQuantity || 0),
@@ -286,7 +287,7 @@ const FinanceReport = () => {
         .map((saudaNo) => {
           const matchingOrders = matches.filter(
             (item) =>
-              String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase(),
+              normalizeValue(item.saudaNo) === normalizeValue(saudaNo),
           );
           const match = matchingOrders.length
             ? {
@@ -299,41 +300,37 @@ const FinanceReport = () => {
             : null;
           const adjustment = adjustments.find(
             (item) =>
-              String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
-              String(item.sellerCompany).toLowerCase() ===
-                company.toLowerCase() &&
+              normalizeValue(item.saudaNo) === normalizeValue(saudaNo) &&
+              normalizeValue(item.sellerCompany) === normalizeValue(company) &&
               (!buyerSaudaNo ||
-                String(item.buyerSaudaNo || "").toLowerCase() ===
-                  buyerSaudaNo.toLowerCase()) &&
+                normalizeValue(item.buyerSaudaNo) ===
+                  normalizeValue(buyerSaudaNo)) &&
               (!buyerCompany ||
-                String(item.buyerCompany || "").toLowerCase() ===
-                  buyerCompany.toLowerCase()),
+                normalizeValue(item.buyerCompany) ===
+                  normalizeValue(buyerCompany)),
           );
           const adjustmentRecords = adjustments.filter(
             (item) =>
-              String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
-              String(item.sellerCompany).toLowerCase() ===
-                company.toLowerCase() &&
+              normalizeValue(item.saudaNo) === normalizeValue(saudaNo) &&
+              normalizeValue(item.sellerCompany) === normalizeValue(company) &&
               (!buyerSaudaNo ||
-                String(item.buyerSaudaNo || "").toLowerCase() ===
-                  buyerSaudaNo.toLowerCase()) &&
+                normalizeValue(item.buyerSaudaNo) ===
+                  normalizeValue(buyerSaudaNo)) &&
               (!buyerCompany ||
-                String(item.buyerCompany || "").toLowerCase() ===
-                  buyerCompany.toLowerCase()),
+                normalizeValue(item.buyerCompany) ===
+                  normalizeValue(buyerCompany)),
           );
           const selectedOption = currentRow?.saudaOptions?.find(
             (option) =>
-              String(option.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
-              String(option.sellerCompany || "").toLowerCase() ===
-                company.toLowerCase(),
+              normalizeValue(option.saudaNo) === normalizeValue(saudaNo) &&
+              normalizeValue(option.sellerCompany) === normalizeValue(company),
           );
           const sellerAdjustedQuantity =
             Number(
               sellerAdjustmentTotals.find(
                 (item) =>
-                  String(item.saudaNo).toLowerCase() === saudaNo.toLowerCase() &&
-                  String(item.sellerCompany || "").toLowerCase() ===
-                    company.toLowerCase(),
+                  normalizeValue(item.saudaNo) === normalizeValue(saudaNo) &&
+                  normalizeValue(item.sellerCompany) === normalizeValue(company),
               )?.adjustmentQuantity,
             ) || Number(selectedOption?.adjustedQuantity || 0);
           return match
@@ -426,7 +423,9 @@ const FinanceReport = () => {
             : {
                 ...row,
                 sellerCompany: company || details[0]?.supplierCompany || "",
-                buyerCompany: details[0]?.buyerCompany || row.buyerCompany || "",
+                  buyerCompany: currentRow?.buyerSaudaNo
+                    ? buyerCompany || row.buyerCompany || ""
+                    : details[0]?.buyerCompany || row.buyerCompany || "",
                 saudaNo: values.join(", "),
                 saudaNos: values,
                 saudaDetails: details,
@@ -1233,9 +1232,11 @@ const FinanceReport = () => {
                 ? {
                     ...item,
                     sellerCompany: sellerCompany || item.sellerCompany,
-                    buyerCompany: selectedOptions.length
-                      ? buyerCompany
-                      : item.buyerCompany,
+                    buyerCompany: item.buyerSaudaNo
+                      ? item.buyerCompany
+                      : selectedOptions.length
+                        ? buyerCompany
+                        : item.buyerCompany,
                     saudaNo: saudaNos.join(", "),
                     saudaNos,
                     saudaDetails: [],
@@ -1255,7 +1256,7 @@ const FinanceReport = () => {
                 sellerCompany || row.sellerCompany,
                 row.manualAdjustment,
                 row.buyerSaudaNo,
-                buyerCompany,
+                row.buyerSaudaNo ? row.buyerCompany : buyerCompany,
             );
           }
         }}

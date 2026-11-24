@@ -15,6 +15,9 @@ const toObjectId = (value) =>
     ? new mongoose.Types.ObjectId(value)
     : null;
 
+const escapeRegex = (value) =>
+  String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const populatePaths = [
   { path: "groupId", select: "groupName" },
   { path: "buyerId", select: "name mobile" },
@@ -358,15 +361,24 @@ router.get("/report", async (req, res) => {
       orderQuery.consignee = { $regex: `^${consignee.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" };
     }
 
+    const dateWiseOrderQuery = {
+      ...orderQuery,
+      ...(orderQuery.$and ? { $and: [...orderQuery.$and] } : {}),
+    };
+
     if (!rawSaudaNos.length) {
       const buyerAdjustmentTotals = await FinanceAdjustment.aggregate([
         { $match: { buyerSaudaNo: { $exists: true, $ne: "" } } },
         {
           $group: {
             _id: {
-              saudaNo: { $toLower: "$buyerSaudaNo" },
+              saudaNo: {
+                $toLower: { $trim: { input: "$buyerSaudaNo" } },
+              },
               buyerCompany: {
-                $toLower: { $ifNull: ["$buyerCompany", ""] },
+                $toLower: {
+                  $trim: { input: { $ifNull: ["$buyerCompany", ""] } },
+                },
               },
             },
             quantity: { $sum: "$adjustmentQuantity" },
@@ -400,7 +412,7 @@ router.get("/report", async (req, res) => {
           .filter(
             (order) => {
               const adjustedQuantity = totalsByBuyerSauda.get(
-                `${String(order.saudaNo || "").toLowerCase()}|${String(order.buyerCompany || "").toLowerCase()}`,
+                `${String(order.saudaNo || "").trim().toLowerCase()}|${String(order.buyerCompany || "").trim().toLowerCase()}`,
               ) || 0;
               const quantity = Number(order.quantity || 0);
               return quantity > 0 && adjustedQuantity >= quantity - 0.01;
@@ -411,8 +423,14 @@ router.get("/report", async (req, res) => {
             ...(orderQuery.$and || []),
             {
               $nor: fullyAdjustedBuyerOrders.map((order) => ({
-                saudaNo: order.saudaNo,
-                buyerCompany: order.buyerCompany,
+                saudaNo: {
+                  $regex: `^${escapeRegex(String(order.saudaNo || "").trim())}$`,
+                  $options: "i",
+                },
+                buyerCompany: {
+                  $regex: `^${escapeRegex(String(order.buyerCompany || "").trim())}$`,
+                  $options: "i",
+                },
               })),
             },
           ];
@@ -546,7 +564,7 @@ router.get("/report", async (req, res) => {
         .lean(),
       FinanceAdjustment.countDocuments(adjustedSaudasQuery),
       SelfOrder.aggregate([
-        { $match: orderQuery },
+        { $match: dateWiseOrderQuery },
         {
           $lookup: {
             from: "sellers",
