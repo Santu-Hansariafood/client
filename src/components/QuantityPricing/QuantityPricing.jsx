@@ -17,6 +17,24 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
     [],
   );
 
+  const weightOptions = useMemo(() => {
+    const options = [
+      { label: "Delivery", value: "Delivery" },
+      { label: "Unloading", value: "Unloading" },
+    ];
+    const currentWeight =
+      formData.weight == null ? "" : String(formData.weight);
+
+    if (
+      currentWeight &&
+      !options.some((option) => option.value === currentWeight)
+    ) {
+      options.push({ label: currentWeight, value: currentWeight });
+    }
+
+    return options;
+  }, [formData.weight]);
+
   const inputFields = useMemo(
     () => [
       {
@@ -43,12 +61,6 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
         placeholder: "CD (%)",
         type: "number",
       },
-      {
-        label: "Weight (Tons)",
-        field: "weight",
-        placeholder: "Weight (Tons)",
-        type: "text",
-      },
     ],
     [],
   );
@@ -72,6 +84,21 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
             />
           </div>
         ))}
+        <div>
+          <label className="block text-sm font-medium text-lux-muted mb-1">
+            Weight (Tons)
+          </label>
+          <DataDropdown
+            options={weightOptions}
+            selectedOptions={
+              formData.weight == null ? "" : String(formData.weight)
+            }
+            onChange={(selected) =>
+              handleInputChange("weight", selected?.value ?? "")
+            }
+            placeholder="Select Weight"
+          />
+        </div>
         <div key="gst">
           <label className="block text-sm font-medium text-lux-muted mb-1">
             GST (%)
