@@ -20,7 +20,7 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
   const weightOptions = useMemo(() => {
     const options = [
       { label: "Delivery", value: "Delivery" },
-      { label: "Unloading", value: "Unloading" },
+      { label: "Loading", value: "Loading" },
     ];
     const currentWeight =
       formData.weight == null ? "" : String(formData.weight);
